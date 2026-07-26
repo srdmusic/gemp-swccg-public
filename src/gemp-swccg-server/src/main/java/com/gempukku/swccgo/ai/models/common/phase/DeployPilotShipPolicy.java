@@ -165,6 +165,23 @@ public final class DeployPilotShipPolicy {
         return new PolicyResult("DEPLOY_OBJECTIVE_PILOT_DESTINATION_POLICY", operations);
     }
 
+    public static PolicyResult evaluateLowAbilityPilotBoarding(
+            LowAbilityPilotBoardingFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        if (!facts.pilot() || facts.ability() == null
+                || facts.ability() >= 5.0f || !facts.assetDestinationOffered()) {
+            return new PolicyResult("DEPLOY_LOW_ABILITY_PILOT_BOARDING_POLICY", List.of());
+        }
+        if (facts.destinationIsAsset()) {
+            return oneAttach(facts.actionId(), "V30-low-ability-pilot-boarding",
+                    TraceOutputKind.ORDERING, 3000.0f,
+                    "V30 PILOT PROTECTION: ability under 5 boards an offered vehicle or starship");
+        }
+        return oneAttach(facts.actionId(), "V30-low-ability-pilot-boarding",
+                TraceOutputKind.VETO, -5000.0f,
+                "V30 PILOT PROTECTION: ability under 5 must board an offered vehicle or starship");
+    }
+
     public static PolicyResult evaluateAssetTail(AssetTailFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(5);
@@ -444,6 +461,14 @@ public final class DeployPilotShipPolicy {
         }
     }
 
+    public record LowAbilityPilotBoardingFacts(
+            String actionId, boolean pilot, Float ability,
+            boolean assetDestinationOffered, boolean destinationIsAsset) {
+        public LowAbilityPilotBoardingFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
     public record AssetTailFacts(String actionId, String cardTitle,
                                  boolean starshipOrVehicle,
                                  boolean executorOrFlagship,
@@ -509,6 +534,14 @@ public final class DeployPilotShipPolicy {
                                   String reason) {
         add(operations, actionId, ruleId, TraceDomainId.DEPLOY_ATTACH,
                 outputKind, delta, reason);
+    }
+
+    private static PolicyResult oneAttach(String actionId, String ruleId,
+                                          TraceOutputKind outputKind, float delta,
+                                          String reason) {
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        addAttach(operations, actionId, ruleId, outputKind, delta, reason);
+        return new PolicyResult("DEPLOY_LOW_ABILITY_PILOT_BOARDING_POLICY", operations);
     }
 
     private static void addSiting(List<PolicyOperation> operations,

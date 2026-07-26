@@ -323,6 +323,30 @@ public class DeployPilotShipPolicyTest {
         assertEquals("Matching pilot for Executor!", operations.get(2).reason());
     }
 
+    @Test
+    public void lowAbilityPilotBoardsWhenCompatibleAssetIsOffered() {
+        assertRules(DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
+                        new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
+                                "a", true, 4.99f, true, true)).operations(),
+                new String[]{"V30-low-ability-pilot-boarding"},
+                new float[]{3000.0f});
+        assertRules(DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
+                        new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
+                                "a", true, 4.99f, true, false)).operations(),
+                new String[]{"V30-low-ability-pilot-boarding"},
+                new float[]{-5000.0f});
+    }
+
+    @Test
+    public void abilityFivePilotAndNoAssetOfferRemainUnforced() {
+        assertTrue(DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
+                new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
+                        "a", true, 5.0f, true, false)).operations().isEmpty());
+        assertTrue(DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
+                new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
+                        "a", true, 3.0f, false, false)).operations().isEmpty());
+    }
+
     private static void assertRules(List<PolicyOperation> operations,
                                     String[] rules, float[] deltas) {
         assertEquals(rules.length, operations.size());

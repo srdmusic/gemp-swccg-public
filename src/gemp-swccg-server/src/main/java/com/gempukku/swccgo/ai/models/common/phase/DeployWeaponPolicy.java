@@ -5,6 +5,7 @@ import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
+import com.gempukku.swccgo.common.CardCategory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,16 @@ import java.util.Objects;
 /** Pure DEPLOY-3 weapon and attachment scoring over adapter-produced facts. */
 public final class DeployWeaponPolicy {
     private DeployWeaponPolicy() {
+    }
+
+    public static boolean isAttachableWeaponHost(CardCategory category) {
+        return category == CardCategory.CHARACTER
+                || category == CardCategory.VEHICLE
+                || category == CardCategory.STARSHIP;
+    }
+
+    public static boolean isRedistributionBuddy(CardCategory category) {
+        return isAttachableWeaponHost(category);
     }
 
     public static PolicyResult evaluateDirectEligibility(DirectEligibilityFacts facts) {

@@ -583,16 +583,21 @@ public class ShieldStrategy {
     private ShieldInfo findShieldInfo(String blueprintId, String cardTitle) {
         Map<String, ShieldInfo> shieldDb =
                 (mySide == Side.DARK) ? DARK_SHIELDS : LIGHT_SHIELDS;
+        if (blueprintId != null) {
+            for (ShieldInfo info : shieldDb.values()) {
+                if (info.blueprintIds.contains(blueprintId)) {
+                    return info;
+                }
+            }
+        }
         String titleLower = cardTitle != null && !cardTitle.isBlank()
                 ? cardTitle.toLowerCase(Locale.ROOT) : null;
+        if (titleLower == null) {
+            return null;
+        }
         for (Map.Entry<String, ShieldInfo> entry : shieldDb.entrySet()) {
-            ShieldInfo info = entry.getValue();
-            if (blueprintId != null && info.blueprintIds.contains(blueprintId)) {
-                return info;
-            }
-            if (titleLower != null
-                    && entry.getKey().toLowerCase(Locale.ROOT).contains(titleLower)) {
-                return info;
+            if (entry.getKey().equalsIgnoreCase(cardTitle)) {
+                return entry.getValue();
             }
         }
         return null;

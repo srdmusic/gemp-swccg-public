@@ -120,6 +120,7 @@ public final class ShieldPolicy {
 
     public static PolicyResult stackedPileParent(String actionId,
                                                  int shieldsOnTable,
+                                                 boolean occupiesBothTheaters,
                                                  FourthSlotPick fourthSlot,
                                                  boolean atActivationCap,
                                                  int activationCount,
@@ -128,6 +129,11 @@ public final class ShieldPolicy {
         Objects.requireNonNull(fourthSlot, "fourthSlot");
         List<PolicyOperation> operations = new ArrayList<>();
 
+        if (shieldsOnTable == 2 && !occupiesBothTheaters) {
+            add(operations, actionId, "V112-third-slot-reserve",
+                    TraceOutputKind.ORDERING, -3000.0f,
+                    "V112 3RD SLOT HOLD: reserve the third shield for Battle Order");
+        }
         if (shieldsOnTable >= 3 && !fourthSlot.pursue()) {
             add(operations, actionId, "V124", TraceOutputKind.ORDERING, -3000.0f,
                     "V124 K&D 4TH-SLOT BLOCK: " + shieldsOnTable
@@ -226,6 +232,19 @@ public final class ShieldPolicy {
                     TraceOutputKind.VETO, -5000.0f,
                     "V53 SHIELD MIN-TURN: '" + cardTitle + "' waits until turn "
                             + minTurnToPlay + " (current turn " + turnNumber + ") -5000");
+        }
+
+        if (shieldsOnTable == 2) {
+            if (isBattleOrderOrPlan(cardTitle)
+                    && occupiesBothTheaters && shieldScore > -50.0f) {
+                add(operations, actionId, "V112-third-slot-selection",
+                        TraceOutputKind.ORDERING, 2000.0f,
+                        "V112 3RD SLOT BATTLE ORDER: both theaters occupied +2000");
+            } else {
+                add(operations, actionId, "V112-third-slot-selection",
+                        TraceOutputKind.ORDERING, -5000.0f,
+                        "V112 3RD SLOT RESERVED: hold for live Battle Order -5000");
+            }
         }
 
         if (shieldsOnTable >= 3) {

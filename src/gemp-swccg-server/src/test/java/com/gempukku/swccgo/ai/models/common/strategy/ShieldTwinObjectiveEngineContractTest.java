@@ -1675,6 +1675,31 @@ public class ShieldTwinObjectiveEngineContractTest {
     }
 
     @Test
+    public void sparePilotedWalkerHoldsASeparateControlledMarker() {
+        for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
+            VirtualTableScenario scn = scenario(objectiveBlueprintId, true);
+            var icePlains = scn.GetDSCard("icePlains");
+            var northRidge = scn.GetDSCard("northRidge");
+            var carrier = scn.GetDSCard("blizzard2");
+            var spare = scn.GetDSCard("blizzard2Duplicate");
+            var cannon = scn.GetDSCard("cannon");
+
+            scn.StartGame();
+            scn.MoveCardsToLocation(northRidge, carrier);
+            scn.AttachCardsTo(carrier, cannon);
+            scn.MoveCardsToLocation(icePlains, spare);
+
+            assertTrue(Filters.piloted.accepts(scn.game(), spare));
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertTrue(analyzer.shouldHoldSecondaryShieldMarkerWalker(
+                        scn.game(), VirtualTableScenario.DS, spare));
+                assertFalse(analyzer.shouldHoldSecondaryShieldMarkerWalker(
+                        scn.game(), VirtualTableScenario.DS, carrier));
+            }
+        }
+    }
+
+    @Test
     public void bothMoveAdaptersScoreEveryExtendedForwardHopOnly() {
         for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
             VirtualTableScenario scn = scenario(objectiveBlueprintId);

@@ -1495,6 +1495,34 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         java.util.List<String> v186Tts = context.getTestingTexts();
         // V186 CONSOLIDATED (2026-07-07): identity from ObjectiveAnalyzer.isWantThatMap().
         boolean v186IsWantThatMap = v186oa != null && v186oa.isAnalyzed() && v186oa.isWantThatMap();
+        SwccgCardBlueprint boardingDeployBlueprint =
+                objectiveProgressDeployingCard != null
+                        ? objectiveProgressDeployingCard.getBlueprint()
+                        : getBlueprintFromId(context, deployingBlueprintId);
+        boolean boardingPilot = boardingDeployBlueprint != null
+                && boardingDeployBlueprint.getCardCategory() == CardCategory.CHARACTER
+                && boardingDeployBlueprint.hasIcon(com.gempukku.swccgo.common.Icon.PILOT);
+        Float boardingAbility = boardingDeployBlueprint != null
+                && boardingDeployBlueprint.hasAbilityAttribute()
+                ? boardingDeployBlueprint.getAbility() : null;
+        boolean boardingAssetDestinationOffered = false;
+        if (gameState != null) {
+            for (String destinationId : context.getCardIds()) {
+                try {
+                    PhysicalCard destination =
+                            gameState.findCardById(Integer.parseInt(destinationId));
+                    CardCategory destinationCategory = destination != null
+                            && destination.getBlueprint() != null
+                            ? destination.getBlueprint().getCardCategory() : null;
+                    if (destinationCategory == CardCategory.VEHICLE
+                            || destinationCategory == CardCategory.STARSHIP) {
+                        boardingAssetDestinationOffered = true;
+                        break;
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
 
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
@@ -1563,6 +1591,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     action,
                                     objectiveProgressDeployingCard,
                                     location);
+                        CardCategory destinationCategory = blueprint != null
+                                ? blueprint.getCardCategory() : null;
+                        applyDeployPilotPolicy(action,
+                                DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
+                                        new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
+                                                action.getActionId(), boardingPilot,
+                                                boardingAbility,
+                                                boardingAssetDestinationOffered,
+                                                destinationCategory == CardCategory.VEHICLE
+                                                        || destinationCategory
+                                                        == CardCategory.STARSHIP)));
 
                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer
                             objectiveProgressAnalyzer = context.getObjectiveAnalyzer();
@@ -2086,7 +2125,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         //      (especially admirals on Executor). But ships deploying INTO
                         //      cargo bays of other ships = 0 power, which is terrible.
                         // =====================================================
-                        if (blueprint != null && blueprint.getCardCategory() == CardCategory.STARSHIP) {
+                        if (blueprint != null
+                                && (blueprint.getCardCategory() == CardCategory.STARSHIP
+                                    || blueprint.getCardCategory() == CardCategory.VEHICLE)) {
                             boolean isExecutor = false;
                             String charGameText = "";
                             String matchedShipName = null;
@@ -2170,7 +2211,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // CRITICAL: WEAPON DEPLOYMENT - check if target already has weapon
                         // Don't deploy a second weapon on a character that already has one!
                         // =====================================================
-                        if (isWeapon && blueprint != null && blueprint.getCardCategory() == CardCategory.CHARACTER) {
+                        if (isWeapon && blueprint != null
+                                && DeployWeaponPolicy.isAttachableWeaponHost(
+                                    blueprint.getCardCategory())) {
                             PhysicalCard targetCharacter = location;  // 'location' is actually the target character
                             boolean alreadyHasWeapon = false;
                             String existingWeaponName = null;
@@ -8534,8 +8577,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         String decisionText = context.getDecisionText();
         String targetDecisionId = context.getDecisionId();
 
-        // Check if we're playing a beneficial card that targets our own cards
-        boolean targetOwnCards = isBeneficialTargetingCard(decisionText);
+        // Target The Main Generator's child chooses our weapon source. It is not
+        // a harmful target selection, despite offering our attached cannons.
+        boolean shieldGeneratorCannonChoice = decisionText != null
+            && "choose at-at cannon, or click 'done' to cancel"
+                .equals(decisionText.trim().toLowerCase(Locale.ROOT))
+            && context.getObjectiveAnalyzer() != null
+            && context.getObjectiveAnalyzer()
+                .hasShieldMainGeneratorFormationRule();
+        boolean targetOwnCards = isBeneficialTargetingCard(decisionText)
+            || shieldGeneratorCannonChoice;
 
         for (String cardId : context.getCardIds()) {
             TargetSelectionPolicy.InitialScore initial =

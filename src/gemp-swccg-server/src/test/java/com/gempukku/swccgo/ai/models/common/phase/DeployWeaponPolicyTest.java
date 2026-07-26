@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
@@ -10,9 +11,30 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class DeployWeaponPolicyTest {
+
+    @Test
+    public void weaponHostAndRedistributionTypingIncludesVehiclesAndStarships() {
+        for (CardCategory category : new CardCategory[]{
+                CardCategory.CHARACTER,
+                CardCategory.VEHICLE,
+                CardCategory.STARSHIP}) {
+            assertTrue(DeployWeaponPolicy.isAttachableWeaponHost(category));
+            assertTrue(DeployWeaponPolicy.isRedistributionBuddy(category));
+            assertOne(DeployWeaponPolicy.evaluateDestinationSlot(
+                            new DeployWeaponPolicy.DestinationSlotFacts(
+                                    "a", true, "AT-AT Cannon")).operations(),
+                    "V25-weapon-slot", -9999.0f,
+                    TraceOutputKind.VETO);
+        }
+        assertFalse(DeployWeaponPolicy.isAttachableWeaponHost(
+                CardCategory.LOCATION));
+        assertFalse(DeployWeaponPolicy.isRedistributionBuddy(
+                CardCategory.LOCATION));
+    }
     @Test
     public void criteriaGateDominatesOtherDirectWeaponArms() {
         List<PolicyOperation> operations = DeployWeaponPolicy.evaluateDirectEligibility(

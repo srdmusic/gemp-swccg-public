@@ -2793,11 +2793,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     ShieldPolicy.FourthSlotPick fourthSlot =
                             new ShieldPolicy.FourthSlotPick(null, false,
                                     ShieldPolicy.FourthSlotTrigger.CLOSED);
-                    if (shieldsOnTable >= 3 && shieldStrategy != null) {
+                    boolean occupiesBothTheaters = false;
+                    if (shieldsOnTable >= 2 && shieldStrategy != null) {
                         ShieldFacts.FourthSlotFacts fourthSlotFacts =
                                 ShieldFacts.fourthSlotFacts(gameState, context.getGame(),
                                         context.getPlayerId());
-                        fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts, null);
+                        occupiesBothTheaters = fourthSlotFacts.occupiesBothTheaters();
+                        if (shieldsOnTable >= 3) {
+                            fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts, null);
+                        }
                     }
                     boolean activationCap = shieldStrategy != null
                             && shieldStrategy.atKnDActivationCap(turnNumber);
@@ -2807,7 +2811,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             && shieldStrategy.atPacingCap(turnNumber);
 
                     controlLedger.register(ShieldPolicy.stackedPileParent(
-                            actionId, shieldsOnTable, fourthSlot, activationCap,
+                            actionId, shieldsOnTable, occupiesBothTheaters,
+                            fourthSlot, activationCap,
                             activationCount, pacingCap, turnNumber));
                     PolicyOperationAdapter.apply(action, controlLedger);
 
@@ -3803,8 +3808,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 }
 
                                 // V72 (Steve, 2026-05-15): WEAPON REDISTRIBUTION.
-                                // If the source character has 2+ weapons attached AND there's an
-                                // unarmed friendly at the same site, transferring redistributes
+                                // If the source host has 2+ weapons attached AND there's an
+                                // unarmed friendly host at the same site, transferring redistributes
                                 // weapons across the team. Massively preferred over swap-from-hand
                                 // because it directly fixes the "one char has 2 lightsabers,
                                 // others have none" pattern.
@@ -3832,8 +3837,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                                     if (sc == null || sc.getBlueprint() == null) continue;
                                                     if (sc == attachee) continue;
                                                     if (!context.getPlayerId().equals(sc.getOwner())) continue;
-                                                    if (sc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                                    // Check if this char is unarmed
+                                                    CardCategory buddyCategory = sc.getBlueprint().getCardCategory();
+                                                    if (!DeployWeaponPolicy
+                                                            .isRedistributionBuddy(
+                                                                buddyCategory)) continue;
+                                                    // Check if this legal transfer host is unarmed.
                                                     boolean scArmed = false;
                                                     java.util.List<PhysicalCard> scAtts = gameState.getAttachedCards(sc);
                                                     if (scAtts != null) {

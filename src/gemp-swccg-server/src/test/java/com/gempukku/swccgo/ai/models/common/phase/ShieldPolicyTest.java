@@ -102,20 +102,25 @@ public class ShieldPolicyTest {
 
     @Test
     public void stackedPileParentPreservesAdditiveOrderAndExactScores() {
-        PolicyResult blocked = ShieldPolicy.stackedPileParent("A", 3, closed(),
+        PolicyResult blocked = ShieldPolicy.stackedPileParent("A", 3, false, closed(),
                 true, 2, true, 1);
         assertOperations(blocked, "V124", -3000.0f, "V102", -2000.0f);
         assertEquals(
                 "V124 K&D 4TH-SLOT BLOCK: 3 shields already on table, no V105/V107 trigger — don't activate K&D for 4th shield",
                 blocked.operations().get(0).reason());
 
-        PolicyResult paced = ShieldPolicy.stackedPileParent("A", 3,
+        PolicyResult paced = ShieldPolicy.stackedPileParent("A", 3, false,
                 pick("Battle Order"), false, 0, true, 2);
         assertOperations(paced, "V29.1-stacked-pile", -40.0f);
 
-        PolicyResult available = ShieldPolicy.stackedPileParent("A", 2, closed(),
+        PolicyResult available = ShieldPolicy.stackedPileParent("A", 2, true, closed(),
                 false, 0, false, 1);
         assertOperations(available, "SHIELDS-stacked-pile-available", 50.0f);
+
+        PolicyResult thirdHeld = ShieldPolicy.stackedPileParent(
+                "A", 2, false, closed(), false, 0, false, 2);
+        assertOperations(thirdHeld, "V112-third-slot-reserve", -3000.0f,
+                "SHIELDS-stacked-pile-available", 50.0f);
     }
 
     @Test
@@ -168,7 +173,8 @@ public class ShieldPolicyTest {
         PolicyResult rejectedBase = ShieldPolicy.shieldCandidateAdjustments(
                 "A", "Battle Order", -50.0f, 2, 2, 2, closed(), true,
                 ShieldPolicy.CandidateRoute.DEDICATED);
-        assertTrue(rejectedBase.operations().isEmpty());
+        assertOperations(rejectedBase,
+                "V112-third-slot-selection", -5000.0f);
     }
 
     @Test
@@ -176,19 +182,23 @@ public class ShieldPolicyTest {
         assertOperations(ShieldPolicy.shieldCandidateAdjustments(
                 "A", "Battle Order", 80.0f, 2, 2, 2, closed(), false,
                 ShieldPolicy.CandidateRoute.RESERVE),
+                "V112-third-slot-selection", -5000.0f,
                 "V51-battle-order-gate", -9999.0f);
         assertOperations(ShieldPolicy.shieldCandidateAdjustments(
                 "A", "Battle Plan", 80.0f, 2, 1, 2, closed(), true,
                 ShieldPolicy.CandidateRoute.RESERVE),
+                "V112-third-slot-selection", 2000.0f,
                 "V51-battle-order-ready", 50.0f,
                 "V51-battle-order-early", 200.0f);
         assertOperations(ShieldPolicy.shieldCandidateAdjustments(
                 "A", "Battle Plan", -50.0f, 2, 1, 2, closed(), true,
                 ShieldPolicy.CandidateRoute.RESERVE),
+                "V112-third-slot-selection", -5000.0f,
                 "V51-battle-order-ready", 50.0f);
-        assertTrue(ShieldPolicy.shieldCandidateAdjustments(
+        assertOperations(ShieldPolicy.shieldCandidateAdjustments(
                 "A", "Ultimatum", 50.0f, 0, 1, 2, closed(), false,
-                ShieldPolicy.CandidateRoute.RESERVE).operations().isEmpty());
+                ShieldPolicy.CandidateRoute.RESERVE),
+                "V112-third-slot-selection", -5000.0f);
     }
 
     @Test
@@ -223,7 +233,7 @@ public class ShieldPolicyTest {
     @Test
     public void onePolicyResultNeverRepeatsAnActionRuleContribution() {
         List<PolicyResult> results = List.of(
-                ShieldPolicy.stackedPileParent("A", 3, closed(), true, 2, true, 1),
+                ShieldPolicy.stackedPileParent("A", 3, false, closed(), true, 2, true, 1),
                 ShieldPolicy.shieldCandidateAdjustments(
                         "B", "Battle Order", 80.0f, 2, 1, 3,
                         pick("Battle Order"), true,

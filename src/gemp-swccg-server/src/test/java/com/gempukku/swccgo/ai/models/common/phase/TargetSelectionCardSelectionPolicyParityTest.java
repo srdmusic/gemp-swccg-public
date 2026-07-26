@@ -145,6 +145,47 @@ public class TargetSelectionCardSelectionPolicyParityTest {
                 "V38.3 SELF-TARGET: NEVER target own card with harmful effect! (-9999.0)");
     }
 
+    @Test
+    public void shieldGeneratorPromptTreatsOwnCannonAsBeneficialForBothBots() {
+        PhysicalCard ownCannon = card("AT-AT Cannon", "tester",
+                0.0f, false, false, false);
+        GameState gameState = gameState(Map.of(300, ownCannon));
+        String prompt = "Choose AT-AT Cannon, or click 'Done' to cancel";
+
+        var randoObjective = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.hasShieldMainGeneratorFormationRule()).thenReturn(true);
+        var randoContext =
+                new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                        gameState, "tester", "CARD_SELECTION", prompt,
+                        "shield-generator-cannon", Phase.DEPLOY);
+        randoContext.setCardIds(List.of("300"));
+        randoContext.setSelectable(List.of(true));
+        randoContext.setObjectiveAnalyzer(randoObjective);
+        var rando =
+                new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                        .evaluate(randoContext);
+
+        var chosenObjective = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.hasShieldMainGeneratorFormationRule()).thenReturn(true);
+        var chosenContext =
+                new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                        gameState, "tester", "CARD_SELECTION", prompt,
+                        "shield-generator-cannon", Phase.DEPLOY);
+        chosenContext.setCardIds(List.of("300"));
+        chosenContext.setSelectable(List.of(true));
+        chosenContext.setObjectiveAnalyzer(chosenObjective);
+        var chosen =
+                new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                        .evaluate(chosenContext);
+
+        assertActionParity(rando, chosen);
+        assertBits(100.0f, rando.get(0).getScore());
+        assertReasons(rando.get(0).getReasoning(),
+                "Beneficial effect on our card (+50.0)");
+    }
+
     private static GameState gameState(Map<Integer, PhysicalCard> cards) {
         GameState gameState = mock(GameState.class);
         when(gameState.getPlayersLatestTurnNumber("tester")).thenReturn(2);

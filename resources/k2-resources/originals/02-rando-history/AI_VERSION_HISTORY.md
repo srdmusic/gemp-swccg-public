@@ -8637,3 +8637,14 @@ The sequential 15-suite TDIGWATT family and shared-battle gate passed `74/0/0/0`
 Generated Rulebook coverage remains pending because the current extractor does not follow this policy's custom `hardVeto(...)` helper and would omit multiple veto families.
 
 Revert the single TDIGWATT Batch Eight commit. Capture Batch Seven and all earlier objective-family commits remain independent.
+## 2026-07-25: Shield twin live-replay repair
+
+Replay `307c29e59umq5waf` proved four post-Batch-Five decision gaps. The generator-fire parent won at `+800`, but its exact Cannon child prompt applied V38.3 to both owned Cannons at `-9949`, causing repeated cancellation. Low-ability pilots deployed outside legally offered walkers. A second Cannon attached to the already armed walker because the destination guard covered only characters. A Useless Gesture consumed shield slot three before Battle Order became live.
+
+The repair narrowly classifies the exact active Shield Cannon-source child as beneficial and preserves ordinary harmful self-target protection. The existing weapon destination and V72 redistribution rules now include vehicles and starships. Icon.PILOT characters below ability 5 must board when the engine offers a legal asset destination, while ability 5 and above remains unrestricted. A spare piloted AT-AT now holds its quiet controlled marker while a different Cannon carrier advances the generator route; contested origins release the hold. Shield catalog lookup uses exact blueprint identity, then exact title equality, and the third shield slot is globally reserved for a live Battle Order or Battle Plan. Existing fourth-slot doctrine is unchanged.
+
+Boundary math: the Cannon child changes from `50 - 9999 = -9949` to `50 + 50 = 100`, above Done/Pass. A low-ability pilot receives `+3000` aboard and `-5000` outside, dominating the replay's site economics without touching ability 5. A duplicate weapon host retains the existing `-9999` destination veto. At two deployed shields, non-tax candidates receive `-5000`; a live Battle Order/Plan with base score above `-50` receives `+2000`.
+
+Scope is AI-only, mirrored across Rando and Chosen One. No engine, card Java, objective data, deck library, database, or client code changed.
+
+Verification: focused replay and policy gate `83/0/0/0`; full isolated reactor `2461/0/0/26`; clean async package PASS. Packaged server jar SHA-256 `92faee066fe9fc4be5cc2f5c6fcd033775febf3915dbb1d4e974482a8a443469`; packaged web jar SHA-256 `0d06cd2e20090038b0763d1574185b66c2066009d39960628cf8bb1f064846b7`.

@@ -522,6 +522,18 @@ public class MoveEvaluator extends ActionEvaluator {
                 }
             }
 
+            if (cardToMove != null && actionLower.contains("using landspeed")
+                    && context.getObjectiveAnalyzer() != null
+                    && context.getObjectiveAnalyzer()
+                        .shouldHoldSecondaryShieldMarkerWalker(
+                            game, playerId, cardToMove)) {
+                ladderVetoHard = true;
+                ladderVetoHardReason =
+                    "HOTH WALKER MARKER HOLD: keep the spare piloted AT-AT on its controlled marker";
+                logger.warn("HOTH WALKER MARKER HOLD: {} stays spread while the cannon carrier advances",
+                        cardToMove.getTitle());
+            }
+
             // A lone opponent undercover spy prevents our drain but is not a battle target.
             // Keep survival moves available, while blocking doctrine claims that would send
             // an ordinary character into that dead position instead of contesting elsewhere.

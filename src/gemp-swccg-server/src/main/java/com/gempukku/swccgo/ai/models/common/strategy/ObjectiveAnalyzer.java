@@ -10906,6 +10906,63 @@ public class ObjectiveAnalyzer {
                     game.getModifiersQuerying(), host);
     }
 
+    /**
+     * Keep a spare piloted AT-AT on its quiet marker while a different
+     * cannon-bearing walker advances the generator route.
+     */
+    public boolean shouldHoldSecondaryShieldMarkerWalker(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (!hasShieldMainGeneratorFormationRule()
+                || game == null || playerId == null || mover == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !playerId.equals(mover.getOwner())) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            if (!Filters.AT_AT.accepts(
+                        gameState, game.getModifiersQuerying(), mover)
+                    || !Filters.piloted.accepts(
+                        gameState, game.getModifiersQuerying(), mover)
+                    || hasActiveShieldCannonAttached(
+                        game, playerId, mover)) {
+                return false;
+            }
+            PhysicalCard origin = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(gameState, mover);
+            if (origin == null
+                    || game.getModifiersQuerying()
+                        .getMarkerNumber(gameState, origin) == null
+                    || !game.getModifiersQuerying()
+                        .controlsLocation(gameState, origin, playerId)) {
+                return false;
+            }
+            String opponent = gameState.getOpponent(playerId);
+            if (opponent != null
+                    && game.getModifiersQuerying()
+                        .getTotalPowerAtLocation(
+                            gameState, origin, opponent,
+                            false, false) > 0.0f) {
+                return false;
+            }
+            for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                if (card == null || card == mover) continue;
+                PhysicalCard cardLocation = game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(gameState, card);
+                if (cardLocation != null
+                        && !samePhysicalLocation(origin, cardLocation)
+                        && isCompleteShieldRouteHost(
+                            game, playerId, card, cardLocation)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Shield marker walker hold failed: {}", e.getMessage());
+        }
+        return false;
+    }
+
     private boolean hasActiveShieldCannonAttached(
             SwccgGame game, String playerId,
             PhysicalCard host) {
