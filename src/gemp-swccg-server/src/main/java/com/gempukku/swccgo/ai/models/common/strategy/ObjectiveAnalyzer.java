@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveSideBlueprints;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
 import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
@@ -131,6 +132,9 @@ public class ObjectiveAnalyzer {
     private String objectiveGameText = null;
     private boolean analyzed = false;
     private boolean isFlipped = false;
+    private int flipFirstObservedAtOwnTurn = -1;
+    private int turnsObservedSinceFlip = 0;
+    private boolean flipAgeKnown = false;
     private boolean requiresOccupy = false;
     private boolean requiresControl = false;
 
@@ -316,8 +320,13 @@ public class ObjectiveAnalyzer {
 
             String bpId = objectiveCard.getBlueprintId(true);
             if (analyzed && bpId != null && bpId.equals(objectiveBlueprintId)) {
-                updateFlipStatus(objectiveCard);
+                updateFlipStatus(
+                        gameState, playerId, objectiveCard);
                 return;
+            }
+            if (analyzed
+                    && !Objects.equals(bpId, objectiveBlueprintId)) {
+                resetFlipAgeObservation();
             }
 
             this.objectiveTitle = title;
@@ -371,7 +380,8 @@ public class ObjectiveAnalyzer {
             // profiles, but only boundary-math-VERIFIED objectives (My Lord + Endor today) hydrate. This
             // prevents the 56 un-verified profiles from silently altering behavior.
             if (loaderOn) hydrateFromProfile(prof);
-            updateFlipStatus(objectiveCard);
+            updateFlipStatus(
+                    gameState, playerId, objectiveCard);
             this.analyzed = true;
 
             logAnalysisResults();
@@ -3645,6 +3655,13 @@ public class ObjectiveAnalyzer {
     public boolean preservesStayFlippedRequirementByMovingTo(
             SwccgGame game, String playerId,
             PhysicalCard mover, PhysicalCard destination) {
+        if (analyzed && isFlipped
+                && CaptureObjectiveFacts.isCaptureObjective(this)) {
+            return !CaptureObjectiveFacts
+                    .wouldBreakStableBackByMovingTo(
+                        game, playerId, this,
+                        mover, destination);
+        }
         if (!analyzed || !isFlipped || game == null
                 || playerId == null || mover == null
                 || destination == null
@@ -7119,6 +7136,14 @@ public class ObjectiveAnalyzer {
             SwccgGame game, String playerId,
             PhysicalCard candidate,
             PhysicalCard destination) {
+        ObjectivePostFlipPayoffRole captureRole =
+                CaptureObjectiveFacts.bhbmDuelPayoffRoleAt(
+                    game, playerId, this,
+                    candidate, destination);
+        if (captureRole
+                != ObjectivePostFlipPayoffRole.NONE) {
+            return captureRole;
+        }
         if (!analyzed || !isFlipped || game == null
                 || playerId == null || candidate == null
                 || destination == null
@@ -7204,6 +7229,14 @@ public class ObjectiveAnalyzer {
             SwccgGame game, String playerId,
             PhysicalCard candidate,
             PhysicalCard destination) {
+        ObjectivePostFlipPayoffRole captureRole =
+                CaptureObjectiveFacts.advancesBhhmDuelPayoffAt(
+                    game, playerId, this,
+                    candidate, destination);
+        if (captureRole
+                != ObjectivePostFlipPayoffRole.NONE) {
+            return captureRole;
+        }
         if (!analyzed || !isFlipped || game == null
                 || playerId == null || candidate == null
                 || destination == null
@@ -7555,6 +7588,10 @@ public class ObjectiveAnalyzer {
 
     public boolean isAnalyzed() { return analyzed; }
     public boolean isFlipped() { return isFlipped; }
+    public boolean isFlipAgeKnown() { return flipAgeKnown; }
+    public int getTurnsObservedSinceFlip() {
+        return turnsObservedSinceFlip;
+    }
     public String getObjectiveTitle() { return objectiveTitle; }
     public String getObjectiveBlueprintId() { return objectiveBlueprintId; }
     public String getFlipConditionText() { return flipConditionText; }
@@ -7771,6 +7808,13 @@ public class ObjectiveAnalyzer {
         }
 
         if (isFlipped) {
+            FlipGateFormationRole captureStateRole =
+                    CaptureObjectiveFacts.classifyStableBackRemoval(
+                        game, playerId, this, candidate);
+            if (captureStateRole
+                    != FlipGateFormationRole.NONE) {
+                return captureStateRole;
+            }
             if (wouldRemovalTriggerOnTableFlipBack(
                     game, playerId, candidate)) {
                 return matchesRequiredOnTableCardFlipBackAlternative(
@@ -8619,6 +8663,13 @@ public class ObjectiveAnalyzer {
             return false;
         }
 
+        if (CaptureObjectiveFacts
+                .advancesCaptureApproachByLandspeed(
+                    game, playerId, this,
+                    actor, destination)) {
+            return true;
+        }
+
         ActorLocationRule rule = findFlipGateActorRule();
         if (rule == null || rule.count == null
                 || rule.count.value == null
@@ -8827,7 +8878,7 @@ public class ObjectiveAnalyzer {
         if (!analyzed || gameState == null || playerId == null) return;
         PhysicalCard objCard = findOurObjective(gameState, playerId);
         if (objCard != null) {
-            updateFlipStatus(objCard);
+            updateFlipStatus(gameState, playerId, objCard);
         }
     }
 
@@ -11412,6 +11463,7 @@ public class ObjectiveAnalyzer {
         objectiveGameText = null;
         analyzed = false;
         isFlipped = false;
+        resetFlipAgeObservation();
         requiresOccupy = false;
         requiresControl = false;
         // V86/V88/V121 CONSOLIDATED: objective-identity flags (mirror objectiveTitle's lifecycle)
@@ -11484,13 +11536,66 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
-    private void updateFlipStatus(PhysicalCard objectiveCard) {
+    private void updateFlipStatus(
+            GameState gameState,
+            String playerId,
+            PhysicalCard objectiveCard) {
         try {
-            this.isFlipped = objectiveCard.isFlipped();
+            int ownTurn = -1;
+            try {
+                ownTurn = gameState.getPlayersLatestTurnNumber(
+                        playerId);
+            } catch (Exception e) {
+                LOG.debug("[ObjectiveAnalyzer] Could not determine own turn"
+                        + " for flip-age observation: {}",
+                        e.getMessage());
+            }
+            observeFlipState(
+                    objectiveCard.isFlipped(), ownTurn);
             LOG.debug("[ObjectiveAnalyzer] Objective flipped = {}", isFlipped);
         } catch (Exception e) {
+            resetFlipAgeObservation();
             LOG.debug("[ObjectiveAnalyzer] Could not determine flip status: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Tracks own-turn transitions from the first observed back side. A new
+     * analyzer cannot recover the historical flip turn from engine state, so
+     * reconnect starts at age zero. An observed flipback clears the age and an
+     * observed reflip starts fresh; a transient side change between refreshes
+     * is not visible to this observation-only clock.
+     */
+    void observeFlipState(boolean flipped, int currentOwnTurn) {
+        if (!flipped) {
+            this.isFlipped = false;
+            resetFlipAgeObservation();
+            return;
+        }
+
+        if (!this.isFlipped) {
+            this.isFlipped = true;
+            resetFlipAgeObservation();
+        }
+        if (!flipAgeKnown) {
+            if (currentOwnTurn >= 0) {
+                flipFirstObservedAtOwnTurn = currentOwnTurn;
+                flipAgeKnown = true;
+            }
+            return;
+        }
+        if (currentOwnTurn >= flipFirstObservedAtOwnTurn) {
+            turnsObservedSinceFlip = Math.max(
+                    turnsObservedSinceFlip,
+                    currentOwnTurn
+                        - flipFirstObservedAtOwnTurn);
+        }
+    }
+
+    private void resetFlipAgeObservation() {
+        flipFirstObservedAtOwnTurn = -1;
+        turnsObservedSinceFlip = 0;
+        flipAgeKnown = false;
     }
 
     private void parseGameText(String gameText, String backGameText) {

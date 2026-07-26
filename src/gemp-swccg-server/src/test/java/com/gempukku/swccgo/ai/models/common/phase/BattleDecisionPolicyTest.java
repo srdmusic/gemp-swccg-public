@@ -78,6 +78,64 @@ public class BattleDecisionPolicyTest {
     }
 
     @Test
+    public void predictorAlsoGuardsPowerZeroPhysicalOpponent() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard location = mock(PhysicalCard.class);
+        PhysicalCard opponentCard = mock(PhysicalCard.class);
+        AtomicInteger predictions = new AtomicInteger();
+
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getOpponent("bot")).thenReturn("opponent");
+        when(gameState.getTopLocations()).thenReturn(List.of(location));
+        when(gameState.getCardsAtLocation(location))
+                .thenReturn(List.of(opponentCard));
+        when(gameState.getAllPermanentCards())
+                .thenReturn(List.of(opponentCard));
+        when(location.getCardId()).thenReturn(7);
+        when(location.getTitle()).thenReturn("Power-Zero Site");
+        when(opponentCard.getOwner()).thenReturn("opponent");
+        when(modifiers.getTotalPowerAtLocation(
+                any(), any(), anyString(),
+                anyBoolean(), anyBoolean()))
+                .thenAnswer(invocation ->
+                    "bot".equals(invocation.getArgument(2))
+                        ? 10.0f : 0.0f);
+        when(modifiers.getTotalAbilityAtLocation(
+                any(), anyString(), any()))
+                .thenReturn(4.0f);
+
+        BattleDecisionPolicy.Context base = context(
+                gameState, game, List.of("battle"),
+                List.of("Initiate battle"),
+                List.of("7"), predictions);
+        BattleDecisionPolicy.Context unsafe =
+                new DelegatingContext(base) {
+                    @Override
+                    public BattleDecisionPolicy.Prediction
+                            predictBattle(
+                                int myPower,
+                                int myDestinyDraws,
+                                int opponentPower,
+                                int opponentDestinyDraws) {
+                        predictions.incrementAndGet();
+                        return new BattleDecisionPolicy.Prediction(
+                                0.20f, 1.0f, 4.0f);
+                    }
+                };
+
+        BattleDecisionPolicy.ScoredAction result =
+                BattleDecisionPolicy.evaluate(unsafe).get(0);
+
+        assertEquals(1, predictions.get());
+        assertTrue(contributionIndexByReason(
+                result.contributions(),
+                "V76 BATTLE PREDICT") >= 0);
+        assertTrue(score(result) < 0.0f);
+    }
+
+    @Test
     public void exactMissingPreFlipTargetAddsObjectiveContestAfterSpecificBattle() {
         GameState gameState = mock(GameState.class);
         SwccgGame game = mock(SwccgGame.class);

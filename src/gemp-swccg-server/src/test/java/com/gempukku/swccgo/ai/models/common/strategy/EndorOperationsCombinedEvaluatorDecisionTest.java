@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
+import com.gempukku.swccgo.ai.models.common.phase.BhbmForceDripUrgencyFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
@@ -17,7 +18,10 @@ import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
+import com.gempukku.swccgo.logic.decisions.CardActionSelectionDecision;
+import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
+import com.gempukku.swccgo.logic.timing.Action;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
@@ -2225,24 +2229,30 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
             if (bot == Bot.RANDO) {
                 ai = new com.gempukku.swccgo.ai.models.rando
                         .RandoCalAi();
-                parentContext = randoContext(
+                var typedParent = randoContext(
                         fixture, parent);
+                typedParent.setActionIds(
+                        List.of("0", "pass"));
+                parentContext = typedParent;
                 selected =
                         new com.gempukku.swccgo.ai.models.rando
                                 .evaluators.EvaluatedAction(
-                                parent.actionIds().get(0),
+                                "0",
                                 com.gempukku.swccgo.ai.models.rando
                                         .evaluators.ActionType.MOVE,
                                 0.0f, "selected physical mover");
             } else {
                 ai = new com.gempukku.swccgo.ai.models.chosenone
                         .TheChosenOneAi();
-                parentContext = chosenContext(
+                var typedParent = chosenContext(
                         fixture, parent);
+                typedParent.setActionIds(
+                        List.of("0", "pass"));
+                parentContext = typedParent;
                 selected =
                         new com.gempukku.swccgo.ai.models.chosenone
                                 .evaluators.EvaluatedAction(
-                                parent.actionIds().get(0),
+                                "0",
                                 com.gempukku.swccgo.ai.models.chosenone
                                         .evaluators.ActionType.MOVE,
                                 0.0f, "selected physical mover");
@@ -2252,9 +2262,14 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                     .getDeclaredMethod(
                             "rememberSelectedMoveCard",
                             parentContext.getClass(),
-                            selected.getClass());
+                            selected.getClass(),
+                            AwaitingDecision.class);
             remember.setAccessible(true);
-            remember.invoke(ai, parentContext, selected);
+            remember.invoke(
+                    ai, parentContext, selected,
+                    engineRuleActionDecision(
+                        chosenCopy,
+                        "Move using landspeed"));
 
             Decision child = Decision.moveDestination(
                     chosenCopy, forest, fixture.cantina());
@@ -2279,6 +2294,12 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                             built,
                             MovePhysicalCardResolver
                                     .MOVER_CARD_ID_EXTRA));
+            assertEquals(
+                    chosenCopy.getPermanentCardId(),
+                    getExtra.invoke(
+                            built,
+                            BhbmForceDripUrgencyFactsReader
+                                .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA));
 
             Outcome forestChoice =
                     builtCardSelectionOutcome(
@@ -2295,6 +2316,10 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                     next,
                     MovePhysicalCardResolver
                             .MOVER_CARD_ID_EXTRA));
+            assertNull(getExtra.invoke(
+                    next,
+                    BhbmForceDripUrgencyFactsReader
+                        .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA));
             assertNotContains(
                     builtCardSelectionOutcome(
                             bot, fixture, next,
@@ -4733,6 +4758,28 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
         when(awaiting.getDecisionParameters())
                 .thenReturn(parameters);
         return awaiting;
+    }
+
+    private static AwaitingDecision engineRuleActionDecision(
+            PhysicalCard attached,
+            String actionText) {
+        Action action = mock(Action.class);
+        when(action.getActionAttachedToCard())
+                .thenReturn(attached);
+        when(action.getActionSource())
+                .thenReturn(null);
+        when(action.getText())
+                .thenReturn(actionText);
+        return new CardActionSelectionDecision(
+                87, "Choose action",
+                List.of(action),
+                true, false,
+                false, false, false) {
+            @Override
+            public void decisionMade(String result)
+                    throws DecisionResultInvalidException {
+            }
+        };
     }
 
     private static void setControls(

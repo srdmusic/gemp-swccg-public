@@ -8,6 +8,11 @@ import com.gempukku.swccgo.ai.models.common.phase.ForceLossFacts;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.BhbmForceDripUrgencyFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.BhbmSetupPayoffFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureVirtualHutChoicePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployFormationSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
@@ -184,6 +189,333 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             EvaluatedAction action, SetupPolicy.Contribution contribution) {
         if (contribution != null) {
             applySetupContributions(action, List.of(contribution));
+        }
+    }
+
+    private boolean isCaptureSetupHutDecision(
+            DecisionContext context) {
+        return context != null
+                && context.getTurnNumber() <= 0
+                && context.getDecisionText() != null
+                && "Choose Chief Chirpa's Hut to deploy"
+                    .equalsIgnoreCase(
+                        context.getDecisionText().trim())
+                && CaptureObjectiveFacts.objectiveKind(
+                    context.getObjectiveAnalyzer())
+                    == CaptureObjectivePolicy.ObjectiveKind
+                        .TIGIH;
+    }
+
+    private List<EvaluatedAction> evaluateCaptureSetupHut(
+            DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        List<String> cardIds = context.getCardIds();
+        List<String> blueprints = context.getBlueprints();
+        int count = Math.max(
+                cardIds != null ? cardIds.size() : 0,
+                blueprints != null ? blueprints.size() : 0);
+        List<String> candidateBlueprints =
+                new ArrayList<>();
+        boolean virtualSelectable = false;
+        boolean baseSelectable = false;
+        for (int i = 0; i < count; i++) {
+            String blueprintId =
+                    captureSetupBlueprintAt(context, i);
+            candidateBlueprints.add(blueprintId);
+            if (!isCardSelectable(context, i)) {
+                continue;
+            }
+            virtualSelectable |=
+                    "214_19".equals(blueprintId);
+            baseSelectable |=
+                    "8_71".equals(blueprintId);
+        }
+        boolean bothHutPrintingsSelectable =
+                virtualSelectable && baseSelectable;
+        for (int i = 0; i < count; i++) {
+            if (!isCardSelectable(context, i)) {
+                continue;
+            }
+            String actionId =
+                    cardIds != null && i < cardIds.size()
+                            && cardIds.get(i) != null
+                            && !cardIds.get(i).isBlank()
+                        ? cardIds.get(i) : String.valueOf(i);
+            String blueprintId =
+                    candidateBlueprints.get(i);
+            EvaluatedAction action = new EvaluatedAction(
+                    actionId,
+                    ActionType.DEPLOY,
+                    50.0f,
+                    "Deploy Chief Chirpa's Hut");
+            PolicyContributionLedger ledger =
+                    new PolicyContributionLedger(
+                        "tigih-setup-hut-" + actionId);
+            ledger.register(
+                CaptureObjectivePolicy.scoreSetupHut(
+                    new CaptureObjectivePolicy.SetupHutFacts(
+                        actionId,
+                        CaptureObjectivePolicy.ObjectiveKind
+                            .TIGIH,
+                        blueprintId != null
+                            ? blueprintId : "",
+                        bothHutPrintingsSelectable)));
+            PolicyOperationAdapter.apply(action, ledger);
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    private String captureSetupBlueprintAt(
+            DecisionContext context, int index) {
+        List<String> blueprints = context.getBlueprints();
+        if (blueprints != null && index >= 0
+                && index < blueprints.size()
+                && blueprints.get(index) != null
+                && !blueprints.get(index).isBlank()) {
+            return blueprints.get(index);
+        }
+        List<String> cardIds = context.getCardIds();
+        if (context.getGameState() == null
+                || cardIds == null || index < 0
+                || index >= cardIds.size()) {
+            return null;
+        }
+        try {
+            PhysicalCard card =
+                    context.getGameState().findCardById(
+                        Integer.parseInt(cardIds.get(index)));
+            return card != null
+                    ? card.getBlueprintId(true) : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private boolean applyCaptureMoveDestination(
+            DecisionContext context,
+            EvaluatedAction action,
+            PhysicalCard mover,
+            PhysicalCard destination) {
+        CaptureObjectivePolicy.ObjectiveKind objective =
+                CaptureObjectiveFacts.objectiveKind(
+                    context.getObjectiveAnalyzer());
+        if (objective == null || action == null
+                || mover == null || destination == null
+                || action.getActionId() == null
+                || action.getActionId().isBlank()) {
+            return false;
+        }
+        boolean guaranteedImmediateCapture =
+                CaptureObjectiveFacts
+                    .guaranteesImmediateCaptureAt(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        context.getObjectiveAnalyzer(),
+                        mover,
+                        destination);
+        boolean stableBack =
+                CaptureObjectiveFacts.stableBackState(
+                    context.getGame(),
+                    context.getPlayerId(),
+                    context.getObjectiveAnalyzer());
+        boolean breaksStableBack =
+                CaptureObjectiveFacts
+                    .wouldBreakStableBackByMovingTo(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        context.getObjectiveAnalyzer(),
+                        mover,
+                        destination);
+        PolicyContributionLedger ledger =
+                new PolicyContributionLedger(
+                    "capture-move-destination-"
+                        + action.getActionId());
+        ledger.register(
+            CaptureObjectivePolicy.scoreCaptureRoute(
+                new CaptureObjectivePolicy.CaptureRouteFacts(
+                    action.getActionId(),
+                    objective,
+                    CaptureObjectivePolicy.CaptureRouteStep
+                        .DESTINATION,
+                    guaranteedImmediateCapture)));
+        ledger.register(
+            CaptureObjectivePolicy.scoreStableBackHold(
+                new CaptureObjectivePolicy.StableBackFacts(
+                    action.getActionId(),
+                    objective,
+                    context.getObjectiveAnalyzer().isFlipped(),
+                    stableBack,
+                    breaksStableBack)));
+        ledger.register(
+            CaptureObjectivePolicy.scoreBhbmYourDestiny(
+                new CaptureObjectivePolicy.BhbmYourDestinyFacts(
+                    action.getActionId(),
+                    BhbmSetupPayoffFactsReader
+                        .rewardsVaderAtBattleground(
+                            context.getGame(),
+                            context.getPlayerId(),
+                            context.getObjectiveAnalyzer(),
+                            mover,
+                            destination)
+                        && BhbmSetupPayoffFactsReader
+                            .projectedVaderMoveFormationSafe(
+                                context.getGame(),
+                                context.getPlayerId(),
+                                mover,
+                                destination))));
+        PolicyOperationAdapter.apply(action, ledger);
+        return guaranteedImmediateCapture;
+    }
+
+    private boolean applyCaptureDeployDestination(
+            DecisionContext context,
+            EvaluatedAction action,
+            PhysicalCard deployingCard,
+            PhysicalCard destination) {
+        CaptureObjectivePolicy.ObjectiveKind objective =
+                CaptureObjectiveFacts.objectiveKind(
+                    context.getObjectiveAnalyzer());
+        if (objective == null || action == null
+                || deployingCard == null || destination == null
+                || action.getActionId() == null
+                || action.getActionId().isBlank()) {
+            return false;
+        }
+        boolean guaranteedImmediateCapture =
+                CaptureObjectiveFacts
+                    .guaranteesImmediateCaptureAt(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        context.getObjectiveAnalyzer(),
+                        deployingCard,
+                        destination);
+        PolicyContributionLedger ledger =
+                new PolicyContributionLedger(
+                    "capture-deploy-destination-"
+                        + action.getActionId());
+        ledger.register(
+            CaptureObjectivePolicy.scoreDeployCaptureRoute(
+                new CaptureObjectivePolicy.DeployCaptureFacts(
+                    action.getActionId(),
+                    objective,
+                    CaptureObjectivePolicy.CaptureRouteStep
+                        .DESTINATION,
+                    guaranteedImmediateCapture)));
+        ledger.register(
+            CaptureObjectivePolicy.scoreBhbmYourDestiny(
+                new CaptureObjectivePolicy.BhbmYourDestinyFacts(
+                    action.getActionId(),
+                    BhbmSetupPayoffFactsReader
+                        .rewardsVaderForDeployAt(
+                            context.getGame(),
+                            context.getPlayerId(),
+                            context.getObjectiveAnalyzer(),
+                            deployingCard,
+                            destination))));
+        PolicyOperationAdapter.apply(action, ledger);
+        return guaranteedImmediateCapture;
+    }
+
+    private void applyBhbmForceDripUrgency(
+            DecisionContext context,
+            EvaluatedAction action,
+            PhysicalCard candidate,
+            PhysicalCard destination,
+            boolean safe,
+            BhbmForceDripUrgencyFactsReader.CandidateMechanism
+                    mechanism) {
+        if (context == null || action == null
+                || action.getActionId() == null
+                || action.getActionId().isBlank()) {
+            return;
+        }
+        PolicyContributionLedger ledger =
+                new PolicyContributionLedger(
+                    "bhbm-force-drip-"
+                        + action.getActionId());
+        ledger.register(
+            CaptureObjectivePolicy
+                .scoreBhbmForceDripUrgency(
+                    BhbmForceDripUrgencyFactsReader.read(
+                        action.getActionId(),
+                        context.getGame(),
+                        context.getPlayerId(),
+                        context.getObjectiveAnalyzer(),
+                        bhbmActionSource(context),
+                        candidate,
+                        destination,
+                        safe,
+                        mechanism)));
+        PolicyOperationAdapter.apply(action, ledger);
+    }
+
+    private PhysicalCard bhbmActionSource(
+            DecisionContext context) {
+        if (context == null
+                || context.getGameState() == null) {
+            return null;
+        }
+        Object sourceId = context.getExtra(
+                BhbmForceDripUrgencyFactsReader
+                    .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA);
+        if (sourceId == null) {
+            return null;
+        }
+        try {
+            return context.getGameState()
+                    .findCardByPermanentId(
+                        Integer.parseInt(
+                            String.valueOf(sourceId)));
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private boolean bhbmDeployFormationSafe(
+            DecisionContext context,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (context == null
+                || context.getGame() == null
+                || context.getGameState() == null
+                || context.getPlayerId() == null
+                || candidate == null
+                || candidate.getBlueprint() == null
+                || candidate.getBlueprint()
+                    .getCardCategory()
+                        != CardCategory.CHARACTER
+                || destination == null) {
+            return false;
+        }
+        try {
+            SwccgCardBlueprint blueprint =
+                    candidate.getBlueprint();
+            com.gempukku.swccgo.ai.models.common.strategy
+                .FormationSafety.DeployVerdict verdict =
+                    com.gempukku.swccgo.ai.models.common.strategy
+                        .FormationSafety.assessCharacterDeploy(
+                            context.getGame(),
+                            context.getGameState(),
+                            context.getPlayerId(),
+                            candidate,
+                            blueprint.hasPowerAttribute()
+                                ? blueprint.getPower() : null,
+                            blueprint.hasAbilityAttribute()
+                                ? blueprint.getAbility() : null,
+                            candidate.isUndercover(),
+                            destination,
+                            context.getGameState()
+                                .getForcePileSize(
+                                    context.getPlayerId()),
+                            blueprint.getDeployCost(),
+                            null,
+                            null);
+            return verdict.constraint()
+                    == com.gempukku.swccgo.ai.models.common.strategy
+                        .FormationSafety.DeployConstraint.ALLOW;
+        } catch (Exception ignored) {
+            return false;
         }
     }
 
@@ -686,6 +1018,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return new ArrayList<>();
         }
 
+        if (isCaptureSetupHutDecision(context)) {
+            return evaluateCaptureSetupHut(context);
+        }
+
         // If we have blueprints but no cardIds, handle reserve deck selection
         if ((cardIds == null || cardIds.isEmpty()) && blueprints != null && !blueprints.isEmpty()) {
             logger.info("[CardSelectionEvaluator] Reserve deck selection with {} blueprints", blueprints.size());
@@ -743,12 +1079,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return evaluateCancelSelection(context);
         } else if (isHuntDownVaderRecallTargetDecision(context)) {
             return evaluateHuntDownVaderRecallTarget(context);
+        } else if (isCaptureVirtualHutMoveDecision(context)) {
+            return evaluateCaptureVirtualHutMove(context);
         } else if (isHuntDownCastleMoveDecision(context)) {
             return evaluateHuntDownCastleMove(context);
         } else if (isObjectiveDockingTransitDecision(context)) {
             return evaluateObjectiveDockingTransit(context);
         } else if (textLower.contains("move to,")
                    || textLower.contains("where to move")
+                   || textLower.contains("where to shuttle")
+                   || textLower.contains("where to disembark")
                    || (textLower.contains("move") && textLower.contains("to")
                        && !textLower.contains("choose target")
                        && !textLower.contains("cardhint"))) {
@@ -1188,6 +1528,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         String title = location.getTitle();
                         String titleLower = title != null ? title.toLowerCase() : "";
                         action.setDisplayText("Deploy to " + (title != null ? title : "location"));
+                        boolean guaranteedCaptureDeployDestination =
+                                applyCaptureDeployDestination(
+                                    context,
+                                    action,
+                                    objectiveProgressDeployingCard,
+                                    location);
 
                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer
                             objectiveProgressAnalyzer = context.getObjectiveAnalyzer();
@@ -2739,6 +3085,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
+                        applyBhbmForceDripUrgency(
+                            context, action,
+                            objectiveProgressDeployingCard,
+                            location,
+                            bhbmDeployFormationSafe(
+                                context,
+                                objectiveProgressDeployingCard,
+                                location),
+                            BhbmForceDripUrgencyFactsReader
+                                .CandidateMechanism.DEPLOY);
+
                         // === V136 (Steve, 2026-05-26): UNIFIED CHARACTER DEPLOY SITE EVALUATOR (CardSelection route) ===
                         // Supersedes V122 (below) and V67as (later in this file).
                         // See CharacterDeploySiteEvaluator + V136_DEPLOY_LOG.md.
@@ -3530,7 +3887,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     }
                                 } else {
                                     // No opponent power - uncontested
-                                    if (ourPower == 0) {
+                                    if (ourPower == 0
+                                            && !guaranteedCaptureDeployDestination) {
                                         // V29: CHARACTER CONCENTRATION — don't deploy alone to empty locations
                                         // if there are solo friendlies at other locations that need backup.
                                         // Spreading characters thin gets them killed one by one.
@@ -3750,7 +4108,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 // anywhere on the table, someone has to go first! Reduce penalties
                                 // so Rando doesn't stall. Still prefer own locations, but don't
                                 // refuse to deploy just because only opponent locations exist.
-                                if (isCharacter && location != null && playerId != null) {
+                                if (isCharacter && location != null && playerId != null
+                                        && !guaranteedCaptureDeployDestination) {
                                     try {
                                         // Check location ownership
                                         String locOwner = location.getOwner();
@@ -4343,6 +4702,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 try {
                     PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
                     if (card != null) {
+                        applyCaptureCriticalRetention(
+                                context, action, card);
                         String title = card.getTitle();
                         if (title != null) {
                             action.setDisplayText("Lose " + title);
@@ -4365,6 +4726,55 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             actions.add(action);
         }
         return actions;
+    }
+
+    private void applyCaptureCriticalRetention(
+            DecisionContext context,
+            EvaluatedAction action,
+            PhysicalCard candidate) {
+        if (context == null || action == null
+                || candidate == null
+                || action.getActionId() == null
+                || action.getActionId().isBlank()) {
+            return;
+        }
+        var analyzer = context.getObjectiveAnalyzer();
+        CaptureObjectivePolicy.ObjectiveKind objective =
+                CaptureObjectiveFacts.objectiveKind(analyzer);
+        if (objective == null) {
+            return;
+        }
+        CaptureObjectivePolicy.CriticalRole role =
+                CaptureObjectiveFacts.preferredCriticalLossRole(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        analyzer,
+                        candidate);
+        if (role == null
+                && CaptureObjectiveFacts
+                    .wouldBreakStableBackIfRemoved(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        analyzer,
+                        candidate)) {
+            role = CaptureObjectivePolicy.CriticalRole
+                    .CAPTURE_PIECE;
+        }
+        if (role == null) {
+            return;
+        }
+        PolicyContributionLedger ledger =
+                new PolicyContributionLedger(
+                        "capture-critical-retention-"
+                            + action.getActionId());
+        ledger.register(
+                CaptureObjectivePolicy.scoreCriticalRetention(
+                    new CaptureObjectivePolicy.RetentionFacts(
+                        action.getActionId(),
+                        objective,
+                        role,
+                        true)));
+        PolicyOperationAdapter.apply(action, ledger);
     }
 
     private ForceLossPolicy.ObjectiveFlags forceLossObjectiveFlags(
@@ -4552,6 +4962,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     flipGateFormationSelection
                         .hasUnprotectedLegalAlternative()));
             PolicyOperationAdapter.apply(action, flipGateFormationLedger);
+            PhysicalCard captureCriticalCandidate = null;
+            if (gameState != null) {
+                try {
+                    captureCriticalCandidate =
+                            gameState.findCardById(
+                                Integer.parseInt(cardId));
+                } catch (NumberFormatException ignored) {
+                    // Preserve the legacy neutral fallback for malformed ids.
+                }
+            }
+            applyCaptureCriticalRetention(
+                    context, action, captureCriticalCandidate);
 
             // V22.4: Optional forfeit handling — COMPLETELY REWORKED
             // Old bug: ALL optional forfeits were avoided (-150). This meant Rando would
@@ -4904,6 +5326,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     battleCandidate = gameState.findCardById(Integer.parseInt(cardId));
                 } catch (NumberFormatException e) { /* ignore */ }
             }
+            applyCaptureCriticalRetention(
+                    context, action, battleCandidate);
             boolean isForceLosSOption = ForceLossFacts.isForceLossZone(battleCandidate);
             BattleForfeitFacts.CandidateFacts battleForfeitCandidate =
                 BattleForfeitFacts.readCandidate(
@@ -5659,6 +6083,193 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         return actions;
     }
 
+    private boolean isCaptureVirtualHutMoveDecision(
+            DecisionContext context) {
+        if (context == null || context.getDecisionText() == null
+                || context.getGameState() == null
+                || context.getPlayerId() == null
+                || context.getObjectiveAnalyzer() == null
+                || context.getObjectiveAnalyzer().isFlipped()
+                || CaptureObjectiveFacts.objectiveKind(
+                    context.getObjectiveAnalyzer())
+                    != CaptureObjectivePolicy.ObjectiveKind.TIGIH) {
+            return false;
+        }
+        String decision = context.getDecisionText().trim();
+        if (!"choose card to move from".equalsIgnoreCase(decision)
+                && !"choose card to move to".equalsIgnoreCase(decision)
+                && !decision.toLowerCase(Locale.ROOT)
+                    .startsWith("choose card to move to ")) {
+            return false;
+        }
+        try {
+            var actionState =
+                    context.getGameState()
+                        .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            String liveText = liveAction != null
+                    ? liveAction.getText() : null;
+            return CaptureObjectiveFacts.isOwnedExactSource(
+                        source, context.getPlayerId(), "214_19")
+                    && "move luke to landing platform"
+                        .equalsIgnoreCase(
+                            liveText != null
+                                ? liveText.trim() : "");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private List<EvaluatedAction> evaluateCaptureVirtualHutMove(
+            DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        GameState gameState = context.getGameState();
+        SwccgGame game = context.getGame();
+        String playerId = context.getPlayerId();
+        var analyzer = context.getObjectiveAnalyzer();
+        var actionState =
+                gameState.getTopGameTextActionState();
+        var liveAction = actionState != null
+                ? actionState.getGameTextAction() : null;
+        PhysicalCard hut = liveAction != null
+                ? liveAction.getActionSource() : null;
+        PhysicalCard target = null;
+        if (game != null) {
+            try {
+                for (PhysicalCard card
+                        : gameState.getAllPermanentCards()) {
+                    if (CaptureObjectiveFacts
+                            .isExactObjectiveTarget(
+                                game, playerId, analyzer,
+                                card)) {
+                        target = card;
+                        break;
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        PhysicalCard targetOrigin = null;
+        if (game != null && target != null) {
+            try {
+                targetOrigin = game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            gameState, target);
+            } catch (Exception ignored) {
+            }
+        }
+        boolean wholeRouteAvailable =
+                CaptureObjectiveFacts
+                    .isOwnedExactSource(
+                        hut, playerId, "214_19")
+                && CaptureObjectiveFacts
+                    .isVirtualHutOrigin(hut)
+                && samePhysicalCard(hut, targetOrigin)
+                && CaptureObjectiveFacts
+                    .virtualHutActionGuaranteesCapture(
+                        game, playerId, analyzer);
+
+        String decision = context.getDecisionText().trim();
+        boolean chooseOrigin =
+                "choose card to move from"
+                    .equalsIgnoreCase(decision);
+        boolean chooseDestination =
+                "choose card to move to"
+                    .equalsIgnoreCase(decision);
+        PhysicalCard finalDestination =
+                !chooseOrigin && !chooseDestination
+                    ? resolveCastleFinalDestination(
+                        gameState, decision) : null;
+
+        List<Boolean> admissible = new ArrayList<>();
+        boolean hasAdmissibleSelectableRoute = false;
+        for (int i = 0;
+                i < context.getCardIds().size(); i++) {
+            String cardId = context.getCardIds().get(i);
+            PhysicalCard candidate = null;
+            try {
+                candidate = gameState.findCardById(
+                        Integer.parseInt(cardId));
+            } catch (Exception ignored) {
+            }
+            boolean candidateAdmissible =
+                    wholeRouteAvailable
+                    && (chooseOrigin
+                        ? samePhysicalCard(hut, candidate)
+                            && CaptureObjectiveFacts
+                                .isVirtualHutOrigin(
+                                    candidate)
+                        : chooseDestination
+                            ? CaptureObjectiveFacts
+                                .isGuaranteedVirtualHutDestination(
+                                    game, playerId,
+                                    analyzer, candidate)
+                            : finalDestination != null
+                                && CaptureObjectiveFacts
+                                    .isGuaranteedVirtualHutDestination(
+                                        game, playerId,
+                                        analyzer,
+                                        finalDestination)
+                                && CaptureObjectiveFacts
+                                    .isExactObjectiveTarget(
+                                        game, playerId,
+                                        analyzer, candidate));
+            admissible.add(candidateAdmissible);
+            hasAdmissibleSelectableRoute |=
+                    isCardSelectable(context, i)
+                    && candidateAdmissible;
+        }
+
+        for (int i = 0;
+                i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.MOVE, 0.0f,
+                    "Choose TIGIH virtual-Hut capture route");
+            CaptureVirtualHutChoicePolicy.Choice choice =
+                    CaptureVirtualHutChoicePolicy.choose(
+                        new CaptureVirtualHutChoicePolicy.Facts(
+                            admissible.get(i),
+                            hasAdmissibleSelectableRoute));
+            if (choice
+                    == CaptureVirtualHutChoicePolicy
+                        .Choice.PREFER) {
+                PolicyContributionLedger captureLedger =
+                        new PolicyContributionLedger(
+                            "tigih-virtual-hut-child-"
+                                + cardId);
+                captureLedger.register(
+                    CaptureObjectivePolicy.scoreCaptureRoute(
+                        new CaptureObjectivePolicy
+                            .CaptureRouteFacts(
+                                cardId,
+                                CaptureObjectivePolicy
+                                    .ObjectiveKind.TIGIH,
+                                CaptureObjectivePolicy
+                                    .CaptureRouteStep
+                                    .DESTINATION,
+                                true)));
+                PolicyOperationAdapter.apply(
+                        action, captureLedger);
+            } else if (choice
+                    == CaptureVirtualHutChoicePolicy
+                        .Choice.HARD_VETO) {
+                action.hardVeto(
+                    "TIGIH VIRTUAL HUT: choose the exact Hut, capture-capable Landing Platform, and objective Luke",
+                    TraceRuleId.of(
+                        "MOVE.OBJECTIVE.TIGIH.VIRTUAL_HUT_CHILD_HOLD"),
+                    TraceDomainId.MOVE,
+                    TraceOutputKind.VETO);
+            }
+            actions.add(action);
+        }
+        return actions;
+    }
+
     private boolean isHuntDownCastleMoveDecision(
             DecisionContext context) {
         if (context == null || context.getDecisionText() == null
@@ -6185,6 +6796,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     if (location != null) {
                         String title = location.getTitle();
                         action.setDisplayText("Move to " + (title != null ? title : "location"));
+                        boolean guaranteedCaptureMoveDestination =
+                                applyCaptureMoveDestination(
+                                    context,
+                                    action,
+                                    fsMover,
+                                    location);
 
                         boolean objectiveTerminalEscapeCandidate =
                             fsMover != null && fsOrigin != null
@@ -6210,9 +6827,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 terminalExposure.reason());
                         }
 
+                        boolean bhbmFormationSafe = false;
                         // FORMATION SAFETY (2026-07-11c): L4 solo-charge + L1 abandon-solo vetoes —
                         // un-outvotable (Codex audit: V32 -300 + V22.2 -120 lost to R2 +6000 here).
-                        if (fsMover != null && fsOrigin != null && game != null) {
+                        if (fsMover != null && fsOrigin != null
+                                && game != null) {
                             String fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
                                 .vetoMoveDestination(game, gameState, playerId, fsMover, location);
                             if (fsV == null && fsOrigin != null
@@ -6225,6 +6844,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 action.hardVeto(fsV);
                                 logger.warn("FORMATION SAFETY (move-dest): {}", fsV);
                             } else {
+                                bhbmFormationSafe = true;
                                 // BATCH1b (2026-07-12, Codex m00199/m00209 — Chiraneau empty-site split):
                                 // a WEAK (ability<4) mover relocating SOLO to an uncontested empty site
                                 // while leaving a lone weak buddy behind creates TWO weak solos — L1
@@ -6270,6 +6890,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     }
                                 } catch (Exception fsSplitE) { /* fail-open */ }
                             }
+                        }
+                        if (context.getDecisionText() != null
+                                && context.getDecisionText()
+                                    .toLowerCase(Locale.ROOT)
+                                    .contains("using landspeed")) {
+                            applyBhbmForceDripUrgency(
+                                context, action,
+                                fsMover,
+                                location,
+                                bhbmFormationSafe,
+                                BhbmForceDripUrgencyFactsReader
+                                    .CandidateMechanism.LANDSPEED);
                         }
 
                         boolean objectiveActorRouteDestination = false;
@@ -6628,7 +7260,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             .objectivePostFlipPayoffDestination(
                                                 objectivePostFlipPayoffDestination,
                                                 fsMover.getTitle(), title);
-                                if (postFlipPayoff.applies()) {
+                                if (!guaranteedCaptureMoveDestination
+                                        && postFlipPayoff.applies()) {
                                     action.addReasoning(
                                         postFlipPayoff.reason(),
                                         postFlipPayoff.delta(),
@@ -7679,6 +8312,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         .advancesRequiredCardDeployPrerequisiteAt(
                             game, playerId, embarker,
                             target);
+            applyCaptureMoveDestination(
+                    context, action, embarker, target);
             if (objectiveTarget) {
                 action.addReasoning(
                     "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_TARGET: board "

@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import org.junit.Test;
 
 import java.util.List;
@@ -83,6 +84,63 @@ public class DeployBudgetPolicyTest {
         assertEquals(DeployBudgetPolicy.AdapterStep.FALL_THROUGH,
                 affordable.adapterStep());
         assertEquals(0, affordable.result().operations().size());
+    }
+
+    @Test
+    public void captureMoveReserveIsStrongButNonterminal() {
+        List<PolicyOperation> operations =
+                DeployBudgetPolicy.futureObligations(
+                    new DeployBudgetPolicy.FutureObligationFacts(
+                        "capture", 2, 2,
+                        0, 0, 0,
+                        false, 0, false, false,
+                        0, 0, 1))
+                    .result().operations();
+
+        assertSingle(operations,
+                "DEPLOY.BUDGET.CAPTURE_MOVE_RESERVE",
+                -2000.0f);
+        assertEquals(PolicyOperationKind.ADD,
+                operations.get(0).kind());
+    }
+
+    @Test
+    public void captureReserveDoesNotChangeGenericObjectiveReserve() {
+        List<PolicyOperation> operations =
+                DeployBudgetPolicy.futureObligations(
+                    new DeployBudgetPolicy.FutureObligationFacts(
+                        "generic", 2, 2,
+                        0, 0, 0,
+                        false, 0, false, false,
+                        0, 1, 0))
+                    .result().operations();
+
+        assertSingle(operations,
+                "DEPLOY.BUDGET.OBJECTIVE_REQUIRED_CARD_RESERVE",
+                -500.0f);
+    }
+
+    @Test
+    public void freeDeployAndZeroCaptureReserveDoNotGainCapturePenalty() {
+        DeployBudgetPolicy.FutureObligationFacts free =
+                new DeployBudgetPolicy.FutureObligationFacts(
+                    "free", 0, 0,
+                    0, 0, 0,
+                    false, 0, false, false,
+                    0, 0, 1);
+        DeployBudgetPolicy.FutureObligationFacts noCapture =
+                new DeployBudgetPolicy.FutureObligationFacts(
+                    "none", 2, 2,
+                    0, 0, 0,
+                    false, 0, false, false,
+                    0, 0, 0);
+
+        assertEquals(0,
+                DeployBudgetPolicy.futureObligations(free)
+                    .result().operations().size());
+        assertEquals(0,
+                DeployBudgetPolicy.futureObligations(noCapture)
+                    .result().operations().size());
     }
 
     private static List<PolicyOperation> newMaintenance(int totalForce, int cost,

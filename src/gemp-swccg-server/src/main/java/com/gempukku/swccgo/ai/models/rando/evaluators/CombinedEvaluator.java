@@ -7,7 +7,9 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceRoute;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSink;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSnapshots;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureMovementMechanismFactsReader;
 import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
+import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import org.apache.logging.log4j.Logger;
@@ -48,6 +50,7 @@ public class CombinedEvaluator {
     private final List<ActionEvaluator> evaluators;
     private String pendingDockingTransitSourceCardId;
     private String pendingDockingTransitDestinationCardId;
+    private String pendingCaptureMovementOriginCardId;
     // V295 RETIRED (unused, zero reads): private final Random random = new Random();
     // TRACE HOOK (2026-07-13, CODEX_MINIMAL_DECISION_TRACE_HOOK): per-decision trace sink.
     // Production default = NoOpTraceSink: no session is opened, EvaluatedAction's guards
@@ -83,6 +86,7 @@ public class CombinedEvaluator {
         evaluators.add(new DeployEvaluator());           // Deploy decisions
         evaluators.add(new BattleEvaluator());           // Battle initiation
         evaluators.add(new MoveEvaluator());             // Movement decisions
+        evaluators.add(new CaptureMovementEvaluator());  // Capture objective special movement
         evaluators.add(new DrawEvaluator());             // Card draw decisions (draw phase only)
         evaluators.add(new CardSelectionEvaluator());    // Card selection from lists
 
@@ -175,9 +179,16 @@ public class CombinedEvaluator {
                         .DOCKING_TRANSIT_DESTINATION_CARD_ID_EXTRA,
                     pendingDockingTransitDestinationCardId);
         }
+        if (pendingCaptureMovementOriginCardId != null) {
+            context.setExtra(
+                    CaptureMovementMechanismFactsReader
+                        .SELECTED_ORIGIN_CARD_ID_EXTRA,
+                    pendingCaptureMovementOriginCardId);
+        }
         EvaluatedAction result =
                 evaluateDecisionCore(context, traced);
         updateDockingTransitState(context, result);
+        updateCaptureMovementOriginState(context, result);
         return result;
     }
 
@@ -264,6 +275,86 @@ public class CombinedEvaluator {
             } catch (Exception ignored) {
             }
             return;
+        }
+    }
+
+    private void updateCaptureMovementOriginState(
+            DecisionContext context, EvaluatedAction winner) {
+        if (context == null) return;
+        String decisionText =
+                context.getDecisionText() != null
+                    ? context.getDecisionText().trim()
+                        .toLowerCase(java.util.Locale.ROOT)
+                    : "";
+        String optionalCancel =
+                ", or click 'done' to cancel";
+        if (decisionText.endsWith(optionalCancel)) {
+            decisionText = decisionText.substring(
+                    0, decisionText.length()
+                        - optionalCancel.length()).trim();
+        }
+
+        if (decisionText.startsWith(
+                    "choose card to move to ")
+                || "choose characters to 'transport'"
+                    .equals(decisionText)) {
+            pendingCaptureMovementOriginCardId = null;
+            return;
+        }
+
+        boolean originChoice =
+                "choose card to move from".equals(
+                    decisionText)
+                || "choose site to 'transport' from"
+                    .equals(decisionText);
+        if (originChoice) {
+            pendingCaptureMovementOriginCardId =
+                    selectedLocationId(context, winner);
+            return;
+        }
+
+        boolean destinationChoice =
+                "choose card to move to".equals(
+                    decisionText)
+                || "choose site to 'transport' to"
+                    .equals(decisionText);
+        if (destinationChoice) {
+            if (selectedLocationId(context, winner)
+                    == null) {
+                pendingCaptureMovementOriginCardId =
+                        null;
+            }
+            return;
+        }
+
+        String type = context.getDecisionType();
+        if ("ACTION_CHOICE".equals(type)
+                || "CARD_ACTION_CHOICE".equals(type)) {
+            pendingCaptureMovementOriginCardId = null;
+        }
+    }
+
+    private String selectedLocationId(
+            DecisionContext context, EvaluatedAction winner) {
+        if (winner == null
+                || winner.getActionId() == null
+                || winner.getActionId().isBlank()
+                || context.getGameState() == null) {
+            return null;
+        }
+        try {
+            PhysicalCard selected =
+                    context.getGameState().findCardById(
+                        Integer.parseInt(
+                            winner.getActionId()));
+            return selected != null
+                    && selected.getBlueprint() != null
+                    && selected.getBlueprint()
+                        .getCardCategory()
+                        == CardCategory.LOCATION
+                ? winner.getActionId() : null;
+        } catch (Exception ignored) {
+            return null;
         }
     }
 

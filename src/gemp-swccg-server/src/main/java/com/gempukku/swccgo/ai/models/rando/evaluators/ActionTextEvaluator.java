@@ -16,6 +16,9 @@ import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainFacts;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureOpponentObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
@@ -316,6 +319,188 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     actions.add(action);
                     continue;
                 }
+            }
+
+            if ("transfer luke to vader".equals(
+                    textLower.trim())) {
+                PhysicalCard opponentObjectiveSource = null;
+                if (cardId != null && gameState != null) {
+                    try {
+                        opponentObjectiveSource =
+                                gameState.findCardById(
+                                    Integer.parseInt(cardId));
+                    } catch (NumberFormatException ignored) {
+                        // Unknown physical sources never receive objective credit.
+                    }
+                }
+                PolicyContributionLedger transferLedger =
+                    new PolicyContributionLedger(
+                        (decisionId == null || decisionId.isBlank()
+                            ? "tigih-transfer-luke"
+                            : decisionId + "-tigih-transfer-luke")
+                        + "-" + actionId);
+                CaptureOpponentObjectiveFacts
+                    .TigihTransferAssessment transferAssessment =
+                        CaptureOpponentObjectiveFacts
+                            .assessTigihTransferLukeToVader(
+                                game,
+                                context.getPlayerId(),
+                                opponentObjectiveSource);
+                transferLedger.register(
+                    CaptureObjectivePolicy.scoreTransferLukeToVader(
+                        new CaptureObjectivePolicy
+                            .TransferLukeToVaderFacts(
+                                actionId,
+                                transferAssessment.legal(),
+                                transferAssessment
+                                    .crossoverModifierPressureKnown(),
+                                transferAssessment
+                                    .crossoverModifierPressure())));
+                PolicyOperationAdapter.apply(
+                    action, transferLedger);
+            }
+
+            PhysicalCard opponentCaptureObjectiveSource = null;
+            if (cardId != null && gameState != null) {
+                try {
+                    opponentCaptureObjectiveSource =
+                            gameState.findCardById(
+                                Integer.parseInt(cardId));
+                } catch (NumberFormatException ignored) {
+                    // Unknown sources never receive opponent-objective credit.
+                }
+            }
+            CaptureOpponentObjectiveFacts
+                .BhbmTargetDownloadAssessment bhbmTargetDownload =
+                    CaptureOpponentObjectiveFacts
+                        .assessBhbmOpponentTargetDownload(
+                            game,
+                            context.getPlayerId(),
+                            opponentCaptureObjectiveSource,
+                            actionText);
+            if (bhbmTargetDownload.legalObjectiveDownload()) {
+                PolicyContributionLedger targetDownloadLedger =
+                    new PolicyContributionLedger(
+                        (decisionId == null || decisionId.isBlank()
+                            ? "bhbm-opponent-target-download"
+                            : decisionId
+                                + "-bhbm-opponent-target-download")
+                        + "-" + actionId);
+                targetDownloadLedger.register(
+                    CaptureObjectivePolicy
+                        .scoreBhbmOpponentTargetDownload(
+                            new CaptureObjectivePolicy
+                                .BhbmOpponentTargetDownloadFacts(
+                                    actionId, true)));
+                PolicyOperationAdapter.apply(
+                    action, targetDownloadLedger);
+            }
+
+            var captureAnalyzer = context.getObjectiveAnalyzer();
+            CaptureObjectivePolicy.ObjectiveKind captureKind =
+                    CaptureObjectiveFacts.objectiveKind(
+                        captureAnalyzer);
+            if (captureKind != null) {
+                PhysicalCard captureSource = null;
+                if (cardId != null && gameState != null) {
+                    try {
+                        captureSource = gameState.findCardById(
+                            Integer.parseInt(cardId));
+                    } catch (NumberFormatException ignored) {
+                        // Unknown action sources never receive objective credit.
+                    }
+                }
+                PolicyContributionLedger captureLedger =
+                    new PolicyContributionLedger(
+                        (decisionId == null || decisionId.isBlank()
+                            ? "capture-objective-action"
+                            : decisionId + "-capture-objective-action")
+                        + "-" + actionId);
+                boolean virtualHutAction =
+                    "move luke to landing platform".equals(
+                        textLower.trim())
+                    && CaptureObjectiveFacts.isOwnedExactSource(
+                        captureSource, context.getPlayerId(),
+                        "214_19");
+                if (virtualHutAction) {
+                    captureLedger.register(
+                        CaptureObjectivePolicy.scoreStableBackHold(
+                            new CaptureObjectivePolicy.StableBackFacts(
+                                actionId, captureKind,
+                                captureAnalyzer.isFlipped(),
+                                CaptureObjectiveFacts.stableBackState(
+                                    game, context.getPlayerId(),
+                                    captureAnalyzer),
+                                CaptureObjectiveFacts
+                                    .virtualHutActionWouldBreakStableBack(
+                                        game, context.getPlayerId(),
+                                        captureAnalyzer))));
+                    captureLedger.register(
+                        CaptureObjectivePolicy.scoreCaptureRoute(
+                            new CaptureObjectivePolicy.CaptureRouteFacts(
+                                actionId, captureKind,
+                                CaptureObjectivePolicy
+                                    .CaptureRouteStep.PARENT,
+                                CaptureObjectiveFacts
+                                    .virtualHutActionGuaranteesCapture(
+                                        game, context.getPlayerId(),
+                                        captureAnalyzer))));
+                }
+
+                boolean tigihCrossover =
+                    captureKind
+                        == CaptureObjectivePolicy.ObjectiveKind.TIGIH
+                    && "shuffle reserve deck and draw destiny"
+                        .equals(textLower.trim())
+                    && CaptureObjectiveFacts.isOwnedExactSource(
+                        captureSource, context.getPlayerId(),
+                        "9_61");
+                boolean bhbmDuel =
+                    captureKind
+                        == CaptureObjectivePolicy.ObjectiveKind.BHBM
+                    && textLower.trim().startsWith("initiate a ")
+                    && textLower.contains("/vader duel")
+                    && CaptureObjectiveFacts.isOwnedExactSource(
+                        captureSource, context.getPlayerId(),
+                        "9_151");
+                boolean bhbmEmperorDownload =
+                    captureKind
+                        == CaptureObjectivePolicy.ObjectiveKind.BHBM
+                    && "deploy emperor from reserve deck"
+                        .equals(textLower.trim())
+                    && CaptureObjectiveFacts.isOwnedExactSource(
+                        captureSource, context.getPlayerId(),
+                        "9_151");
+                if (bhbmEmperorDownload) {
+                    captureLedger.register(
+                        CaptureObjectivePolicy.scoreEmperorDownload(
+                            new CaptureObjectivePolicy
+                                .EmperorDownloadFacts(
+                                    actionId, captureKind,
+                                    captureAnalyzer.isFlipped(),
+                                    CaptureObjectiveFacts
+                                        .canAffordBhbmEmperorDownload(
+                                            game,
+                                            context.getPlayerId(),
+                                            captureAnalyzer,
+                                            captureSource))));
+                }
+                if (tigihCrossover || bhbmDuel) {
+                    captureLedger.register(
+                        CaptureObjectivePolicy.scorePayoff(
+                            new CaptureObjectivePolicy.PayoffFacts(
+                                actionId, captureKind,
+                                captureAnalyzer.isFlipped(),
+                                CaptureObjectiveFacts
+                                    .tigihCrossoverTimingReached(
+                                        context.getPhase()),
+                                CaptureObjectiveFacts
+                                    .guaranteedTigihCrossoverTotal(
+                                        game, context.getPlayerId(),
+                                        captureAnalyzer))));
+                }
+                PolicyOperationAdapter.apply(
+                    action, captureLedger);
             }
 
             if ("disembark".equals(textLower.trim())

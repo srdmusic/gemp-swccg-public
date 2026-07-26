@@ -8,7 +8,11 @@ import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.CardKnowledge;
+import com.gempukku.swccgo.ai.models.common.phase.BhbmSetupPayoffFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureDeployBudgetFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DeployBudgetPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopeFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
@@ -1155,6 +1159,104 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
+                    {
+                        var captureAnalyzer =
+                            context.getObjectiveAnalyzer();
+                        CaptureObjectivePolicy.ObjectiveKind captureKind =
+                            CaptureObjectiveFacts.objectiveKind(
+                                captureAnalyzer);
+                        if (captureKind != null
+                                && gameState != null && game != null
+                                && playerId != null) {
+                            PhysicalCard explicitDestination = null;
+                            int explicitDestinationTitleLength = -1;
+                            String captureActionLower =
+                                actionText.toLowerCase(Locale.ROOT);
+                            for (PhysicalCard target
+                                    : gameState
+                                        .getAllPermanentCards()) {
+                                CardCategory targetCategory =
+                                    target != null
+                                        && target.getBlueprint()
+                                            != null
+                                        ? target.getBlueprint()
+                                            .getCardCategory()
+                                        : null;
+                                String targetTitle =
+                                    target != null
+                                        && target.getZone() != null
+                                        && target.getZone()
+                                            .isInPlay()
+                                        && (targetCategory
+                                                == CardCategory.LOCATION
+                                            || targetCategory
+                                                == CardCategory.VEHICLE
+                                            || targetCategory
+                                                == CardCategory.STARSHIP)
+                                        ? target.getTitle() : null;
+                                if (targetTitle != null
+                                        && targetTitle.length()
+                                            > explicitDestinationTitleLength
+                                        && captureActionLower.contains(
+                                            targetTitle.toLowerCase(
+                                                Locale.ROOT))) {
+                                    explicitDestination = target;
+                                    explicitDestinationTitleLength =
+                                        targetTitle.length();
+                                }
+                            }
+                            boolean guaranteedCapture =
+                                explicitDestination != null
+                                ? CaptureObjectiveFacts
+                                    .guaranteesImmediateCaptureAt(
+                                        game, playerId,
+                                        captureAnalyzer, card,
+                                        explicitDestination)
+                                : CaptureObjectiveFacts
+                                    .hasLegalImmediateCaptureDeployDestination(
+                                        game, playerId,
+                                        captureAnalyzer, card);
+                            boolean bhbmYourDestiny =
+                                explicitDestination != null
+                                ? BhbmSetupPayoffFactsReader
+                                    .rewardsVaderForDeployAt(
+                                        game, playerId,
+                                        captureAnalyzer, card,
+                                        explicitDestination)
+                                : BhbmSetupPayoffFactsReader
+                                    .hasLegalYourDestinyDeployDestination(
+                                        game, playerId,
+                                        captureAnalyzer, card);
+                            PolicyContributionLedger captureDeployLedger =
+                                new PolicyContributionLedger(
+                                    (decisionId == null
+                                        || decisionId.isBlank()
+                                        ? "capture-deploy-parent"
+                                        : decisionId
+                                            + "-capture-deploy-parent")
+                                    + "-" + actionId);
+                            captureDeployLedger.register(
+                                CaptureObjectivePolicy
+                                    .scoreDeployCaptureRoute(
+                                        new CaptureObjectivePolicy
+                                            .DeployCaptureFacts(
+                                                actionId,
+                                                captureKind,
+                                                CaptureObjectivePolicy
+                                                    .CaptureRouteStep.PARENT,
+                                                guaranteedCapture)));
+                            captureDeployLedger.register(
+                                CaptureObjectivePolicy
+                                    .scoreBhbmYourDestiny(
+                                        new CaptureObjectivePolicy
+                                            .BhbmYourDestinyFacts(
+                                                actionId,
+                                                bhbmYourDestiny)));
+                            PolicyOperationAdapter.apply(
+                                action, captureDeployLedger);
+                        }
+                    }
+
 
                     boolean v212EvazanWithoutArmedFriend = false;
                     String v212SitingSiteTitle = "";
@@ -1494,6 +1596,28 @@ public class DeployEvaluator extends ActionEvaluator {
                                 .getFirstOrderReignsRouteForceReserve(
                                     game, playerId, card)
                             : 0;
+                    int captureMoveForceReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? CaptureObjectiveFacts
+                                .nextCaptureMoveForceReserve(
+                                    game, playerId,
+                                    context.getObjectiveAnalyzer(),
+                                    card)
+                            : 0;
+                    Integer exactCaptureDeployPayment =
+                        captureMoveForceReserve > 0
+                                && !reservePull
+                            ? CaptureDeployBudgetFactsReader
+                                .actionPayment(
+                                    context.getExtra(
+                                        CaptureDeployBudgetFactsReader
+                                            .ACTION_PAYMENTS_EXTRA),
+                                    actionId)
+                            : null;
+                    boolean unknownCaptureDeployPayment =
+                        captureMoveForceReserve > 0
+                            && !reservePull
+                            && exactCaptureDeployPayment == null;
                     int objectiveRequiredCardReserve =
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
@@ -1536,6 +1660,7 @@ public class DeployEvaluator extends ActionEvaluator {
                     // Get card stats (with type checks for safety)
                     // DeployCost exists on most deployable cards
                     int cost = 0;
+                    int futureObligationDeployCost;
                     try {
                         Float deployCost = blueprint.getDeployCost();
                         cost = deployCost != null ? deployCost.intValue() : 0;
@@ -1576,6 +1701,16 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     } catch (UnsupportedOperationException e) {
                         // Card type doesn't support deployCost (e.g., Interrupt)
+                    }
+                    futureObligationDeployCost = cost;
+                    if (exactCaptureDeployPayment != null) {
+                        futureObligationDeployCost =
+                            Math.max(
+                                futureObligationDeployCost,
+                                exactCaptureDeployPayment);
+                    } else if (unknownCaptureDeployPayment) {
+                        action.hardVeto(
+                            "CAPTURE.BUDGET.UNKNOWN: cannot prove this deploy preserves the exact capture move Force");
                     }
 
                     // === V24.5: RESERVE FORCE FOR EXISTING MAINTENANCE CARDS ===
@@ -1664,13 +1799,16 @@ public class DeployEvaluator extends ActionEvaluator {
                     DeployBudgetPolicy.Evaluation futureObligations =
                         DeployBudgetPolicy.futureObligations(
                             new DeployBudgetPolicy.FutureObligationFacts(
-                                actionId, availableForce, cost, vaderMoveReserve,
+                                actionId, availableForce,
+                                futureObligationDeployCost,
+                                vaderMoveReserve,
                                 v67zTransitReserve, v79VergeMoveReserve,
                                 obligationMaintenance, obligationMaintenanceCost,
                                 gameState != null && context.getForceReserveFacts().dtfActive,
                                 gameState != null && context.getForceReserveFacts().grabberUnused,
                                 objectiveFormationReserve,
-                                objectiveRequiredCardReserve));
+                                objectiveRequiredCardReserve,
+                                captureMoveForceReserve));
                     PolicyContributionLedger futureObligationLedger = new PolicyContributionLedger(
                         (decisionId == null || decisionId.isBlank()
                             ? "deploy-future-obligation"

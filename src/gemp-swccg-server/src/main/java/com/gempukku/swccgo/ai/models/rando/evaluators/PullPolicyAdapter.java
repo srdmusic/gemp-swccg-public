@@ -2,6 +2,8 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.phase.PullActionFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidateFacts;
@@ -19,6 +21,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /** Facts-only bridge from bot compatibility services to shared PULL policies. */
@@ -214,12 +217,25 @@ final class PullPolicyAdapter {
             public boolean objectiveRoutePullVetoBypass(
                     SwccgGame game, String playerId,
                     PhysicalCard source, String actionText) {
-                return objective
+                boolean firstOrderRoute = objective
                         .isFirstOrderReignsDownloadAction(
                                 source, actionText)
                         && objective
                             .hasFirstOrderReignsRouteProgressCandidateInReserve(
                                 game, playerId);
+                boolean bringHimBeforeMeEmperorRoute =
+                        CaptureObjectiveFacts.objectiveKind(objective)
+                            == CaptureObjectivePolicy.ObjectiveKind.BHBM
+                        && CaptureObjectiveFacts.isOwnedExactSource(
+                            source, playerId, "9_151")
+                        && actionText != null
+                        && "deploy emperor from reserve deck".equals(
+                            actionText.trim().toLowerCase(Locale.ROOT))
+                        && CaptureObjectiveFacts
+                            .canAffordBhbmEmperorDownload(
+                                game, playerId,
+                                objective, source);
+                return firstOrderRoute || bringHimBeforeMeEmperorRoute;
             }
         };
     }

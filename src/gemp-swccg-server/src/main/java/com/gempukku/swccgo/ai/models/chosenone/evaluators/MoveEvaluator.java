@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.phase.MoveAbilityPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveBlockedResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveBuddyProtectionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDrainRoutingPolicy;
@@ -571,9 +573,61 @@ public class MoveEvaluator extends ActionEvaluator {
             // landspeed or hyperspeed legs. Claim doctrine only when at least one exact
             // closer hop survives both destination and origin safety checks.
             boolean objectiveLandspeedMove =
-                    actionLower.contains("move using landspeed");
+                    "move using landspeed".equals(
+                        actionLower.trim());
             boolean objectiveHyperspeedMove =
                     actionLower.contains("move using hyperspeed");
+            if (objectiveLandspeedMove
+                    && cardToMove != null && game != null
+                    && gameState != null && playerId != null) {
+                var captureAnalyzer =
+                        context.getObjectiveAnalyzer();
+                CaptureObjectivePolicy.ObjectiveKind captureKind =
+                        CaptureObjectiveFacts.objectiveKind(
+                            captureAnalyzer);
+                if (captureKind != null) {
+                    boolean guaranteedCaptureRoute =
+                        CaptureObjectiveFacts
+                            .hasFormationSafeLegalImmediateCaptureMoveDestination(
+                                game, playerId,
+                                captureAnalyzer, cardToMove);
+                    if (guaranteedCaptureRoute) {
+                        // The move ladder owns the +20k R4 band. Applying the
+                        // policy's scalar here as well would be clamped and
+                        // double-counted by the finalizer.
+                        action.addReasoning(
+                            captureKind
+                                + " CAPTURE ROUTE: an exact legal destination"
+                                + " guarantees the source capture trigger",
+                            0.0f,
+                            TraceRuleId.of(
+                                "MOVE.OBJECTIVE.CAPTURE_ROUTE_PARENT"),
+                            TraceDomainId.MOVE,
+                            TraceOutputKind.BANDED);
+                        ladderClaimR4Transit(
+                            "OBJECTIVE CAPTURE ROUTE");
+                    } else if (captureAnalyzer.isFlipped()
+                            && CaptureObjectiveFacts.stableBackState(
+                                game, playerId, captureAnalyzer)
+                            && CaptureObjectiveFacts
+                                .classifyStableBackRemoval(
+                                    game, playerId,
+                                    captureAnalyzer, cardToMove)
+                                != com.gempukku.swccgo.ai.models.common
+                                    .strategy.ObjectiveAnalyzer
+                                    .FlipGateFormationRole.NONE
+                            && !CaptureObjectiveFacts
+                                .hasLegalStableBackMoveDestination(
+                                    game, playerId,
+                                    captureAnalyzer, cardToMove)) {
+                        ladderVetoHard = true;
+                        ladderVetoHardReason =
+                            "OBJECTIVE.CAPTURE_STATE.STABLE_BACK_HOLD:"
+                            + " every legal destination breaks the last"
+                            + " captive or present-with-Vader state";
+                    }
+                }
+            }
             if (cardToMove != null && gameState != null && game != null
                     && playerId != null
                     && (objectiveLandspeedMove

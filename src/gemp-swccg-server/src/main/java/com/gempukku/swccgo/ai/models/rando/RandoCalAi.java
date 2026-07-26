@@ -5,6 +5,7 @@ import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.ContestStatus;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer.LocationAnalysis;
 import com.gempukku.swccgo.ai.common.AiChatManager;
+import com.gempukku.swccgo.ai.models.rando.evaluators.ActionType;
 import com.gempukku.swccgo.ai.models.rando.evaluators.CombinedEvaluator;
 import com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext;
 import com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction;
@@ -15,8 +16,11 @@ import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
+import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
 import com.gempukku.swccgo.ai.models.common.phase.BattleActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.BhbmForceDripUrgencyFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.CaptureDeployBudgetFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.CoordinatorPosturePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
@@ -138,7 +142,9 @@ public class RandoCalAi extends HeuristicAiBase {
     private final Set<String> seenOwnShields = new HashSet<>();
     private String lastPendingDeployType = null;  // Track pending deploy for confirmation
     private Integer pendingMovePhysicalCardId;
+    private Integer pendingMoveActionSourcePermanentCardId;
     private Integer pendingObjectiveDeployingCardId;
+    private Integer pendingDeployActionSourcePermanentCardId;
 
     // Bot stats DAO for record lookups (optional - set via setter)
     private com.gempukku.swccgo.db.BotStatsDAO botStatsDAO;
@@ -1230,7 +1236,8 @@ public class RandoCalAi extends HeuristicAiBase {
 
     private void rememberSelectedMoveCard(
             DecisionContext context,
-            EvaluatedAction selected) {
+            EvaluatedAction selected,
+            AwaitingDecision parentDecision) {
         if (context == null || selected == null
                 || context.getPhase() != Phase.MOVE
                 || context.getDecisionType() == null
@@ -1239,6 +1246,7 @@ public class RandoCalAi extends HeuristicAiBase {
             return;
         }
         pendingMovePhysicalCardId = null;
+        pendingMoveActionSourcePermanentCardId = null;
         int index = context.getActionIds().indexOf(
                 selected.getActionId());
         if (index < 0
@@ -1248,16 +1256,35 @@ public class RandoCalAi extends HeuristicAiBase {
         }
         String actionText =
                 context.getActionTexts().get(index);
-        if (actionText == null
-                || (!actionText.toLowerCase(Locale.ROOT)
-                    .contains("move using landspeed")
-                    && !actionText.toLowerCase(Locale.ROOT)
-                        .contains("embark"))) {
+        String actionTextLower = actionText != null
+                ? actionText.toLowerCase(Locale.ROOT) : "";
+        if (!actionTextLower.contains("move using landspeed")
+                && !actionTextLower.contains("move using hyperspeed")
+                && !actionTextLower.contains("embark")
+                && !actionTextLower.contains("disembark")
+                && !actionTextLower.contains("shuttle")) {
             return;
         }
         try {
-            pendingMovePhysicalCardId = Integer.valueOf(
-                    context.getCardIds().get(index));
+            PhysicalCard attachedCard =
+                    context.getGameState() != null
+                        ? context.getGameState().findCardById(
+                            Integer.parseInt(
+                                context.getCardIds().get(index)))
+                        : null;
+            if (attachedCard != null) {
+                pendingMovePhysicalCardId =
+                        attachedCard.getCardId();
+            }
+            PhysicalCard actionSource =
+                    AiActionSourceProvenance
+                        .selectedActionSource(
+                            parentDecision,
+                            selected.getActionId());
+            if (actionSource != null) {
+                pendingMoveActionSourcePermanentCardId =
+                        actionSource.getPermanentCardId();
+            }
         } catch (NumberFormatException ignored) {
         }
     }
@@ -1306,6 +1333,60 @@ public class RandoCalAi extends HeuristicAiBase {
         }
     }
 
+    private void rememberSelectedDeployCard(
+            DecisionContext context,
+            EvaluatedAction selected,
+            AwaitingDecision parentDecision) {
+        if (context != null && selected != null
+                && context.getPhase() == Phase.DEPLOY
+                && context.getDecisionType() != null
+                && context.getDecisionType()
+                    .contains("ACTION_CHOICE")
+                && selected.getActionType()
+                    == ActionType.DEPLOY) {
+            pendingObjectiveDeployingCardId = null;
+            pendingDeployActionSourcePermanentCardId = null;
+            int index = context.getActionIds().indexOf(
+                    selected.getActionId());
+            if (index < 0
+                    || index >= context.getCardIds().size()
+                    || context.getGameState() == null) {
+                return;
+            }
+            try {
+                PhysicalCard selectedCard =
+                        context.getGameState().findCardById(
+                            Integer.parseInt(
+                                context.getCardIds().get(index)));
+                if (selectedCard != null) {
+                    PhysicalCard actionSource =
+                            AiActionSourceProvenance
+                                .selectedActionSource(
+                                    parentDecision,
+                                    selected.getActionId());
+                    if (actionSource != null) {
+                        pendingDeployActionSourcePermanentCardId =
+                                actionSource
+                                    .getPermanentCardId();
+                    }
+                }
+                if (selectedCard != null
+                        && context.getPlayerId() != null
+                        && selectedCard.getZone() == Zone.HAND
+                        && context.getPlayerId().equals(
+                            selectedCard.getOwner())) {
+                    pendingObjectiveDeployingCardId =
+                            selectedCard.getPermanentCardId();
+                }
+            } catch (NumberFormatException ignored) {
+                // Non-card deploy sources must not become child provenance.
+            }
+            return;
+        }
+        rememberSelectedLostPileDeployCard(
+                context, selected);
+    }
+
     /**
      * Try to use the evaluator system for this decision.
      *
@@ -1333,9 +1414,10 @@ public class RandoCalAi extends HeuristicAiBase {
         }
 
         LOG.info("Evaluator decision: {} (score: {})", bestAction.getDisplayText(), bestAction.getScore());
-        rememberSelectedMoveCard(evalContext, bestAction);
-        rememberSelectedLostPileDeployCard(
-                evalContext, bestAction);
+        rememberSelectedMoveCard(
+                evalContext, bestAction, decision);
+        rememberSelectedDeployCard(
+                evalContext, bestAction, decision);
 
         // === MULTI-SELECT FIX (Steve, 2026-05-31) ===
         // ArbitraryCardsSelectionDecision (and similar multi-select) expects a
@@ -1424,33 +1506,65 @@ public class RandoCalAi extends HeuristicAiBase {
         String promptLower = decision.getText() != null
             ? decision.getText().toLowerCase(Locale.ROOT) : "";
         if (pendingMovePhysicalCardId != null
-                && "CARD_SELECTION".equals(
+                || pendingMoveActionSourcePermanentCardId != null) {
+            if ("CARD_SELECTION".equals(
                     decisionType.name())
-                && (promptLower.contains(
-                    "choose where to move")
-                    || promptLower.contains(
-                        "choose where to embark"))) {
-            evalContext.setExtra(
-                MovePhysicalCardResolver
-                    .MOVER_CARD_ID_EXTRA,
-                pendingMovePhysicalCardId);
+                    && (promptLower.contains(
+                        "choose where to move")
+                        || promptLower.contains(
+                            "choose where to embark")
+                        || promptLower.contains(
+                            "choose where to disembark")
+                        || promptLower.contains(
+                            "choose where to shuttle"))) {
+                if (pendingMovePhysicalCardId != null) {
+                    evalContext.setExtra(
+                        MovePhysicalCardResolver
+                            .MOVER_CARD_ID_EXTRA,
+                        pendingMovePhysicalCardId);
+                }
+                if (pendingMoveActionSourcePermanentCardId
+                        != null) {
+                    evalContext.setExtra(
+                        BhbmForceDripUrgencyFactsReader
+                            .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA,
+                        pendingMoveActionSourcePermanentCardId);
+                }
+            }
+            // The selected top-level movement action's next decision owns this
+            // provenance. If the expected child is absent or unreadable, fail
+            // open instead of leaking the physical card into a later move.
             pendingMovePhysicalCardId = null;
+            pendingMoveActionSourcePermanentCardId = null;
         }
-        if (pendingObjectiveDeployingCardId != null
+        if ((pendingObjectiveDeployingCardId != null
+                || pendingDeployActionSourcePermanentCardId != null)
                 && "CARD_SELECTION".equals(
                     decisionType.name())
                 && promptLower.contains(
                     "choose where to deploy")) {
-            evalContext.setExtra(
-                ObjectiveAnalyzer
-                    .OBJECTIVE_DEPLOYING_CARD_ID_EXTRA,
-                pendingObjectiveDeployingCardId);
+            if (pendingObjectiveDeployingCardId != null) {
+                evalContext.setExtra(
+                    ObjectiveAnalyzer
+                        .OBJECTIVE_DEPLOYING_CARD_ID_EXTRA,
+                    pendingObjectiveDeployingCardId);
+            }
+            if (pendingDeployActionSourcePermanentCardId
+                    != null) {
+                evalContext.setExtra(
+                    BhbmForceDripUrgencyFactsReader
+                        .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA,
+                    pendingDeployActionSourcePermanentCardId);
+            }
             pendingObjectiveDeployingCardId = null;
-        } else if (pendingObjectiveDeployingCardId != null
+            pendingDeployActionSourcePermanentCardId = null;
+        } else if ((pendingObjectiveDeployingCardId != null
+                || pendingDeployActionSourcePermanentCardId != null)
                 && (phase != Phase.DEPLOY
                     || decisionType.name()
                         .contains("ACTION_CHOICE"))) {
             pendingObjectiveDeployingCardId = null;
+            pendingDeployActionSourcePermanentCardId = null;
         }
         evalContext.setActivationAmountDecision(activationAmountDecision);
 
@@ -1650,6 +1764,18 @@ public class RandoCalAi extends HeuristicAiBase {
         } else if (objectiveAnalyzer.isAnalyzed() && currentGame != null) {
             // V29.7: Refresh flip status each evaluation so we detect when objective actually flips
             objectiveAnalyzer.refreshFlipStatus(currentGame.getGameState(), playerId);
+        }
+        if (decisionType
+                == AwaitingDecisionType.CARD_ACTION_CHOICE
+                && phase == Phase.DEPLOY
+                && currentGame != null) {
+            evalContext.setExtra(
+                CaptureDeployBudgetFactsReader
+                    .ACTION_PAYMENTS_EXTRA,
+                CaptureDeployBudgetFactsReader
+                    .snapshotExactNormalDeployPayments(
+                        decision, currentGame,
+                        playerId));
         }
         evalContext.setShieldStrategy(shieldStrategy);
         deployPhasePlanner.setObjectiveAnalyzer(objectiveAnalyzer);

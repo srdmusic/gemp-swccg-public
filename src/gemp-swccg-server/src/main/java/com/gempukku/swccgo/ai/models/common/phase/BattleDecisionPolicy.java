@@ -504,6 +504,40 @@ public final class BattleDecisionPolicy {
                                     }
                                 }
 
+                                ObjectiveAnalyzer captureAnalyzer =
+                                        context.getObjectiveAnalyzer();
+                                CaptureObjectivePolicy.ObjectiveKind captureKind =
+                                        CaptureObjectiveFacts.objectiveKind(
+                                            captureAnalyzer);
+                                boolean soleVirtualCaptureEnabler = false;
+                                boolean captureConflictActive = false;
+                                boolean captureInsignificantRebellionActive =
+                                        false;
+                                int captureMoveForceReserve = 0;
+                                if (captureKind != null) {
+                                    soleVirtualCaptureEnabler =
+                                            CaptureObjectiveFacts
+                                                .isSoleVirtualHutCaptureEnablerLocation(
+                                                    game, playerId,
+                                                    captureAnalyzer,
+                                                    targetLocation);
+                                    captureConflictActive =
+                                            CaptureObjectiveFacts
+                                                .iFeelTheConflictActive(
+                                                    game, playerId,
+                                                    captureAnalyzer);
+                                    captureInsignificantRebellionActive =
+                                            BhbmSetupPayoffFactsReader
+                                                .insignificantRebellionActive(
+                                                    game, playerId,
+                                                    captureAnalyzer);
+                                    captureMoveForceReserve =
+                                            CaptureObjectiveFacts
+                                                .nextCaptureMoveForceReserve(
+                                                    game, playerId,
+                                                    captureAnalyzer, null);
+                                }
+
                                 if (ourPower > 0 && theirPower > 0) {
                                     foundAnyContestedLocation = true;
                                     boolean formationSafetyVeto = false;
@@ -616,6 +650,10 @@ public final class BattleDecisionPolicy {
                                                     .getFirstOrderReignsCurrentMoveForceReserve(
                                                         game, playerId)
                                                 : 0;
+                                        objectiveMoveForceReserve =
+                                                Math.max(
+                                                    objectiveMoveForceReserve,
+                                                    captureMoveForceReserve);
                                         availableObjectiveMoveForce =
                                                 gameState.getForcePileSize(
                                                     playerId);
@@ -723,6 +761,39 @@ public final class BattleDecisionPolicy {
                                             reserveDeck,
                                             ourPower,
                                             theirPower)));
+                                    if (captureKind != null) {
+                                        action.apply(
+                                            CaptureObjectivePolicy
+                                                .holdSoleVirtualCaptureEnablerBattle(
+                                                    new CaptureObjectivePolicy
+                                                        .CaptureEnablerBattleFacts(
+                                                            actionId,
+                                                            captureKind,
+                                                            soleVirtualCaptureEnabler)));
+                                        action.apply(
+                                            CaptureObjectivePolicy
+                                                .scoreConflictBattle(
+                                                    new CaptureObjectivePolicy
+                                                        .ConflictBattleFacts(
+                                                            actionId,
+                                                            captureKind,
+                                                            captureConflictActive,
+                                                            specificBattle
+                                                                .favorable()
+                                                                && !formationSafetyVeto
+                                                                && predictorSafe)));
+                                        action.apply(
+                                            CaptureObjectivePolicy
+                                                .scoreBhbmBattleWin(
+                                                    new CaptureObjectivePolicy
+                                                        .BhbmBattleWinFacts(
+                                                            actionId,
+                                                            captureInsignificantRebellionActive,
+                                                            specificBattle
+                                                                .favorable()
+                                                                && !formationSafetyVeto
+                                                                && predictorSafe)));
+                                    }
 
                                     if (specificBattle.favorable()) {
                                         foundFavorableBattle = true;
@@ -747,6 +818,112 @@ public final class BattleDecisionPolicy {
                                             lukeHere,
                                             hasIHYN);
                                     action.apply(specificBattle.contribution());
+                                    boolean opponentCardPresent =
+                                        cardsHere.stream().anyMatch(
+                                            card -> card != null
+                                                && opponentId.equals(
+                                                    card.getOwner()));
+                                    boolean formationSafetyVeto = false;
+                                    String formationSafetyReason =
+                                            com.gempukku.swccgo.ai.models
+                                                .common.strategy.FormationSafety
+                                                .vetoInitiateBattle(
+                                                    game, gameState,
+                                                    playerId,
+                                                    targetLocation);
+                                    if (formationSafetyReason != null) {
+                                        formationSafetyVeto = true;
+                                        action.hardVeto(
+                                            formationSafetyReason);
+                                    }
+                                    boolean powerZeroPredictorSafe = false;
+                                    if (opponentCardPresent) {
+                                        try {
+                                            Prediction outcome =
+                                                context.predictBattle(
+                                                    (int) (ourPower
+                                                        + weaponBonus),
+                                                    ourAbility >= 4.0f
+                                                        ? 1 : 0,
+                                                    (int) (theirPower
+                                                        + oppWeaponBonus),
+                                                    theirAbility >= 4.0f
+                                                        ? 1 : 0);
+                                            BattleInitiationPolicy
+                                                .PredictionDecision prediction =
+                                                    BattleInitiationPolicy
+                                                        .prediction(
+                                                            targetLocation
+                                                                .getTitle(),
+                                                            outcome
+                                                                .winProbability,
+                                                            outcome
+                                                                .expectedDamageTaken);
+                                            powerZeroPredictorSafe =
+                                                prediction.branch()
+                                                    == BattleInitiationPolicy
+                                                        .PredictionBranch.NONE;
+                                            action.apply(
+                                                prediction.contribution());
+                                        } catch (Exception ignored) {
+                                            // Unknown projection receives no
+                                            // Capture objective safety credit.
+                                        }
+                                    }
+                                    if (captureMoveForceReserve > 0) {
+                                        try {
+                                            float battleInitiationCost =
+                                                game.getModifiersQuerying()
+                                                    .getInitiateBattleCost(
+                                                        gameState,
+                                                        targetLocation,
+                                                        playerId, true);
+                                            action.apply(
+                                                ObjectiveBattlePolicy
+                                                    .preserveObjectiveMoveForce(
+                                                        actionId,
+                                                        captureMoveForceReserve,
+                                                        gameState
+                                                            .getForcePileSize(
+                                                                playerId),
+                                                        battleInitiationCost));
+                                        } catch (Exception ignored) {
+                                            // Unknown cost remains fail-open.
+                                        }
+                                    }
+                                    if (captureKind != null) {
+                                        action.apply(
+                                            CaptureObjectivePolicy
+                                                .holdSoleVirtualCaptureEnablerBattle(
+                                                    new CaptureObjectivePolicy
+                                                        .CaptureEnablerBattleFacts(
+                                                            actionId,
+                                                            captureKind,
+                                                            soleVirtualCaptureEnabler)));
+                                        action.apply(
+                                            CaptureObjectivePolicy
+                                                .scoreConflictBattle(
+                                                    new CaptureObjectivePolicy
+                                                        .ConflictBattleFacts(
+                                                            actionId,
+                                                            captureKind,
+                                                            captureConflictActive,
+                                                            !formationSafetyVeto
+                                                                && powerZeroPredictorSafe)));
+                                        action.apply(
+                                            CaptureObjectivePolicy
+                                                .scoreBhbmBattleWin(
+                                                    new CaptureObjectivePolicy
+                                                        .BhbmBattleWinFacts(
+                                                            actionId,
+                                                            captureInsignificantRebellionActive,
+                                                            !formationSafetyVeto
+                                                                && powerZeroPredictorSafe)));
+                                    }
+                                    if (specificBattle.favorable()
+                                            || powerZeroPredictorSafe) {
+                                        foundFavorableBattle = true;
+                                    }
                                 }
                             }
 

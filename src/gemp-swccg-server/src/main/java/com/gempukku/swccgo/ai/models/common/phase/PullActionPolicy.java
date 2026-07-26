@@ -200,6 +200,7 @@ public final class PullActionPolicy {
 
         if (!hardBlocked
                 && !facts.requiredOnTableCardPullVetoBypass()
+                && !facts.objectiveRoutePullVetoBypass()
                 && facts.cheapestTargetCost() != null
                 && facts.cheapestTargetCost() > facts.availableForce()) {
             operations.add(add(facts.actionId(), "V67ac",

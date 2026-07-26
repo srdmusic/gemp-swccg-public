@@ -121,6 +121,26 @@ public final class DeployBudgetPolicy {
                             forceAfterDeploy,
                             facts.objectiveRequiredCardReserve())));
         }
+        if (facts.captureMoveForceReserve() > 0
+                && forceAfterDeploy
+                    < facts.captureMoveForceReserve()) {
+            // A representative ordinary character deploy carries +1520 before
+            // budgeting, so the former -500 contribution did not change the
+            // winner. Keep this additive, not terminal: the public decision row
+            // does not expose every action-specific cost modifier, and exact
+            // +20000 capture-route actions must remain dominant.
+            operations.add(PolicyOperation.add(
+                    facts.actionId(),
+                    TraceRuleId.of(
+                        "DEPLOY.BUDGET.CAPTURE_MOVE_RESERVE"),
+                    TraceDomainId.FORCE_BUDGET,
+                    TraceOutputKind.BANDED,
+                    -2000.0f,
+                    String.format(
+                        "Off-plan deploy leaves %d Force; the exact capture move needs %d",
+                        forceAfterDeploy,
+                        facts.captureMoveForceReserve())));
+        }
         if (facts.vaderMoveReserve() > 0
                 && forceAfterDeploy < facts.vaderMoveReserve()) {
             operations.add(add(facts.actionId(), "V48", -500.0f,
@@ -181,9 +201,29 @@ public final class DeployBudgetPolicy {
                                         boolean dtfActive,
                                         boolean grabberUnused,
                                         int objectiveFormationReserve,
-                                        int objectiveRequiredCardReserve) {
+                                        int objectiveRequiredCardReserve,
+                                        int captureMoveForceReserve) {
         public FutureObligationFacts {
             Objects.requireNonNull(actionId, "actionId");
+        }
+
+        public FutureObligationFacts(
+                String actionId, int availableForce,
+                int deployCost, int vaderMoveReserve,
+                int hiddenPathTransitReserve,
+                int vergeMoveReserve,
+                boolean maintenanceCard,
+                int maintenanceCost,
+                boolean dtfActive,
+                boolean grabberUnused,
+                int objectiveFormationReserve,
+                int objectiveRequiredCardReserve) {
+            this(actionId, availableForce, deployCost,
+                    vaderMoveReserve, hiddenPathTransitReserve,
+                    vergeMoveReserve, maintenanceCard,
+                    maintenanceCost, dtfActive, grabberUnused,
+                    objectiveFormationReserve,
+                    objectiveRequiredCardReserve, 0);
         }
 
         public FutureObligationFacts(
@@ -200,7 +240,7 @@ public final class DeployBudgetPolicy {
                     vaderMoveReserve, hiddenPathTransitReserve,
                     vergeMoveReserve, maintenanceCard,
                     maintenanceCost, dtfActive, grabberUnused,
-                    objectiveFormationReserve, 0);
+                    objectiveFormationReserve, 0, 0);
         }
     }
 

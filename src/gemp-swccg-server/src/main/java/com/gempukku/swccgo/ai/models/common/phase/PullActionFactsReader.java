@@ -357,6 +357,7 @@ public final class PullActionFactsReader {
             }
         }
         if (!requiredOnTableCardPullVetoBypass
+                && !objectiveRoutePullVetoBypass
                 && cheapestCost != null
                 && cheapestCost > availableForce) {
             return buildParent(actionId, text, reserveSize, "",
