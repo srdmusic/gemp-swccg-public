@@ -63,8 +63,8 @@ public class Card_4_122_Tests {
 		 * Destiny: 3
 		 * Icons: Dagobah
 		 * Game Text: Use 2 Force to deploy on your Star Destroyer. Your other starships may move as a 'react'
-		 * 		to same system or sector (for free). If starship lost, you lose X Force, where X = starship's armor.
-		 * 		(Immune to your Alter.)
+		 * 		to same system or sector (for free). If starship about to be lost, you lose X Force,
+		 * 		where X = starship's armor.	(Immune to your Alter.)
 		 * Lore: After the Battle of Yavin, it was politically necessary to demonstrate the unstoppable might
 		 * 		of the Empire. The Executor and Death Squadron ensured this objective.
 		 * Set: Dagobah
