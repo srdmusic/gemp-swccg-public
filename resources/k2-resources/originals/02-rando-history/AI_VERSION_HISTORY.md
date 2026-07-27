@@ -8755,3 +8755,16 @@ Exact Veers source `206_11` now validates its exact reveal action against physic
 The repair preserves Invasion capital-ship handling, weapon-host protection, true cargo behavior, and the existing Shield route. Scope is shared AI policy, mirrored Rando and Chosen One adapters, and AI tests only. No engine, card Java, objective data, deck library, database, or client changed.
 
 Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed clean package PASS. Live `web.jar` SHA-256 `bf94439416ab4afdbc5c0a1b36718edc35040d24ce63039d82e1a7fac5f962de` matched host and running container, HTTP returned 200, the server reached operational mode, and startup contained no real error or exception. Nothing was pushed. Fresh live play remains the final behavior gate.
+
+  ==== Consolidated live lineage (2026-07-27): TDIGWATT/Hoth + EOP on one jar ====
+    Branch k2/consolidated-2026-07-27 rebuilds one clean lineage: live base 93f0fd2c0, the two
+    docs-only main commits, and all five EOP replay-fix commits ported by individual cherry-pick.
+    ShieldPolicy.stackedPileParent carries both the live V112 third-slot hold and the EOP
+    reserveForBattleOrder branch (9-arg primary; the EOP-era overload passes
+    occupiesBothTheaters=true so V112 cannot fire through the legacy path).
+    ShieldStrategy.findShieldInfo stays blueprint-authoritative with exact title equality.
+    shieldCandidateAdjustments keeps live V112 selection law and adds the EOP
+    battleOrderPlanRedundancyGate ahead of it. The takeover P0 turn-counter defect is REFUTED
+    with primary log evidence (see P0_TURN_COUNTER_REFUTATION_2026-07-27.md); no code change.
+    Full isolated reactor on the consolidated worktree: 2762/0/0/26 BUILD SUCCESS. Rulebook
+    regenerated: 784 rules. Revert = reset to 93f0fd2c0 and redeploy its jar.
