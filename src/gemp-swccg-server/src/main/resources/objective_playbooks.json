@@ -2021,7 +2021,106 @@
           "runtimeFilter": "Filters.and(Icon.EPISODE_VII, Filters.Falcon)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "oa-front-control-system-occupy-sites",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Jakku_system",
+              "locationFragments": [
+                "jakku"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "leg A: you control Jakku system (Card204_032.java L132)"
+            },
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "Jakku_battleground_site",
+              "locationFragments": [
+                "jakku"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "leg A: you occupy two Jakku battleground sites (L133)"
+            }
+          ]
+        },
+        {
+          "id": "oa-front-occupy-system-control-sites",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "Jakku_system",
+              "locationFragments": [
+                "jakku"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "leg B: you occupy Jakku system (L134)"
+            },
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Jakku_battleground_site",
+              "locationFragments": [
+                "jakku"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "leg B: you control two Jakku battleground sites (L135). The two same-phase rules are the card's OR: completing EITHER makes the unchanged engine flip, so per-rule progress consumers stay honest."
+            }
+          ]
+        },
+        {
+          "id": "oa-back-hold-two-battlegrounds",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "battleground",
+              "locationFragments": [],
+              "count": {
+                "comparator": "<=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flips back when you occupy fewer than two battlegrounds ANYWHERE (Card204_032_BACK.java L127); holding any two battlegrounds keeps the back"
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "He Is The Chosen One",

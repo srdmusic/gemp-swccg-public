@@ -9792,6 +9792,10 @@ public class ObjectiveAnalyzer {
             case "Tatooine_location":            return com.gempukku.swccgo.filters.Filters.Tatooine_location;
             // Batch Twelve (2026-07-27): Imperial Entanglements counted law.
             case "Tatooine_site":                return com.gempukku.swccgo.filters.Filters.Tatooine_site;
+            // Batch Thirteen (2026-07-27): Old Allies cross-paired Jakku law.
+            case "Jakku_system":                 return com.gempukku.swccgo.filters.Filters.Jakku_system;
+            case "Jakku_battleground_site":      return com.gempukku.swccgo.filters.Filters.Jakku_battleground_site;
+            case "battleground":                 return com.gempukku.swccgo.filters.Filters.battleground;
             case "Yavin_4_location":             return com.gempukku.swccgo.filters.Filters.Yavin_4_location;
             // Batch Ten (2026-07-27): Massassi Base Operations counted law.
             case "Yavin_4_site":                 return com.gempukku.swccgo.filters.Filters.Yavin_4_site;

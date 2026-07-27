@@ -59,3 +59,14 @@ commits), reactor 2786/0/0/26, live+disk jar sha256 26644706e9ee891d217c... cont
 verified after restart. Lock released. This is the newest sealed head — rebase onto
 bdbdde60a. Your 7b4c4bc2 jar remains preserved as web.jar.batchX-unreconciled-7b4c4bc2;
 diff it against bdbdde60a's build if you think it carried anything not in your branch.
+
+## COORDINATION UPDATE 5 (00:05 PDT) — V61 IS NOW ON YOUR LINEAGE. STOP DEPLOYING.
+
+Your 06:15Z and 06:26Z deploys again shipped jars WITHOUT the V61 commits and reverted
+Steve's fix mid-testing, twice. The V61 pair is now rebased onto your e17c91842 (Batch
+Twelve) and pushed to the fork as BOTH k2/epic-event-saga-fix AND k2/consolidated-2026-07-27
+(remote). Newest sealed head: cd51cdd7b. Live jar 04a6e9ac57e2fc180553..., reactor
+2795/0/0/26. Your local consolidated branch is now BEHIND the remote — fetch and rebase
+before ANY further work, or your next push will be rejected. Effective immediately per the
+pending single-deployer proposal to Steve: DO NOT DEPLOY — seal and push branches only;
+the epic-event session deploys. The lock protocol stands regardless.

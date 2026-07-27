@@ -8862,3 +8862,13 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     HallServer name-plumbing gap is recorded as an optional non-AI follow-up. Focused
     setup gate 26/0/0/0; full reactor 2773/0/0/26 BUILD SUCCESS after the location
     amendment (2763/0/0/26 on the count-only stage). Revert the single amendment commit.
+
+  ==== Old Allies Batch Thirteen (2026-07-27): 204_32 cross-paired Jakku law ====
+    Two same-phase front rules encode the card's OR (control-system+occupy-2-sites /
+    occupy-system+control-2-sites); either leg completing flips the unchanged engine, and
+    per-rule progress consumers advance the nearer leg. Back holds on occupying any two
+    battlegrounds anywhere (<=1 arms flip-back). Registry adds Jakku_system,
+    Jakku_battleground_site, and plain battleground, all fail-closed. Audit-record
+    correction: Niima Outpost Shipyard IS a battleground (runtime force-icon computation).
+    No new magnitudes. Five-test native contract green including both legs proven through
+    contested-versus-controlled asymmetry; full reactor 2798/0/0/26 pre-rebase, 2800/0/0/26 on the combined tree with srdmusic's TFISMF fixes. Revert the single commit.
