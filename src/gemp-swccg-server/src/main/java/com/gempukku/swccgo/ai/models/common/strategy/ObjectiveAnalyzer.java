@@ -4168,6 +4168,7 @@ public class ObjectiveAnalyzer {
             FlipLocationAlternative alternative) {
         if (alternative == null
                 || (!"onTable".equals(alternative.relation)
+                    && !"utinniEffectCompleted".equals(alternative.relation)
                     && alternative.locationFilterKey == null)) {
             return false;
         }
@@ -4182,6 +4183,35 @@ public class ObjectiveAnalyzer {
                     gameState, playerId, alternative.controller);
             if (controller == null
                     && !"any".equals(alternative.controller)) {
+                return false;
+            }
+
+            // Batch Seventeen (2026-07-27): persistent-counter relation for
+            // Watch Your Step's Kessel Run route. Reads the engine's
+            // completed-Utinni-effect record; the counter survives the cards
+            // leaving the table, exactly like the card law. Supports >= and
+            // < comparators only; anything else fails closed with a warn.
+            if ("utinniEffectCompleted".equals(alternative.relation)) {
+                com.gempukku.swccgo.filters.Filter utinniFilter =
+                        resolveFilter(alternative.actorFilterKey);
+                if (utinniFilter == null || alternative.count == null
+                        || controller == null) {
+                    return false;
+                }
+                String comparator = alternative.count.comparator != null
+                        ? alternative.count.comparator : ">=";
+                boolean atLeast = game.getModifiersQuerying()
+                        .hasCompletedUtinniEffect(gameState, controller,
+                                alternative.count.value, utinniFilter);
+                if (">=".equals(comparator)) {
+                    return atLeast;
+                }
+                if ("<".equals(comparator)) {
+                    return !atLeast;
+                }
+                LOG.warn("[ObjectiveAnalyzer] utinniEffectCompleted supports"
+                        + " only >= and < comparators; got '{}' — fail-closed.",
+                        comparator);
                 return false;
             }
 
@@ -9725,6 +9755,13 @@ public class ObjectiveAnalyzer {
                             .Imperial_leader,
                         com.gempukku.swccgo.filters.Filters
                             .snowtrooper);
+            // Batch Seventeen (2026-07-27): Watch Your Step family actors.
+            case "smuggler":
+                return com.gempukku.swccgo.filters.Filters.smuggler;
+            case "Corellian":
+                return com.gempukku.swccgo.filters.Filters.Corellian;
+            case "Kessel_Run":
+                return com.gempukku.swccgo.filters.Filters.Kessel_Run;
             // Batch Sixteen (2026-07-27): Twin Suns' controlWith actor.
             // Dark Jedi is COMPUTED (dark side + character + ability >= 6),
             // never a keyword.
@@ -9806,6 +9843,12 @@ public class ObjectiveAnalyzer {
             case "Scarif_location":              return com.gempukku.swccgo.filters.Filters.Scarif_location;
             // Batch Sixteen (2026-07-27): Twin Suns Of Tatooine four-leg law.
             case "Tatooine_battleground_site":   return com.gempukku.swccgo.filters.Filters.Tatooine_battleground_site;
+            // Batch Seventeen (2026-07-27): Watch Your Step (V) Corellia law.
+            case "Corellia_system":              return com.gempukku.swccgo.filters.Filters.Corellia_system;
+            case "Corellia_battleground_site":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.Corellia_site,
+                        com.gempukku.swccgo.filters.Filters.battleground);
             case "Tatooine_system":              return com.gempukku.swccgo.filters.Filters.Tatooine_system;
             case "your_occupied_Scarif_site":
                 return com.gempukku.swccgo.filters.Filters.and(

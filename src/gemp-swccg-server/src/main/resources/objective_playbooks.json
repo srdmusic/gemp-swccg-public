@@ -878,7 +878,77 @@
           "runtimeFilter": "Filters.Tatooine_system"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "loaderEnabled": true,
+      "flipLocationRules": [
+        {
+          "id": "wys-classic-front-runs-or-smugglers",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "utinniEffectCompleted",
+              "controller": "self",
+              "actorFilterKey": "Kessel_Run",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "route A: you have completed two Kessel Runs — a persistent engine counter that survives the cards leaving the table (Card10_026.java L133)"
+            },
+            {
+              "relation": "occupyWith",
+              "controller": "self",
+              "locationFilterKey": "battleground",
+              "locationFragments": [],
+              "actorFilterKey": "smuggler",
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "route B: you occupy two battlegrounds, any kind anywhere, each with your smuggler (L134)"
+            }
+          ]
+        },
+        {
+          "id": "wys-classic-back-hold",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "utinniEffectCompleted",
+              "controller": "self",
+              "actorFilterKey": "Kessel_Run",
+              "locationFragments": [],
+              "count": {
+                "comparator": "<",
+                "value": 2
+              },
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back leg 1: fewer than two completed Kessel Runs (Card10_026_BACK.java L135); two runs hold the back forever"
+            },
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "battleground",
+              "locationFragments": [],
+              "count": {
+                "comparator": "<=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back leg 2: AND you occupy fewer than two battlegrounds — PLAIN occupy, smugglers not required, weaker than the front gate (L136)"
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "Plead My Case To The Senate",
@@ -7521,6 +7591,84 @@
               "includeExcludedFromBattle": true,
               "scoreRole": "stayFlipped",
               "sourceText": "flips back when opponent controls strictly more Tatooine sites than you (Card301_004_BACK.java L104-L105); ties hold"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Watch Your Step (V)",
+      "loaderEnabled": true,
+      "blueprintIds": [
+        "601_146",
+        "601_146_BACK"
+      ],
+      "titleFragments": [
+        "watch your step",
+        "this place can be a little rough"
+      ],
+      "locationFragments": [
+        "corellia"
+      ],
+      "sourceCanonicalFile": "resources/objective_flip_audit/records/601_146.json",
+      "flipLocationRules": [
+        {
+          "id": "wys-v-front-corellia",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "Corellia_system",
+              "locationFragments": [
+                "corellia"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": false,
+              "scoreRole": "flipProgress",
+              "sourceText": "you occupy Corellia system (Card601_146.java L133; the card passes no SpotOverride on this leg)"
+            },
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "Corellia_battleground_site",
+              "locationFragments": [
+                "corellia"
+              ],
+              "actorFilterKey": "Corellian",
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "you control two Corellia battleground sites each with your Corellian, a species filter, never a keyword (L134-L135)"
+            }
+          ]
+        },
+        {
+          "id": "wys-v-back-hold",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "battleground",
+              "locationFragments": [],
+              "count": {
+                "comparator": "<=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flips back when you occupy fewer than two battlegrounds (Card601_146_BACK.java L120). The printed Kessel Run exception is NOT in this card's code and is deliberately not encoded"
             }
           ]
         }

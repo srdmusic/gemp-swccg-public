@@ -8900,3 +8900,15 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Tatooine_system, Dark_Jedi, fail-closed. Captive-counting on two legs recorded as
     unexpressed. Sandwhirl is an Effect, never a site. No new magnitudes. Four-test
     contract green on first run; full reactor 2811/0/0/26. Revert the single commit.
+
+  ==== Watch Your Step family Batch Seventeen (2026-07-27): 10_26 + 601_146, not twins ====
+    Classic front = anyOf(two completed Kessel Runs via the NEW utinniEffectCompleted
+    schema relation reading the engine's persistent counter, occupyWith-smuggler two
+    battlegrounds); classic back = allOf(runs < 2, occupy <= 1 battleground), plain occupy,
+    asymmetric to the front. Virtual = allOf(occupy Corellia system, controlWith Corellian
+    two Corellia battleground sites); virtual back has NO Kessel exception because the
+    printed text is an uncoded copy of the classic (encode the CODE, never the print).
+    Classic profile activated; virtual profile authored from nothing. Registry adds
+    smuggler, Corellian, Kessel_Run, Corellia_system, Corellia_battleground_site. Goldens
+    22->24 enabled, 58->59 profiles. Six-test contract green including the counter route on
+    an empty board; full reactor 2817/0/0/26 (both goldens updated for the count changes). Revert the single Batch Seventeen commit.

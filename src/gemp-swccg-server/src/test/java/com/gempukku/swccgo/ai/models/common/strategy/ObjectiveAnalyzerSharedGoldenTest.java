@@ -190,7 +190,8 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         Method profilesMethod = ObjectiveAnalyzer.class.getDeclaredMethod("profiles");
         profilesMethod.setAccessible(true);
         List<?> profiles = (List<?>) profilesMethod.invoke(analyzer);
-        assertEquals(58, profiles.size());
+        // Batch Seventeen (2026-07-27): the authored 601_146 profile, 58 -> 59.
+        assertEquals(59, profiles.size());
 
         int enabled = 0;
         for (Object profile : profiles) {
@@ -198,10 +199,11 @@ public class ObjectiveAnalyzerSharedGoldenTest {
             loaderEnabled.setAccessible(true);
             if (Boolean.TRUE.equals(loaderEnabled.get(profile))) enabled++;
         }
-        // Batch Fifteen (2026-07-27): 222_27 was activated (loaderEnabled
-        // added to the previously inert profile), 21 -> 22.
-        assertEquals(22, enabled);
-        assertEquals(36, profiles.size() - enabled);
+        // Batch Fifteen (2026-07-27): 222_27 activated, 21 -> 22.
+        // Batch Seventeen (2026-07-27): 10_26 activated and the new
+        // 601_146 profile authored, 22 -> 24 enabled, 58 -> 59 profiles.
+        assertEquals(24, enabled);
+        assertEquals(35, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);

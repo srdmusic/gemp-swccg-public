@@ -1,5 +1,5 @@
 
-<title>Rando Rulebook @ aa48897b0</title>
+<title>Rando Rulebook @ 0ce2465da</title>
 <style>
 :root{
   --bg:#f6f7f4; --panel:#ffffff; --panel2:#eceee8; --line:#d8dbd2;
@@ -94,7 +94,7 @@ header.top .sub{color:var(--ink2);font-size:14px;margin-top:4px}
 <header class="top">
   <h1>Rando Rulebook</h1>
   <div class="sub">Every scoring rule in the AI, generated straight from the code.
-   HEAD <span class="mono">aa48897b0</span> · 784 arms ·
+   HEAD <span class="mono">0ce2465da</span> · 784 arms ·
    regenerate: <span class="mono">tools/rulebook-extract.py && tools/rulebook-render.py</span></div>
 </header>
 <div class="bar">
@@ -226,7 +226,7 @@ document.getElementById("exp").onclick=()=>{
     const r=RULES.find(x=>x._k===k)||{};
     return{id:r.id,verdict:v.verdict,note:v.note||"",delta:r.delta,reason:r.reason,
       policy:r.policy,file:r.file,line:r.line,phase:r.phase};});
-  const blob=new Blob([JSON.stringify({exported:new Date().toISOString(),head:"aa48897b0",flags:out},null,1)],{type:"application/json"});
+  const blob=new Blob([JSON.stringify({exported:new Date().toISOString(),head:"0ce2465da",flags:out},null,1)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download="rulebook-flags.json";a.click();
   navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify(out,null,1)).catch(()=>{});};
