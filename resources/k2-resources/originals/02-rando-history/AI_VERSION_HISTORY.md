@@ -8891,3 +8891,12 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     table and the setup auto-pulls the 4th. Zero new keys, zero new magnitudes. Three-test
     contract green including the full oscillation cycle; full reactor 2807/0/0/26 (golden loader-count updated 21 to 22). Revert the
     single Batch Fifteen commit.
+
+  ==== Twin Suns Of Tatooine Batch Sixteen (2026-07-27): 301_4 four-leg law ====
+    DARK objective (takeover listed it LIGHT). One front rule: control >= 2
+    Tatooine_battleground_site with opponentConstraint zero Tatooine_site, controlWith
+    Dark_Jedi (computed ability-6+ class) >= 1, occupy Tatooine_system; back = CITC-shape
+    strict relative count on Tatooine_site. Registry adds Tatooine_battleground_site,
+    Tatooine_system, Dark_Jedi, fail-closed. Captive-counting on two legs recorded as
+    unexpressed. Sandwhirl is an Effect, never a site. No new magnitudes. Four-test
+    contract green on first run; full reactor 2811/0/0/26. Revert the single commit.

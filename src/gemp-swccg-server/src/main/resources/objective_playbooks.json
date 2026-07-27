@@ -7435,7 +7435,96 @@
           "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.not(Filters.Jabbas_Palace_site))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "tsot-front-four-leg-tatooine",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Tatooine_battleground_site",
+              "locationFragments": [
+                "tatooine"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "opponentConstraint": {
+                "relation": "control",
+                "locationFilterKey": "Tatooine_site",
+                "includeExcludedFromBattle": true,
+                "count": {
+                  "comparator": "==",
+                  "value": 0
+                }
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "you control two Tatooine battleground sites while opponent controls zero Tatooine sites of any kind (Card301_004.java L107, L110; the card's opponent-zero leg counts captives, unexpressed here)"
+            },
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "Tatooine_battleground_site",
+              "locationFragments": [
+                "tatooine"
+              ],
+              "actorFilterKey": "Dark_Jedi",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "at least one of those sites is controlled WITH a Dark Jedi, a computed class: dark character of ability six or more (L108)"
+            },
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "Tatooine_system",
+              "locationFragments": [
+                "tatooine"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "you occupy Tatooine system (L109; card law counts captives, unexpressed here)"
+            }
+          ]
+        },
+        {
+          "id": "tsot-back-relative-site-count",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Tatooine_site",
+              "locationFragments": [
+                "tatooine"
+              ],
+              "count": {
+                "comparator": ">",
+                "value": 0,
+                "referenceController": "self"
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flips back when opponent controls strictly more Tatooine sites than you (Card301_004_BACK.java L104-L105); ties hold"
+            }
+          ]
+        }
+      ]
     }
   ],
   "validation": {

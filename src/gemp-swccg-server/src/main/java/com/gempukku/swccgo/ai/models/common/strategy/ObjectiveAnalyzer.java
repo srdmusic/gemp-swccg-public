@@ -9725,6 +9725,11 @@ public class ObjectiveAnalyzer {
                             .Imperial_leader,
                         com.gempukku.swccgo.filters.Filters
                             .snowtrooper);
+            // Batch Sixteen (2026-07-27): Twin Suns' controlWith actor.
+            // Dark Jedi is COMPUTED (dark side + character + ability >= 6),
+            // never a keyword.
+            case "Dark_Jedi":
+                return com.gempukku.swccgo.filters.Filters.Dark_Jedi;
             // Batch Fourteen (2026-07-27): the back-hold exception ship.
             case "Rogue_One":
                 return com.gempukku.swccgo.filters.Filters.Rogue_One;
@@ -9799,6 +9804,9 @@ public class ObjectiveAnalyzer {
             case "Jakku_system":                 return com.gempukku.swccgo.filters.Filters.Jakku_system;
             // Batch Fourteen (2026-07-27): They Have No Idea We're Coming.
             case "Scarif_location":              return com.gempukku.swccgo.filters.Filters.Scarif_location;
+            // Batch Sixteen (2026-07-27): Twin Suns Of Tatooine four-leg law.
+            case "Tatooine_battleground_site":   return com.gempukku.swccgo.filters.Filters.Tatooine_battleground_site;
+            case "Tatooine_system":              return com.gempukku.swccgo.filters.Filters.Tatooine_system;
             case "your_occupied_Scarif_site":
                 return com.gempukku.swccgo.filters.Filters.and(
                         com.gempukku.swccgo.filters.Filters.site,
