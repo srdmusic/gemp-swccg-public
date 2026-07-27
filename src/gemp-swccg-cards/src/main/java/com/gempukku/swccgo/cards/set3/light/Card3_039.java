@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set3.light;
 import com.gempukku.swccgo.cards.AbstractUtinniEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AttachedCondition;
+import com.gempukku.swccgo.cards.effects.ClearForRemainderOfGameDataEffect;
 import com.gempukku.swccgo.cards.evaluators.CalculateCardVariableEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -20,6 +21,7 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.ForRemainderOfGameData;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.TriggerConditions;
@@ -35,7 +37,6 @@ import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
-import com.gempukku.swccgo.logic.timing.results.BattleInitiatedResult;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -121,6 +122,9 @@ public class Card3_039 extends AbstractUtinniEffect {
                         protected void doPlayEffect(SwccgGame game) {
                             PhysicalCard self = gameState.findCardByPermanentId(permCardId);
                             self.setUtinniEffectStatus(UtinniEffectStatus.COMPLETED);
+                            if(GameConditions.hasGameTextModification(game, self, ModifyGameTextType.THE_FIRST_TRANSPORT_IS_AWAY__RETRIEVE_FORCE_INTO_HAND))
+                                //record at time of completion and evaluate later during retrieval
+                                self.setForRemainderOfGameData(self.getCardId(), new ForRemainderOfGameData());
                         }
                     }
             );
@@ -135,13 +139,15 @@ public class Card3_039 extends AbstractUtinniEffect {
                         }
                         @Override
                         public boolean mayBeTakenIntoHand() {
-                            return GameConditions.hasGameTextModification(game, self, ModifyGameTextType.THE_FIRST_TRANSPORT_IS_AWAY__RETRIEVE_FORCE_INTO_HAND);
+                            return GameConditions.cardHasAnyForRemainderOfGameDataSet(self);
                         }
                     });
             if (hothSystem != null) {
                 action.appendEffect(
                         new AttachCardFromTableEffect(action, self, hothSystem));
             }
+            action.appendEffect(
+                    new ClearForRemainderOfGameDataEffect(action, self, true));
             return Collections.singletonList(action);
         }
         return null;
