@@ -8872,3 +8872,12 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     correction: Niima Outpost Shipyard IS a battleground (runtime force-icon computation).
     No new magnitudes. Five-test native contract green including both legs proven through
     contested-versus-controlled asymmetry; full reactor 2798/0/0/26 pre-rebase, 2800/0/0/26 on the combined tree with srdmusic's TFISMF fixes. Revert the single commit.
+
+  ==== They Have No Idea We're Coming Batch Fourteen (2026-07-27): 209_29 Scarif law ====
+    Front = counted control (>= 2 Scarif_location, IEFB). Back = allOf(occupy <= 1,
+    zero Rogue Ones at your-occupied Scarif sites): the exception ship alone holds the back
+    below the occupation floor, encoded with the playerId-aware composite key
+    your_occupied_Scarif_site (your_Hoth_location precedent) plus Scarif_location and
+    Rogue_One keys, all fail-closed. Rogue One is a Zeta-class transport, not a corvette.
+    No new magnitudes. Four-test native contract green including the exception ladder in
+    both directions; full reactor 2804/0/0/26. Revert the single Batch Fourteen commit.

@@ -2442,7 +2442,71 @@
           "runtimeFilter": "Filters.Massassi_War_Room"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "thni-front-two-scarif-locations",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Scarif_location",
+              "locationFragments": [
+                "scarif"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "you control two Scarif locations, system or sites, either side's printings (Card209_029.java L142-L144)"
+            }
+          ]
+        },
+        {
+          "id": "thni-back-occupation-or-rogue-one",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "Scarif_location",
+              "locationFragments": [
+                "scarif"
+              ],
+              "count": {
+                "comparator": "<=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back leg 1: you occupy fewer than two Scarif locations (Card209_029_BACK.java L184)"
+            },
+            {
+              "relation": "at",
+              "controller": "self",
+              "locationFilterKey": "your_occupied_Scarif_site",
+              "locationFragments": [
+                "scarif"
+              ],
+              "actorFilterKey": "Rogue_One",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back leg 2: AND no Rogue One at a Scarif site you occupy (L185); a Rogue One there holds the back below the occupation floor"
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "The Hyperdrive Generator's Gone",

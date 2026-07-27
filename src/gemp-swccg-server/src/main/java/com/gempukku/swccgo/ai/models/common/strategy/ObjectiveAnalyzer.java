@@ -9725,6 +9725,9 @@ public class ObjectiveAnalyzer {
                             .Imperial_leader,
                         com.gempukku.swccgo.filters.Filters
                             .snowtrooper);
+            // Batch Fourteen (2026-07-27): the back-hold exception ship.
+            case "Rogue_One":
+                return com.gempukku.swccgo.filters.Filters.Rogue_One;
             // Batch Eleven (2026-07-27): My Lord senator-count law. Composite
             // keys fold the location into the actor filter because the
             // "onTable" relation counts ACTORS, not locations.
@@ -9794,6 +9797,13 @@ public class ObjectiveAnalyzer {
             case "Tatooine_site":                return com.gempukku.swccgo.filters.Filters.Tatooine_site;
             // Batch Thirteen (2026-07-27): Old Allies cross-paired Jakku law.
             case "Jakku_system":                 return com.gempukku.swccgo.filters.Filters.Jakku_system;
+            // Batch Fourteen (2026-07-27): They Have No Idea We're Coming.
+            case "Scarif_location":              return com.gempukku.swccgo.filters.Filters.Scarif_location;
+            case "your_occupied_Scarif_site":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.site,
+                        com.gempukku.swccgo.filters.Filters.Scarif_location,
+                        com.gempukku.swccgo.filters.Filters.occupies(playerId));
             case "Jakku_battleground_site":      return com.gempukku.swccgo.filters.Filters.Jakku_battleground_site;
             case "battleground":                 return com.gempukku.swccgo.filters.Filters.battleground;
             case "Yavin_4_location":             return com.gempukku.swccgo.filters.Filters.Yavin_4_location;
