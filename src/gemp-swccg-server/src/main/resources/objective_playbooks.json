@@ -1606,7 +1606,41 @@
           "titleFragments": []
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "mbo-front-three-yavin-sites",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Yavin_4_site",
+              "locationFragments": [
+                "yavin"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "includeExcludedFromBattle": true,
+              "opponentConstraint": {
+                "relation": "control",
+                "locationFilterKey": "Yavin_4_site",
+                "includeExcludedFromBattle": true,
+                "count": {
+                  "comparator": "<",
+                  "value": 3
+                }
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "you control three Yavin 4 sites while opponent controls fewer than three (Card111_004.java L136-L137). Back side is permanent: no postFlip rule on purpose."
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "Agents In The Court",

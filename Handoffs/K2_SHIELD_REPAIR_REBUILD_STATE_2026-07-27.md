@@ -17,3 +17,21 @@ target web.jar and compare against the changelog entries.
 Newest sealed head is now k2/epic-event-saga-fix @ d11f44f7e (adds the V61
 starting-location-first saga signal on top of the union). Live jar sha256 87bec3d1... .
 Rebase onto d11f44f7e before your next package/deploy.
+
+## DEPLOY LOCK PROTOCOL (23:05 PDT — MANDATORY after three same-night clobbers)
+
+Three deploy collisions tonight (22:14 shield jar clobbered by 22:19 V61; 22:48 Batch Nine
+jar deployed without the V61 commits). From now on, BOTH sessions:
+
+1. Before packaging for deploy: `mkdir /Users/steve/gemp-deploy-lock` (atomic; fails if
+   held). On failure, WAIT and retry — never proceed.
+2. Write `/Users/steve/gemp-deploy-lock/holder.txt` with session name + intent + timestamp.
+3. Fetch/rebase onto the NEWEST sealed head across BOTH branches (k2/consolidated-2026-07-27
+   and k2/epic-event-saga-fix) before packaging. `git -C /Users/steve/gemp-swccg-public
+   branch -v --list 'k2/*'` + commit timestamps decide newest.
+4. Deploy, verify, update this file's "newest sealed head" line, THEN `rm -rf
+   /Users/steve/gemp-deploy-lock`.
+5. A lock older than 45 minutes may be broken (assume the holder died), noting it here.
+
+NEWEST SEALED HEAD: (keep current) — being updated by epic-event K-2 to the union of
+f622ec295 (Batch Nine) + the two V61 commits; deploy in progress under lock.

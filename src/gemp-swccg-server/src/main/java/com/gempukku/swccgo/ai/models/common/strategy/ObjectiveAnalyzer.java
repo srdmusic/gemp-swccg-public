@@ -9777,6 +9777,8 @@ public class ObjectiveAnalyzer {
                         com.gempukku.swccgo.filters.Filters.Bespin_cloud_sector);
             case "Tatooine_location":            return com.gempukku.swccgo.filters.Filters.Tatooine_location;
             case "Yavin_4_location":             return com.gempukku.swccgo.filters.Filters.Yavin_4_location;
+            // Batch Ten (2026-07-27): Massassi Base Operations counted law.
+            case "Yavin_4_site":                 return com.gempukku.swccgo.filters.Filters.Yavin_4_site;
             case "Hoth_location":                return com.gempukku.swccgo.filters.Filters.Hoth_location;
             case "Hoth_site":                    return com.gempukku.swccgo.filters.Filters.Hoth_site;
             case "Ice_Plains":                   return com.gempukku.swccgo.filters.Filters.Ice_Plains;

@@ -8817,3 +8817,13 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     stability at equal counts; hydrated rules track the engine state-for-state. Full reactor
     2780/0/0/26. Codex's pre-reboot Batch Nine WIP was destroyed uncommitted by the machine
     reboot; this batch was built fresh from source. Revert the single Batch Nine commit.
+
+  ==== Massassi Base Operations Batch Ten (2026-07-27): 111_4 counted control law ====
+    One flipLocationRule: control self Yavin_4_site >= 3 with opponentConstraint control < 3
+    (both IEFB), registry key Yavin_4_site added fail-closed, and deliberately NO postFlip
+    rule because One In A Million has no flip-back (permanent back; the front-only Yavin
+    blown-away hazard is recorded, not encoded). No new magnitudes; sealed generic consumers
+    drive deploy/pull/move/battle behavior. Four-test native engine contract green including
+    the opponent-three blocker and back permanence under total board collapse; hydrated rules
+    track the engine with an empty postFlip assessment. Full reactor 2784/0/0/26. Revert the
+    single Batch Ten commit.
