@@ -8846,3 +8846,15 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Jabba's Palace sites count in both tallies but only the opponent can deploy them, and the
     site-download action id is shared across the flip. No new magnitudes. Four-test native
     contract green on first run; full reactor 2793/0/0/26. Revert the single Batch Twelve commit.
+
+  ==== V61 saga choice amended (2026-07-27): persona counts beat the deck name ====
+    Replay rgfogqxrh4uat4bo: a 4x Rey / 3x Luke / 2x Anakin Skywalker Saga deck answered
+    The Force Is Strong In My Family with 'I Have It'. The V29.15 deck name reached the
+    interceptor as null (setDeckName only wired via Curator) and the name law would have
+    said Luke regardless. SetupPolicy.chooseSaga now takes Luke/Anakin/Rey copy counts as
+    the primary signal (strict argmax; ties and zeros fall to the original name chain then
+    the Luke default). Counts come from DeckOracle.countCardsWithPersona — typed
+    getPersonas() per copy, no title substrings — in both bots, with lazy oracle analyze.
+    The two-arg overload delegates with zeros so all other callers are unchanged. The
+    HallServer name-plumbing gap is recorded as an optional non-AI follow-up. Focused
+    setup gate 25/0/0/0; full reactor 2763/0/0/26 BUILD SUCCESS. Revert the single amendment commit.

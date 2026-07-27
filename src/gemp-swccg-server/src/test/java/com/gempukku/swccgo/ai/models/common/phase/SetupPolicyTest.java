@@ -223,6 +223,50 @@ public class SetupPolicyTest {
                 "Luke Saga", new String[]{"No", "Yes"}).sagaChoice());
     }
 
+    // V61 amended 2026-07-27: persona counts are the primary saga signal.
+    @Test
+    public void sagaPersonaCountsBeatDeckNameAndDefault() {
+        String[] canonical = {
+                "My Father Has It", "I Have It", "You Have That Power, Too"};
+
+        // Replay rgfogqxrh4uat4bo: 4x Rey / 3x Luke / 2x Anakin. The deck
+        // name is null AND would have said Luke — counts must win.
+        SetupPolicy.SagaSelection rey = SetupPolicy.chooseSaga(
+                null, canonical, 3, 2, 4);
+        assertEquals(2, rey.index());
+        assertTrue(rey.reason().contains("counts L=3 A=2 R=4"));
+
+        // A name that contradicts the counts loses to the counts.
+        assertEquals(2, SetupPolicy.chooseSaga(
+                "Skywalker Saga - Luke", canonical, 3, 2, 4).index());
+
+        // Unique Luke majority picks Luke; unique Anakin picks Anakin.
+        assertEquals(1, SetupPolicy.chooseSaga(
+                null, canonical, 4, 1, 2).index());
+        assertEquals(0, SetupPolicy.chooseSaga(
+                null, canonical, 1, 4, 2).index());
+
+        // Tie between personas falls through to the name chain.
+        assertEquals(2, SetupPolicy.chooseSaga(
+                "Rey Saga", canonical, 3, 0, 3).index());
+
+        // All-zero counts preserve the original name chain and default.
+        assertEquals(1, SetupPolicy.chooseSaga(
+                "Skywalker Saga - Luke", canonical, 0, 0, 0).index());
+        assertEquals(1, SetupPolicy.chooseSaga(
+                null, canonical, 0, 0, 0).index());
+
+        // Winning persona's option missing from the menu → fall through
+        // (Rey majority, but only Anakin/Luke offered → name/default chain).
+        assertEquals(1, SetupPolicy.chooseSaga(
+                null, new String[]{"My Father Has It", "I Have It"},
+                0, 0, 4).index());
+
+        // Non-saga menus stay untouched regardless of counts.
+        assertFalse(SetupPolicy.chooseSaga(
+                null, new String[]{"No", "Yes"}, 0, 0, 4).sagaChoice());
+    }
+
     private static void assertContribution(
             SetupPolicy.Contribution contribution,
             SetupPolicy.Branch branch,

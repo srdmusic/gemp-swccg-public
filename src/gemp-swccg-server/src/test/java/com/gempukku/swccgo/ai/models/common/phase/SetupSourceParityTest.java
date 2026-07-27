@@ -35,8 +35,12 @@ public class SetupSourceParityTest {
                 "chosenone", "TheChosenOneAi.java"));
 
         assertEquals(normalizeDirectAi(rando), normalizeDirectAi(chosen));
+        // V61 amended 2026-07-27: the interceptor feeds typed persona counts
+        // into the shared owner's 5-arg overload.
         assertEquals(1, countOccurrences(
-                rando, "SetupPolicy.chooseSaga(deckName, results)"));
+                rando, "SetupPolicy.chooseSaga(deckName, results,"));
+        assertEquals(3, countOccurrences(
+                rando, "deckOracle.countCardsWithPersona("));
         assertFalse(rando.contains("int luke = -1"));
         assertFalse(rando.contains("boolean isTfismfChoice"));
     }

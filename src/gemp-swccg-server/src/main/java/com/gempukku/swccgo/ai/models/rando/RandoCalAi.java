@@ -760,8 +760,31 @@ public class RandoCalAi extends HeuristicAiBase {
             //   Rey deck    → "You Have That Power, Too"
             if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE) {
                 String[] results = params != null ? params.get("results") : null;
+                // V61 amended (2026-07-27, Steve): persona COUNTS from the
+                // deck are the primary signal (replay rgfogqxrh4uat4bo ran
+                // 4x Rey / 3x Luke / 2x Anakin, the deck name arrived null,
+                // and the old name law would have picked Luke regardless).
+                // Typed getPersonas via DeckOracle; lazy-analyze because this
+                // interceptor runs before the evaluator-context init.
+                int sagaLuke = 0, sagaAnakin = 0, sagaRey = 0;
+                try {
+                    if (deckOracle != null) {
+                        if (!deckOracle.isAnalyzed() && currentGame != null) {
+                            deckOracle.analyze(currentGame, playerId, mySide);
+                        }
+                        sagaLuke = deckOracle.countCardsWithPersona(
+                                com.gempukku.swccgo.common.Persona.LUKE);
+                        sagaAnakin = deckOracle.countCardsWithPersona(
+                                com.gempukku.swccgo.common.Persona.ANAKIN);
+                        sagaRey = deckOracle.countCardsWithPersona(
+                                com.gempukku.swccgo.common.Persona.REY);
+                    }
+                } catch (Exception sagaE) {
+                    LOG.debug("V61 saga persona count failed: {}", sagaE.getMessage());
+                }
                 SetupPolicy.SagaSelection saga =
-                        SetupPolicy.chooseSaga(deckName, results);
+                        SetupPolicy.chooseSaga(deckName, results,
+                                sagaLuke, sagaAnakin, sagaRey);
                 if (saga.sagaChoice() && saga.index() >= 0) {
                     LOG.warn("V61 EPIC EVENT SAGA: deck='{}' choices={} → {} (index {})",
                             deckName, java.util.Arrays.asList(results),

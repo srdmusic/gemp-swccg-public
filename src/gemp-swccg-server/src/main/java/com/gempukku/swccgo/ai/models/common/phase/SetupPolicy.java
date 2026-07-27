@@ -612,6 +612,22 @@ public final class SetupPolicy {
 
     public static SagaSelection chooseSaga(
             String deckName, String[] results) {
+        return chooseSaga(deckName, results, 0, 0, 0);
+    }
+
+    /**
+     * V61 amended in place (2026-07-27, Steve): the deck's actual persona
+     * counts are the PRIMARY signal — a deck that runs 4x Rey / 3x Luke /
+     * 2x Anakin wants 'You Have That Power, Too' regardless of what the deck
+     * is named. Replay rgfogqxrh4uat4bo: the deck name arrived null AND the
+     * name-based law would have picked Luke anyway; Rando chose 'I Have It'
+     * and Rey's boost was lost. Strict argmax over the three persona counts
+     * wins; ties and all-zero counts fall through to the original deck-name
+     * chain, then the Luke default.
+     */
+    public static SagaSelection chooseSaga(
+            String deckName, String[] results,
+            int lukeCount, int anakinCount, int reyCount) {
         if (results == null || results.length == 0) {
             return new SagaSelection(false, -1, null);
         }
@@ -637,6 +653,30 @@ public final class SetupPolicy {
         }
         if (!sagaChoice) {
             return new SagaSelection(false, -1, null);
+        }
+
+        int best = Math.max(lukeCount, Math.max(anakinCount, reyCount));
+        if (best > 0) {
+            boolean lukeBest = lukeCount == best;
+            boolean anakinBest = anakinCount == best;
+            boolean reyBest = reyCount == best;
+            boolean unique = (lukeBest ? 1 : 0) + (anakinBest ? 1 : 0)
+                    + (reyBest ? 1 : 0) == 1;
+            String counts = "counts L=" + lukeCount + " A=" + anakinCount
+                    + " R=" + reyCount;
+            if (unique && reyBest && rey >= 0) {
+                return new SagaSelection(true, rey,
+                        counts + " → Rey deck → 'You Have That Power, Too'");
+            }
+            if (unique && lukeBest && luke >= 0) {
+                return new SagaSelection(true, luke,
+                        counts + " → Luke deck → 'I Have It'");
+            }
+            if (unique && anakinBest && anakin >= 0) {
+                return new SagaSelection(true, anakin,
+                        counts + " → Anakin deck → 'My Father Has It'");
+            }
+            // tie, or the winning persona's option missing → name chain below
         }
 
         String deckLower = lower(deckName);

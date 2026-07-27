@@ -343,6 +343,27 @@ public class DeckOracle {
         return isCardInZone(blueprintIdOrTitle, Zone.RESERVE_DECK);
     }
 
+    /**
+     * V61 saga counting (2026-07-27): copies of cards in the FULL deck whose
+     * blueprint carries the given persona — typed getPersonas(), never a
+     * title substring (feedback_card_search_by_type_not_text). Counts every
+     * physical copy. 0 when unanalyzed or on any blueprint error.
+     */
+    public int countCardsWithPersona(com.gempukku.swccgo.common.Persona persona) {
+        if (persona == null) return 0;
+        int count = 0;
+        for (DeckCard dc : allCards) {
+            if (dc == null) continue;
+            SwccgCardBlueprint bp = dc.getBlueprint();
+            if (bp == null) continue;
+            try {
+                java.util.Set<com.gempukku.swccgo.common.Persona> ps = bp.getPersonas();
+                if (ps != null && ps.contains(persona)) count++;
+            } catch (Exception e) { /* some blueprints throw — skip */ }
+        }
+        return count;
+    }
+
     /** Is any copy of this card in hand? */
     public boolean isCardInHand(String blueprintIdOrTitle) {
         return isCardInZone(blueprintIdOrTitle, Zone.HAND);
