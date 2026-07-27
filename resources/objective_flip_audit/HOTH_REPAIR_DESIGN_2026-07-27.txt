@@ -1,0 +1,150 @@
+m01438 REPAIR DESIGN — 222_30 adjacent-phase regressions (DESIGN ONLY, nothing edited)
+BASES: HEAD d0f530dde (clean reads via git show where dirty). LIVE = codex/tdigwatt-shield-live 93f0fd2c0 (adds occupiesBothTheaters
+ param + V112 3rd-slot arms to ShieldPolicy). DIRTY TREE = HEAD + Codex hand-merge of EOP a302161eb (ShieldPolicy +52, ShieldFacts
+ +70 shouldReserveEopBattleOrderSlot, ShieldStrategy findShieldInfo exact-match). Line numbers below name their base.
+
+1. HOTH SYSTEM PACKAGE PRESERVATION
+OWNER (HEAD, file clean): ForceLossPolicy.addZoneScore, common/phase/ForceLossPolicy.java:264-296; exact arm :276-277
+ handShipOrVehicle -> protectChars ? 500 : 750; protectChars = lifeForce>=4 (:269). Flags built by
+ CardSelectionEvaluator.forceLossObjectiveFlags rando/chosenone :4808-4911; objective.requiredForFlip() -> V21 VETO -9999 at
+ ForceLossPolicy:200-209.
+COMPETING: observed 550.0 tie at TOP of the loss ranking for Stalker / Eli Vanto In Dreadnaught / Mara Jade In VT-49 (zone 500 +
+ 50). Higher score = lost first. Other bands: hand non-char 600/850, used 800/400, duplicate 1000, reserve 400/300, force pile 50.
+PRECEDENT: ObjectiveAnalyzer.isPreferredShieldRoutePackageForceLossCandidate :5619-5635 + selectShieldRoutePackage
+ (host/pilot/cannon), wired CSE:4864-4872 and folded into `required`.
+CHANGE (minimal): add isPreferredObjectiveTheaterPackageForceLossCandidate(game, playerId, candidate) modelled line-for-line on
+ :5619. Selects ONE cheapest affordable ship+pilot pair in hand, only when analyzed AND a battleground SYSTEM matching one of the
+ objective's own objectiveNamedLocations filters is on table AND we occupy zero battleground systems AND force covers both. Feed
+ into the SAME `required` disjunction at CSE:4885-4888. No new band.
+HONESTY: NO fact means "objective needs SYSTEM presence". 222_30's profile only offers named location "Hoth location" =
+ Filters.Hoth_location, and a Hoth system IS a Hoth location, so the only clean typed hook is Filters.and(battleground_system,
+ <named-location filter>) + canSpot. Fail closed: no fact, no protection. Do NOT scope by 222_x title.
+BOUNDARY: exactly 2 cards held (ship + pilot), tiebreak cost then cardId. V21 VETO -9999 sinks them below everything, so the 550 tie
+ resolves onto hand non-characters (600) and used pile (800), which already outrank 550 and are the right fodder. No
+ never-pitch-ships absurdity: a third ship stays 500/750 and remains top pitch; at lifeForce<4 ships rise to 750 and still only the
+ one pair is held, correct because that pair IS the theater.
+RISK: `required` is shared with Invasion and First Order Reigns. ShieldFacts:163-168 already excludes Naboo_system while Invasion is
+ on table; the selector MUST reuse isInvasionOnTable or it protects a Naboo pair Invasion says is not a battleground. Capture/Endor
+ unaffected (no battleground-system named location).
+TESTS (mirrored; winner asserted BY CARD ID, never by reason substring): T1 pair vetoed, winner is the third candidate. T2 no BG
+ system among named locations -> pair stays 500 and is still top loss. T3 we already occupy a BG system -> off. T4 Invasion + Naboo
+ only -> off. T5 three ships, only the cheapest affordable pair held, third still pitchable. T6 rando/chosenone flags parity.
+
+2. V51 BATTLE ORDER GATE (inverted vs card law)
+OWNER: ShieldPolicy.addBattleOrderSelection — working :306-320 (veto :316), HEAD :254-268 (:264), LIVE :273-298 (:283). Twin:
+ ShieldPolicy.unknownBattleOrderGate working :212-220 / HEAD :173-181 ("V112"). Predicate ShieldFacts.occupiesBothTheaters(game,
+ playerId) ShieldFacts.java:154-178, called with RANDO's id at rando CSE:9750, :9964, :9347 and via fourthSlotFacts(...playerId)
+ :55.
+CARD LAW (Card13_054.java:45-48): TWO independent InitiateForceDrainCostModifiers. :45-46 taxes the OWNER unless Battle Plan on
+ table OR the OWNER occupies BG site AND BG system; :47-48 taxes the OPPONENT unless Battle Plan OR the OPPONENT occupies both.
+ m01438 is correct.
+INTENT ALREADY WRITTEN DOWN: ShieldStrategy.java:130-136 "Only deploy Turn 2+ if opponent drains 2+ but lacks both theaters". The
+ comment is right, only the predicate is inverted: amend in place, no new V-tag.
+CHANGE: add ShieldFacts.opponentLacksBothTheaters(game, playerId) = !occupiesBothTheaters(game, game.getOpponent(playerId)); same
+ engine predicate, inherits the Naboo exclusion, fails closed (false on error). Gate becomes battleOrderLive =
+ opponentLacksBothTheaters && (occupiesBothTheaters(self) || netDrainBalance <= -2). Self-tax term reuses the existing
+ computeNetDrainBalance(game, gameState, playerId) already called by V166 at rando CSE:7633.
+BOUNDARY (replay): asdf occupied BG sites only and NO BG system all game -> opponentLacksBoth TRUE; Rando occupied neither, so the
+ self-term carries; netDrainBalance <= -2 from turn 2 (asdf 5/turn vs Rando 1) -> opens turn 2, matching minTurnToPlay=2
+ (ShieldStrategy:132-135). The V53 turn-1 exception (working :291-292) must be re-keyed to battleOrderLive or it stays dead code.
+SCORE BOUNDARY: Allegations 325 (V53 +100 ALWAYS FIRST, ShieldStrategy:739-741), Secret Plans 275 (+50 :742), Battle Order base 80.
+ Opened gate adds ready +50 + early +200 = 330, which OUTRANKS Allegations by 5 and breaks ALWAYS-FIRST. Fix inside the same arm:
+ gate V51-battle-order-early on shieldsOnTable >= 2 as well as shieldScore > -50. Then turn 1 = 130 < 275 < 325 (ordering intact),
+ and at slot 3 = 80+50+200+2000 (V112 3rd slot) = 2330, dominating Resistance / CHYBC.
+COMPOSITION vs EOP BRANCH: (a) THE ONE REAL COLLISION: V112-third-slot-reserve (LIVE stackedPileParent, working :161-165) fires on
+ shieldsOnTable==2 && !occupiesBothTheaters for -3000 on the K&D PARENT; under corrected law it MUST be re-keyed to !battleOrderLive
+ or it permanently blocks the activation it is reserving for. (b) EOP reserve (working :165-169;
+ ShieldFacts.shouldReserveEopBattleOrderSlot :208-276 -> EndorOperationsTacticalPolicy.shouldReserveShieldSlotForBattleOrder :60-71)
+ is already an else-branch, so no double -3000, and its condition is a SELF-exemption timer that stays valid. (c) a302161eb
+ twin-redundancy veto battleOrderPlanRedundancyGate (-9999, early return at the top of shieldCandidateAdjustments) is unaffected and
+ must keep running BEFORE the gate.
+PREREQUISITE DEFECT (P0, blocks item 2 from ever being observable): 37x "V102 K&D ACTIVATION CAP: turn 1 count 2" on turns 2-7.
+ knDActivationsThisTurn(int) ShieldStrategy:433-435 returns 0 unless turnNumber == knDActivationsTurnSeen, so a count of 2 PROVES
+ the caller passed turn 1 at all 37 decisions. Source: ActionTextEvaluator :2841 context.getTurnNumber() -> DecisionContext.java:97
+ gameState.getPlayersLatestTurnNumber(playerId). Needs a runtime probe (out of scope read-only). While it is stuck at 1, no shield
+ after #2 can be played however the V51 gate is fixed.
+RISK: Endor Operations (8_167) shares every arm; the corrected gate opens Battle Order earlier there, which is what a302161eb
+ wanted. Invasion inherits the Naboo exclusion.
+TESTS: T7 opponent lacks both + netDrain -2 -> no veto; opponent occupies both -> VETO -9999. T8 opponent lacks both but netDrain 0
+ and we lack both -> VETO (self-tax). T9 turn 1, 0 shields, gate open -> winner is Allegations BY ID (330-vs-130 regression guard).
+ T10 slot 3 -> Battle Order BY ID. T11 V112-third-slot-reserve absent when battleOrderLive. T12 opponent has Battle Plan ->
+ redundancy -9999 still wins. T13 EOP + corrected gate both true -> exactly one -3000. T14 parity.
+
+3. POST-FLIP ANCHOR GUARD
+OWNERS OF THE +945: V41 rando CSE:8149-8164 via MoveDestinationPolicy.spyAwareContest (+500 hunt Jedi); V166 rando CSE:7624-7650 via
+ MoveDrainRoutingPolicy.contestOpponentDrain (+350).
+WHY THE EXISTING GUARD MISSED: CSE:7108-7156 already hard-vetoes via MoveObjectiveGateHoldPolicy.evaluatePostFlipSurvivalActor, but
+ ONLY when moverFormationRole == LAST_OBJECTIVE_SURVIVAL_ACTOR (ObjectiveAnalyzer:7826-7830 ->
+ wouldDepartureTriggerStayFlippedFailure :3575-3648) AND decisionText contains "using landspeed". Unpiloted Blizzard 4 fails
+ Filters.and(AT_AT, piloted) and 4-LOM is neither Imperial_leader nor snowtrooper, so neither mover was classified. The loss mode
+ was not departure but CONCENTRATION: both movers entered the site holding the ONLY anchor (Marquand piloted by Ozzel), which died
+ in one opponent battle -> anchors 0 -> OOP (Card222_030_BACK.java:132-144).
+CHANGE (new branch on the existing owner, no new evaluator): add
+ MoveObjectiveGateHoldPolicy.evaluatePostFlipAnchorConcentration(stayFlippedRuleActive, destinationHoldsLastAnchor,
+ destinationUnsafe, safeAnchorSitesAfterMove) -> hardVeto when the three booleans hold and safeAnchorSitesAfterMove == 0. Facts from
+ ObjectiveAnalyzer reusing the SAME activeFlipLocationRules machinery and the already-resolved actorFilterKey
+ "piloted_AT_AT_or_Imperial_leader_or_snowtrooper" (ObjectiveAnalyzer:9453): add countSafeStayFlippedAnchorSites(game, playerId,
+ hypotheticalDestination) counting Hoth sites where we occupyWith a qualifying actor and opponentPower <= friendlyPower +
+ RETREATABLE_POWER_GAP. Apply at the same decision point as the existing hold (CSE:7148) but WITHOUT the "using landspeed" text
+ gate, which is also why the walker's own move would have escaped.
+PREFER SEPARATE SITES: an ORDERING term of -250 when the destination already holds a qualifying anchor while another safe qualifying
+ Hoth site exists. Deliberately below 945: it breaks ties only.
+BOUNDARY: V41 +500 and V166 +350 sum to 945 additively, but action.hardVeto makes the row UN-SELECTABLE regardless of score
+ (CombinedEvaluator:762-764), so magnitude is irrelevant, per the FORMATION SAFETY doctrine. Yields to survival by reusing
+ RETREATABLE_POWER_GAP = 6.0f (MoveObjectiveGateHoldPolicy:28), exactly as evaluatePostFlipSurvivalActor:265-269, so an anchor
+ fleeing a hopeless site is never held. If every destination vetoes, CombinedEvaluator:793-812 already falls back to Pass or
+ least-bad: no hang.
+RISK: data-scoped, not title-scoped. The branch keys on activeFlipLocationRules purpose=="stayFlipped", today only 222_30's
+ `imperial-troops-back-hoth-site-survival` rule. Capture returns earlier via CaptureObjectiveFacts.classifyStableBackRemoval
+ (ObjectiveAnalyzer:7810-7817): no cross-talk.
+TESTS: T15 last anchor at destination + unsafe + 0 safe sites after -> hardVeto. T16 near miss: a second safe anchor site exists ->
+ no veto. T17 oppPower > friendly+6 at the anchor site -> released. T18 selection: the 945 row vetoed, winner is the alternate
+ destination BY ID with Pass in the pool. T19 capture objective flipped -> inert. T20 the -250 term cannot flip 945-vs-0. T21
+ parity.
+
+4. VEERS CANCEL-LATCH (V201 defer + V163)
+OWNER: DeployPlanPolicy.evaluateDestinationTarget, common/phase/DeployPlanPolicy.java:111-134; defer =
+ PolicyOperation.defer("deploy-plan-target-defer") :124-131, driven by plannedTargetOffered at rando CSE:2087-2101 (chosenone
+ identical) = plannedTargetIndex >= 0 && isCardSelectable(...). Offered is not the same as admissible: that is the whole bug.
+CHAIN: every non-planned row deferred (CombinedEvaluator:767-776) while the planned Cloud City row was FORMATION SAFETY hard-vetoed
+ and therefore absent from nonVetoed -> v201AllDeferred -> synthetic Pass :817-831. That cancel armed the cancel-loop counter and
+ V163 (rando/evaluators/ActionTextEvaluator.java:267) hard-vetoed "Deploy" for the rest of the game.
+PATTERN TO REUSE: V297.1 (commit 9251a6e63) at rando CSE:2092-2107 already suppresses both the policy call and the defer when the
+ planned target is blocked only by an opponent undercover spy ("V297.1 PLAN FALLBACK"). That is the release valve; it just does not
+ know about formation vetoes. Invasion's ef8790b73 replan work lives in DeployPhasePlanner and does NOT touch this arm, so V297.1 is
+ the pattern to reuse, not ef8790b73.
+CHANGE (minimal): compute plannedTargetFormationBlocked from the FormationSafety verdict already produced per row at rando
+ CSE:3231-3242 (hoist the planned-target row's verdict, or read that row's v212FormationState), then widen :2092-2101 to
+ plannedTargetBlocked = plannedTargetSpyBlocked || plannedTargetFormationBlocked, reusing the identical `!isPlannedTarget ||
+ !plannedTargetBlocked` guard and the same PLAN FALLBACK log family. No new score, no new veto tier.
+BOUNDARY: with the release, the Blizzard 4 boarding row keeps its observed 3000.0 (V30 +3000, V29 +50) and becomes admissible; the
+ planned Cloud City row stays hard-vetoed at -9999; the next best non-vetoed site row was -4485. Winner flips from synthetic Pass to
+ Deploy-to-Blizzard-4, margin 3000 vs -4485. The defer must still fire when the planned target is offered AND admissible.
+RISK: shared by every objective that builds a DeploymentPlan (Invasion, Endor, Capture). The widened release fires only when the
+ planned row is HARD_BLOCKed, a state in which the plan is already unexecutable this pass, so it is a strict subset of today's
+ deadlock.
+RECORD ONLY (separate lane): the V163 latch survived across turns after one synthetic Pass. ActionTextEvaluator:255-267 shows V169's
+ per-turn retry budget falling back to the hard veto. A synthetic V201 / FORMATION_SAFETY Pass arguably should not count as a cancel
+ at all.
+TESTS: T22 offered && !blocked -> defer present. T23 blocked -> defer absent, -100 "not planned target" still present. T24 decision
+ test: planned row hard-vetoed + others deferred -> today Pass, after fix winner is the 3000 row BY ID. T25 regression: ordinary
+ plan-following unchanged (+200 row wins). T26 parity at CSE:2087-2108.
+
+5. SECOND CANNON — CLOSED, WORKING AS INTENDED (no AI-layer fix exists)
+Card3_158.java:52-54 getGameTextValidDeployTargetFilter = Filters.and(your, AT_AT): BOTH walkers pass the card's own filter, so the
+ one-element offer came from the generic composition at AbstractNonLocationPlaysToTable.java:444-475 (notProhibitedFromTarget /
+ notProhibitedFromCarrying / canBeTargetedBy / canUseForceToDeployToTarget). Which of the four fired cannot be settled by static
+ reading; it needs a runtime probe. Cost is excluded: Card209_042.java:52 is a global -1 DeployCostModifier, not per-target.
+SETTLED ANYWAY: (a) the AI got a one-element carrier list and cannot expand an engine-supplied target list, so no AI-side change
+ alters the outcome; (b) V25's hard block (-9949) was correct on that list; (c) m01438's "prefer an unarmed second walker" would
+ have been WRONG on card law: Blizzard 4 was UNPILOTED, and an unpiloted vehicle has numWeaponsAllowedToUse == 0
+ (Weapons.java:100-110) and fails canFireWeapon's isPiloted test (Filters.java:14529-14533), so a cannon there could never be used
+ or fired.
+FOLLOW-UP: the real improvement is upstream, board a pilot on Blizzard 4 first, which item 4's release already delivers (boarding
+ scored 3000). Non-blocking, not this batch: the two ties resolved by list order with no tiebreak rule, 3100/3100 carrier (audit s1)
+ and 50/50 Rangefinder host (s2); cheap future rule is prefer the host already carrying the route cannon.
+
+TEST COUNT: 26 cases, each written once against the shared common policy plus one rando/chosenone parity assertion.
+SELF-REFERENTIAL-GATE CHECK: no item requires the state it is trying to create. Item 1 does not require the system occupied before
+ protecting the pair that would occupy it; item 2 does not require us to occupy both theaters before playing the card that taxes the
+ opponent; item 3 does not require a second anchor before vetoing the move that erases the first.
