@@ -8800,3 +8800,20 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     and rebuilt identically from recorded edit scripts in a durable worktree. Focused gate
     95/0/0/0; full reactor 2771/0/0/26 BUILD SUCCESS. Revert the single batch commit; the consolidated
     lineage stays independent.
+
+  ==== Bespin control family Batch Nine (2026-07-27): QMC 109_4 + CITC 301_2 ====
+    Both loader-enabled profiles gain flipLocationRules encoding the exact card law (source
+    citations in BATCH_NINE_SOURCE_LAW_2026-07-27.md; Bespin: Cloud City verified as a SECTOR,
+    refuting an earlier site claim, so the Lando/Lobot alternative's controlled-site leg is
+    encoded as controlWith — a recorded tightening the unchanged engine does not share). QMC:
+    sector control + opponent-zero-Bespin constraint + anyOf(two sites, Lando/Lobot site) and
+    anyOf flip-back (opponent Bespin system, three of the site/cloud-sector pool). CITC: allOf
+    (two battleground sites + opponent-zero constraint, Bespin occupation) and a strict '>'
+    relative-count flip-back. Registry adds four fail-closed keys (Bespin_location,
+    Bespin_Cloud_City, Cloud_City_site_or_Bespin_cloud_sector, Lando_or_Lobot). The sealed
+    generic consumers (deploy +600/+1000, reserve pull, move gate holds, battle +80) act on
+    the rules with their existing magnitudes; no new score minted, no new boundary math.
+    Nine-test native engine contract green including near misses, the Lando alternative, and
+    stability at equal counts; hydrated rules track the engine state-for-state. Full reactor
+    2780/0/0/26. Codex's pre-reboot Batch Nine WIP was destroyed uncommitted by the machine
+    reboot; this batch was built fresh from source. Revert the single Batch Nine commit.

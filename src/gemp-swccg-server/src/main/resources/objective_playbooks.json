@@ -1358,7 +1358,119 @@
           "runtimeFilter": "Filters.docking_bay"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "qmc-front-cloud-city-control",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Bespin_Cloud_City",
+              "locationFragments": [
+                "cloud city"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "opponentConstraint": {
+                "relation": "control",
+                "locationFilterKey": "Bespin_location",
+                "includeExcludedFromBattle": true,
+                "count": {
+                  "comparator": "==",
+                  "value": 0
+                }
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "you control Bespin: Cloud City while opponent controls no Bespin location (Card109_004.java L125-L126)"
+            }
+          ]
+        },
+        {
+          "id": "qmc-front-site-count-or-lando-lobot",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Cloud_City_site",
+              "locationFragments": [
+                "cloud city"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "you control two Cloud City sites (L127)"
+            },
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "Cloud_City_site",
+              "locationFragments": [
+                "cloud city"
+              ],
+              "actorFilterKey": "Lando_or_Lobot",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "your Lando or Lobot at a Cloud City site you control (L128-L129). Deliberate tightening: card law allows Lando/Lobot anywhere on Cloud City (including the Bespin: Cloud City SECTOR, which is NOT a Cloud_City_site) while any one site is controlled; the profile pursues the actionable co-located form. The unchanged card Java still flips on the looser law."
+            }
+          ]
+        },
+        {
+          "id": "qmc-back-bespin-control-flip-back",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Bespin_system",
+              "locationFragments": [
+                "bespin"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "opponent controls Bespin system (Card109_004_BACK.java L107)"
+            },
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Cloud_City_site_or_Bespin_cloud_sector",
+              "locationFragments": [
+                "cloud city",
+                "bespin"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "opponent controls three Cloud City sites and/or Bespin cloud sectors (BACK L108)"
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "You Can Either Profit By This...",
@@ -3144,7 +3256,80 @@
           "runtimeFilter": "Filters.and(Filters.Cloud_City_site, Filters.battleground)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "citc-front-control-occupy",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Cloud_City_battleground_site",
+              "locationFragments": [
+                "cloud city"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "opponentConstraint": {
+                "relation": "control",
+                "locationFilterKey": "Cloud_City_site",
+                "includeExcludedFromBattle": true,
+                "count": {
+                  "comparator": "==",
+                  "value": 0
+                }
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "you control two Cloud City battleground sites while opponent controls no Cloud City site (Card301_002.java L103, L105; card law counts captives on the opponent leg, unexpressed here)"
+            },
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "Bespin_system",
+              "locationFragments": [
+                "bespin"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "you occupy Bespin system (L104; card law counts captives, unexpressed here)"
+            }
+          ]
+        },
+        {
+          "id": "citc-back-relative-site-count",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Cloud_City_site",
+              "locationFragments": [
+                "cloud city"
+              ],
+              "count": {
+                "comparator": ">",
+                "value": 0,
+                "referenceController": "self"
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "opponent controls strictly more Cloud City sites than you (Card301_002_BACK.java L149-L150)"
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "Carbon Chamber Testing",

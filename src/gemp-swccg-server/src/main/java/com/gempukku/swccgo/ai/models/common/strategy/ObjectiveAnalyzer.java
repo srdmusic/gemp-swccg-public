@@ -9725,6 +9725,11 @@ public class ObjectiveAnalyzer {
                             .Imperial_leader,
                         com.gempukku.swccgo.filters.Filters
                             .snowtrooper);
+            // Batch Nine (2026-07-27): QMC front Lando/Lobot alternative.
+            case "Lando_or_Lobot":
+                return com.gempukku.swccgo.filters.Filters.or(
+                        com.gempukku.swccgo.filters.Filters.Lando,
+                        com.gempukku.swccgo.filters.Filters.Lobot);
             case "biker_scout_or_piloted_AT_ST":
                 return com.gempukku.swccgo.filters.Filters.or(
                     com.gempukku.swccgo.filters.Filters.biker_scout,
@@ -9763,6 +9768,13 @@ public class ObjectiveAnalyzer {
             case "Bespin_system":                return com.gempukku.swccgo.filters.Filters.Bespin_system;
             case "Cloud_City_site":              return com.gempukku.swccgo.filters.Filters.Cloud_City_site;
             case "Cloud_City_battleground_site": return com.gempukku.swccgo.filters.Filters.Cloud_City_battleground_site;
+            // Batch Nine (2026-07-27): Bespin control family keys.
+            case "Bespin_location":              return com.gempukku.swccgo.filters.Filters.Bespin_location;
+            case "Bespin_Cloud_City":            return com.gempukku.swccgo.filters.Filters.Bespin_Cloud_City;
+            case "Cloud_City_site_or_Bespin_cloud_sector":
+                return com.gempukku.swccgo.filters.Filters.or(
+                        com.gempukku.swccgo.filters.Filters.Cloud_City_site,
+                        com.gempukku.swccgo.filters.Filters.Bespin_cloud_sector);
             case "Tatooine_location":            return com.gempukku.swccgo.filters.Filters.Tatooine_location;
             case "Yavin_4_location":             return com.gempukku.swccgo.filters.Filters.Yavin_4_location;
             case "Hoth_location":                return com.gempukku.swccgo.filters.Filters.Hoth_location;
