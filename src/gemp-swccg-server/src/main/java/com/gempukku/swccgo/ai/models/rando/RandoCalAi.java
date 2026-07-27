@@ -782,9 +782,50 @@ public class RandoCalAi extends HeuristicAiBase {
                 } catch (Exception sagaE) {
                     LOG.debug("V61 saga persona count failed: {}", sagaE.getMessage());
                 }
+                // V61 starting-location signal (2026-07-27, Steve): the
+                // set-17 marker location on OUR side of the table pins the
+                // saga by its own card text. Exact blueprint id first, exact
+                // title equality as the reprint-safe fallback. UNKNOWN only
+                // when the board cannot be read.
+                SetupPolicy.SagaStartingLocation sagaStart =
+                        SetupPolicy.SagaStartingLocation.UNKNOWN;
+                try {
+                    if (gameState != null) {
+                        boolean sawOwnLocation = false;
+                        for (PhysicalCard sagaLoc : gameState.getTopLocations()) {
+                            if (sagaLoc == null
+                                    || !playerId.equals(sagaLoc.getOwner())) {
+                                continue;
+                            }
+                            sawOwnLocation = true;
+                            String bp = sagaLoc.getBlueprintId(true);
+                            String lt = sagaLoc.getTitle();
+                            if ("217_27".equals(bp)
+                                    || "Ajan Kloss: Training Course".equals(lt)) {
+                                sagaStart = SetupPolicy.SagaStartingLocation
+                                        .REY_LOCATION;
+                                break;
+                            }
+                            if ("217_34".equals(bp)
+                                    || "Endor: Anakin's Funeral Pyre".equals(lt)) {
+                                sagaStart = SetupPolicy.SagaStartingLocation
+                                        .LUKE_LOCATION;
+                                break;
+                            }
+                        }
+                        if (sagaStart == SetupPolicy.SagaStartingLocation.UNKNOWN
+                                && sawOwnLocation) {
+                            sagaStart = SetupPolicy.SagaStartingLocation
+                                    .OTHER_LOCATION;
+                        }
+                    }
+                } catch (Exception sagaLocE) {
+                    LOG.debug("V61 saga location scan failed: {}",
+                            sagaLocE.getMessage());
+                }
                 SetupPolicy.SagaSelection saga =
                         SetupPolicy.chooseSaga(deckName, results,
-                                sagaLuke, sagaAnakin, sagaRey);
+                                sagaLuke, sagaAnakin, sagaRey, sagaStart);
                 if (saga.sagaChoice() && saga.index() >= 0) {
                     LOG.warn("V61 EPIC EVENT SAGA: deck='{}' choices={} → {} (index {})",
                             deckName, java.util.Arrays.asList(results),

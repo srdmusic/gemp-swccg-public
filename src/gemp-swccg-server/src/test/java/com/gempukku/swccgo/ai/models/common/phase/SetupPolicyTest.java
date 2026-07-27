@@ -267,6 +267,51 @@ public class SetupPolicyTest {
                 null, new String[]{"No", "Yes"}, 0, 0, 4).sagaChoice());
     }
 
+    // V61 starting-location signal 2026-07-27: the marker location decides
+    // before counts, name, and default.
+    @Test
+    public void sagaStartingLocationBeatsCountsNameAndDefault() {
+        String[] canonical = {
+                "My Father Has It", "I Have It", "You Have That Power, Too"};
+
+        // The failing 05:29 game: 3x Luke / 3x Rey tie, null name, but the
+        // deck started at Ajan Kloss: Training Course → Rey.
+        SetupPolicy.SagaSelection rey = SetupPolicy.chooseSaga(
+                null, canonical, 3, 2, 3,
+                SetupPolicy.SagaStartingLocation.REY_LOCATION);
+        assertEquals(2, rey.index());
+        assertTrue(rey.reason().contains("Ajan Kloss"));
+
+        // The location outranks contradicting counts AND a contradicting name.
+        assertEquals(2, SetupPolicy.chooseSaga(
+                "Skywalker Saga - Luke", canonical, 4, 0, 1,
+                SetupPolicy.SagaStartingLocation.REY_LOCATION).index());
+        assertEquals(1, SetupPolicy.chooseSaga(
+                "Rey Saga", canonical, 0, 0, 4,
+                SetupPolicy.SagaStartingLocation.LUKE_LOCATION).index());
+
+        // Any other own starting location is the Anakin build.
+        assertEquals(0, SetupPolicy.chooseSaga(
+                null, canonical, 0, 0, 4,
+                SetupPolicy.SagaStartingLocation.OTHER_LOCATION).index());
+
+        // UNKNOWN board falls back to the count law.
+        assertEquals(2, SetupPolicy.chooseSaga(
+                null, canonical, 3, 2, 4,
+                SetupPolicy.SagaStartingLocation.UNKNOWN).index());
+
+        // A pinned option missing from the menu falls through safely.
+        assertEquals(1, SetupPolicy.chooseSaga(
+                null, new String[]{"My Father Has It", "I Have It"},
+                0, 0, 0,
+                SetupPolicy.SagaStartingLocation.REY_LOCATION).index());
+
+        // Non-saga menus stay untouched regardless of the location.
+        assertFalse(SetupPolicy.chooseSaga(
+                null, new String[]{"No", "Yes"}, 0, 0, 0,
+                SetupPolicy.SagaStartingLocation.REY_LOCATION).sagaChoice());
+    }
+
     private static void assertContribution(
             SetupPolicy.Contribution contribution,
             SetupPolicy.Branch branch,

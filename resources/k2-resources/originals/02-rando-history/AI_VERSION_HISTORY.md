@@ -8851,10 +8851,14 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Replay rgfogqxrh4uat4bo: a 4x Rey / 3x Luke / 2x Anakin Skywalker Saga deck answered
     The Force Is Strong In My Family with 'I Have It'. The V29.15 deck name reached the
     interceptor as null (setDeckName only wired via Curator) and the name law would have
-    said Luke regardless. SetupPolicy.chooseSaga now takes Luke/Anakin/Rey copy counts as
-    the primary signal (strict argmax; ties and zeros fall to the original name chain then
-    the Luke default). Counts come from DeckOracle.countCardsWithPersona — typed
+    said Luke regardless. The STARTING LOCATION now decides first (Steve, after a 3x Luke /
+    3x Rey tie fell to the Luke default in the 05:29 live test): own-side 217_27 Ajan
+    Kloss: Training Course → You Have That Power, Too; own-side 217_34 Anakin's Funeral
+    Pyre → I Have It; any other own starting location → My Father Has It; unreadable
+    board falls through. Below that, chooseSaga's Luke/Anakin/Rey copy counts (strict
+    argmax; ties and zeros fall to the original name chain then the Luke default). Counts come from DeckOracle.countCardsWithPersona — typed
     getPersonas() per copy, no title substrings — in both bots, with lazy oracle analyze.
     The two-arg overload delegates with zeros so all other callers are unchanged. The
     HallServer name-plumbing gap is recorded as an optional non-AI follow-up. Focused
-    setup gate 25/0/0/0; full reactor 2763/0/0/26 BUILD SUCCESS. Revert the single amendment commit.
+    setup gate 26/0/0/0; full reactor 2773/0/0/26 BUILD SUCCESS after the location
+    amendment (2763/0/0/26 on the count-only stage). Revert the single amendment commit.

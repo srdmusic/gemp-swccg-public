@@ -616,6 +616,28 @@ public final class SetupPolicy {
     }
 
     /**
+     * V61 starting-location signal (2026-07-27, Steve). The two set-17
+     * marker locations pin the saga by their own card text: Ajan Kloss:
+     * Training Course (217_27) rewards 'You Have That Power, Too' and
+     * Endor: Anakin's Funeral Pyre (217_34) rewards 'I Have It'. A deck
+     * running TFISMF with any OTHER starting location is the Anakin build.
+     * UNKNOWN means the board could not be read — fall to the count law.
+     */
+    public enum SagaStartingLocation {
+        REY_LOCATION,
+        LUKE_LOCATION,
+        OTHER_LOCATION,
+        UNKNOWN
+    }
+
+    public static SagaSelection chooseSaga(
+            String deckName, String[] results,
+            int lukeCount, int anakinCount, int reyCount) {
+        return chooseSaga(deckName, results, lukeCount, anakinCount,
+                reyCount, SagaStartingLocation.UNKNOWN);
+    }
+
+    /**
      * V61 amended in place (2026-07-27, Steve): the deck's actual persona
      * counts are the PRIMARY signal — a deck that runs 4x Rey / 3x Luke /
      * 2x Anakin wants 'You Have That Power, Too' regardless of what the deck
@@ -627,7 +649,8 @@ public final class SetupPolicy {
      */
     public static SagaSelection chooseSaga(
             String deckName, String[] results,
-            int lukeCount, int anakinCount, int reyCount) {
+            int lukeCount, int anakinCount, int reyCount,
+            SagaStartingLocation startingLocation) {
         if (results == null || results.length == 0) {
             return new SagaSelection(false, -1, null);
         }
@@ -653,6 +676,23 @@ public final class SetupPolicy {
         }
         if (!sagaChoice) {
             return new SagaSelection(false, -1, null);
+        }
+
+        // Starting-location signal decides first (card law: the marker
+        // location's own download keys on the exact choice). Falls through
+        // only when the board was unreadable or the pinned option is absent.
+        if (startingLocation == SagaStartingLocation.REY_LOCATION && rey >= 0) {
+            return new SagaSelection(true, rey,
+                    "Ajan Kloss: Training Course start → 'You Have That Power, Too'");
+        }
+        if (startingLocation == SagaStartingLocation.LUKE_LOCATION && luke >= 0) {
+            return new SagaSelection(true, luke,
+                    "Anakin's Funeral Pyre start → 'I Have It'");
+        }
+        if (startingLocation == SagaStartingLocation.OTHER_LOCATION
+                && anakin >= 0) {
+            return new SagaSelection(true, anakin,
+                    "Non-marker starting location → 'My Father Has It'");
         }
 
         int best = Math.max(lukeCount, Math.max(anakinCount, reyCount));
