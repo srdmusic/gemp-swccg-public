@@ -5655,7 +5655,65 @@
           "runtimeFilter": "Filters.and(Filters.Tatooine_site, Filters.battleground)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "ie-front-three-tatooine-sites",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Tatooine_site",
+              "locationFragments": [
+                "tatooine"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "includeExcludedFromBattle": true,
+              "opponentConstraint": {
+                "relation": "control",
+                "locationFilterKey": "Tatooine_site",
+                "includeExcludedFromBattle": true,
+                "count": {
+                  "comparator": "<",
+                  "value": 3
+                }
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "you control three Tatooine sites while opponent controls fewer than three (Card201_039.java L132-L133); Jabba's Palace sites count in both tallies though the owner may never deploy them"
+            }
+          ]
+        },
+        {
+          "id": "ie-back-relative-site-count",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Tatooine_site",
+              "locationFragments": [
+                "tatooine"
+              ],
+              "count": {
+                "comparator": ">",
+                "value": 0,
+                "referenceController": "self"
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flips back when opponent controls strictly more Tatooine sites than you (Card201_039_BACK.java L144-L145); equal counts including 0-0 hold the back"
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "I Want That Map",

@@ -8837,3 +8837,12 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     magnitudes; V83/V88/V108/V110 senator arms plus sealed generic consumers drive behavior.
     Five-test native contract green including both flip paths and the hold/flip-back ladder
     with real table pulses; full reactor 2789/0/0/26. Revert the single Batch Eleven commit.
+
+  ==== Imperial Entanglements Batch Twelve (2026-07-27): 201_39 counted control law ====
+    Front rule = Massassi shape (control self Tatooine_site >= 3, opponentConstraint < 3,
+    IEFB); back rule = CITC shape (opponent strictly > self on the same filter); registry key
+    Tatooine_site added fail-closed. Back title corrected to No One To Stop Us This Time.
+    Recorded adjacent law: the until-end-of-game Imperial-only deploy ban survives the flip,
+    Jabba's Palace sites count in both tallies but only the opponent can deploy them, and the
+    site-download action id is shared across the flip. No new magnitudes. Four-test native
+    contract green on first run; full reactor 2793/0/0/26. Revert the single Batch Twelve commit.
