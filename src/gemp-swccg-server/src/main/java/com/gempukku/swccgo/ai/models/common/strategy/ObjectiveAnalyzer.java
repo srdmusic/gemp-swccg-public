@@ -9725,6 +9725,20 @@ public class ObjectiveAnalyzer {
                             .Imperial_leader,
                         com.gempukku.swccgo.filters.Filters
                             .snowtrooper);
+            // Batch Eleven (2026-07-27): My Lord senator-count law. Composite
+            // keys fold the location into the actor filter because the
+            // "onTable" relation counts ACTORS, not locations.
+            case "senator_at_Galactic_Senate":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.senator,
+                        com.gempukku.swccgo.filters.Filters.at(
+                                com.gempukku.swccgo.filters.Filters.Galactic_Senate));
+            case "senator_with_blockade_agenda_at_Galactic_Senate":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.senator,
+                        com.gempukku.swccgo.filters.Filters.blockade_agenda,
+                        com.gempukku.swccgo.filters.Filters.at(
+                                com.gempukku.swccgo.filters.Filters.Galactic_Senate));
             // Batch Nine (2026-07-27): QMC front Lando/Lobot alternative.
             case "Lando_or_Lobot":
                 return com.gempukku.swccgo.filters.Filters.or(

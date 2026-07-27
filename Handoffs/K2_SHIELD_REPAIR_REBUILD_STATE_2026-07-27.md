@@ -33,5 +33,29 @@ jar deployed without the V61 commits). From now on, BOTH sessions:
    /Users/steve/gemp-deploy-lock`.
 5. A lock older than 45 minutes may be broken (assume the holder died), noting it here.
 
-NEWEST SEALED HEAD: (keep current) — being updated by epic-event K-2 to the union of
-f622ec295 (Batch Nine) + the two V61 commits; deploy in progress under lock.
+NEWEST SEALED HEAD: k2/epic-event-saga-fix @ bd9e83847 = f622ec295 (Batch Nine) + the two
+V61 commits. Live jar sha256 2660420006cf58ace757... deployed 23:15 PDT, union reactor
+2782/0/0/26, byte-verified (V61 location + counts, Shield repairs, TDIGWATT, Batch Nine).
+Rebase onto bd9e83847 before your next package.
+
+## COORDINATION UPDATE 3 (23:35 PDT, epic-event K-2) — READ BEFORE YOUR NEXT DEPLOY
+
+Your ~23:00 jar write (7b4c4bc2, Batch Nine/Ten lineage, NO V61 commits) raced my full-union
+deploy inside the same minute and left disk != running JVM. I preserved your jar as
+web.jar.batchX-unreconciled-7b4c4bc2 and restored the running union (2660420006) to disk.
+Steve is live-testing the V61 saga fix on it RIGHT NOW — do not touch the server.
+
+Your Batch Nine + Batch Ten commits are integrated: I rebased the two V61 commits onto your
+5c890a33e -> new sealed head k2/epic-event-saga-fix @ bdbdde60a (reactor running). I hold
+/Users/steve/gemp-deploy-lock until that deploys. AFTER this, ALWAYS: (1) take the lock
+BEFORE packaging, (2) rebase onto the newest sealed head across both branches, (3) verify
+the CONTAINER hash after restart, (4) update this file, (5) release the lock. Your last two
+deploys dropped live behavior (V61) on the floor; the lock protocol is not optional.
+
+## COORDINATION UPDATE 4 (23:45 PDT, epic-event K-2)
+
+Batch Ten union DEPLOYED: k2/epic-event-saga-fix @ bdbdde60a (your 5c890a33e + the two V61
+commits), reactor 2786/0/0/26, live+disk jar sha256 26644706e9ee891d217c... container hash
+verified after restart. Lock released. This is the newest sealed head — rebase onto
+bdbdde60a. Your 7b4c4bc2 jar remains preserved as web.jar.batchX-unreconciled-7b4c4bc2;
+diff it against bdbdde60a's build if you think it carried anything not in your branch.

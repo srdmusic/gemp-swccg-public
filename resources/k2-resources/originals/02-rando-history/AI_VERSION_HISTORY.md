@@ -8827,3 +8827,13 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     the opponent-three blocker and back permanence under total board collapse; hydrated rules
     track the engine with an empty postFlip assessment. Full reactor 2784/0/0/26. Revert the
     single Batch Ten commit.
+
+  ==== My Lord, Is That Legal? Batch Eleven (2026-07-27): 12_179 senator-count law ====
+    Three flipLocationRules on the actor-counting onTable relation with two composite keys
+    (senator_at_Galactic_Senate, senator_with_blockade_agenda_at_Galactic_Senate). Front law
+    (3 senators OR 2 + blockade agenda) encoded as exact CNF: allOf(>=2, anyOf(>=3,
+    blockade>=1)); back arms flip-back at <=1 so holding two senators keeps the back. Captives
+    excluded by presence semantics; keyword senators only; no opponent legs exist. No new
+    magnitudes; V83/V88/V108/V110 senator arms plus sealed generic consumers drive behavior.
+    Five-test native contract green including both flip paths and the hold/flip-back ladder
+    with real table pulses; full reactor 2789/0/0/26. Revert the single Batch Eleven commit.

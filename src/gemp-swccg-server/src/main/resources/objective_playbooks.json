@@ -4626,7 +4626,97 @@
           "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "mlitl-front-two-senators-floor",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "self",
+              "actorFilterKey": "senator_at_Galactic_Senate",
+              "locationFilterKey": "Galactic_Senate",
+              "locationFragments": [
+                "galactic senate"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "CNF floor: every flip path needs at least two of your senators at the Galactic Senate (Card12_179.java L169-L172; captives do not count)"
+            }
+          ]
+        },
+        {
+          "id": "mlitl-front-third-senator-or-blockade",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "self",
+              "actorFilterKey": "senator_at_Galactic_Senate",
+              "locationFilterKey": "Galactic_Senate",
+              "locationFragments": [
+                "galactic senate"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "three of your senators at the Galactic Senate (L171)"
+            },
+            {
+              "relation": "onTable",
+              "controller": "self",
+              "actorFilterKey": "senator_with_blockade_agenda_at_Galactic_Senate",
+              "locationFilterKey": "Galactic_Senate",
+              "locationFragments": [
+                "galactic senate"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "with the two-senator floor held, one of them carrying a blockade agenda completes the alternative (L172). CNF of (3 OR (2 AND blockade)) = (>=2) AND (>=3 OR blockade), exact because 3 implies 2."
+            }
+          ]
+        },
+        {
+          "id": "mlitl-back-hold-two-senators",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "self",
+              "actorFilterKey": "senator_at_Galactic_Senate",
+              "locationFilterKey": "Galactic_Senate",
+              "locationFragments": [
+                "galactic senate"
+              ],
+              "count": {
+                "comparator": "<=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flips back when fewer than two of your senators remain at the Galactic Senate (Card12_179_BACK.java L171); holding two or more keeps the back stable"
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "No Money, No Parts, No Deal!",
