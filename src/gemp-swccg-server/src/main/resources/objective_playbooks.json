@@ -3142,7 +3142,56 @@
           "runtimeFilter": "Filters.Main_Power_Generators"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "loaderEnabled": true,
+      "flipLocationRules": [
+        {
+          "id": "tekwrh-front-opponent-invades-your-hoth",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupy",
+              "controller": "opponent",
+              "locationFilterKey": "your_Hoth_location",
+              "locationFragments": [
+                "hoth"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "opponent occupies a Hoth location YOU OWN (Card222_027.java L137; Filters.your(playerId) qualifies the location card, so opponent presence at their own converted/dark-printed Hoth locations never flips it)"
+            }
+          ]
+        },
+        {
+          "id": "tekwrh-back-invader-cleared",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupy",
+              "controller": "opponent",
+              "locationFilterKey": "your_Hoth_location",
+              "locationFragments": [
+                "hoth"
+              ],
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flips back the moment no opponent presence remains at any of your Hoth locations (Card222_027_BACK.java L220): the exact negation of the front, a pure oscillator"
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "Mind What You Have Learned",

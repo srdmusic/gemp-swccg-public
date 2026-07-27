@@ -8881,3 +8881,13 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Rogue_One keys, all fail-closed. Rogue One is a Zeta-class transport, not a corvette.
     No new magnitudes. Four-test native contract green including the exception ladder in
     both directions; full reactor 2804/0/0/26. Revert the single Batch Fourteen commit.
+
+  ==== The Empire Knows We're Here Batch Fifteen (2026-07-27): 222_27 activation + oscillator ====
+    The profile was fully inert (no loaderEnabled key; ABSENT/DISABLED in the gap matrix).
+    Activated with two rules on the existing your_Hoth_location composite: front = opponent
+    occupies >= 1 of your Hoth locations; back = the exact negation (== 0) arming flip-back.
+    Ownership lives on the LOCATION card, so invaders at converted or dark-printed Hoth
+    locations never count. Marker-ordering law recorded: MPG needs a 4th/5th/6th Marker on
+    table and the setup auto-pulls the 4th. Zero new keys, zero new magnitudes. Three-test
+    contract green including the full oscillation cycle; full reactor 2807/0/0/26 (golden loader-count updated 21 to 22). Revert the
+    single Batch Fifteen commit.

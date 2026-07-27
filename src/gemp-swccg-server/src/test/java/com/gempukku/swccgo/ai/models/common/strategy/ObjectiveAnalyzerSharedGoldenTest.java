@@ -198,8 +198,10 @@ public class ObjectiveAnalyzerSharedGoldenTest {
             loaderEnabled.setAccessible(true);
             if (Boolean.TRUE.equals(loaderEnabled.get(profile))) enabled++;
         }
-        assertEquals(21, enabled);
-        assertEquals(37, profiles.size() - enabled);
+        // Batch Fifteen (2026-07-27): 222_27 was activated (loaderEnabled
+        // added to the previously inert profile), 21 -> 22.
+        assertEquals(22, enabled);
+        assertEquals(36, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);
