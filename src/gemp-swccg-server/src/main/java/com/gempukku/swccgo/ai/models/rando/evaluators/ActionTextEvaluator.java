@@ -2849,12 +2849,26 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     ShieldPolicy.FourthSlotPick fourthSlot =
                             new ShieldPolicy.FourthSlotPick(null, false,
                                     ShieldPolicy.FourthSlotTrigger.CLOSED);
-                    boolean occupiesBothTheaters = false;
+                    // Hoth repair #2 (2026-07-27): the parent hold is keyed on
+                    // the corrected battleOrderLive law, not self-occupation,
+                    // and is released outright when a Battle Order/Plan
+                    // equivalent is already on table (reserve target spent —
+                    // otherwise slot three stalls for the rest of the game).
+                    // OLD: occupiesBothTheaters = fourthSlotFacts.occupiesBothTheaters();
+                    boolean holdReleased = false;
                     if (shieldsOnTable >= 2 && shieldStrategy != null) {
                         ShieldFacts.FourthSlotFacts fourthSlotFacts =
                                 ShieldFacts.fourthSlotFacts(gameState, context.getGame(),
                                         context.getPlayerId());
-                        occupiesBothTheaters = fourthSlotFacts.occupiesBothTheaters();
+                        boolean opponentOutDrains =
+                                CardSelectionEvaluator.computeNetDrainBalance(
+                                    context.getGame(), gameState,
+                                    context.getPlayerId()) >= 2;
+                        holdReleased = ShieldFacts.battleOrderLive(
+                                context.getGame(), context.getPlayerId(),
+                                opponentOutDrains)
+                            || ShieldFacts.battleOrderPlanEquivalentOnTable(
+                                gameState);
                         if (shieldsOnTable >= 3) {
                             fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts, null);
                         }
@@ -2871,7 +2885,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 stackedPileSource, shieldsOnTable);
 
                     controlLedger.register(ShieldPolicy.stackedPileParent(
-                            actionId, shieldsOnTable, occupiesBothTheaters,
+                            actionId, shieldsOnTable, holdReleased,
                             fourthSlot, activationCap,
                             activationCount, pacingCap, turnNumber,
                             reserveEopBattleOrder));

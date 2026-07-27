@@ -140,10 +140,15 @@ public class ShieldCardSelectionPolicyParityTest {
                 new ShieldStrategy(Side.DARK), new ShieldStrategy(Side.DARK));
 
         var preferred = action(pair.rando(), "7");
-        assertBits(2280.0f, preferred.getScore());
+        // Hoth repair #2 (2026-07-27): this mock board answers every canSpot
+        // true, so the OPPONENT also occupies both theaters and is self-exempt
+        // from Battle Order's tax — the corrected gate is rightly dead here
+        // (V51 -9999, and the V53 turn-1 exception no longer applies). The
+        // live-gate path is covered in ShieldPolicyTest.
+        assertBits(-12919.0f, preferred.getScore());
         assertReasonOnce(preferred.getReasoning(), "4TH SLOT BOOST");
-        assertReasonOnce(preferred.getReasoning(), "V51 BATTLE ORDER EARLY-DEPLOY");
-        assertNoReasonContaining(preferred.getReasoning(), "V53 SHIELD MIN-TURN");
+        assertReasonOnce(preferred.getReasoning(), "V51 BATTLE ORDER GATE");
+        assertReasonOnce(preferred.getReasoning(), "V53 SHIELD MIN-TURN");
 
         var other = action(pair.rando(), "8");
         assertBits(-4950.0f, other.getScore());
@@ -188,7 +193,10 @@ public class ShieldCardSelectionPolicyParityTest {
                 "Deploy from Reserve Deck", List.of(), List.of("13_54", "13_95"),
                 List.of(), new ShieldStrategy(Side.DARK), new ShieldStrategy(Side.DARK));
 
-        assertBits(2380.0f, pair.rando().get(0).getScore());
+        // Hoth repair #2: corrected gate dead on this both-players-occupy
+        // mock board (see fourthSlot test note); preferred discovery and
+        // parity semantics unchanged.
+        assertBits(-12869.0f, pair.rando().get(0).getScore());
         assertReasonOnce(pair.rando().get(0).getReasoning(), "4TH SLOT BOOST");
         assertBits(-4900.0f, pair.rando().get(1).getScore());
         assertReasonOnce(pair.rando().get(1).getReasoning(), "not preferred");
@@ -204,21 +212,22 @@ public class ShieldCardSelectionPolicyParityTest {
         EvaluationPair dedicated = evaluate(gameState, game, "CARD_SELECTION",
                 "Choose a defensive shield", List.of("7"), List.of(), List.of(),
                 new ShieldStrategy(Side.DARK), new ShieldStrategy(Side.DARK));
-        assertBits(280.0f, dedicated.rando().get(0).getScore());
+        // Hoth repair #2: corrected gate dead on this both-players-occupy
+        // mock board (opponent self-exempt); V53 turn-1 exception is keyed on
+        // the live gate and no longer waives the min-turn veto here.
+        assertBits(-14919.0f, dedicated.rando().get(0).getScore());
         assertReasonOnce(dedicated.rando().get(0).getReasoning(),
-                "V51 BATTLE ORDER EARLY-DEPLOY");
-        assertNoReasonContaining(dedicated.rando().get(0).getReasoning(),
+                "V51 BATTLE ORDER GATE");
+        assertReasonOnce(dedicated.rando().get(0).getReasoning(),
                 "V53 SHIELD MIN-TURN");
 
         EvaluationPair reserve = evaluate(gameState, game, "CARD_SELECTION",
                 "Deploy from Reserve Deck", List.of(), List.of("13_54"), List.of(),
                 new ShieldStrategy(Side.DARK), new ShieldStrategy(Side.DARK));
-        assertBits(380.0f, reserve.rando().get(0).getScore());
+        assertBits(-14869.0f, reserve.rando().get(0).getScore());
         assertReasonOnce(reserve.rando().get(0).getReasoning(),
-                "V51 BATTLE ORDER: Occupy BG site + BG system");
+                "V51 BATTLE ORDER GATE");
         assertReasonOnce(reserve.rando().get(0).getReasoning(),
-                "V51 BATTLE ORDER EARLY-DEPLOY");
-        assertNoReasonContaining(reserve.rando().get(0).getReasoning(),
                 "V53 SHIELD MIN-TURN");
     }
 

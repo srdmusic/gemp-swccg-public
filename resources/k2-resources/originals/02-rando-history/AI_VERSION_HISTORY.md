@@ -8768,3 +8768,35 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     with primary log evidence (see P0_TURN_COUNTER_REFUTATION_2026-07-27.md); no code change.
     Full isolated reactor on the consolidated worktree: 2762/0/0/26 BUILD SUCCESS. Rulebook
     regenerated: 784 rules. Revert = reset to 93f0fd2c0 and redeploy its jar.
+
+  ==== Shield twin adjacent-repair batch (2026-07-27): four live regressions from 93r5wrrnbo3q91j0 ====
+    The live 222_30 flip route is preserved untouched. Repair 2 corrects the Battle Order gate
+    to Card13_054's real tax direction via ShieldFacts.opponentLacksBothTheaters and
+    battleOrderLive (opponent lacks both theaters AND (self-exempt OR opponent out-drains by
+    2+, code convention computeNetDrainBalance >= 2)). V51, the V112 unknown gate, the V112
+    third-slot selection and parent hold, and the V53 turn-1 exception are re-keyed to
+    battleOrderLive; the third-slot reserve is additionally released when a Battle Order/Plan
+    equivalent is already on table (review catch: without the release, slot three stalls for
+    the rest of the game once the reserve target is spent). The V51 early bonus additionally
+    requires shieldsOnTable >= 2 so turn-1 totals stay 130 < Secret Plans 275 < Allegations
+    325 while slot three totals 2280 dedicated / 2330 reserve. V112 hold and the EOP reserve
+    are an if/else pair. Repair 1 adds
+    ObjectiveAnalyzer.isPreferredObjectiveTheaterPackageForceLossCandidate: exactly one
+    cheapest affordable ship+pilot hand pair joins the V21 -9999 required hold while the
+    profile's named battleground system is on table and we occupy zero battleground systems;
+    data-scoped, fail-closed, tiebreak cost then ship id then pilot id, Invasion Naboo
+    exclusion reused. Repair 3 adds MoveObjectiveGateHoldPolicy.evaluatePostFlipAnchorConcentration
+    plus analyzer facts (holdsStayFlippedAnchor / isSoleStayFlippedAnchorSite /
+    countSafeStayFlippedAnchorSites): a move INTO the sole unsafe stay-flipped anchor site
+    with no other safe anchor site is hard-vetoed on every move route (no landspeed text
+    gate), with a -250 spread nudge when a safe alternative exists; fleeing anchors are
+    unaffected and RETREATABLE_POWER_GAP (6.0, now public) is shared with the survival
+    release. Repair 4 widens the V297.1 plan-fallback release to spyBlocked OR
+    formationHardBlocked via isPlannedTargetFormationHardBlocked (mirrors the per-row
+    FormationSafety verdict), so a hard-blocked planned target no longer defers every
+    admissible row into the V201 synthetic Pass that armed the V163 cancel latch.
+    The second-Cannon item is closed as working-as-intended; no carrier-preference rule added.
+    Both bots mirrored; AI code and tests only. Original batch wiped uncommitted by a reboot
+    and rebuilt identically from recorded edit scripts in a durable worktree. Focused gate
+    95/0/0/0; full reactor 2771/0/0/26 BUILD SUCCESS. Revert the single batch commit; the consolidated
+    lineage stays independent.

@@ -2092,16 +2092,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 && isCardSelectable(context, plannedTargetIndex);
                             boolean plannedTargetSpyBlocked = plannedTargetOffered
                                 && isOpponentUndercoverOnlyTarget(context, plannedTargetId);
-                            if (!isPlannedTarget || !plannedTargetSpyBlocked) {
+                            // Hoth repair #4 (2026-07-27): a planned target that
+                            // FormationSafety hard-blocks is offered but not
+                            // admissible. Deferring every other row against it
+                            // produced the V201 all-deferred synthetic Pass that
+                            // armed the V163 cancel latch (Veers never deployed).
+                            // Widen V297.1's release to the formation case.
+                            boolean plannedTargetFormationBlocked = plannedTargetOffered
+                                && isPlannedTargetFormationHardBlocked(context,
+                                    plannedTargetId, deployingBlueprintId,
+                                    plannedDeployInstruction, deploymentPlanSnapshot);
+                            boolean plannedTargetBlocked = plannedTargetSpyBlocked
+                                || plannedTargetFormationBlocked;
+                            if (!isPlannedTarget || !plannedTargetBlocked) {
                                 applyDeployPlanDestinationPolicy(action,
                                     DeployPlanPolicy.evaluateDestinationTarget(
                                         new DeployPlanPolicy.DestinationTargetFacts(
                                             action.getActionId(), isPlannedTarget,
-                                            plannedTargetOffered && !plannedTargetSpyBlocked,
+                                            plannedTargetOffered && !plannedTargetBlocked,
                                             plannedTargetName)));
                             }
                             if (isPlannedTarget && plannedTargetSpyBlocked) {
                                 logger.warn("V297.1 PLAN FALLBACK: {} is blocked only by an opponent undercover spy; release alternate destinations",
+                                    title);
+                            } else if (isPlannedTarget && plannedTargetFormationBlocked) {
+                                logger.warn("V297.1 PLAN FALLBACK: planned target {} is FormationSafety hard-blocked; release alternate destinations",
                                     title);
                             } else if (isPlannedTarget) {
                                 logger.info("✅ {} is the PLANNED target (+200)", title);
@@ -6013,7 +6028,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         } catch (Exception e) { return new float[]{0f, 0f, 0f}; }
     }
 
-    private static int computeNetDrainBalance(SwccgGame game, GameState gs, String playerId) {
+    // Hoth repair #2 (2026-07-27): package-visible so ActionTextEvaluator can
+    // feed the corrected battleOrderLive gate without duplicating drain math.
+    static int computeNetDrainBalance(SwccgGame game, GameState gs, String playerId) {
         String oppId = gs.getOpponent(playerId);
         if (oppId == null) return 0;
         int oppTotal = 0, ourTotal = 0;
@@ -7172,6 +7189,73 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 "MOVE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD"),
                                             TraceDomainId.MOVE,
                                             TraceOutputKind.VETO);
+                                    }
+                                }
+                                // Hoth repair #3 (2026-07-27): anchor-
+                                // concentration guard. Applies to EVERY move
+                                // route (no "using landspeed" text gate; that
+                                // gate is why the replay's walker move
+                                // escaped the survival hold). Blocks moving
+                                // INTO the sole unsafe stay-flipped anchor
+                                // site when no other safe anchor site exists;
+                                // otherwise a -250 ordering nudge prefers a
+                                // separate anchor site. Data-scoped via the
+                                // profile's stayFlipped rules.
+                                if (routeAnalyzer != null
+                                        && routeAnalyzer.isAnalyzed()
+                                        && routeAnalyzer
+                                            .holdsStayFlippedAnchor(
+                                                game, playerId, location)) {
+                                    String anchorOpp =
+                                        gameState.getOpponent(playerId);
+                                    float anchorFriendly =
+                                        game.getModifiersQuerying()
+                                            .getTotalPowerAtLocation(
+                                                gameState, location,
+                                                playerId, false, false);
+                                    float anchorOpposing = anchorOpp != null
+                                        ? game.getModifiersQuerying()
+                                            .getTotalPowerAtLocation(
+                                                gameState, location,
+                                                anchorOpp, false, false)
+                                            + com.gempukku.swccgo.ai.models
+                                                .common.strategy
+                                                .FormationSafety
+                                                .weaponBonusAt(
+                                                    gameState, location,
+                                                    anchorOpp)
+                                        : 0.0f;
+                                    boolean anchorDestUnsafe =
+                                        anchorOpposing > anchorFriendly
+                                            + MoveObjectiveGateHoldPolicy
+                                                .RETREATABLE_POWER_GAP;
+                                    int safeOtherAnchorSites =
+                                        routeAnalyzer
+                                            .countSafeStayFlippedAnchorSites(
+                                                game, playerId, location,
+                                                MoveObjectiveGateHoldPolicy
+                                                    .RETREATABLE_POWER_GAP);
+                                    var concentrationHold =
+                                        MoveObjectiveGateHoldPolicy
+                                            .evaluatePostFlipAnchorConcentration(
+                                                true,
+                                                routeAnalyzer
+                                                    .isSoleStayFlippedAnchorSite(
+                                                        game, playerId,
+                                                        location),
+                                                anchorDestUnsafe,
+                                                safeOtherAnchorSites);
+                                    if (concentrationHold.hardVeto()) {
+                                        action.hardVeto(
+                                            concentrationHold.reason(),
+                                            TraceRuleId.of(
+                                                "MOVE.OBJECTIVE.POST_FLIP_ANCHOR_CONCENTRATION"),
+                                            TraceDomainId.MOVE,
+                                            TraceOutputKind.VETO);
+                                    } else if (safeOtherAnchorSites > 0) {
+                                        action.addReasoning(
+                                            "MOVE.OBJECTIVE.ANCHOR_SPREAD: prefer a separate stay-flipped anchor site -250",
+                                            -250.0f);
                                     }
                                 }
                                 boolean countedFormationActive =
@@ -9363,19 +9447,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // Battle Order/Plan normally requires Rando to use 3 Force per drain; occupation
             // waives that cost, and Battle Plan also suppresses the Battle Order modifier.
             boolean v112IsBattleOrder = ShieldPolicy.isBattleOrderOrPlan(cardTitle);
-            boolean v112OccupiesBoth = !v112IsBattleOrder
-                    || ShieldFacts.occupiesBothTheaters(
-                        context.getGame(), context.getPlayerId());
+            // Hoth repair #2 (2026-07-27): corrected battleOrderLive law.
+            // OLD: ShieldFacts.occupiesBothTheaters(game, playerId)
+            boolean v112BattleOrderLive = !v112IsBattleOrder
+                    || ShieldFacts.battleOrderLive(
+                        context.getGame(), context.getPlayerId(),
+                        computeNetDrainBalance(context.getGame(),
+                            context.getGameState(),
+                            context.getPlayerId()) >= 2);
             shieldLedger.register(ShieldPolicy.unknownBattleOrderGate(
-                    cardId, cardTitle, v112OccupiesBoth));
+                    cardId, cardTitle, v112BattleOrderLive));
             shieldLedger.register(
                     ShieldPolicy.battleOrderPlanRedundancyGate(
                             cardId, cardTitle,
                             ShieldFacts
                                 .battleOrderPlanEquivalentOnTable(
                                     context.getGameState())));
-            if (v112IsBattleOrder && !v112OccupiesBoth) {
-                logger.warn("V112 BATTLE ORDER GATE: '{}' blocked - occupiesBothTheaters=false",
+            if (v112IsBattleOrder && !v112BattleOrderLive) {
+                logger.warn("V112 BATTLE ORDER GATE: '{}' blocked - battleOrderLive=false",
                         cardTitle);
             }
 
@@ -9566,6 +9655,104 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     && context.getGame().getModifiersQuerying().getTotalPowerAtLocation(
                             context.getGameState(), target, opponentId,
                             false, false) <= 0.0f;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Hoth repair #4 (2026-07-27): true when the PLANNED deploy target would
+     * receive a FormationSafety HARD_BLOCK for the deploying character.
+     * Mirrors the per-row verdict computation (fsForce/fsThisCost/fsBuddyCost/
+     * flip-gate refinement then assessCharacterDeploy) — keep the two in sync.
+     * Fails closed to false so an uncertain verdict never suppresses the
+     * plan-following defer.
+     */
+    private boolean isPlannedTargetFormationHardBlocked(
+            DecisionContext context, String plannedTargetId,
+            String deployingBlueprintId,
+            DeploymentInstruction plannedDeployInstruction,
+            DeploymentPlan deploymentPlanSnapshot) {
+        try {
+            GameState gameState = context.getGameState();
+            if (gameState == null || context.getGame() == null
+                    || context.getPlayerId() == null
+                    || deployingBlueprintId == null) {
+                return false;
+            }
+            PhysicalCard location = gameState.findCardById(
+                    Integer.parseInt(plannedTargetId));
+            if (location == null) return false;
+            PhysicalCard deployingCard = null;
+            for (PhysicalCard h : gameState.getHand(context.getPlayerId())) {
+                if (h != null
+                        && deployingBlueprintId.equals(h.getBlueprintId(false))) {
+                    deployingCard = h;
+                    break;
+                }
+            }
+            if (deployingCard == null) return false;
+            SwccgCardBlueprint fsDepBp = deployingCard.getBlueprint();
+            if (fsDepBp == null
+                    || fsDepBp.getCardCategory() != CardCategory.CHARACTER) {
+                return false;
+            }
+            float fsForce = gameState.getForcePileSize(context.getPlayerId());
+            Float fsThisCost = fsDepBp.getDeployCost();
+            Float fsBuddyCost = null;
+            java.util.Set<Integer> fsCharacterIdsInHand = new java.util.HashSet<>();
+            for (PhysicalCard fsH : gameState.getHand(context.getPlayerId())) {
+                if (fsH == null || fsH.getBlueprint() == null) continue;
+                if (fsH.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                fsCharacterIdsInHand.add(fsH.getPermanentCardId());
+            }
+            boolean fsExactPlanCard = plannedDeployInstruction != null
+                && plannedDeployInstruction.getCardPermanentCardId() != null
+                && plannedDeployInstruction.getCardCurrentCardId() != null
+                && deployingCard.getPermanentCardId() == plannedDeployInstruction.getCardPermanentCardId()
+                && deployingCard.getCardId() == plannedDeployInstruction.getCardCurrentCardId();
+            if (fsExactPlanCard && deploymentPlanSnapshot != null) {
+                fsBuddyCost = deploymentPlanSnapshot.getCheapestPlannedCharacterBuddyCost(
+                    plannedDeployInstruction, String.valueOf(location.getCardId()),
+                    fsCharacterIdsInHand);
+            }
+            var fsObj = context.getObjectiveAnalyzer();
+            String fsFlipGate = (fsObj != null && fsObj.isAnalyzed())
+                    ? fsObj.getFlipCriticalControlSite() : null;
+            if (fsObj != null && fsObj.hasFlipGateActorRequirement()) {
+                boolean actorGateCandidate =
+                    fsObj.advancesUnfilledFlipGateActorRequirement(
+                        context.getGame(), context.getPlayerId(),
+                        deployingCard, location);
+                int fsFriendlyCharacters = com.gempukku.swccgo.ai.models.common.strategy
+                    .FormationSafety.countFriendlyNonUndercoverCharacters(
+                        gameState.getCardsAtLocation(location),
+                        context.getPlayerId());
+                boolean fsFundedBuddy = fsBuddyCost != null
+                    && fsThisCost != null
+                    && fsThisCost + fsBuddyCost <= fsForce;
+                if (!actorGateCandidate
+                        || !(fsFriendlyCharacters > 0 || fsFundedBuddy)) {
+                    fsFlipGate = null;
+                }
+            }
+            if (fsObj != null
+                    && fsObj.wouldCompletePreFlipRequirementAt(
+                        context.getGame(), context.getPlayerId(),
+                        deployingCard, location)) {
+                fsFlipGate = location.getTitle();
+            }
+            com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployVerdict fsVerdict =
+                com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                .assessCharacterDeploy(context.getGame(), gameState, context.getPlayerId(),
+                    deployingCard,
+                    fsDepBp.hasPowerAttribute() ? fsDepBp.getPower() : null,
+                    fsDepBp.hasAbilityAttribute() ? fsDepBp.getAbility() : null,
+                    deployingCard.isUndercover(),
+                    location, fsForce, fsThisCost, fsBuddyCost, fsFlipGate);
+            return fsVerdict.constraint()
+                    == com.gempukku.swccgo.ai.models.common.strategy
+                        .FormationSafety.DeployConstraint.HARD_BLOCK;
         } catch (Exception ignored) {
             return false;
         }
@@ -9772,15 +9959,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     }
                 }
 
-                boolean occupiesBoth = !ShieldPolicy.isBattleOrderOrPlan(cardTitle)
-                        || ShieldFacts.occupiesBothTheaters(game, playerId);
+                // Hoth repair #2 (2026-07-27): corrected battleOrderLive law.
+                // OLD: ShieldFacts.occupiesBothTheaters(game, playerId)
+                boolean battleOrderLive = !ShieldPolicy.isBattleOrderOrPlan(cardTitle)
+                        || ShieldFacts.battleOrderLive(game, playerId,
+                            computeNetDrainBalance(game,
+                                context.getGameState(), playerId) >= 2);
                 PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
                         decisionId == null || decisionId.isBlank()
                                 ? "shield-reserve-" + action.getActionId()
                                 : decisionId + "-shield-reserve-" + action.getActionId());
                 shieldLedger.register(ShieldPolicy.shieldCandidateAdjustments(
                         action.getActionId(), cardTitle, shieldScore, minTurnToPlay,
-                        turnNumber, shieldsOnTable, fourthSlot, occupiesBoth,
+                        turnNumber, shieldsOnTable, fourthSlot, battleOrderLive,
                         ShieldFacts.battleOrderPlanEquivalentOnTable(
                             context.getGameState()),
                         ShieldPolicy.CandidateRoute.RESERVE));
@@ -9790,8 +9981,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             cardTitle, fourthSlot.preferred(), fourthSlot.pursue());
                 }
                 if (ShieldPolicy.isBattleOrderOrPlan(cardTitle)) {
-                    logger.warn("V51 BATTLE ORDER (reserve): occupiesBoth={} base={}",
-                            occupiesBoth, shieldScore);
+                    logger.warn("V51 BATTLE ORDER (reserve): battleOrderLive={} base={}",
+                            battleOrderLive, shieldScore);
                 }
             }
 
@@ -9988,16 +10179,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     preferred -> preferredShieldInCandidates(context, preferred));
                         }
                     }
-                    boolean occupiesBoth = !ShieldPolicy.isBattleOrderOrPlan(title)
-                            || ShieldFacts.occupiesBothTheaters(
-                                context.getGame(), context.getPlayerId());
+                    // Hoth repair #2 (2026-07-27): corrected battleOrderLive law.
+                    // OLD: ShieldFacts.occupiesBothTheaters(game, playerId)
+                    boolean battleOrderLive = !ShieldPolicy.isBattleOrderOrPlan(title)
+                            || ShieldFacts.battleOrderLive(
+                                context.getGame(), context.getPlayerId(),
+                                computeNetDrainBalance(context.getGame(),
+                                    context.getGameState(),
+                                    context.getPlayerId()) >= 2);
                     PolicyContributionLedger shieldLedger = new PolicyContributionLedger(
                             decisionId == null || decisionId.isBlank()
                                     ? "shield-selection-" + cardId
                                     : decisionId + "-shield-selection-" + cardId);
                     shieldLedger.register(ShieldPolicy.shieldCandidateAdjustments(
                             cardId, title, shieldScore, minTurnToPlay, turnNumber,
-                            shieldsOnTable, fourthSlot, occupiesBoth,
+                            shieldsOnTable, fourthSlot, battleOrderLive,
                             ShieldFacts.battleOrderPlanEquivalentOnTable(
                                 context.getGameState()),
                             ShieldPolicy.CandidateRoute.DEDICATED));
@@ -10008,8 +10204,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 title, fourthSlot.preferred(), fourthSlot.pursue());
                     }
                     if (ShieldPolicy.isBattleOrderOrPlan(title)) {
-                        logger.warn("V51 BATTLE ORDER (shield): occupiesBoth={} base={}",
-                                occupiesBoth, shieldScore);
+                        logger.warn("V51 BATTLE ORDER (shield): battleOrderLive={} base={}",
+                                battleOrderLive, shieldScore);
                     }
                 } else if (blueprint != null) {
                     // Not a shield - low priority

@@ -218,6 +218,42 @@ public final class ShieldFacts {
     }
 
     /**
+     * V51/V112 corrected-law input (2026-07-27, Hoth repair #2): does the
+     * OPPONENT lack simultaneous battleground site + system occupation?
+     * Card13_054 taxes the player initiating the drain unless THAT player
+     * occupies both theaters (or Battle Plan is on table), so Battle Order
+     * only pays off while the opponent lacks both. Same engine predicate as
+     * occupiesBothTheaters (inherits the Invasion Naboo exclusion). Fails
+     * closed: false on any error, so the gate stays shut.
+     */
+    public static boolean opponentLacksBothTheaters(SwccgGame game, String playerId) {
+        if (game == null || playerId == null) return false;
+        try {
+            String opponent = game.getOpponent(playerId);
+            if (opponent == null) return false;
+            return !occupiesBothTheaters(game, opponent);
+        } catch (Exception e) {
+            LOG.debug("opponentLacksBothTheaters error: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * V51/V112 corrected gate (2026-07-27, Hoth repair #2): Battle Order /
+     * Battle Plan is worth playing when the opponent would be taxed (they
+     * lack both theaters) AND either we are self-exempt (we occupy both) or
+     * the opponent out-drains us by 2+ so accepting our own tax is justified.
+     * The old keying was occupiesBothTheaters(self) alone, which inverted the
+     * card law: it demanded the state that makes the card unnecessary.
+     */
+    public static boolean battleOrderLive(SwccgGame game, String playerId,
+                                          boolean opponentOutDrainsByTwoPlus) {
+        return opponentLacksBothTheaters(game, playerId)
+                && (occupiesBothTheaters(game, playerId)
+                    || opponentOutDrainsByTwoPlus);
+    }
+
+    /**
      * V106 input (2026-07-06, T2 MOVE #3): does playerId occupy ANY battleground?
      * Engine predicate (canSpot(occupies + battleground)) — presence-based, so an
      * unpiloted ship at a battleground system counts (it occupies, power 0),
@@ -337,7 +373,10 @@ public final class ShieldFacts {
                         gameState, modifiers, location);
     }
 
-    private static boolean isInvasionOnTable(GameState gameState) {
+    // Hoth repair #1 (2026-07-27): package-visible so ObjectiveAnalyzer's
+    // theater-package selector reuses the SAME Invasion Naboo exclusion as
+    // occupiesBothTheaters, instead of forking a second table scan.
+    static boolean isInvasionOnTable(GameState gameState) {
         if (gameState == null) return false;
         try {
             for (PhysicalCard card : gameState.getAllPermanentCards()) {

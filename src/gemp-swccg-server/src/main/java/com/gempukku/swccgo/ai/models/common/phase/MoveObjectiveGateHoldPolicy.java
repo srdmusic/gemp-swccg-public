@@ -15,6 +15,7 @@ public final class MoveObjectiveGateHoldPolicy {
         HOLD_LAST_CONTROL_SOURCE,
         HOLD_FLIP_BACK_BLOCKER,
         HOLD_POST_FLIP_SURVIVAL_ACTOR,
+        HOLD_POST_FLIP_ANCHOR_CONCENTRATION,
         HOLD_REQUIRED_CARD_RETENTION_DEFENDER,
         HOLD_HARD_LOSS_DEFENDER
     }
@@ -25,7 +26,10 @@ public final class MoveObjectiveGateHoldPolicy {
         }
     }
 
-    private static final float RETREATABLE_POWER_GAP = 6.0f;
+    // Hoth repair #3 (2026-07-27): public so the anchor-concentration
+    // adapters and ObjectiveAnalyzer's safe-site count reuse the exact same
+    // retreatability threshold as evaluatePostFlipSurvivalActor.
+    public static final float RETREATABLE_POWER_GAP = 6.0f;
 
     private MoveObjectiveGateHoldPolicy() {
     }
@@ -272,6 +276,32 @@ public final class MoveObjectiveGateHoldPolicy {
                 Branch.HOLD_POST_FLIP_SURVIVAL_ACTOR,
                 true,
                 "MOVE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD: keep the last actor preventing immediate objective loss");
+    }
+
+    /**
+     * Hoth repair #3 (2026-07-27): blocks a move that would concentrate at
+     * the ONLY stay-flipped anchor site while that site is unsafe and no
+     * other safe anchor site exists. The 93r5wrrnbo3q91j0 loss mode was not
+     * departure but concentration: every mover piled onto the sole anchor,
+     * which died in one battle and took the flipped objective out of play.
+     * An anchor fleeing a hopeless site is unaffected (its destination does
+     * not hold the last anchor), so this never fights the survival release.
+     */
+    public static Evaluation evaluatePostFlipAnchorConcentration(
+            boolean stayFlippedRuleActive,
+            boolean destinationHoldsLastAnchor,
+            boolean destinationUnsafe,
+            int safeAnchorSitesAfterMove) {
+        if (!stayFlippedRuleActive
+                || !destinationHoldsLastAnchor
+                || !destinationUnsafe
+                || safeAnchorSitesAfterMove != 0) {
+            return Evaluation.none();
+        }
+        return new Evaluation(
+                Branch.HOLD_POST_FLIP_ANCHOR_CONCENTRATION,
+                true,
+                "MOVE.OBJECTIVE.POST_FLIP_ANCHOR_CONCENTRATION: do not stack every stay-flipped anchor at one unsafe site");
     }
 
     public static Evaluation evaluate(

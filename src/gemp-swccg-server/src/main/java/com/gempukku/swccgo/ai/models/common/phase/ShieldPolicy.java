@@ -121,18 +121,18 @@ public final class ShieldPolicy {
 
     public static PolicyResult stackedPileParent(String actionId,
                                                  int shieldsOnTable,
-                                                 boolean occupiesBothTheaters,
+                                                 boolean battleOrderLive,
                                                  FourthSlotPick fourthSlot,
                                                  boolean atActivationCap,
                                                  int activationCount,
                                                  boolean atPacingCap,
                                                  int turnNumber) {
-        return stackedPileParent(actionId, shieldsOnTable, occupiesBothTheaters,
+        return stackedPileParent(actionId, shieldsOnTable, battleOrderLive,
                 fourthSlot, atActivationCap, activationCount, atPacingCap,
                 turnNumber, false);
     }
 
-    // EOP-era compatibility overload (no occupiesBothTheaters): the V112
+    // EOP-era compatibility overload (no battleOrderLive): the V112
     // third-slot hold cannot fire through this path — pass true so only the
     // EOP reserve semantics apply, matching the EOP lineage's behavior.
     public static PolicyResult stackedPileParent(String actionId,
@@ -150,7 +150,7 @@ public final class ShieldPolicy {
 
     public static PolicyResult stackedPileParent(String actionId,
                                                  int shieldsOnTable,
-                                                 boolean occupiesBothTheaters,
+                                                 boolean battleOrderLive,
                                                  FourthSlotPick fourthSlot,
                                                  boolean atActivationCap,
                                                  int activationCount,
@@ -160,12 +160,19 @@ public final class ShieldPolicy {
         Objects.requireNonNull(fourthSlot, "fourthSlot");
         List<PolicyOperation> operations = new ArrayList<>();
 
-        if (shieldsOnTable == 2 && !occupiesBothTheaters) {
+        // Hoth repair #2 (2026-07-27): the hold is re-keyed from
+        // !occupiesBothTheaters(self) to !battleOrderLive. The old key made
+        // the hold block the very activation it was reserving for whenever
+        // Battle Order became playable through the corrected card law
+        // (opponent lacks both theaters + self-exempt-or-out-drained).
+        // Callers additionally release the hold when a Battle Order/Plan
+        // equivalent is already on table (the reserve target is spent).
+        // OLD: if (shieldsOnTable == 2 && !occupiesBothTheaters) {
+        if (shieldsOnTable == 2 && !battleOrderLive) {
             add(operations, actionId, "V112-third-slot-reserve",
                     TraceOutputKind.ORDERING, -3000.0f,
                     "V112 3RD SLOT HOLD: reserve the third shield for Battle Order");
-        }
-        if (reserveForBattleOrder) {
+        } else if (reserveForBattleOrder) {
             add(operations, actionId, "SHIELDS-EOP-BATTLE-ORDER-RESERVE",
                     TraceOutputKind.ORDERING, -3000.0f,
                     "EOP SHIELD HOLD: preserve slot four until Endor system occupation makes Battle Order live");
@@ -212,15 +219,17 @@ public final class ShieldPolicy {
                 TraceOutputKind.BANDED, 50.0f, "Defensive shield");
     }
 
+    // Hoth repair #2 (2026-07-27): re-keyed from occupiesBothTheaters(self)
+    // to the corrected battleOrderLive law (ShieldFacts.battleOrderLive).
     public static PolicyResult unknownBattleOrderGate(String actionId,
                                                       String cardTitle,
-                                                      boolean occupiesBothTheaters) {
-        if (!isBattleOrderOrPlan(cardTitle) || occupiesBothTheaters) {
+                                                      boolean battleOrderLive) {
+        if (!isBattleOrderOrPlan(cardTitle) || battleOrderLive) {
             return result("SHIELD_UNKNOWN_POLICY", List.of());
         }
         return one("SHIELD_UNKNOWN_POLICY", actionId, "V112",
                 TraceOutputKind.VETO, -9999.0f,
-                "V112 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!");
+                "V112 BATTLE ORDER GATE: opponent self-exempt or tax unjustified");
     }
 
     public static PolicyResult battleOrderPlanRedundancyGate(
@@ -268,11 +277,11 @@ public final class ShieldPolicy {
                                                           int turnNumber,
                                                           int shieldsOnTable,
                                                           FourthSlotPick pick,
-                                                          boolean occupiesBothTheaters,
+                                                          boolean battleOrderLive,
                                                           CandidateRoute route) {
         return shieldCandidateAdjustments(
                 actionId, cardTitle, shieldScore, minTurnToPlay,
-                turnNumber, shieldsOnTable, pick, occupiesBothTheaters,
+                turnNumber, shieldsOnTable, pick, battleOrderLive,
                 false, route);
     }
 
@@ -283,7 +292,7 @@ public final class ShieldPolicy {
                                                           int turnNumber,
                                                           int shieldsOnTable,
                                                           FourthSlotPick pick,
-                                                          boolean occupiesBothTheaters,
+                                                          boolean battleOrderLive,
                                                           boolean equivalentOnTable,
                                                           CandidateRoute route) {
         Objects.requireNonNull(pick, "pick");
@@ -296,8 +305,10 @@ public final class ShieldPolicy {
             return redundancy;
         }
 
+        // Hoth repair #2 (2026-07-27): re-keyed from occupiesBothTheaters to
+        // the corrected battleOrderLive law (see ShieldFacts.battleOrderLive).
         boolean battleOrderTurnOneException = turnNumber == 1
-                && isBattleOrderOrPlan(cardTitle) && occupiesBothTheaters;
+                && isBattleOrderOrPlan(cardTitle) && battleOrderLive;
         if (turnNumber < minTurnToPlay && !battleOrderTurnOneException) {
             add(operations, actionId, "V53-shield-min-turn",
                     TraceOutputKind.VETO, -5000.0f,
@@ -305,12 +316,17 @@ public final class ShieldPolicy {
                             + minTurnToPlay + " (current turn " + turnNumber + ") -5000");
         }
 
-        if (shieldsOnTable == 2) {
+        // Hoth repair #2 (2026-07-27): re-keyed to battleOrderLive, and the
+        // reserve is released entirely when a Battle Order/Plan equivalent is
+        // already on table — the slot's target is spent and holding every
+        // other shield would stall slot three for the rest of the game.
+        // OLD: occupiesBothTheaters && shieldScore > -50.0f, no release
+        if (shieldsOnTable == 2 && !equivalentOnTable) {
             if (isBattleOrderOrPlan(cardTitle)
-                    && occupiesBothTheaters && shieldScore > -50.0f) {
+                    && battleOrderLive && shieldScore > -50.0f) {
                 add(operations, actionId, "V112-third-slot-selection",
                         TraceOutputKind.ORDERING, 2000.0f,
-                        "V112 3RD SLOT BATTLE ORDER: both theaters occupied +2000");
+                        "V112 3RD SLOT BATTLE ORDER: corrected gate live +2000");
             } else {
                 add(operations, actionId, "V112-third-slot-selection",
                         TraceOutputKind.ORDERING, -5000.0f,
@@ -337,7 +353,8 @@ public final class ShieldPolicy {
         }
 
         addBattleOrderSelection(operations, actionId, cardTitle, shieldScore,
-                occupiesBothTheaters, route == CandidateRoute.RESERVE);
+                battleOrderLive, shieldsOnTable,
+                route == CandidateRoute.RESERVE);
         return result("SHIELD_CANDIDATE_POLICY", operations);
     }
 
@@ -345,26 +362,38 @@ public final class ShieldPolicy {
                                                 String actionId,
                                                 String cardTitle,
                                                 float shieldScore,
-                                                boolean occupiesBothTheaters,
+                                                boolean battleOrderLive,
+                                                int shieldsOnTable,
                                                 boolean includeReadyBonus) {
         if (!isBattleOrderOrPlan(cardTitle)) {
             return;
         }
-        if (!occupiesBothTheaters) {
+        // Hoth repair #2 (2026-07-27): the V51 veto is re-keyed from
+        // occupiesBothTheaters(self) to the corrected battleOrderLive law.
+        // Card13_054 taxes the DRAINING player unless that player occupies
+        // both theaters; the old self-only key demanded the state that makes
+        // the card unnecessary and never let the tax fire on the opponent.
+        if (!battleOrderLive) {
             add(operations, actionId, "V51-battle-order-gate",
                     TraceOutputKind.VETO, -9999.0f,
-                    "V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!");
+                    "V51 BATTLE ORDER GATE: opponent self-exempt or tax unjustified");
             return;
         }
         if (includeReadyBonus) {
             add(operations, actionId, "V51-battle-order-ready",
                     TraceOutputKind.BANDED, 50.0f,
-                    "V51 BATTLE ORDER: Occupy BG site + BG system — ready!");
+                    "V51 BATTLE ORDER: corrected gate live — ready!");
         }
-        if (shieldScore > -50.0f) {
+        // Hoth repair #2: the early bonus is additionally gated on
+        // shieldsOnTable >= 2 so an opened gate on turn 1 (reserve route base
+        // 80 + ready 50 = 130) cannot outrank Allegations 325 / Secret Plans
+        // 275 and break the V53 ALWAYS-FIRST ordering. At slot 3 the arm
+        // totals 80+200+2000 dedicated (2330 with the reserve-route ready
+        // bonus) and dominates Resistance / CHYBC either way.
+        if (shieldsOnTable >= 2 && shieldScore > -50.0f) {
             add(operations, actionId, "V51-battle-order-early",
                     TraceOutputKind.BANDED, 200.0f,
-                    "V51 BATTLE ORDER EARLY-DEPLOY: occupy BG site + system — deploy now, tax compounds +200");
+                    "V51 BATTLE ORDER EARLY-DEPLOY: gate live at slot 3+ — deploy now, tax compounds +200");
         }
     }
 

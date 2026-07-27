@@ -145,6 +145,91 @@ public class ShieldPolicyTest {
                 "SHIELDS-stacked-pile-available", 50.0f);
     }
 
+    // ==== Hoth repair #2 (2026-07-27): corrected Battle Order gate ====
+
+    @Test
+    public void correctedGateReleasesThirdSlotHoldWhenBattleOrderLive() {
+        // T11: the V112 parent hold must not block the activation it is
+        // reserving for once the corrected gate is live.
+        PolicyResult released = ShieldPolicy.stackedPileParent(
+                "A", 2, true, closed(), false, 0, false, 3);
+        assertOperations(released, "SHIELDS-stacked-pile-available", 50.0f);
+
+        PolicyResult held = ShieldPolicy.stackedPileParent(
+                "A", 2, false, closed(), false, 0, false, 3);
+        assertOperations(held, "V112-third-slot-reserve", -3000.0f,
+                "SHIELDS-stacked-pile-available", 50.0f);
+    }
+
+    @Test
+    public void thirdSlotHoldAndEopReserveNeverDoubleStack() {
+        // T13: V112 and the EOP reserve are an if/else pair — exactly one
+        // -3000 even when both keys are simultaneously true.
+        PolicyResult both = ShieldPolicy.stackedPileParent(
+                "A", 2, false, closed(), false, 0, false, 2, true);
+        assertOperations(both, "V112-third-slot-reserve", -3000.0f,
+                "SHIELDS-stacked-pile-available", 50.0f);
+    }
+
+    @Test
+    public void unknownBattleOrderGateFollowsCorrectedLaw() {
+        // T7-shaped at the policy surface: live gate passes, dead gate vetoes.
+        assertTrue(ShieldPolicy.unknownBattleOrderGate("A", "Battle Order", true)
+                .operations().isEmpty());
+        assertOperations(ShieldPolicy.unknownBattleOrderGate(
+                "A", "Battle Order", false), "V112", -9999.0f);
+        assertTrue(ShieldPolicy.unknownBattleOrderGate("A", "Other Shield", false)
+                .operations().isEmpty());
+    }
+
+    @Test
+    public void earlyBonusRequiresTwoShieldsSoAllegationsStaysFirst() {
+        // T9 boundary at the policy surface: an opened gate on turn 1 with
+        // zero shields must NOT add the +200 early bonus (base 80 + ready 50
+        // = 130 < Secret Plans 275 < Allegations 325). At slot 3 the reserve
+        // route totals 80+50+200+2000 and dominates.
+        PolicyResult turnOneOpen = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Order", 80.0f, 2, 1, 0,
+                closed(), true, ShieldPolicy.CandidateRoute.RESERVE);
+        assertOperations(turnOneOpen, "V51-battle-order-ready", 50.0f);
+
+        PolicyResult slotThreeOpen = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Order", 80.0f, 2, 3, 2,
+                closed(), true, ShieldPolicy.CandidateRoute.RESERVE);
+        assertOperations(slotThreeOpen,
+                "V112-third-slot-selection", 2000.0f,
+                "V51-battle-order-ready", 50.0f,
+                "V51-battle-order-early", 200.0f);
+    }
+
+    @Test
+    public void redundancyGateStillWinsOverTheCorrectedGate() {
+        // T12: an equivalent card on table vetoes before any gate scoring.
+        PolicyResult redundant = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Order", 80.0f, 2, 3, 2,
+                closed(), true, true, ShieldPolicy.CandidateRoute.DEDICATED);
+        assertOperations(redundant,
+                "SHIELD.BATTLE_ORDER_PLAN.REDUNDANT", -9999.0f);
+    }
+
+    @Test
+    public void thirdSlotReserveReleasesWhenEquivalentAlreadyOnTable() {
+        // Review integration (2026-07-27): when a Battle Order/Plan
+        // equivalent is already on table the third-slot reserve is spent —
+        // a non-Battle-Order shield at two shields must NOT take the -5000
+        // hold, or slot three stalls for the rest of the game.
+        PolicyResult released = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Other Shield", 80.0f, 2, 3, 2,
+                closed(), false, true, ShieldPolicy.CandidateRoute.DEDICATED);
+        assertTrue(released.operations().isEmpty());
+
+        PolicyResult stillHeld = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Other Shield", 80.0f, 2, 3, 2,
+                closed(), false, false, ShieldPolicy.CandidateRoute.DEDICATED);
+        assertOperations(stillHeld,
+                "V112-third-slot-selection", -5000.0f);
+    }
+
     @Test
     public void defensiveWindowPreservesOpponentTurnPrecedence() {
         assertOperations(ShieldPolicy.defensiveShieldWindow("A", false, true, 1),

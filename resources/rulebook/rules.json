@@ -1,5 +1,5 @@
 {
- "head": "46b9f04c0",
+ "head": "41cdd8f46",
  "counts": {
   "total": 784,
   "by_family": {
@@ -14151,7 +14151,7 @@
    "reason_kind": "literal",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 201,
+   "line": 208,
    "family": "B"
   },
   {
@@ -14171,7 +14171,7 @@
     "V29.1"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 206,
+   "line": 213,
    "family": "B"
   },
   {
@@ -14189,7 +14189,7 @@
    "reason_kind": "literal",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 211,
+   "line": 218,
    "family": "B"
   },
   {
@@ -14203,13 +14203,13 @@
    "delta": -9999.0,
    "delta_expr": null,
    "delta_kind": "literal",
-   "reason": "V112 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!",
+   "reason": "V112 BATTLE ORDER GATE: opponent self-exempt or tax unjustified",
    "reason_kind": "literal",
    "provenance": [
     "V112"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 221,
+   "line": 230,
    "family": "B"
   },
   {
@@ -14227,7 +14227,7 @@
    "reason_kind": "literal",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 233,
+   "line": 242,
    "family": "B"
   },
   {
@@ -14247,7 +14247,7 @@
     "V117"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 248,
+   "line": 257,
    "family": "B"
   },
   {
@@ -14267,7 +14267,7 @@
     "V117"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 254,
+   "line": 263,
    "family": "B"
   },
   {
@@ -14287,7 +14287,7 @@
     "V117"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 259,
+   "line": 268,
    "family": "B"
   },
   {
@@ -14307,7 +14307,7 @@
     "V112"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 164,
+   "line": 172,
    "family": "A"
   },
   {
@@ -14325,7 +14325,7 @@
    "reason_kind": "literal",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 169,
+   "line": 176,
    "family": "A"
   },
   {
@@ -14345,7 +14345,7 @@
     "V124"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 174,
+   "line": 181,
    "family": "A"
   },
   {
@@ -14365,7 +14365,7 @@
     "V102"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 180,
+   "line": 187,
    "family": "A"
   },
   {
@@ -14385,7 +14385,7 @@
     "V29.1"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 185,
+   "line": 192,
    "family": "A"
   },
   {
@@ -14403,7 +14403,7 @@
    "reason_kind": "literal",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 189,
+   "line": 196,
    "family": "A"
   },
   {
@@ -14423,7 +14423,7 @@
     "V53"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 302,
+   "line": 313,
    "family": "A"
   },
   {
@@ -14437,13 +14437,13 @@
    "delta": 2000.0,
    "delta_expr": null,
    "delta_kind": "literal",
-   "reason": "V112 3RD SLOT BATTLE ORDER: both theaters occupied +2000",
+   "reason": "V112 3RD SLOT BATTLE ORDER: corrected gate live +2000",
    "reason_kind": "literal",
    "provenance": [
     "V112"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 311,
+   "line": 327,
    "family": "A"
   },
   {
@@ -14463,7 +14463,7 @@
     "V112"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 315,
+   "line": 331,
    "family": "A"
   },
   {
@@ -14484,7 +14484,7 @@
     "V107"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 323,
+   "line": 339,
    "family": "A"
   },
   {
@@ -14505,7 +14505,7 @@
     "V107"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 327,
+   "line": 343,
    "family": "A"
   },
   {
@@ -14526,7 +14526,7 @@
     "V107"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 332,
+   "line": 348,
    "family": "A"
   },
   {
@@ -14540,13 +14540,13 @@
    "delta": -9999.0,
    "delta_expr": null,
    "delta_kind": "literal",
-   "reason": "V51 BATTLE ORDER GATE: Need BOTH a BG site AND BG system occupied!",
+   "reason": "V51 BATTLE ORDER GATE: opponent self-exempt or tax unjustified",
    "reason_kind": "literal",
    "provenance": [
     "V51"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 354,
+   "line": 377,
    "family": "A"
   },
   {
@@ -14560,13 +14560,13 @@
    "delta": 50.0,
    "delta_expr": null,
    "delta_kind": "literal",
-   "reason": "V51 BATTLE ORDER: Occupy BG site + BG system \u2014 ready!",
+   "reason": "V51 BATTLE ORDER: corrected gate live \u2014 ready!",
    "reason_kind": "literal",
    "provenance": [
     "V51"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 360,
+   "line": 383,
    "family": "A"
   },
   {
@@ -14580,13 +14580,13 @@
    "delta": 200.0,
    "delta_expr": null,
    "delta_kind": "literal",
-   "reason": "V51 BATTLE ORDER EARLY-DEPLOY: occupy BG site + system \u2014 deploy now, tax compounds +200",
+   "reason": "V51 BATTLE ORDER EARLY-DEPLOY: gate live at slot 3+ \u2014 deploy now, tax compounds +200",
    "reason_kind": "literal",
    "provenance": [
     "V51"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ShieldPolicy.java",
-   "line": 365,
+   "line": 394,
    "family": "A"
   },
   {

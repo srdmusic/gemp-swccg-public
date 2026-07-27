@@ -9,6 +9,45 @@ import static org.junit.Assert.assertTrue;
 
 public class MoveObjectiveGateHoldPolicyTest {
 
+    // ==== Hoth repair #3 (2026-07-27): anchor-concentration guard ====
+
+    @Test
+    public void anchorConcentrationVetoesSoleUnsafeAnchorDestinationWithNoSafeAlternative() {
+        MoveObjectiveGateHoldPolicy.Evaluation result =
+                MoveObjectiveGateHoldPolicy.evaluatePostFlipAnchorConcentration(
+                        true, true, true, 0);
+
+        assertEquals(
+                MoveObjectiveGateHoldPolicy.Branch
+                        .HOLD_POST_FLIP_ANCHOR_CONCENTRATION,
+                result.branch());
+        assertTrue(result.hardVeto());
+    }
+
+    @Test
+    public void anchorConcentrationFailsClosedWithoutEveryProvenFact() {
+        assertFalse(MoveObjectiveGateHoldPolicy
+                .evaluatePostFlipAnchorConcentration(false, true, true, 0)
+                .hardVeto());
+        assertFalse(MoveObjectiveGateHoldPolicy
+                .evaluatePostFlipAnchorConcentration(true, false, true, 0)
+                .hardVeto());
+        assertFalse(MoveObjectiveGateHoldPolicy
+                .evaluatePostFlipAnchorConcentration(true, true, false, 0)
+                .hardVeto());
+    }
+
+    @Test
+    public void anchorConcentrationReleasesWhenAnotherSafeAnchorSiteExists() {
+        assertFalse(MoveObjectiveGateHoldPolicy
+                .evaluatePostFlipAnchorConcentration(true, true, true, 1)
+                .hardVeto());
+        assertEquals(MoveObjectiveGateHoldPolicy.Branch.NONE,
+                MoveObjectiveGateHoldPolicy
+                        .evaluatePostFlipAnchorConcentration(true, true, true, 2)
+                        .branch());
+    }
+
     @Test
     public void soleControlSourceAtExactRequiredLocationIsHeld() {
         MoveObjectiveGateHoldPolicy.Evaluation result =

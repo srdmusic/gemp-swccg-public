@@ -27,10 +27,14 @@ public class DeployMapuzoPlanDestinationSourceParityTest {
         assertTrue(source.contains("isCardSelectable(context, plannedTargetIndex)"));
         assertTrue(source.contains(
                 "isOpponentUndercoverOnlyTarget(context, plannedTargetId)"));
+        // Hoth repair #4 (2026-07-27): the plan-fallback release is widened
+        // from spy-only to spyBlocked || formationHardBlocked.
         assertTrue(source.contains(
-                "if (!isPlannedTarget || !plannedTargetSpyBlocked)"));
+                "isPlannedTargetFormationHardBlocked(context,"));
         assertTrue(source.contains(
-                "plannedTargetOffered && !plannedTargetSpyBlocked"));
+                "if (!isPlannedTarget || !plannedTargetBlocked)"));
+        assertTrue(source.contains(
+                "plannedTargetOffered && !plannedTargetBlocked"));
         for (String retired : new String[]{
                 "action.addReasoning(\"V64 MAPUZO DEFENSE:",
                 "action.addReasoning(\"V64 MAPUZO TRAP:",

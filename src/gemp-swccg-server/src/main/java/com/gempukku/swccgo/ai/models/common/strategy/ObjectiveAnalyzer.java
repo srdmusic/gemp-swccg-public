@@ -3758,6 +3758,125 @@ public class ObjectiveAnalyzer {
     }
 
     /**
+     * Hoth repair #3 (2026-07-27): true when this location currently holds a
+     * qualifying stay-flipped anchor (an actor matching the active profile's
+     * stayFlipped actorFilterKey, owned by playerId). Keyed on the data rule
+     * (today only 222_30's imperial-troops-back-hoth-site-survival), never a
+     * title. Fails closed to false so uncertainty never gates a move.
+     */
+    public boolean holdsStayFlippedAnchor(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        if (!analyzed || !isFlipped || game == null || playerId == null
+                || location == null || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (rule == null
+                        || !"postFlip".equals(rule.phase)
+                        || !"stayFlipped".equals(rule.purpose)
+                        || rule.alternatives == null) {
+                    continue;
+                }
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (isSupportedPostFlipAlternative(rule, alternative)
+                            && locationMatchesAlternative(
+                                gameState, game, playerId,
+                                location, alternative)
+                            && hasMatchingActorAtLocation(
+                                game, playerId, location,
+                                alternative.actorFilterKey)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Stay-flipped anchor check failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Hoth repair #3: true when no OTHER location besides this one holds a
+     * qualifying stay-flipped anchor. Fails closed to false (never claims
+     * soleness on error, so the concentration veto cannot fire falsely).
+     */
+    public boolean isSoleStayFlippedAnchorSite(
+            SwccgGame game, String playerId, PhysicalCard site) {
+        if (!holdsStayFlippedAnchor(game, playerId, site)) {
+            return false;
+        }
+        try {
+            for (PhysicalCard other
+                    : game.getGameState().getLocationsInOrder()) {
+                if (other != null && other != site
+                        && holdsStayFlippedAnchor(
+                            game, playerId, other)) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            LOG.debug("Sole anchor-site check failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Hoth repair #3: counts stay-flipped anchor sites that are SAFE
+     * (opponent power + weapon bonus <= friendly power + the caller's
+     * retreatable gap), excluding excludedSite (pass the move destination).
+     * Returns 0 on any error; the veto also requires soleness so a failed
+     * count cannot alone create a veto.
+     */
+    public int countSafeStayFlippedAnchorSites(
+            SwccgGame game, String playerId, PhysicalCard excludedSite,
+            float retreatablePowerGap) {
+        if (!analyzed || !isFlipped || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        int count = 0;
+        try {
+            GameState gameState = game.getGameState();
+            String opponent = gameState.getOpponent(playerId);
+            for (PhysicalCard site
+                    : gameState.getLocationsInOrder()) {
+                if (site == null || site == excludedSite
+                        || !holdsStayFlippedAnchor(
+                            game, playerId, site)) {
+                    continue;
+                }
+                float friendly = game.getModifiersQuerying()
+                        .getTotalPowerAtLocation(
+                            gameState, site, playerId, false, false);
+                float opposing = opponent != null
+                        ? game.getModifiersQuerying()
+                            .getTotalPowerAtLocation(
+                                gameState, site, opponent, false, false)
+                            + FormationSafety.weaponBonusAt(
+                                gameState, site, opponent)
+                        : 0.0f;
+                if (opposing <= friendly + retreatablePowerGap) {
+                    count++;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Safe anchor-site count failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+        return count;
+    }
+
+    /**
      * Returns the currently piloted AT-AT that would become unpiloted if this
      * exact assigned pilot left. Permanent pilots and a second assigned pilot
      * keep the vehicle valid and therefore return no dependency.
@@ -5632,6 +5751,153 @@ public class ObjectiveAnalyzer {
                 && (candidate == packagePlan.host
                     || candidate == packagePlan.pilot
                     || candidate == packagePlan.cannon);
+    }
+
+    /**
+     * Hoth repair #1 (2026-07-27): protects exactly ONE cheapest affordable
+     * ship+pilot pair in hand from generic Force-loss ranking while the
+     * objective's own named battleground SYSTEM is on table and we occupy
+     * zero battleground systems. Data-scoped: the hook is
+     * Filters.and(battleground_system, resolved named-location filter) from
+     * the active profile's flip/actor location rules — no 222_x title check.
+     * Fails closed: no named-system fact, no protection. Reuses the
+     * ShieldFacts Invasion Naboo exclusion so a Naboo pair is never protected
+     * while Invasion says Naboo is not a battleground.
+     */
+    public boolean isPreferredObjectiveTheaterPackageForceLossCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!analyzed || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        PhysicalCard[] pair =
+                selectObjectiveTheaterPackage(game, playerId);
+        return pair != null
+                && (candidate == pair[0] || candidate == pair[1]);
+    }
+
+    /** Returns {ship, pilot} or null. See the public predicate for the law. */
+    private PhysicalCard[] selectObjectiveTheaterPackage(
+            SwccgGame game, String playerId) {
+        GameState gameState = game.getGameState();
+        if (gameState == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        try {
+            com.gempukku.swccgo.filters.Filter systemFilter =
+                    com.gempukku.swccgo.filters.Filters.battleground_system;
+            if (ShieldFacts.isInvasionOnTable(gameState)) {
+                systemFilter = com.gempukku.swccgo.filters.Filters.and(
+                        systemFilter,
+                        com.gempukku.swccgo.filters.Filters.not(
+                                com.gempukku.swccgo.filters.Filters
+                                        .Naboo_system));
+            }
+
+            // Leg 1: an objective-named battleground system is on table.
+            boolean namedSystemOnTable = false;
+            java.util.LinkedHashSet<String> filterKeys =
+                    new java.util.LinkedHashSet<>();
+            if (activeFlipLocationRules != null) {
+                for (FlipLocationRule rule : activeFlipLocationRules) {
+                    if (rule == null || rule.alternatives == null) continue;
+                    for (FlipLocationAlternative alt : rule.alternatives) {
+                        if (alt != null && alt.locationFilterKey != null) {
+                            filterKeys.add(alt.locationFilterKey);
+                        }
+                    }
+                }
+            }
+            if (activeActorLocationRules != null) {
+                for (ActorLocationRule rule : activeActorLocationRules) {
+                    if (rule != null && rule.locationFilterKey != null) {
+                        filterKeys.add(rule.locationFilterKey);
+                    }
+                }
+            }
+            for (String key : filterKeys) {
+                com.gempukku.swccgo.filters.Filter named =
+                        resolveLocationFilter(key, playerId);
+                if (named == null) continue;
+                if (com.gempukku.swccgo.filters.Filters.canSpot(game, null,
+                        com.gempukku.swccgo.filters.Filters.and(
+                                systemFilter, named))) {
+                    namedSystemOnTable = true;
+                    break;
+                }
+            }
+            if (!namedSystemOnTable) return null;
+
+            // Leg 2: we occupy ZERO battleground systems.
+            if (com.gempukku.swccgo.filters.Filters.canSpot(game, null,
+                    com.gempukku.swccgo.filters.Filters.and(
+                            com.gempukku.swccgo.filters.Filters
+                                    .occupies(playerId),
+                            systemFilter))) {
+                return null;
+            }
+
+            // Leg 3: cheapest affordable ship+pilot pair in hand,
+            // tiebreak cost, then ship cardId, then pilot cardId.
+            List<PhysicalCard> hand = gameState.getHand(playerId);
+            if (hand == null || hand.isEmpty()) return null;
+            int forceAvailable =
+                    gameState.getForcePile(playerId) != null
+                            ? gameState.getForcePile(playerId).size() : 0;
+            PhysicalCard bestShip = null, bestPilot = null;
+            int bestCost = Integer.MAX_VALUE;
+            for (PhysicalCard ship : hand) {
+                if (ship == null
+                        || !playerId.equals(ship.getOwner())
+                        || !com.gempukku.swccgo.filters.Filters.starship
+                                .accepts(gameState,
+                                        game.getModifiersQuerying(), ship)) {
+                    continue;
+                }
+                Integer shipCost = requiredCardDeployCost(game, ship);
+                if (shipCost == null) continue;
+                for (PhysicalCard pilot : hand) {
+                    if (pilot == null || pilot == ship
+                            || !isLegalProspectivePilotForHost(
+                                    game, playerId, ship, pilot)) {
+                        continue;
+                    }
+                    Integer pilotCost =
+                            requiredCardDeployCost(game, pilot);
+                    if (pilotCost == null) continue;
+                    int total = shipCost + pilotCost;
+                    if (total > forceAvailable) continue;
+                    boolean better;
+                    if (bestShip == null) {
+                        better = true;
+                    } else if (total != bestCost) {
+                        better = total < bestCost;
+                    } else if (ship.getCardId()
+                            != bestShip.getCardId()) {
+                        better = ship.getCardId()
+                                < bestShip.getCardId();
+                    } else {
+                        better = bestPilot != null
+                                && pilot.getCardId()
+                                    < bestPilot.getCardId();
+                    }
+                    if (better) {
+                        bestShip = ship;
+                        bestPilot = pilot;
+                        bestCost = total;
+                    }
+                }
+            }
+            return bestShip != null
+                    ? new PhysicalCard[]{bestShip, bestPilot} : null;
+        } catch (Exception e) {
+            LOG.debug("Theater-package selection error: {}",
+                    e.getMessage());
+            return null;
+        }
     }
 
     private int requiredCardForceLossRank(
