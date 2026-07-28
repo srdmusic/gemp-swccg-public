@@ -9784,6 +9784,30 @@ public class ObjectiveAnalyzer {
                         com.gempukku.swccgo.filters.Filters.blockade_agenda,
                         com.gempukku.swccgo.filters.Filters.at(
                                 com.gempukku.swccgo.filters.Filters.Galactic_Senate));
+            // Batch Eighteen (2026-07-27): Profit pair actors. Han legs are
+            // ownership-free spots (canSpot has no side); on(Tatooine) is
+            // presence-on-planet (excludes the system location), never
+            // Tatooine_location. The back drops the planet leg entirely.
+            case "free_Han_on_Tatooine":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.Han,
+                        com.gempukku.swccgo.filters.Filters.on(
+                                com.gempukku.swccgo.common.Title.Tatooine),
+                        com.gempukku.swccgo.filters.Filters.not(
+                                com.gempukku.swccgo.filters.Filters.captive));
+            case "free_Han":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.Han,
+                        com.gempukku.swccgo.filters.Filters.not(
+                                com.gempukku.swccgo.filters.Filters.captive));
+            // Filters.Watto is a TITLE filter (no Persona.WATTO exists);
+            // presentAt, not at — the card's own removal counter uses the
+            // wider at() but the flip gate does not.
+            case "Watto_present_at_Wattos_Junkyard":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.Watto,
+                        com.gempukku.swccgo.filters.Filters.presentAt(
+                                com.gempukku.swccgo.filters.Filters.Wattos_Junkyard));
             // Batch Nine (2026-07-27): QMC front Lando/Lobot alternative.
             case "Lando_or_Lobot":
                 return com.gempukku.swccgo.filters.Filters.or(
@@ -9882,6 +9906,9 @@ public class ObjectiveAnalyzer {
             case "Galactic_Senate":              return com.gempukku.swccgo.filters.Filters.Galactic_Senate;
             case "Rebel_Base_location":          return com.gempukku.swccgo.filters.Filters.Rebel_Base_location;
             case "Wattos_Junkyard":              return com.gempukku.swccgo.filters.Filters.Wattos_Junkyard;
+            // Batch Eighteen (2026-07-27): NMNPND occupy leg. Exact title —
+            // Mos Espa Docking Bay is a different title and never matches.
+            case "Mos_Espa":                     return com.gempukku.swccgo.filters.Filters.Mos_Espa;
             case "Crait_Salt_Plateau":           return com.gempukku.swccgo.filters.Filters.Crait_Salt_Plateau;
             case "Crait_location":               return com.gempukku.swccgo.filters.Filters.Crait_location;
             case "Episode_VII_battleground_system":

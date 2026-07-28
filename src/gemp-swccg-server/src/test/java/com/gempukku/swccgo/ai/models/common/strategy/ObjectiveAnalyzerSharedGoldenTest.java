@@ -202,8 +202,10 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // Batch Fifteen (2026-07-27): 222_27 activated, 21 -> 22.
         // Batch Seventeen (2026-07-27): 10_26 activated and the new
         // 601_146 profile authored, 22 -> 24 enabled, 58 -> 59 profiles.
-        assertEquals(24, enabled);
-        assertEquals(35, profiles.size() - enabled);
+        // Batch Eighteen (2026-07-27): 110_4 and 12_180 activated,
+        // 24 -> 26 enabled.
+        assertEquals(26, enabled);
+        assertEquals(33, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);

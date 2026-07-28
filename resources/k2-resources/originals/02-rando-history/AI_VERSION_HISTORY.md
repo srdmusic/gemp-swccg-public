@@ -8912,3 +8912,23 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     smuggler, Corellian, Kessel_Run, Corellia_system, Corellia_battleground_site. Goldens
     22->24 enabled, 58->59 profiles. Six-test contract green including the counter route on
     an empty board; full reactor 2817/0/0/26 (both goldens updated for the count changes). Revert the single Batch Seventeen commit.
+
+  ==== Profit pair Batch Eighteen (2026-07-27): 110_4 + 12_180, FALSE TWINS ====
+    Opposite-side objectives batched together, encoded separately. LIGHT 110_4 front =
+    ONE ownership-free leg: onTable(free_Han_on_Tatooine) >= 1 — Han persona AND
+    on(Tatooine) presence-on-planet (system never counts; the dossier's Tatooine_location
+    claim was wrong) AND not(captive), a rescue gate because setup deploys Han frozen at
+    Audience Chamber. Back = the DROPPED-leg hold: flips forward only when
+    onTable(free_Han) < 1 anywhere — free Han off Tatooine holds the back. Tatooine
+    blown-away out-of-play on both sides recorded as unexpressed (deferred RST
+    primitive). Released Jabba's Prize (10_42 DARK, Han persona) satisfying the LIGHT
+    front recorded. DARK 12_180 front = allOf(onTable(Watto_present_at_Wattos_Junkyard)
+    >= 1 — Watto is a TITLE filter, no Persona.WATTO; presentAt not at — occupy Mos_Espa
+    >= 1, occupy not control, exact title excludes the Docking Bay). Back = exact De
+    Morgan anyOf of the negated legs. No hard-loss either side. First use of controller
+    "any" (no ownership restriction, matching side-agnostic canSpot). Registry adds
+    free_Han_on_Tatooine, free_Han, Watto_present_at_Wattos_Junkyard, Mos_Espa,
+    fail-closed. Goldens 24->26 enabled, profiles stay 59. No new magnitudes. Nine-test
+    contract green on first run (frozen rescue gate, off-planet near miss, dropped-leg
+    back hold, wrong-site Watto, occupy-under-presence, both De Morgan flip-back legs
+    with re-flip). Revert the single Batch Eighteen commit.

@@ -1544,6 +1544,7 @@
     },
     {
       "label": "You Can Either Profit By This...",
+      "loaderEnabled": true,
       "blueprintIds": [
         "110_4",
         "110_4_BACK"
@@ -1599,7 +1600,51 @@
           "runtimeFilter": "Filters.exterior_Tatooine_site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "ycepbt-front-free-han-on-tatooine",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "actorFilterKey": "free_Han_on_Tatooine",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "single-leg law: spot Han on Tatooine and not a captive (Card110_004.java L142). Ownership-free spot: ANY Han persona counts, including a released Jabba's Prize (10_42, DARK, addPersona HAN). on(Tatooine) is presence-on-planet: a Tatooine SITE counts, Han aboard a ship at the Tatooine SYSTEM does not (Presence.java L222-L223); never substitute Tatooine_location, which includes the system. not(captive) is live: setup deploys Han as a frozen captive (L79), so this is a rescue gate. Hard-loss unexpressed in schema: Tatooine system blown away puts the objective out of play on BOTH sides (L128-L137)."
+            }
+          ]
+        },
+        {
+          "id": "ycepbt-back-hold-free-han-anywhere",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "actorFilterKey": "free_Han",
+              "locationFragments": [],
+              "count": {
+                "comparator": "<",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back when NO non-captive Han can be spotted anywhere (Card110_004_BACK.java L100). The front's on(Tatooine) leg is DROPPED on the back: a free Han off Tatooine holds the back; only capturing or removing every Han flips it forward. Not the negation of the front law."
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "Massassi Base Operations",
@@ -5002,6 +5047,7 @@
     },
     {
       "label": "No Money, No Parts, No Deal!",
+      "loaderEnabled": true,
       "blueprintIds": [
         "12_180",
         "12_180_BACK"
@@ -5093,7 +5139,87 @@
           "runtimeFilter": "Filters.Mos_Espa"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "nmnpnd-front-watto-junkyard-and-mos-espa",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "actorFilterKey": "Watto_present_at_Wattos_Junkyard",
+              "locationFilterKey": "Wattos_Junkyard",
+              "locationFragments": [
+                "watto's junkyard"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "leg 1: spot Watto PRESENT AT Watto's Junkyard (Card12_180.java L163). Filters.Watto is a TITLE filter, not a persona (no Persona.WATTO exists; printings 11_65 and 11_66 both match). presentAt, not at: the opponent's 8-Force Watto-removal counter uses the strictly wider at() and can bin a Watto the flip gate cannot see. Ownership-free spot."
+            },
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "Mos_Espa",
+              "locationFragments": [
+                "mos espa"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "leg 2: you OCCUPY Mos Espa (Card12_180.java L164) - occupy, not control: opponent presence does not block it. Exact title: Mos Espa Docking Bay (12_86/12_177) is a different title and never counts. No hard-loss handler on either side of this objective."
+            }
+          ]
+        },
+        {
+          "id": "nmnpnd-back-demorgan-flip-back",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "actorFilterKey": "Watto_present_at_Wattos_Junkyard",
+              "locationFilterKey": "Wattos_Junkyard",
+              "locationFragments": [
+                "watto's junkyard"
+              ],
+              "count": {
+                "comparator": "<",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back leg 1: no Watto present at Watto's Junkyard (Card12_180_BACK.java L225). The back is the exact De Morgan negation of the front: losing EITHER leg flips it back."
+            },
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "Mos_Espa",
+              "locationFragments": [
+                "mos espa"
+              ],
+              "count": {
+                "comparator": "<",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back leg 2: OR you no longer occupy Mos Espa (Card12_180_BACK.java L226)"
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "Let Them Make The First Move",
