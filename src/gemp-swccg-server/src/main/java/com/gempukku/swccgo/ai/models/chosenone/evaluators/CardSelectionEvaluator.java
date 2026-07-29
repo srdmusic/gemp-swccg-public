@@ -3582,7 +3582,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // FLIPPED BONUS: +1 drain at BG sites with non-Undercover ISB agent, -1 opponent drain.
                         // STRATEGY: Pre-flip, ISB agents get MASSIVE priority. Non-ISB agents heavily penalized.
                         //           Higher ability characters preferred for location control.
-                        if (isCharacter && !earlySpyDetected && locObjAnalyzer != null
+                        if (false /* SUPERSEDED 2026-07-27 Batch Nineteen — 7_299 profile flipLocationRules now own ISB steering; retired per gap_matrix prescription to prevent double-steer */
+                            && isCharacter && !earlySpyDetected && locObjAnalyzer != null
                             && locObjAnalyzer.isAnalyzed() && locObjAnalyzer.isISBOperations()) {
                             try {
                                 // Check if the deploying card is an ISB agent and get its ability

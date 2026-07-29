@@ -9784,6 +9784,20 @@ public class ObjectiveAnalyzer {
                         com.gempukku.swccgo.filters.Filters.blockade_agenda,
                         com.gempukku.swccgo.filters.Filters.at(
                                 com.gempukku.swccgo.filters.Filters.Galactic_Senate));
+            // Batch Nineteen (2026-07-27): Local Uprising twins + ISB actors.
+            // The matching-operative filters read the runtime Subjugated/
+            // Renegade planet from gameState inside accepts(), so static keys
+            // self-resolve the setup-time planet choice. ISB_agent is a
+            // keyword granted ONLY by 7_299's own two sides (no printed card
+            // carries it); the card's flip legs have no ownership term.
+            case "matchingOperativeToSubjugatedPlanet":
+                return com.gempukku.swccgo.filters.Filters
+                        .matchingOperativeToSubjugatedPlanet;
+            case "matchingOperativeToRenegadePlanet":
+                return com.gempukku.swccgo.filters.Filters
+                        .matchingOperativeToRenegadePlanet;
+            case "ISB_agent":
+                return com.gempukku.swccgo.filters.Filters.ISB_agent;
             // Batch Eighteen (2026-07-27): Profit pair actors. Han legs are
             // ownership-free spots (canSpot has no side); on(Tatooine) is
             // presence-on-planet (excludes the system location), never
@@ -9909,6 +9923,17 @@ public class ObjectiveAnalyzer {
             // Batch Eighteen (2026-07-27): NMNPND occupy leg. Exact title —
             // Mos Espa Docking Bay is a different title and never matches.
             case "Mos_Espa":                     return com.gempukku.swccgo.filters.Filters.Mos_Espa;
+            // Batch Nineteen (2026-07-27): Local Uprising twins. The planet
+            // fragments read gameState at accepts() time; battleground is
+            // computed per printing from force icons, never an icon constant.
+            case "Subjugated_planet_battleground_site":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.battleground_site,
+                        com.gempukku.swccgo.filters.Filters.Subjugated_planet_location);
+            case "Renegade_planet_battleground_site":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.battleground_site,
+                        com.gempukku.swccgo.filters.Filters.Renegade_planet_location);
             case "Crait_Salt_Plateau":           return com.gempukku.swccgo.filters.Filters.Crait_Salt_Plateau;
             case "Crait_location":               return com.gempukku.swccgo.filters.Filters.Crait_location;
             case "Episode_VII_battleground_system":

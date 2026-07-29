@@ -8932,3 +8932,29 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     contract green on first run (frozen rescue gate, off-planet near miss, dropped-leg
     back hold, wrong-site Watto, occupy-under-presence, both De Morgan flip-back legs
     with re-flip). Revert the single Batch Eighteen commit.
+
+  ==== Local Uprising trio Batch Nineteen (2026-07-27): 7_137 + 7_298 TRUE TWINS,
+       7_299 false family member; V29.7 ISB statics retired ====
+    LU/IO are line-for-line twins five tokens apart. Front = control three
+    battleground sites of the setup-chosen Subjugated/Renegade planet, each WITH
+    your matching operative (Keyword.OPERATIVE + matching system; engine injects
+    owner + not-undercover). Back = flips back below two PLAIN-occupied such
+    sites — operatives needed to flip, anything to hold. NEW ENGINE LAW found by
+    the first contract run: a lone matching operative can NEVER control a site on
+    its matching planet — its ability is excluded from the control total
+    (LocationControl.java L372-L382) — so the real route is operative + companion
+    at each site, six bodies not three. ISBO is NOT a twin: front =
+    anyOf(four ISB agents anywhere — ownership-free spot; two Rebel Base
+    locations each controlled with an agent; Rebel_Base_location = partOfSystem
+    Yavin 4 OR Hoth, battleground not required); back = pure agent absence.
+    ISB_AGENT keyword exists only as 7_299's own lore-based grant; undercover
+    agents are invisible to every leg including the back hold (recorded hole).
+    Registry adds matchingOperativeToSubjugatedPlanet/-RenegadePlanet, ISB_agent,
+    Subjugated/Renegade_planet_battleground_site, fail-closed; the planet
+    filters read gameState inside accepts() so static keys self-resolve. V29.7
+    ISB deployment-strategy block retired in BOTH CardSelectionEvaluator mirrors
+    (if (false /* SUPERSEDED) per the gap-matrix prescription — the profile owns
+    ISB steering now, preventing double-steer. Goldens 26->29 enabled, 59
+    profiles. Ten-test contract green after the operative-rule fixture fix
+    (first run failed 6/18 on lone operatives — that failure IS the finding).
+    Revert the single Batch Nineteen commit.

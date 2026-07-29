@@ -229,6 +229,7 @@
     },
     {
       "label": "Local Uprising",
+      "loaderEnabled": true,
       "blueprintIds": [
         "7_137",
         "7_137_BACK"
@@ -294,7 +295,52 @@
           "runtimeFilter": "Filters.and(Filters.generic, Filters.site) to selected systemName"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "lu-front-control-three-with-operatives",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "actorFilterKey": "matchingOperativeToSubjugatedPlanet",
+              "locationFilterKey": "Subjugated_planet_battleground_site",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "single leg: control three battleground sites of the Subjugated planet, each WITH your matching operative (Card7_137.java L110-L111). The planet is a runtime choice made at setup (any planet system, in practice the ten LIGHT operative systems); Filters.Subjugated_planet_location reads it from gameState at evaluation time. Operative = Keyword.OPERATIVE + matching system; the engine also injects owner + not-undercover (ControlsWithCondition L102/L110). OPERATIVE RULE, proven in the contract test: a lone matching operative can NEVER control a site on its matching planet - its ability is excluded from the control total (LocationControl.java L372-L382) - so every counted site needs the operative PLUS a non-operative companion with ability. The once-per-deploy-phase generic-site pull is NOT free and reshuffles; the two setup deploys are free without reshuffle."
+            }
+          ]
+        },
+        {
+          "id": "lu-back-hold-occupy-two",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "Subjugated_planet_battleground_site",
+              "locationFragments": [],
+              "count": {
+                "comparator": "<",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back when you occupy fewer than two Subjugated-planet battleground sites (Card7_137_BACK.java L128). PLAIN occupy - operatives not required to hold, the control-3-with-operatives vs occupy-2-with-anything asymmetry is real. No hard-loss handler on either side."
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "Mind What You Have Learned",
@@ -4010,6 +4056,7 @@
     },
     {
       "label": "Imperial Occupation",
+      "loaderEnabled": true,
       "blueprintIds": [
         "7_298",
         "7_298_BACK"
@@ -4075,10 +4122,56 @@
           "runtimeFilter": "Filters.and(Filters.generic, Filters.site)"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "io-front-control-three-with-operatives",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "actorFilterKey": "matchingOperativeToRenegadePlanet",
+              "locationFilterKey": "Renegade_planet_battleground_site",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "single leg: control three battleground sites of the Renegade planet, each WITH your matching operative (Card7_298.java L110-L111). TRUE TWIN of 7_137 (five-token diff: side, titles, action id, Renegade state, back companion filter); Filters.Renegade_planet_location reads the setup-time planet choice from gameState. OPERATIVE RULE, proven in the contract test: a lone matching operative can NEVER control a site on its matching planet (ability excluded from the control total, LocationControl.java L372-L382) - every counted site needs operative PLUS a non-operative companion with ability. The once-per-deploy-phase generic-site pull is NOT free and reshuffles; the two setup deploys are free without reshuffle."
+            }
+          ]
+        },
+        {
+          "id": "io-back-hold-occupy-two",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "Renegade_planet_battleground_site",
+              "locationFragments": [],
+              "count": {
+                "comparator": "<",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back when you occupy fewer than two Renegade-planet battleground sites (Card7_298_BACK.java L128). PLAIN occupy - operatives not required to hold. No hard-loss handler on either side."
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "ISB Operations",
+      "loaderEnabled": true,
       "blueprintIds": [
         "7_299",
         "7_299_BACK"
@@ -4136,7 +4229,65 @@
           "runtimeFilter": "Filters.Coruscant_location"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "isbo-front-four-agents-or-two-rebel-base",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "actorFilterKey": "ISB_agent",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 4
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "route A: spot four ISB agents anywhere on table (Card7_299.java L75). Keyword.ISB_AGENT exists ONLY as this objective's own grant to your characters with ISB/Rebel/Rebellion lore (both sides re-grant it, L62-L63 front, L72-L73 back); the card's canSpot has no ownership term, so controller any is the faithful encoding. The objective's own SPY grant makes agents undercover-capable, and undercover agents are invisible to ALL legs including the back hold - recorded hole."
+            },
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "actorFilterKey": "ISB_agent",
+              "locationFilterKey": "Rebel_Base_location",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "route B: control two Rebel Base locations each WITH an ISB agent (Card7_299.java L76). Rebel_Base_location = partOfSystem(Yavin 4) OR partOfSystem(Hoth) - a computed membership filter matching systems AND all their sites, battleground or not, regardless of who deployed them. The engine injects owner + not-undercover around the bare ISB_agent (ControlsWithCondition L102/L110)."
+            }
+          ]
+        },
+        {
+          "id": "isbo-back-flip-back-no-agents",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "actorFilterKey": "ISB_agent",
+              "locationFragments": [],
+              "count": {
+                "comparator": "<",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back when NO ISB agent can be spotted anywhere (Card7_299_BACK.java L85) - pure absence, no location, no ownership. The back re-grants the agent keyword so agents keep counting post-flip. No hard-loss handler on either side."
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "Ralltiir Operations",
