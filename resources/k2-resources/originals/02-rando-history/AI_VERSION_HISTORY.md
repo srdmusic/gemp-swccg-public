@@ -9059,3 +9059,47 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     of scope): 501_19_BACK println/NPE block, back-side singletonList
     hiding the site download. Revert the single Extension Batch commit
     (reopens the 501_94 hijack).
+
+  ==== V48 LOADED-CARRIER BATTLE-FORFEIT REPAIR (2026-07-29, both bots) ====
+    Replay twnnl1w16107g3o8 proved the combined battle-loss route chose loaded
+    Supremacy at 2480 over Cardo, Peavey, and Pryde; a later First Order game
+    similarly lost Kylo Ren's Command Shuttle with General Hux aboard. The old
+    standalone-only V48 block sat after optional early returns and used
+    GameState.getAttachedCards(carrier), whose default overload excludes pilots,
+    passengers, and cargo. Its real crew count was zero. Stranded commit
+    82e5d47f2 added the combined call but retained the wrong relation and never
+    reached the consolidated live lineage.
+
+    BattleForfeitFacts now counts physical characters through
+    getAboardCards(carrier, true), including nested cargo. Standalone, optional,
+    and combined adapters call one shared policy before their early exits. A
+    loaded carrier receives the inherited -9999 fallback plus hard veto while a
+    safe alternative exists: another selectable board forfeit; optional Pass;
+    or, only when attrition is zero, selectable Force loss. Nonselectable cards
+    do not count. Mandatory attrition releases a sole carrier because Force loss
+    cannot satisfy attrition.
+
+    Replay-shaped proof scores Supremacy -7519 and Cardo 2230. Pure damage holds
+    a loaded shuttle for Force loss, while real attrition 2 plus damage 2
+    releases that shuttle when no other legal forfeit exists. A BHBM all-hard
+    fixture offers only a hit loaded carrier and capture-critical Vader; both
+    are hard-vetoed, Vader still wins, and objective retention cannot resurrect
+    carrier-first loss. Rando and Chosen One remain normalized mirrors.
+
+    Verification: focused 48/0/0/0; impacted First Order and shared forfeit
+    54/0/0/0; mirrored capture harness 38/0/0/0; final isolated reactor
+    2860/0/0/26 across 379 suites. Independent review, diff, package, mirror,
+    and target/classes to server jar to web.jar byte gates passed. Server jar
+    SHA-256 c5713802b75aae076f6ffd3850b7dbf1634ea1b29349aaad60ff840033be2f35;
+    web.jar SHA-256
+    1c89708180c681abe06d0b97fe28e6a2458fd18723d65a0c618d9141fc9667e6.
+
+    Local commit b0f5e8997 on codex/v48-combined-forfeit-repair was deployed
+    after freezing table creation and proving zero hall tables. Prior live jar
+    880b89fd905dec7f276dd2dbb8f29f971ae26f8289d99a7678ad76c481cbb92b
+    is preserved as web.jar.pre-v48-b0f5e8997. Candidate, host, and container
+    hashes match. Fresh JVM start 2026-07-29T17:16:06.980737178Z followed the
+    jar mtime, restart count is zero, both bot markers are present, HTTP and
+    authenticated hall return 200, AI/private games are enabled, startup is
+    clean, and the hall remained empty. No push. Fresh branch firing in a game
+    remains separate proof. Revert b0f5e8997 and restore the preserved jar.

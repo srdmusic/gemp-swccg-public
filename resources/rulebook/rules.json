@@ -1,16 +1,16 @@
 {
- "head": "b336ee03e",
+ "head": "b0f5e8997",
  "counts": {
-  "total": 784,
+  "total": 787,
   "by_family": {
    "B": 106,
-   "A": 439,
-   "A-inline": 43,
+   "A": 440,
+   "A-inline": 45,
    "C": 187,
    "D": 9
   },
   "by_id_source": {
-   "typed": 538,
+   "typed": 541,
    "typed-dynamic": 50,
    "none": 69,
    "prose-vtag": 127
@@ -536,13 +536,33 @@
    "delta": -9999.0,
    "delta_expr": null,
    "delta_kind": "literal",
-   "reason": "V48 SHIP WITH CREW: %s has %d crew aboard \u2014 forfeit crew first, not the ship!",
-   "reason_kind": "format",
+   "reason": "reason",
+   "reason_kind": "expression",
    "provenance": [
     "V48"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 202,
+   "line": 214,
+   "family": "A"
+  },
+  {
+   "id": "V48-ship-with-crew-combined",
+   "id_source": "typed",
+   "phase": "BATTLE",
+   "domain": "BATTLE_FORFEIT",
+   "policy": "BattleForfeitPolicy",
+   "method": "scoreCombinedShipWithCrew",
+   "kind": "VETO",
+   "delta": -9999.0,
+   "delta_expr": null,
+   "delta_kind": "literal",
+   "reason": "reason",
+   "reason_kind": "expression",
+   "provenance": [
+    "V48"
+   ],
+   "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
+   "line": 242,
    "family": "A"
   },
   {
@@ -560,7 +580,7 @@
    "reason_kind": "literal",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 214,
+   "line": 259,
    "family": "A"
   },
   {
@@ -578,7 +598,7 @@
    "reason_kind": "literal",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 219,
+   "line": 264,
    "family": "A"
   },
   {
@@ -598,7 +618,7 @@
     "V139"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 231,
+   "line": 276,
    "family": "A"
   },
   {
@@ -618,7 +638,7 @@
     "V139"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 237,
+   "line": 282,
    "family": "A"
   },
   {
@@ -638,7 +658,7 @@
     "V139"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 240,
+   "line": 285,
    "family": "A"
   },
   {
@@ -658,7 +678,7 @@
     "V139"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 247,
+   "line": 292,
    "family": "A"
   },
   {
@@ -678,7 +698,7 @@
     "V139"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 251,
+   "line": 296,
    "family": "A"
   },
   {
@@ -698,7 +718,7 @@
     "V21"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 257,
+   "line": 302,
    "family": "A"
   },
   {
@@ -718,7 +738,7 @@
     "V21"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 261,
+   "line": 306,
    "family": "A"
   },
   {
@@ -738,7 +758,7 @@
     "V154"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 281,
+   "line": 326,
    "family": "A"
   },
   {
@@ -758,7 +778,7 @@
     "V118"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 290,
+   "line": 335,
    "family": "A"
   },
   {
@@ -778,7 +798,7 @@
     "V118"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 295,
+   "line": 340,
    "family": "A"
   },
   {
@@ -798,7 +818,7 @@
     "V150"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 319,
+   "line": 364,
    "family": "A"
   },
   {
@@ -818,7 +838,7 @@
     "V22.3"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 324,
+   "line": 369,
    "family": "A"
   },
   {
@@ -838,7 +858,7 @@
     "V22.3"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 328,
+   "line": 373,
    "family": "A"
   },
   {
@@ -858,7 +878,7 @@
     "V22.3"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 342,
+   "line": 387,
    "family": "A"
   },
   {
@@ -878,8 +898,48 @@
     "V159"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
-   "line": 359,
+   "line": 404,
    "family": "A"
+  },
+  {
+   "id": "V48-ship-with-crew-hard",
+   "id_source": "typed",
+   "phase": "BATTLE",
+   "domain": "BATTLE_FORFEIT",
+   "policy": "BattleForfeitPolicy",
+   "method": "scoreStandaloneShipWithCrew",
+   "kind": "VETO",
+   "delta": 0.0,
+   "delta_expr": null,
+   "delta_kind": "literal",
+   "reason": "reason",
+   "reason_kind": "expression",
+   "provenance": [
+    "V48"
+   ],
+   "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
+   "line": 216,
+   "family": "A-inline"
+  },
+  {
+   "id": "V48-ship-with-crew-combined-hard",
+   "id_source": "typed",
+   "phase": "BATTLE",
+   "domain": "BATTLE_FORFEIT",
+   "policy": "BattleForfeitPolicy",
+   "method": "scoreCombinedShipWithCrew",
+   "kind": "VETO",
+   "delta": 0.0,
+   "delta_expr": null,
+   "delta_kind": "literal",
+   "reason": "reason",
+   "reason_kind": "expression",
+   "provenance": [
+    "V48"
+   ],
+   "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleForfeitPolicy.java",
+   "line": 244,
+   "family": "A-inline"
   },
   {
    "id": "V29.9",
