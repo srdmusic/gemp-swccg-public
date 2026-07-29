@@ -9028,3 +9028,34 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     contract green with NO VADER in the deck (Galen alone flips; unprinted
     flip-back route natively proven); classic 19/19 + 10/10 regression
     green. Revert the single Batch Twenty-Two commit (reopens the hijack).
+
+  ==== Extension Batch Twenty-Three (2026-07-29): the three deferred schema
+       primitives + RST family + 501_19 ====
+    Primitives, each proven by a real objective: blownAway relation (LATCHED
+    snapshot reader over ModifiersLogic._blownAwayCards - append-only,
+    pre-flag clones; >= 1 / < 1 only, fail-closed); gamePhase + whosePhase
+    window fields (unsatisfied outside the window, fail-closed on unknowns);
+    minActorsPerLocation floor (first actor may ride the IEFB override,
+    every further actor must be FULLY ACTIVE - the card's inner-with()
+    asymmetry). RST family NOT TWINS: classic = anyOf(Bunker blown away;
+    YOUR-move-phase control of three exterior Endor sites each with TWO
+    Rebel scouts) with an opponent-MOVE-phase flip-back window, a permanent
+    post-blow-away lock, and Endor hard-loss both sides; V = blow-away only,
+    back = opponent-controls-Bunker where the one-arg filter's blown-away
+    intolerance IS the card's emergent lock (intolerant key kept
+    deliberately). Third title hijack closed (501_94 was hydrating 8_78's
+    profile). 501_19 = conquest law, fully expressible: onTable
+    Separatist_system >= 2 / < 2 - a face-up-blueprint icon count; the
+    conquest driver (drain/battle-win flips Utapau/Christophsis) is PLAYED
+    in the test, not encoded. Registry adds Rebel_scout, exterior_Endor_site,
+    Bunker_including_blown_away, Separatist_system. Goldens 32->34 enabled,
+    60->62 profiles. Six-test contract green: route B end-to-end with real
+    regular moves, route A via the real DTSG pipeline (occupied-site losses
+    + 8-Force payment resolved decision-by-decision), the V rejecting the
+    classic's route B board, the real drain-conquest cascade flipping
+    501_19 natively. Fixture laws: one regular move per card per turn;
+    occupied-site blow-aways surface put-on-Lost-Pile choices; the force
+    loss prompt reads "Choose Force to lose". Engine defects flagged (out
+    of scope): 501_19_BACK println/NPE block, back-side singletonList
+    hiding the site download. Revert the single Extension Batch commit
+    (reopens the 501_94 hijack).

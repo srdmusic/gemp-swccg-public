@@ -4186,6 +4186,38 @@ public class ObjectiveAnalyzer {
                 return false;
             }
 
+            // Extension batch (2026-07-29): phase-window gate (Rebel Strike
+            // Team's move-phase-only routes). Outside the window the
+            // alternative is simply unsatisfied; unknown values fail closed.
+            if (alternative.gamePhase != null) {
+                com.gempukku.swccgo.common.Phase windowPhase;
+                try {
+                    windowPhase = com.gempukku.swccgo.common.Phase.valueOf(
+                            alternative.gamePhase);
+                } catch (IllegalArgumentException badPhase) {
+                    LOG.warn("[ObjectiveAnalyzer] unknown gamePhase '{}' in"
+                            + " objective_playbooks.json — fail-closed.",
+                            alternative.gamePhase);
+                    return false;
+                }
+                if (gameState.getCurrentPhase() != windowPhase) {
+                    return false;
+                }
+                if (alternative.whosePhase != null) {
+                    String phaseOwner = gameState.getCurrentPlayerId();
+                    if ("self".equals(alternative.whosePhase)) {
+                        if (!playerId.equals(phaseOwner)) return false;
+                    } else if ("opponent".equals(alternative.whosePhase)) {
+                        if (playerId.equals(phaseOwner)) return false;
+                    } else {
+                        LOG.warn("[ObjectiveAnalyzer] unknown whosePhase '{}'"
+                                + " in objective_playbooks.json — fail-closed.",
+                                alternative.whosePhase);
+                        return false;
+                    }
+                }
+            }
+
             // Batch Seventeen (2026-07-27): persistent-counter relation for
             // Watch Your Step's Kessel Run route. Reads the engine's
             // completed-Utinni-effect record; the counter survives the cards
@@ -4212,6 +4244,44 @@ public class ObjectiveAnalyzer {
                 LOG.warn("[ObjectiveAnalyzer] utinniEffectCompleted supports"
                         + " only >= and < comparators; got '{}' — fail-closed.",
                         comparator);
+                return false;
+            }
+
+            // Extension batch (2026-07-29): blown-away relation (Rebel
+            // Strike Team's Bunker routes). Reads the engine's SNAPSHOT
+            // record (ModifiersLogic._blownAwayCards) — latched for the
+            // rest of the game exactly like the card law, and immune to the
+            // blown-away card later leaving the table. The snapshots carry
+            // the pre-flag state, so both tolerant and one-arg title
+            // filters match; profiles still pair this with a tolerant key
+            // for clarity. Supports >= 1 and < 1 only; fail-closed warn
+            // otherwise.
+            if ("blownAway".equals(alternative.relation)) {
+                com.gempukku.swccgo.filters.Filter blownFilter =
+                        resolveLocationFilter(
+                                alternative.locationFilterKey, playerId);
+                if (blownFilter == null || alternative.count == null
+                        || alternative.count.value == null
+                        || alternative.count.value != 1) {
+                    LOG.warn("[ObjectiveAnalyzer] blownAway needs a"
+                            + " resolvable locationFilterKey and count value"
+                            + " 1 — fail-closed.");
+                    return false;
+                }
+                String blownComparator =
+                        alternative.count.comparator != null
+                                ? alternative.count.comparator : ">=";
+                boolean anyBlown = game.getModifiersQuerying()
+                        .isBlownAway(gameState, blownFilter);
+                if (">=".equals(blownComparator)) {
+                    return anyBlown;
+                }
+                if ("<".equals(blownComparator)) {
+                    return !anyBlown;
+                }
+                LOG.warn("[ObjectiveAnalyzer] blownAway supports only >= and"
+                        + " < comparators; got '{}' — fail-closed.",
+                        blownComparator);
                 return false;
             }
 
@@ -4281,11 +4351,61 @@ public class ObjectiveAnalyzer {
                             game, playerId, controller, location,
                             alternative.relation,
                             alternative.actorFilterKey,
-                            alternative.includeExcludedFromBattle)) {
+                            alternative.includeExcludedFromBattle)
+                    && meetsPerLocationActorFloor(
+                            game, controller, location, alternative)) {
                 matchingLocations++;
             }
         }
         return matchingLocations;
+    }
+
+    /**
+     * Extension batch (2026-07-29): per-location actor-count floor (Rebel
+     * Strike Team's two-scouts-per-site law). A location only counts when
+     * the controller has at least minActorsPerLocation matching actors
+     * there. Mirrors the card law's spotting asymmetry: the first actor may
+     * ride the alternative's spot override, but every actor beyond the
+     * first must be FULLY ACTIVE because the source's inner with() takes no
+     * SpotOverride.
+     */
+    private boolean meetsPerLocationActorFloor(
+            SwccgGame game, String controller, PhysicalCard location,
+            FlipLocationAlternative alternative) {
+        if (alternative.minActorsPerLocation == null
+                || alternative.minActorsPerLocation <= 1
+                || alternative.actorFilterKey == null) {
+            return true;
+        }
+        com.gempukku.swccgo.filters.Filter actorFilter =
+                resolveFilter(alternative.actorFilterKey);
+        if (actorFilter == null) return false;
+        GameState gameState = game.getGameState();
+        Collection<PhysicalCard> permanents = gameState.getAllPermanentCards();
+        if (permanents == null) return false;
+        int totalWithOverride = 0;
+        int fullyActive = 0;
+        for (PhysicalCard card : permanents) {
+            if (card == null
+                    || controller != null
+                        && !controller.equals(card.getOwner())
+                    || !actorFilter.accepts(
+                            gameState, game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard at = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(gameState, card);
+            if (at != location) continue;
+            if (isActiveForSpot(
+                    game, card, alternative.includeExcludedFromBattle)) {
+                totalWithOverride++;
+            }
+            if (isActiveForSpot(game, card, Boolean.FALSE)) {
+                fullyActive++;
+            }
+        }
+        return totalWithOverride >= alternative.minActorsPerLocation
+                && fullyActive >= alternative.minActorsPerLocation - 1;
     }
 
     private static String resolveController(
@@ -9390,7 +9510,7 @@ public class ObjectiveAnalyzer {
         RuleCount count;
     }
     static final class FlipLocationAlternative {
-        String relation;              // control | occupy | presentAt | onTable | controlWith | occupyWith
+        String relation;              // control | occupy | presentAt | onTable | controlWith | occupyWith | utinniEffectCompleted | blownAway
         String controller;            // self | opponent | any
         String locationFilterKey;     // registry key or dynamic ref
         List<String> locationFragments;
@@ -9400,6 +9520,19 @@ public class ObjectiveAnalyzer {
         String requiredSide;          // LIGHT | DARK | null
         Boolean includeExcludedFromBattle;
         RuleOpponentConstraint opponentConstraint;
+        // Extension batch (2026-07-29): phase-window gate. When gamePhase is
+        // set, the alternative is satisfied only during that game phase;
+        // whosePhase (self | opponent) additionally pins the phase owner.
+        // Unknown values fail closed with a warn.
+        String gamePhase;             // e.g. MOVE | CONTROL | DEPLOY | null
+        String whosePhase;            // self | opponent | null
+        // Extension batch (2026-07-29): per-location actor-count floor for
+        // location-counting relations with an actorFilterKey. A location
+        // only counts when at least this many of the controller's matching
+        // actors are there; actors beyond the first must be FULLY ACTIVE
+        // (no spot override), mirroring the card law's inner with() that
+        // takes no SpotOverride.
+        Integer minActorsPerLocation;
         String scoreRole;             // setupLocation | flipProgress | flipGate | stayFlipped | postFlipPrimary | postFlipSecondary
         String sourceText;            // audit only — runtime must not parse this
     }
@@ -9788,6 +9921,21 @@ public class ObjectiveAnalyzer {
             // The Death Star's killer is the LIGHT Attack Run epic event.
             case "Attack_Run":
                 return com.gempukku.swccgo.filters.Filters.Attack_Run;
+            // Extension batch (2026-07-29): 501_19's conquest currency. A
+            // face-up-blueprint icon read: flipping Utapau/Christophsis to
+            // their Separatist backs (drain or battle win at a related
+            // site) changes what this filter counts — the entire conquest
+            // law is spottable standing state, no event hook needed.
+            case "Separatist_system":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.common.Icon.SEPARATIST,
+                        com.gempukku.swccgo.filters.Filters.system);
+            // Extension batch (2026-07-29): Rebel Strike Team pair actor.
+            // Rebel scout = Icon.REBEL (injected by AbstractRebel, never
+            // printed) AND Keyword.SCOUT — Ewok Sentry 8_11 is an ALIEN
+            // scout and never matches.
+            case "Rebel_scout":
+                return com.gempukku.swccgo.filters.Filters.Rebel_scout;
             // Batch Twenty-Two (2026-07-29): HDADTJ Legacy 601_87 actors.
             // Galen is a co-equal flip alternative to Vader (the classic
             // printings are Vader-only — false siblings). The blocker is a
@@ -9948,6 +10096,19 @@ public class ObjectiveAnalyzer {
             // Batch Eighteen (2026-07-27): NMNPND occupy leg. Exact title —
             // Mos Espa Docking Bay is a different title and never matches.
             case "Mos_Espa":                     return com.gempukku.swccgo.filters.Filters.Mos_Espa;
+            // Extension batch (2026-07-29): Rebel Strike Team keys. The
+            // exterior class is icon+partOfSystem (no site subtype, no
+            // Endor icon — Anakin's Funeral Pyre qualifies). The tolerant
+            // Bunker key is REQUIRED wherever the blownAway relation or a
+            // post-blow-away truth is involved: the plain "Bunker" key is
+            // the one-arg title filter and stops matching the moment the
+            // Bunker is blown away (which is exactly right for the V back's
+            // opponent-controls-Bunker leg, and exactly wrong elsewhere).
+            case "exterior_Endor_site":
+                return com.gempukku.swccgo.filters.Filters.exterior_Endor_site;
+            case "Bunker_including_blown_away":
+                return com.gempukku.swccgo.filters.Filters.title(
+                        com.gempukku.swccgo.common.Title.Bunker, true);
             // Batch Twenty-One (2026-07-29): SYCFA back hard-loss anchor.
             // One-arg title filter: a blown-away Death Star stops matching,
             // which is fine — the hard-loss trigger consumes the blown-away

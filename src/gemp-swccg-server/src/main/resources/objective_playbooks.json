@@ -682,7 +682,260 @@
           "runtimeFilter": "Filters.Rebel_Landing_Site"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "rst-classic-front-blow-away-or-three-pair-sites",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "blownAway",
+              "controller": "any",
+              "locationFilterKey": "Bunker_including_blown_away",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "route A: the Bunker is blown away (Card8_078.java L112, isBlownAwayLastStep with the tolerant two-arg title filter). Encoded via the engine's SNAPSHOT record - latched for the rest of the game, exactly like the card - through the new blownAway relation (extension batch 2026-07-29). The playable driver is Deactivate The Shield Generator 8_43 (control Bunker with a Rebel, two destiny +3 per Explosive Charge, total > 12; the back's own +2 Epic Event destiny modifier feeds this)."
+            },
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "exterior_Endor_site",
+              "locationFragments": [],
+              "actorFilterKey": "Rebel_scout",
+              "minActorsPerLocation": 2,
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "includeExcludedFromBattle": true,
+              "gamePhase": "MOVE",
+              "whosePhase": "self",
+              "scoreRole": "flipProgress",
+              "sourceText": "route B: during YOUR move phase only, control three exterior Endor sites each with TWO of your Rebel scouts (Card8_078.java L113-L115). All three new primitives at once: the MOVE/self phase window (isDuringYourPhase L114), the per-site pair floor with the spotting asymmetry (outer sameSiteAs takes IEFB, inner with() takes NO override - scouts beyond the first must be fully active), and CONTROL not occupy. Rebel scout = Icon.REBEL + Keyword.SCOUT; Ewok Sentry 8_11 is an alien scout and never counts. Six scouts minimum, not three."
+            }
+          ]
+        },
+        {
+          "id": "rst-classic-back-window-and-lock",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "blownAway",
+              "controller": "any",
+              "locationFilterKey": "Bunker_including_blown_away",
+              "locationFragments": [],
+              "count": {
+                "comparator": "<",
+                "value": 1
+              },
+              "gamePhase": "MOVE",
+              "whosePhase": "opponent",
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back gate: only while the Bunker has NEVER been blown away (Card8_078_BACK.java L89 - the snapshot record is append-only, so after the blow-away the back is PERMANENTLY locked), and only during the OPPONENT's move phase (L90). Both folded into one alternative; the sibling anyOf rule below ANDs with this one (CNF)."
+            }
+          ]
+        },
+        {
+          "id": "rst-classic-back-opponent-control-routes",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Endor_system",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back route 1: opponent controls the Endor system (Card8_078_BACK.java L92)"
+            },
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "exterior_Endor_site",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back route 2: opponent controls three exterior Endor sites, NO actor requirement (Card8_078_BACK.java L93)"
+            }
+          ]
+        }
+      ],
+      "hardLossLocationRules": [
+        {
+          "id": "rst-classic-endor-blown-away",
+          "locationFilterKey": "Endor_system",
+          "defenseLocationFilterKey": "Bunker",
+          "threatCardFilterKey": "Deactivate_The_Shield_Generator",
+          "trigger": "blownAwayLastStep",
+          "outcome": "objectiveOutOfPlay",
+          "sourceText": "BOTH sides: Endor system blown away places the objective out of play (Card8_078.java L129-L137, Card8_078_BACK.java L106-L114). Endor-proven trigger/outcome pair."
+        }
+      ]
+    },
+    {
+      "label": "Rebel Strike Team (V)",
+      "loaderEnabled": true,
+      "blueprintIds": [
+        "501_94",
+        "501_94_BACK"
+      ],
+      "titleFragments": [
+        "rebel strike team",
+        "garrison destroyed"
+      ],
+      "locationFragments": [
+        "endor"
+      ],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
+      "flipGateSite": null,
+      "flipGateCardIds": [],
+      "startingLocations": [],
+      "startingEffects": [],
+      "startingInterrupts": [],
+      "keyCharacterFilter": null,
+      "keySiteFilter": null,
+      "weights": {},
+      "frontBp": "501_94",
+      "backBp": "501_94_BACK",
+      "abbreviation": "RSTV",
+      "side": "LIGHT",
+      "sourceCanonicalFile": "resources/objective_flip_audit/records/501_94.json",
+      "flipLocationRules": [
+        {
+          "id": "rst-virtual-front-blow-away-only",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "blownAway",
+              "controller": "any",
+              "locationFilterKey": "Bunker_including_blown_away",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "scoreRole": "flipProgress",
+              "sourceText": "SOLE self-owned route: the Bunker is blown away (Card501_094.java L119). FALSE SIBLING of 8_78 - the classic's three-pair-site route, its phase windows, and its Endor hard-loss do NOT exist here (the gap matrix's twin claim was wrong). This authored profile also closes the second title-fallback hijack: without it, 501_94 games hydrate the classic 8_78 profile. External route recorded: The Shield Is Down! (V) 203_15 can flip EITHER printing with the Bunker intact, and pins both backs while an Explosive Charge sits at the Bunker. The V's own Bunker download is dead until a Bunker arrives by other means, and dead forever after the blow-away. The V back's attrition immunity uses bare Filters.scout - it shields OPPONENT scouts including Imperial biker scouts (gameplay landmine, unexpressible)."
+            }
+          ]
+        },
+        {
+          "id": "rst-virtual-back-opponent-controls-bunker",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "opponent",
+              "locationFilterKey": "Bunker",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back: opponent controls the Bunker (Card501_094_BACK.java L125). DELIBERATELY the one-arg intolerant Bunker key: after the blow-away no live card matches it, so this leg goes permanently dead - the card's own emergent lock, reproduced exactly. Only reachable at all via the 203_15 external flip with the Bunker intact. No phase gate, no blown-away guard, no Endor legs (all classic-only)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "More Systems Will Rally To Our Cause",
+      "loaderEnabled": true,
+      "blueprintIds": [
+        "501_19",
+        "501_19_BACK"
+      ],
+      "titleFragments": [
+        "more systems will rally to our cause",
+        "the galaxy torn apart"
+      ],
+      "locationFragments": [
+        "geonosis"
+      ],
+      "requiredCardsOnTable": [],
+      "pullableCards": [],
+      "flipGateSite": null,
+      "flipGateCardIds": [],
+      "startingLocations": [],
+      "startingEffects": [],
+      "startingInterrupts": [],
+      "keyCharacterFilter": null,
+      "keySiteFilter": null,
+      "weights": {},
+      "frontBp": "501_19",
+      "backBp": "501_19_BACK",
+      "abbreviation": "MSWR",
+      "side": "DARK",
+      "sourceCanonicalFile": "resources/objective_flip_audit/records/501_19.json",
+      "flipLocationRules": [
+        {
+          "id": "mswr-front-two-separatist-systems",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "actorFilterKey": "Separatist_system",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "single leg: two [Separatist] systems spottable on table (Card501_019.java L134) - a pure ownership-free card count of a FACE-UP-BLUEPRINT icon read. Only three cards in the entire pool print the icon on a system face: Geonosis 501_20 front, Utapau 501_23 BACK, Christophsis 501_26 BACK - so the flip is 100 percent conquest-gated: the owner drains or wins battles at Utapau/Christophsis sites to flip those locations to their Separatist backs (Card501_023.java L44-L56, Card501_026.java L43-L55; the LIGHT player reverses them the same way). The once-per-turn related-battleground-site pull is the conquest fuel line. Conversion trap recorded: LIGHT Geonosis 221_62 converting over 501_20 buries a Separatist system and can flip the back forward; the objective's own convert-raise trigger un-buries it (its back copy carries leftover println debug + a latent NPE at Card501_019_BACK.java L163-L168, engine scope, flagged). Hidden unexpressible conjunct: each counted system must also be targetable by the objective (canBeTargetedBy, GameConditions L1908-L1917)."
+            }
+          ]
+        },
+        {
+          "id": "mswr-back-below-two-separatist-systems",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "actorFilterKey": "Separatist_system",
+              "locationFragments": [],
+              "count": {
+                "comparator": "<",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flip-back: fewer than two [Separatist] systems on table (Card501_019_BACK.java L127) - the exact negation of the front leg. Reconquest and the 221_62 burial both drop the count live."
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "There Is Good In Him",

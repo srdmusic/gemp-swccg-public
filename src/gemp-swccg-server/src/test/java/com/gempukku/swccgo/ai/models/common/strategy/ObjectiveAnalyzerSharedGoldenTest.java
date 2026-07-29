@@ -193,7 +193,10 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // Batch Seventeen (2026-07-27): the authored 601_146 profile, 58 -> 59.
         // Batch Twenty-Two (2026-07-29): the authored 601_87 profile
         // (closes the title-fallback hijack of the 7_297 profile), 59 -> 60.
-        assertEquals(60, profiles.size());
+        // Extension batch (2026-07-29): the authored 501_94 profile (closes
+        // the second title hijack, of the 8_78 profile) and the authored
+        // 501_19 profile, 60 -> 62.
+        assertEquals(62, profiles.size());
 
         int enabled = 0;
         for (Object profile : profiles) {
@@ -215,7 +218,9 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // 30 -> 31 enabled.
         // Batch Twenty-Two (2026-07-29): 601_87 authored and enabled,
         // 31 -> 32 enabled, 59 -> 60 profiles.
-        assertEquals(32, enabled);
+        // Extension batch (2026-07-29): 501_94 and 501_19 authored and
+        // enabled, 32 -> 34 enabled, 60 -> 62 profiles.
+        assertEquals(34, enabled);
         assertEquals(28, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
