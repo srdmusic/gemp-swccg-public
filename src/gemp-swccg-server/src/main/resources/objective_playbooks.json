@@ -6723,6 +6723,136 @@
       "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
     },
     {
+      "label": "Hunt Down And Destroy The Jedi (Legacy)",
+      "loaderEnabled": true,
+      "blueprintIds": [
+        "601_87",
+        "601_87_BACK"
+      ],
+      "titleFragments": [
+        "hunt down and destroy the jedi",
+        "their fire has gone out of the universe"
+      ],
+      "locationFragments": [],
+      "requiredCardsOnTable": [],
+      "pullableCards": [
+        "601_95"
+      ],
+      "flipGateSite": null,
+      "flipGateCardIds": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "7_275",
+            "12_165",
+            "203_31",
+            "226_2"
+          ],
+          "titleFragments": [
+            "coruscant"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "7_277",
+            "201_38"
+          ],
+          "titleFragments": [
+            "coruscant: imperial city",
+            "imperial city"
+          ]
+        }
+      ],
+      "startingEffects": [
+        {
+          "blueprintIds": [
+            "601_73"
+          ],
+          "titleFragments": [
+            "a sith's plans"
+          ]
+        }
+      ],
+      "startingInterrupts": [],
+      "keyCharacterFilter": "Galen_or_Vader",
+      "keySiteFilter": null,
+      "weights": {},
+      "frontBp": "601_87",
+      "backBp": "601_87_BACK",
+      "abbreviation": "HDADTJL",
+      "side": "DARK",
+      "sourceCanonicalFile": "resources/objective_flip_audit/records/601_87.json",
+      "flipLocationRules": [
+        {
+          "id": "hunt-down-legacy-front",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "any",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Galen_or_Vader",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "actorToLocation",
+              "sourceText": "leg 1: Galen OR Vader at a battleground site (Card601_087.java L123) - Galen is a CO-EQUAL alternative, ownership-free spot; the classic 7_297/213_31 printings are Vader-only FALSE SIBLINGS. Authoring this profile also closes a live defect: with no 601_87 profile, findProfile's title fallback hydrated the WRONG loaderEnabled 7_297 profile (Vader-only actor, Jedi_or_Luke blocker, Executor setup) onto 601_87 games."
+            },
+            {
+              "relation": "at",
+              "controller": "opponent",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "unique_character_ability_above_3",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "globalBlockerAbsent",
+              "sourceText": "leg 2: opponent has NO unique character of ability > 3 at a battleground site (Card601_087.java L124) - a COMPUTED class (unique + character + abilityMoreThan(3), permanent pilots excluded), not the classic's Jedi/Luke persona class. Code uses at(), wider than the printed 'present at'. Captives never count (IEFB only)."
+            }
+          ]
+        },
+        {
+          "id": "hunt-down-legacy-back",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "opponent",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "unique_character_ability_above_3",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "globalBlockerPresent",
+              "sourceText": "flip-back route 1: opponent lands a unique ability>3 character at a battleground site (Card601_087_BACK.java L111)"
+            },
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "Galen_or_Vader",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "requiredActorMissing",
+              "sourceText": "flip-back route 2: NEITHER Vader NOR Galen spottable (Card601_087_BACK.java L112-L113) - the source's nested allOf[NOT Vader, NOT Galen] folded to count==0 over the union, logically identical. This route is ABSENT from the printed back text; encode the CODE."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "label": "Shadow Collective",
       "blueprintIds": [
         "213_32",

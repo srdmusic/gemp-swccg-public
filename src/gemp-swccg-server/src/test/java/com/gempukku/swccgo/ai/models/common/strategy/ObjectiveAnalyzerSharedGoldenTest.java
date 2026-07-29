@@ -191,7 +191,9 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         profilesMethod.setAccessible(true);
         List<?> profiles = (List<?>) profilesMethod.invoke(analyzer);
         // Batch Seventeen (2026-07-27): the authored 601_146 profile, 58 -> 59.
-        assertEquals(59, profiles.size());
+        // Batch Twenty-Two (2026-07-29): the authored 601_87 profile
+        // (closes the title-fallback hijack of the 7_297 profile), 59 -> 60.
+        assertEquals(60, profiles.size());
 
         int enabled = 0;
         for (Object profile : profiles) {
@@ -211,7 +213,9 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // Batch Twenty-One (2026-07-29): SYCFA activated (hard-loss rule
         // only; the flip is the deferred blown-away primitive),
         // 30 -> 31 enabled.
-        assertEquals(31, enabled);
+        // Batch Twenty-Two (2026-07-29): 601_87 authored and enabled,
+        // 31 -> 32 enabled, 59 -> 60 profiles.
+        assertEquals(32, enabled);
         assertEquals(28, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);

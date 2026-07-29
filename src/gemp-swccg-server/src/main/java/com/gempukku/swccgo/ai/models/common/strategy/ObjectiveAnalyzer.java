@@ -9788,6 +9788,21 @@ public class ObjectiveAnalyzer {
             // The Death Star's killer is the LIGHT Attack Run epic event.
             case "Attack_Run":
                 return com.gempukku.swccgo.filters.Filters.Attack_Run;
+            // Batch Twenty-Two (2026-07-29): HDADTJ Legacy 601_87 actors.
+            // Galen is a co-equal flip alternative to Vader (the classic
+            // printings are Vader-only — false siblings). The blocker is a
+            // COMPUTED class: unique character of ability > 3, no persona or
+            // keyword; ownership comes from the rule's controller field,
+            // never baked into the key.
+            case "Galen_or_Vader":
+                return com.gempukku.swccgo.filters.Filters.or(
+                        com.gempukku.swccgo.filters.Filters.Galen,
+                        com.gempukku.swccgo.filters.Filters.Vader);
+            case "unique_character_ability_above_3":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.unique,
+                        com.gempukku.swccgo.filters.Filters.character,
+                        com.gempukku.swccgo.filters.Filters.abilityMoreThan(3));
             // Batch Twenty (2026-07-27): Hidden Path flip actor. Jedi is a
             // COMPUTED class (LIGHT character with ability >= 6), never a
             // keyword and never the Jedi_Survivor keyword — any owned

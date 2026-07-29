@@ -9006,3 +9006,25 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     back out-of-play proven at analyzer level only (Attack Run fixture
     deferred); 209_41 route unmodeled. Revert the single Batch Twenty-One
     commit.
+
+  ==== Hunt Down And Destroy The Jedi (Legacy) Batch Twenty-Two (2026-07-29):
+       601_87 authored; live title-fallback hijack closed ====
+    FALSE SIBLING of 7_297/213_31 (those are Vader-only, persona-class
+    blockers; near-twins of each other). 601_87 front = (Galen OR Vader) at a
+    battleground site AND no opponent unique character of ability > 3 at a
+    battleground site (COMPUTED class, perm pilots excluded; at() wider than
+    printed "present at"). Back = anyOf(blocker returns; NEITHER hunter
+    spottable - the second route is unprinted; encoded as onTable
+    Galen_or_Vader count==0, logically identical to the source's nested
+    conjunction). No hard-loss. LIVE DEFECT CLOSED: findProfile's
+    title-substring fallback was hydrating the classic 7_297 profile
+    (Vader-only + Executor setup) onto 601_87 games; the authored profile
+    short-circuits the fallback. Registry adds Galen_or_Vader +
+    unique_character_ability_above_3 (ownership in controller, never the
+    key). Goldens 31->32 enabled, 59->60 profiles. New fixture laws:
+    startingLocations/startingEffects are JsonCardRef OBJECT lists - plain
+    strings make Gson throw and nuke the ENTIRE registry (golden counts
+    catch it); A Sith's Plans asks for its attach-site host. Three-test
+    contract green with NO VADER in the deck (Galen alone flips; unprinted
+    flip-back route natively proven); classic 19/19 + 10/10 regression
+    green. Revert the single Batch Twenty-Two commit (reopens the hijack).
