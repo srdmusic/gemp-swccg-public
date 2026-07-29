@@ -9784,6 +9784,10 @@ public class ObjectiveAnalyzer {
                         com.gempukku.swccgo.filters.Filters.blockade_agenda,
                         com.gempukku.swccgo.filters.Filters.at(
                                 com.gempukku.swccgo.filters.Filters.Galactic_Senate));
+            // Batch Twenty-One (2026-07-29): SYCFA back hard-loss threat.
+            // The Death Star's killer is the LIGHT Attack Run epic event.
+            case "Attack_Run":
+                return com.gempukku.swccgo.filters.Filters.Attack_Run;
             // Batch Twenty (2026-07-27): Hidden Path flip actor. Jedi is a
             // COMPUTED class (LIGHT character with ability >= 6), never a
             // keyword and never the Jedi_Survivor keyword — any owned
@@ -9929,6 +9933,12 @@ public class ObjectiveAnalyzer {
             // Batch Eighteen (2026-07-27): NMNPND occupy leg. Exact title —
             // Mos Espa Docking Bay is a different title and never matches.
             case "Mos_Espa":                     return com.gempukku.swccgo.filters.Filters.Mos_Espa;
+            // Batch Twenty-One (2026-07-29): SYCFA back hard-loss anchor.
+            // One-arg title filter: a blown-away Death Star stops matching,
+            // which is fine — the hard-loss trigger consumes the blown-away
+            // event itself, not this standing filter.
+            case "Death_Star_system":
+                return com.gempukku.swccgo.filters.Filters.Death_Star_system;
             // Batch Twenty (2026-07-27): Hidden Path gate sites. Plain sites
             // outside the Mapuzo system — battleground NOT required (V62's
             // battleground-only steer is narrower than the law); no Mapuzo

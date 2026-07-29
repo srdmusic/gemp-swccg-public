@@ -8984,3 +8984,25 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     leak starved the 7-cost third pulse; the fixture now stages every body
     pre-cheat (fillers 24->30, cheat 22->24). Both mechanisms are new fixture
     laws. Revert the single Batch Twenty commit.
+
+  ==== Set Your Course For Alderaan Batch Twenty-One (2026-07-29): 111_6 DARK,
+       event-shaped law ====
+    The queue's LIGHT listing was wrong (set111/dark). Front flips ONLY when
+    Alderaan is blown away (isBlownAwayLastStep, includeBlownAway=true) - an
+    EVENT, not a board state; no isTableChanged, no canBeFlipped, no
+    control/occupy leg. Back never flips back by its own text; hard-loss =
+    Death Star blown away -> objective OUT OF PLAY. External Krennic route
+    (An Inkling 209_41, once/turn, end-of-turn auto-revert) recorded - the
+    audit record's "nothing else flips this card" was false. Encoded: ONE
+    Endor-shaped hardLossLocationRule (Death_Star_system /
+    blownAwayLastStep / objectiveOutOfPlay / threat Attack_Run) and
+    DELIBERATELY NO flipLocationRules - the flip is the deferred blown-away
+    primitive (RST BATCH_18_DEFERRAL), evidence strengthened. Registry adds
+    Death_Star_system + Attack_Run, fail-closed. Goldens 30->31. V188
+    Death-Star-site deploy veto (title-gated, self-disabling on flip) stays.
+    Two-test contract green on first run including the REAL CPI pipeline
+    (Superlaser to parsec-0 Death Star, raw orbit injection, destiny 7 vs
+    Y=2, natively blowing away Alderaan and flipping the front). Limits:
+    back out-of-play proven at analyzer level only (Attack Run fixture
+    deferred); 209_41 route unmodeled. Revert the single Batch Twenty-One
+    commit.

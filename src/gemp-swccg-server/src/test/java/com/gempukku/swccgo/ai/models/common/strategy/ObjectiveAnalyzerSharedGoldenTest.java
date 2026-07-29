@@ -208,8 +208,11 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // Operations activated, 26 -> 29 enabled.
         // Batch Twenty (2026-07-27): The Hidden Path activated,
         // 29 -> 30 enabled.
-        assertEquals(30, enabled);
-        assertEquals(29, profiles.size() - enabled);
+        // Batch Twenty-One (2026-07-29): SYCFA activated (hard-loss rule
+        // only; the flip is the deferred blown-away primitive),
+        // 30 -> 31 enabled.
+        assertEquals(31, enabled);
+        assertEquals(28, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);
