@@ -8958,3 +8958,29 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     profiles. Ten-test contract green after the operative-rule fixture fix
     (first run failed 6/18 on lone operatives — that failure IS the finding).
     Revert the single Batch Nineteen commit.
+
+  ==== The Hidden Path Batch Twenty (2026-07-27): 226_28, no twins ====
+    Front = your Jedi OCCUPY two non-Mapuzo sites (occupiesWith >= 2, presence
+    not control, owner-only, undercover excluded, IEFB); back = the EXACT
+    negation of the same call. Jedi is the COMPUTED ability-6+ LIGHT character
+    class, wider than the three Jedi_Survivor keyword holders; battleground is
+    NOT required (V62's battleground-only steer is narrower than the law).
+    Registry adds actor Jedi (shared unlock) + location non_Mapuzo_site,
+    fail-closed. Goldens 29->30 enabled. The eleven live title-gated strategy
+    consumers (V52b/V53b/V60/V62/V64/V67aa/V67n/V67z) stay: no retirement
+    prescription, and they own movement/budget/safety behavior the schema
+    cannot express; overlap recorded. Adjacent laws recorded: back rider uses
+    battleground_site (Mapuzo battlegrounds count there); Corridor transit is
+    survivor-KEYWORD-gated; Fallen Order title cliff - every hiddenPathOnTable
+    modifier dies at the flip (proven live by the flip pulse spawning required
+    game-text restores). Fixture doctrine: stacked required triggers on one
+    pulse surface an ORDERING decision PassAllResponses cannot clear, and
+    post-flip restore triggers leave an optional-response window that blocks
+    the next deploy - resolveRequiredWindows in the contract test answers
+    both. Three-test contract green; full reactor in commit. ALSO: a
+    pre-existing WYS back-test intermittent (Batch Seventeen) was root-caused
+    and fixed - raw moves of Force-Pile cards spend invisible Force and deploy
+    menus never reprice after raw zone changes, so a shuffle-dependent double
+    leak starved the 7-cost third pulse; the fixture now stages every body
+    pre-cheat (fillers 24->30, cheat 22->24). Both mechanisms are new fixture
+    laws. Revert the single Batch Twenty commit.

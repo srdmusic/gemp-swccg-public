@@ -206,8 +206,10 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // 24 -> 26 enabled.
         // Batch Nineteen (2026-07-27): the Local Uprising twins and ISB
         // Operations activated, 26 -> 29 enabled.
-        assertEquals(29, enabled);
-        assertEquals(30, profiles.size() - enabled);
+        // Batch Twenty (2026-07-27): The Hidden Path activated,
+        // 29 -> 30 enabled.
+        assertEquals(30, enabled);
+        assertEquals(29, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);

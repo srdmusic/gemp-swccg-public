@@ -67,7 +67,11 @@ public class WatchYourStepObjectiveEngineContractTest {
                 }},
                 new HashMap<>() {{
                 }},
-                24,
+                // 30 light fillers (Batch Twenty hardening): the back-holds
+                // test stages four bodies pre-cheat and needs three 7-cost
+                // pulses, so a 24-filler reserve left the activation cheat
+                // and the phase skipper fighting over the same cards.
+                30,
                 24,
                 WYS_CLASSIC,
                 StartingSetup.DefaultDSGroundLocation,
@@ -160,10 +164,22 @@ public class WatchYourStepObjectiveEngineContractTest {
         scn.StartGame();
         scn.MoveCardsToLocation(cantina, han);
         scn.MoveCardsToLocation(dockingBay, scn.GetLSFiller(1));
+        // Batch Twenty hardening of a pre-existing shuffle intermittent:
+        // every body this test later needs must be ON TABLE before the
+        // activation cheat. A raw MoveCardsToLocation of a card sitting in
+        // the Force Pile silently drains one Force, the deploy menus are
+        // stale snapshots priced at 7 per pulse, and 22 activated minus two
+        // 7-cost pulses leaves 8 — so two shuffle-dependent leaks (6 < 7)
+        // emptied the third pulse's menu. Smuggler and the fifth trooper
+        // stage at cantina (one smuggler battleground — not flip-complete,
+        // the skipper stays unjammed) and relocate with in-play moves.
+        scn.MoveCardsToLocation(cantina, corellianSmuggler);
+        scn.MoveCardsToLocation(cantina, scn.GetLSFiller(5));
 
         // The classic front taxes non-smuggler deploys +6, so each filler
-        // pulse costs 7.
-        scn.LSActivateForceCheat(22);
+        // pulse costs 7. 24 of the 27 reserve cards activate; three stay
+        // for the phase skipper; 24 - 14 leaves 10 for the third pulse.
+        scn.LSActivateForceCheat(24);
         scn.SkipToLSTurn(Phase.DEPLOY);
         scn.MoveCardsToLocation(dockingBay, corellianSmuggler);
         scn.LSDeployCardAndPassResponses(
@@ -172,10 +188,10 @@ public class WatchYourStepObjectiveEngineContractTest {
         scn.DSPass();
 
         // Remove BOTH smugglers: plain fillers still occupy two
-        // battlegrounds, and the asymmetric back law holds.
+        // battlegrounds, and the asymmetric back law holds. The fifth
+        // trooper already stands at cantina from the pre-cheat staging.
         scn.MoveOutOfPlay(han);
         scn.MoveOutOfPlay(corellianSmuggler);
-        scn.MoveCardsToLocation(cantina, scn.GetLSFiller(5));
         scn.LSDeployCardAndPassResponses(
                 pulseTwo, scn.GetDSStartingLocation());
         assertTrue("Plain occupation of two battlegrounds must hold the back",
