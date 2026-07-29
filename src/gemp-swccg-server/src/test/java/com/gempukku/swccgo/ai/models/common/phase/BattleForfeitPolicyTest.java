@@ -151,8 +151,10 @@ public class BattleForfeitPolicyTest {
 
         assertOperations(shipWithCrew,
                 op("V48-ship-with-crew", -9999.0f,
-                        "V48 SHIP WITH CREW: Executor has 3 crew aboard \u2014 forfeit crew first, not the ship!",
-                        TraceOutputKind.VETO));
+                        "V48 SHIP WITH CREW: Executor has 3 crew aboard; forfeit crew first, not the ship!",
+                        TraceOutputKind.VETO),
+                hardVeto("V48-ship-with-crew-hard",
+                        "V48 SHIP WITH CREW: Executor has 3 crew aboard; forfeit crew first, not the ship!"));
         assertOperations(residual,
                 op("V139-forfeit-value", 30.0f, "Forfeit value 7"),
                 op("V139-high-power", -100.0f,
@@ -164,6 +166,25 @@ public class BattleForfeitPolicyTest {
         assertBits(-20318.0f, 50.0f + shipWithCrew.operations().get(0).delta()
                 + residual.operations().stream().map(PolicyOperation::delta)
                 .reduce(0.0f, Float::sum));
+    }
+
+    @Test
+    public void combinedShipWithCrewIsBlockedOnlyWhileAnotherForfeitExists() {
+        PolicyResult blocked = BattleForfeitPolicy.scoreCombinedShipWithCrew(
+                ACTION_ID, "Supremacy", 3, true);
+        assertOperations(blocked,
+                op("V48-ship-with-crew-combined", -9999.0f,
+                        "V48 SHIP WITH CREW: Supremacy has 3 crew aboard; use another legal loss first, not the ship!",
+                        TraceOutputKind.VETO),
+                hardVeto("V48-ship-with-crew-combined-hard",
+                        "V48 SHIP WITH CREW: Supremacy has 3 crew aboard; use another legal loss first, not the ship!"));
+
+        assertOperations(BattleForfeitPolicy.scoreCombinedShipWithCrew(
+                ACTION_ID, "Supremacy", 0, true));
+        assertOperations(BattleForfeitPolicy.scoreCombinedShipWithCrew(
+                ACTION_ID, "Supremacy", 3, false));
+        assertOperations(BattleForfeitPolicy.scoreStandaloneShipWithCrew(
+                ACTION_ID, "Supremacy", 3, false));
     }
 
     @Test
@@ -464,7 +485,13 @@ public class BattleForfeitPolicyTest {
 
     private static Expected op(String ruleArmId, float delta, String reason,
                                TraceOutputKind outputKind) {
-        return new Expected(ruleArmId, delta, reason, outputKind);
+        return new Expected(ruleArmId, delta, reason, outputKind,
+                PolicyOperationKind.ADD);
+    }
+
+    private static Expected hardVeto(String ruleArmId, String reason) {
+        return new Expected(ruleArmId, 0.0f, reason,
+                TraceOutputKind.VETO, PolicyOperationKind.HARD_VETO);
     }
 
     private static void assertOperations(PolicyResult result, Expected... expected) {
@@ -480,7 +507,7 @@ public class BattleForfeitPolicyTest {
             assertEquals(expectedOperation.reason(), operation.reason());
             assertEquals(expectedOperation.outputKind(), operation.outputKind());
             assertEquals(TraceDomainId.BATTLE_FORFEIT, operation.domainId());
-            assertEquals(PolicyOperationKind.ADD, operation.kind());
+            assertEquals(expectedOperation.kind(), operation.kind());
             assertEquals(ACTION_ID, operation.actionId());
         }
     }
@@ -491,7 +518,8 @@ public class BattleForfeitPolicyTest {
     }
 
     private record Expected(String ruleArmId, float delta, String reason,
-                            TraceOutputKind outputKind) {
+                            TraceOutputKind outputKind,
+                            PolicyOperationKind kind) {
     }
 
     private static final class CandidateBuilder {

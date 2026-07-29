@@ -55,7 +55,7 @@ public class BattleResidualSourceOwnershipTest {
     }
 
     @Test
-    public void forfeitResidualAdaptersKeepReadsAndPriorityBeforeV48()
+    public void forfeitResidualAdaptersApplyAboardV48BeforeEarlyOptionalRoutes()
             throws IOException {
         String rando = evaluatorSource("rando", "CardSelectionEvaluator.java");
         String chosenOne = evaluatorSource("chosenone", "CardSelectionEvaluator.java");
@@ -65,9 +65,13 @@ public class BattleResidualSourceOwnershipTest {
             assertTrue(evaluator.contains("AiCardHelper.isDeadCard(card, game, playerId)"));
             assertTrue(evaluator.contains("PhysicalCard attachedTo = card.getAttachedTo()"));
             assertTrue(evaluator.contains("BattleForfeitPolicy.scoreStandalonePriority("));
-            assertTrue(evaluator.indexOf("scoreStandalonePriority(")
-                    < evaluator.indexOf("scoreStandaloneShipWithCrew("));
+            assertTrue(evaluator.contains(
+                    "BattleForfeitFacts.countAboardCharacters("));
             assertTrue(evaluator.indexOf("scoreStandaloneShipWithCrew(")
+                    < evaluator.indexOf("if (isOptional && optionalDamageRemaining <= 0)"));
+            assertTrue(evaluator.indexOf("scoreStandaloneShipWithCrew(")
+                    < evaluator.indexOf("scoreStandalonePriority("));
+            assertTrue(evaluator.indexOf("scoreStandalonePriority(")
                     < evaluator.lastIndexOf("scoreStandaloneResidual("));
         }
     }

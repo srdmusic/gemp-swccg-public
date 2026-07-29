@@ -163,6 +163,32 @@ public class BattleForfeitFactsTest {
         assertFalse(facts.soloPower().available());
     }
 
+    @Test
+    public void aboardCharacterCountUsesPilotPassengerAndNestedCargoRelations() {
+        GameState gameState = new GameState();
+        PhysicalCard carrier = card(CardCategory.STARSHIP);
+        PhysicalCard pilot = card(CardCategory.CHARACTER);
+        PhysicalCard passenger = card(CardCategory.CHARACTER);
+        PhysicalCard weapon = card(CardCategory.WEAPON);
+        PhysicalCard cargoVehicle = card(CardCategory.VEHICLE);
+        PhysicalCard nestedPassenger = card(CardCategory.CHARACTER);
+
+        when(carrier.getCardsAttached()).thenReturn(
+                List.of(pilot, passenger, weapon, cargoVehicle));
+        when(pilot.isPilotOf()).thenReturn(true);
+        when(passenger.isPassengerOf()).thenReturn(true);
+        when(cargoVehicle.isInCargoHoldAsVehicle()).thenReturn(true);
+        when(cargoVehicle.getCardsAttached())
+                .thenReturn(List.of(nestedPassenger));
+        when(nestedPassenger.isPassengerOf()).thenReturn(true);
+
+        assertEquals(List.of(weapon),
+                gameState.getAttachedCards(carrier));
+        assertEquals(3,
+                BattleForfeitFacts.countAboardCharacters(
+                        gameState, carrier));
+    }
+
     private static BattleForfeitFacts.CandidateFacts candidate(
             String actionId, boolean blueprintPresent, float forfeit,
             boolean hit, boolean dead) {

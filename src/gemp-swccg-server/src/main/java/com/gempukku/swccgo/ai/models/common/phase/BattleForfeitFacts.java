@@ -144,6 +144,32 @@ public final class BattleForfeitFacts {
     }
 
     /**
+     * Counts physical characters carried aboard a starship or vehicle.
+     * The aboard relation is distinct from ordinary attachments: the default
+     * getAttachedCards overload excludes pilots, passengers, and cargo.
+     */
+    public static int countAboardCharacters(
+            GameState gameState, PhysicalCard carrier) {
+        if (gameState == null || carrier == null) {
+            return 0;
+        }
+        List<PhysicalCard> aboard = gameState.getAboardCards(carrier, true);
+        if (aboard == null) {
+            return 0;
+        }
+        int characterCount = 0;
+        for (PhysicalCard card : aboard) {
+            if (card != null
+                    && card.getBlueprint() != null
+                    && card.getBlueprint().getCardCategory()
+                        == CardCategory.CHARACTER) {
+                characterCount++;
+            }
+        }
+        return characterCount;
+    }
+
+    /**
      * Reads the exact Invasion formation role for every offered loss. An
      * optional pass is an alternative. A Force-loss card is an alternative
      * only when no attrition remains, because Force loss cannot satisfy attrition.

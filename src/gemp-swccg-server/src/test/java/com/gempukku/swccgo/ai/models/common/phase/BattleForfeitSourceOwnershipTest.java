@@ -20,7 +20,7 @@ public class BattleForfeitSourceOwnershipTest {
 
         assertEquals(normalize(rando), normalize(chosenOne));
         for (String evaluator : new String[] {rando, chosenOne}) {
-            assertTrue(evaluator.contains("BattleForfeitPolicy.scoreStandaloneShipWithCrew("));
+            assertTrue(evaluator.contains("scoreStandaloneShipWithCrew("));
             assertTrue(evaluator.contains("BattleForfeitPolicy.scoreStandalonePriority("));
             assertTrue(evaluator.contains("BattleForfeitPolicy.scoreStandaloneResidual("));
             assertFalse(evaluator.contains("V48 SHIP WITH CREW:"));
@@ -49,7 +49,7 @@ public class BattleForfeitSourceOwnershipTest {
         assertTrue(policy.contains("V139 High power - prefer keeping for battle"));
         assertTrue(policy.contains("V139 VALUABLE UNIQUE - never forfeit unless forced"));
         assertTrue(policy.contains("OBJECTIVE CRITICAL - NEVER FORFEIT!"));
-        assertFalse(policy.contains("hardVeto("));
+        assertTrue(policy.contains("PolicyOperation.hardVeto("));
         assertFalse(policy.contains("defer("));
         for (String forbidden : new String[] {
                 "DecisionContext", "EvaluatedAction", "PhysicalCard",
@@ -67,12 +67,19 @@ public class BattleForfeitSourceOwnershipTest {
         String policy = policySource();
         assertTrue(policy.contains("V154-hit-host"));
         assertTrue(policy.contains("AdapterStep.CONTINUE_CANDIDATE"));
+        assertTrue(policy.contains("scoreCombinedShipWithCrew"));
 
         for (String evaluator : new String[] {
                 evaluatorSource("rando"), evaluatorSource("chosenone")}) {
             assertTrue(evaluator.contains("return evaluateForceLossOrForfeit(context)"));
             assertTrue(evaluator.contains(
                     "V67y deliberately not applied in this method"));
+            assertTrue(evaluator.contains(
+                    "BattleForfeitFacts.countAboardCharacters("));
+            assertTrue(evaluator.contains(
+                    "scoreCombinedShipWithCrew("));
+            assertFalse(evaluator.contains(
+                    "gameState.getAttachedCards(battleCandidate)"));
         }
 
         assertTrue(aiSource("rando", "RandoCalAi.java").contains(

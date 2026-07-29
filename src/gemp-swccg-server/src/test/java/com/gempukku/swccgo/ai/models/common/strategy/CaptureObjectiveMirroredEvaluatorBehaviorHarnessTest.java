@@ -17,6 +17,7 @@ import com.gempukku.swccgo.game.PhysicalCardVisitor;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.BattleState;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.game.state.actions.GameTextActionState;
 import com.gempukku.swccgo.logic.GameUtils;
@@ -2570,6 +2571,74 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
         assertParity(duplicateForceLoss);
         assertParity(duplicateForfeit);
         assertParity(duplicateMovement);
+    }
+
+    @Test
+    public void mandatoryAllHardForfeitStillChoosesCrewBeforeLoadedCarrier() {
+        List<Outcome> carriers = new ArrayList<>();
+        List<Outcome> vaders = new ArrayList<>();
+        List<Outcome> winners = new ArrayList<>();
+        for (Bot bot : Bot.values()) {
+            Fixture fixture = stableBhbmCarrierFixture(
+                    bot, false);
+            PhysicalCard carrier =
+                    fixture.card(CARRIER_ID);
+            PhysicalCard vader =
+                    fixture.card(VADER_ID);
+            when(fixture.gameState.getAboardCards(
+                    carrier, true))
+                    .thenReturn(List.of(vader));
+            when(carrier.isHit()).thenReturn(true);
+
+            BattleState battleState =
+                    new BattleState();
+            battleState.reachedDamageSegment();
+            battleState.setBaseBattleDamage(
+                    fixture.player, 2.0f);
+            when(fixture.gameState.getBattleState())
+                    .thenReturn(battleState);
+            when(fixture.modifiers.getTotalBattleDamage(
+                    fixture.gameState, fixture.player))
+                    .thenReturn(2.0f);
+
+            Decision forfeit = Decision.cards(
+                    "Choose Force to lose or a card from battle to forfeit",
+                    Phase.BATTLE,
+                    List.of(String.valueOf(CARRIER_ID),
+                            String.valueOf(VADER_ID)),
+                    List.of(BANTHA, VADER),
+                    List.of(true, true));
+            List<Outcome> actions =
+                    cardSelectionAdapter(
+                        fixture, forfeit);
+            Outcome heldCarrier = only(
+                    actions,
+                    String.valueOf(CARRIER_ID));
+            Outcome heldVader = only(
+                    actions,
+                    String.valueOf(VADER_ID));
+            Outcome winner =
+                    combined(fixture, forfeit);
+
+            assertTrue(heldCarrier.hardVeto());
+            assertTrue(heldVader.hardVeto());
+            assertContains(heldCarrier,
+                    "V48 SHIP WITH CREW");
+            assertContains(heldCarrier,
+                    "BHBM CRITICAL");
+            assertContains(heldVader,
+                    "BHBM CRITICAL");
+            assertTrue(heldCarrier.score()
+                    < heldVader.score());
+            assertEquals(String.valueOf(VADER_ID),
+                    winner.actionId());
+            carriers.add(heldCarrier);
+            vaders.add(heldVader);
+            winners.add(winner);
+        }
+        assertParity(carriers);
+        assertParity(vaders);
+        assertParity(winners);
     }
 
     @Test

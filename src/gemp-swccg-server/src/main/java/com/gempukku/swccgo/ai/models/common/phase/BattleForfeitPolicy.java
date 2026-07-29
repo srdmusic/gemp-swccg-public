@@ -193,15 +193,60 @@ public final class BattleForfeitPolicy {
                 AdapterStep.CONTINUE_CANDIDATE, operations, List.of());
     }
 
-    /** V48 standalone additive protection after the evaluator counts attached crew. */
+    /** V48 standalone protection after the evaluator counts physical crew aboard. */
     public static PolicyResult scoreStandaloneShipWithCrew(String actionId,
                                                            String title,
                                                            int crewCount) {
+        return scoreStandaloneShipWithCrew(
+                actionId, title, crewCount, true);
+    }
+
+    public static PolicyResult scoreStandaloneShipWithCrew(
+            String actionId,
+            String title,
+            int crewCount,
+            boolean hasSafeAlternative) {
         List<PolicyOperation> operations = new ArrayList<>();
-        if (crewCount > 0) {
+        if (crewCount > 0 && hasSafeAlternative) {
+            String reason = String.format(
+                    "V48 SHIP WITH CREW: %s has %d crew aboard; forfeit crew first, not the ship!",
+                    title, crewCount);
             add(operations, actionId, "V48-ship-with-crew", TraceOutputKind.VETO, -9999.0f,
-                    String.format("V48 SHIP WITH CREW: %s has %d crew aboard \u2014 forfeit crew first, not the ship!",
-                            title, crewCount));
+                    reason);
+            operations.add(PolicyOperation.hardVeto(
+                    actionId,
+                    TraceRuleId.of("V48-ship-with-crew-hard"),
+                    TraceDomainId.BATTLE_FORFEIT,
+                    TraceOutputKind.VETO,
+                    reason));
+        }
+        return result(operations);
+    }
+
+    /**
+     * V48 protection for the combined Force-loss-or-forfeit route.
+     * A forfeited carrier loses every character aboard without adding their
+     * forfeit values. Hold the carrier while another legal loss can satisfy
+     * the current damage or attrition.
+     */
+    public static PolicyResult scoreCombinedShipWithCrew(
+            String actionId,
+            String title,
+            int crewCount,
+            boolean hasSafeAlternative) {
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (crewCount > 0 && hasSafeAlternative) {
+            String reason = String.format(
+                    "V48 SHIP WITH CREW: %s has %d crew aboard; use another legal loss first, not the ship!",
+                    title, crewCount);
+            add(operations, actionId, "V48-ship-with-crew-combined",
+                    TraceOutputKind.VETO, -9999.0f, reason);
+            operations.add(PolicyOperation.hardVeto(
+                    actionId,
+                    TraceRuleId.of("V48-ship-with-crew-combined-hard"),
+                    TraceDomainId.BATTLE_FORFEIT,
+                    TraceOutputKind.VETO,
+                    reason));
         }
         return result(operations);
     }

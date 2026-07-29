@@ -4993,6 +4993,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     ? "battle-forfeit-flip-gate-formation"
                     : optionalForfeitDecisionId
                         + "-battle-forfeit-flip-gate-formation");
+        int standaloneForfeitOptionCount = 0;
+        if (gameState != null) {
+            for (int index = 0;
+                    index < context.getCardIds().size(); index++) {
+                if (!isCardSelectable(context, index)) {
+                    continue;
+                }
+                try {
+                    if (gameState.findCardById(Integer.parseInt(
+                            context.getCardIds().get(index))) != null) {
+                        standaloneForfeitOptionCount++;
+                    }
+                } catch (NumberFormatException ignored) {
+                    // Malformed ids cannot prove a legal alternative.
+                }
+            }
+        }
 
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
@@ -5019,6 +5036,39 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             }
             applyCaptureCriticalRetention(
                     context, action, captureCriticalCandidate);
+            if (captureCriticalCandidate != null
+                    && captureCriticalCandidate.getBlueprint() != null) {
+                CardCategory category = captureCriticalCandidate
+                        .getBlueprint().getCardCategory();
+                if (category == CardCategory.STARSHIP
+                        || category == CardCategory.VEHICLE) {
+                    int crewCount =
+                            BattleForfeitFacts.countAboardCharacters(
+                                    gameState, captureCriticalCandidate);
+                    PolicyContributionLedger v48ForfeitLedger =
+                            new PolicyContributionLedger(
+                                    "standalone-battle-forfeit-v48-"
+                                            + cardId);
+                    v48ForfeitLedger.register(
+                            BattleForfeitPolicy
+                                .scoreStandaloneShipWithCrew(
+                                    cardId,
+                                    captureCriticalCandidate.getTitle(),
+                                    crewCount,
+                                    isOptional
+                                        || standaloneForfeitOptionCount > 1));
+                    PolicyOperationAdapter.apply(
+                            action, v48ForfeitLedger);
+                    if (crewCount > 0
+                            && (isOptional
+                                || standaloneForfeitOptionCount > 1)) {
+                        logger.warn(
+                                "V48 SHIP FORFEIT BLOCK: {} has {} crew; forfeit another card first",
+                                captureCriticalCandidate.getTitle(),
+                                crewCount);
+                    }
+                }
+            }
 
             // V22.4: Optional forfeit handling — COMPLETELY REWORKED
             // Old bug: ALL optional forfeits were avoided (-150). This meant Rando would
@@ -5140,42 +5190,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 cardId, false, true)));
                                     PolicyOperationAdapter.apply(action, pilotForfeitLedger);
                                 }
-                            }
-                        }
-
-                        // =======================================================
-                        // Check if this is a ship/vehicle with cards aboard
-                        // Should NOT be forfeited until pilots are gone!
-                        // =======================================================
-                        List<PhysicalCard> attachedCards = gameState.getAttachedCards(card);
-                        if (attachedCards != null && !attachedCards.isEmpty()) {
-                            boolean hasCharacterAboard = false;
-                            for (PhysicalCard attached : attachedCards) {
-                                if (attached.getBlueprint() != null &&
-                                    attached.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                    hasCharacterAboard = true;
-                                    break;
-                                }
-                            }
-                            if (hasCharacterAboard) {
-                                // V48: NEVER forfeit a ship with crew aboard — you lose the ship
-                                // AND all its pilots/passengers. Forfeit individual crew instead.
-                                // Executor + Piett + Gherant = 3 cards lost for 1 forfeit. Catastrophic.
-                                int crewCount = 0;
-                                for (PhysicalCard att : attachedCards) {
-                                    if (att.getBlueprint() != null &&
-                                        att.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                        crewCount++;
-                                    }
-                                }
-                                PolicyContributionLedger v48ForfeitLedger =
-                                    new PolicyContributionLedger("standalone-battle-forfeit-v48-" + cardId);
-                                v48ForfeitLedger.register(
-                                    BattleForfeitPolicy.scoreStandaloneShipWithCrew(
-                                        cardId, title, crewCount));
-                                PolicyOperationAdapter.apply(action, v48ForfeitLedger);
-                                logger.warn("V48 SHIP FORFEIT BLOCK: {} has {} crew — NEVER forfeit ship with crew aboard!",
-                                    title, crewCount);
                             }
                         }
 
@@ -5302,10 +5316,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         boolean hasDeadCards = false;
         String bestHitActionId = null;
         float bestHitForfeit = Float.MAX_VALUE;
+        int combinedForfeitOptionCount = 0;
+        boolean hasSelectableForceLossOption = false;
         // Note: game and playerId already declared above for battle state queries
 
-        // First pass: identify hit cards and dead cards
-        for (String cardId : context.getCardIds()) {
+        // First pass: identify hit cards, dead cards, and legal forfeit options.
+        for (int index = 0; index < context.getCardIds().size(); index++) {
+            String cardId = context.getCardIds().get(index);
             if (gameState != null) {
                 try {
                     PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
@@ -5324,6 +5341,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (game != null && playerId != null &&
                             AiCardHelper.isDeadCard(card, game, playerId)) {
                             hasDeadCards = true;
+                        }
+                        if (isCardSelectable(context, index)) {
+                            if (ForceLossFacts.isForceLossZone(card)) {
+                                hasSelectableForceLossOption = true;
+                            } else {
+                                combinedForfeitOptionCount++;
+                            }
                         }
                     }
                 } catch (NumberFormatException e) {
@@ -5462,6 +5486,37 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 if (battleCandidate != null) {
                     String title = battleCandidate.getTitle();
                     action.setDisplayText("Forfeit " + (title != null ? title : cardId));
+                    SwccgCardBlueprint blueprint =
+                            battleCandidate.getBlueprint();
+                    if (blueprint != null
+                            && (blueprint.getCardCategory()
+                                    == CardCategory.STARSHIP
+                                || blueprint.getCardCategory()
+                                    == CardCategory.VEHICLE)) {
+                        int crewCount =
+                                BattleForfeitFacts.countAboardCharacters(
+                                        gameState, battleCandidate);
+                        PolicyContributionLedger v48Ledger =
+                                new PolicyContributionLedger(
+                                        "combined-battle-forfeit-v48-"
+                                                + cardId);
+                        v48Ledger.register(
+                                BattleForfeitPolicy
+                                    .scoreCombinedShipWithCrew(
+                                        cardId, title, crewCount,
+                                        combinedForfeitOptionCount > 1
+                                            || (attritionRemaining <= 0
+                                                && hasSelectableForceLossOption)));
+                        PolicyOperationAdapter.apply(action, v48Ledger);
+                        if (crewCount > 0
+                                && (combinedForfeitOptionCount > 1
+                                    || (attritionRemaining <= 0
+                                        && hasSelectableForceLossOption))) {
+                            logger.warn(
+                                    "V48 COMBINED SHIP FORFEIT BLOCK: {} has {} crew; forfeit another card first",
+                                    title, crewCount);
+                        }
+                    }
                 }
                 battleForfeitAfterLedger.register(battleForfeitEvaluation.afterRoute());
                 PolicyOperationAdapter.apply(action, battleForfeitAfterLedger);

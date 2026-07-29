@@ -88,6 +88,259 @@ public class ForceLossCardSelectionPolicyParityTest {
     }
 
     @Test
+    public void combinedPromptForfeitsCrewBeforeLoadedSupremacyWithBotParity() {
+        PhysicalCard supremacy = forfeitCard(
+                "Supremacy", Zone.AT_LOCATION, CardCategory.STARSHIP, 16.0f);
+        PhysicalCard cardo = forfeitCard(
+                "Cardo", Zone.AT_LOCATION, CardCategory.CHARACTER, 6.0f);
+        when(cardo.getAttachedTo()).thenReturn(supremacy);
+        when(cardo.isPilotOf()).thenReturn(true);
+
+        Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
+        candidates.put(273, supremacy);
+        candidates.put(276, cardo);
+        GameState gameState = battleGameState(
+                candidates, List.of(), List.of(), 11, 0, 4, 11, 0);
+        when(gameState.getAboardCards(supremacy, true))
+                .thenReturn(List.of(cardo));
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("273", "276"), Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("273", "276"), Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertBits(-7519.0f, action(rando, "273").getScore());
+        assertBits(2230.0f, action(rando, "276").getScore());
+        assertTrue(action(rando, "273").isHardVetoed());
+        assertTrue(hasReason(action(rando, "273"),
+                "V48 SHIP WITH CREW"));
+        assertTrue(hasReason(action(rando, "273"),
+                "V159 FORFEIT (attr=0 dmg=11 fv=16 hit=false)"));
+        assertTrue(action(rando, "276").getScore()
+                > action(rando, "273").getScore());
+    }
+
+    @Test
+    public void standaloneAndOptionalPromptsAlsoProtectLoadedShips() {
+        for (String prompt : List.of(
+                "Choose a card from battle to forfeit",
+                "Choose a card from battle to forfeit (if desired)")) {
+            PhysicalCard ship = forfeitCard(
+                    "Executor", Zone.AT_LOCATION,
+                    CardCategory.STARSHIP, 12.0f);
+            PhysicalCard crew = forfeitCard(
+                    "Admiral Piett", Zone.AT_LOCATION,
+                    CardCategory.CHARACTER, 6.0f);
+            when(crew.getAttachedTo()).thenReturn(ship);
+            when(crew.isPilotOf()).thenReturn(true);
+
+            Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
+            candidates.put(300, ship);
+            candidates.put(301, crew);
+            GameState gameState = battleGameState(
+                    candidates, List.of(), List.of(), 11, 0, 4, 11, 0);
+            when(gameState.getAboardCards(ship, true))
+                    .thenReturn(List.of(crew));
+
+            var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                    .evaluate(randoContext(gameState, prompt,
+                            List.of("300", "301"), Phase.BATTLE));
+            var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                    .evaluate(chosenContext(gameState, prompt,
+                            List.of("300", "301"), Phase.BATTLE));
+
+            assertActionParity(rando, chosen);
+            assertTrue(action(rando, "300").isHardVetoed());
+            assertTrue(hasReason(action(rando, "300"),
+                    "V48 SHIP WITH CREW"));
+            assertFalse(action(rando, "301").isHardVetoed());
+            assertTrue(action(rando, "301").getScore()
+                    > action(rando, "300").getScore());
+        }
+    }
+
+    @Test
+    public void optionalSoleLoadedShipIsProtectedBecausePassIsSafe() {
+        PhysicalCard ship = forfeitCard(
+                "Executor", Zone.AT_LOCATION,
+                CardCategory.STARSHIP, 12.0f);
+        PhysicalCard crew = forfeitCard(
+                "Admiral Piett", Zone.AT_LOCATION,
+                CardCategory.CHARACTER, 6.0f);
+        when(crew.getAttachedTo()).thenReturn(ship);
+        when(crew.isPilotOf()).thenReturn(true);
+
+        GameState gameState = battleGameState(
+                Map.of(300, ship), List.of(), List.of(), 11, 0, 4, 11, 0);
+        when(gameState.getAboardCards(ship, true))
+                .thenReturn(List.of(crew));
+        String prompt = "Choose a card from battle to forfeit (if desired)";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("300"), Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("300"), Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertTrue(action(rando, "300").isHardVetoed());
+        assertTrue(hasReason(action(rando, "300"),
+                "V48 SHIP WITH CREW"));
+    }
+
+    @Test
+    public void combinedPureDamageProtectsLoadedShipWhenForceLossIsSafe() {
+        PhysicalCard shuttle = forfeitCard(
+                "Kylo Ren's Command Shuttle", Zone.AT_LOCATION,
+                CardCategory.STARSHIP, 5.0f);
+        PhysicalCard hux = forfeitCard(
+                "General Hux", Zone.AT_LOCATION, CardCategory.CHARACTER, 5.0f);
+        PhysicalCard reserveEffect = card(
+                "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+        when(hux.getAttachedTo()).thenReturn(shuttle);
+        when(hux.isPassengerOf()).thenReturn(true);
+
+        Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
+        candidates.put(229, shuttle);
+        candidates.put(242, reserveEffect);
+        GameState gameState = battleGameState(
+                candidates, List.of(), List.of(), 11, 0, 1, 2, 0);
+        when(gameState.getAboardCards(shuttle, true))
+                .thenReturn(List.of(hux));
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("229", "242"), Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("229", "242"), Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertBits(-12949.0f, action(rando, "229").getScore());
+        assertTrue(action(rando, "229").isHardVetoed());
+        assertTrue(hasReason(action(rando, "229"),
+                "V48 SHIP WITH CREW"));
+    }
+
+    @Test
+    public void combinedAttritionAllowsLoadedShipWhenNoOtherForfeitIsLegal() {
+        PhysicalCard shuttle = forfeitCard(
+                "Kylo Ren's Command Shuttle", Zone.AT_LOCATION,
+                CardCategory.STARSHIP, 5.0f);
+        PhysicalCard hux = forfeitCard(
+                "General Hux", Zone.AT_LOCATION, CardCategory.CHARACTER, 5.0f);
+        PhysicalCard reserveEffect = card(
+                "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+        when(hux.getAttachedTo()).thenReturn(shuttle);
+        when(hux.isPassengerOf()).thenReturn(true);
+
+        Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
+        candidates.put(229, shuttle);
+        candidates.put(242, reserveEffect);
+        GameState gameState = battleGameState(
+                candidates, List.of(), List.of(), 11, 0, 1, 2, 2);
+        when(gameState.getAboardCards(shuttle, true))
+                .thenReturn(List.of(hux));
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("229", "242"), Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("229", "242"), Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertBits(2250.0f, action(rando, "229").getScore());
+        assertFalse(action(rando, "229").isHardVetoed());
+        assertFalse(hasReason(action(rando, "229"),
+                "V48 SHIP WITH CREW"));
+        assertTrue(hasReason(action(rando, "229"),
+                "V159 FORFEIT (attr=2 dmg=2"));
+    }
+
+    @Test
+    public void nonSelectableForceLossDoesNotCreateASafeAlternative() {
+        PhysicalCard shuttle = forfeitCard(
+                "Kylo Ren's Command Shuttle", Zone.AT_LOCATION,
+                CardCategory.STARSHIP, 5.0f);
+        PhysicalCard hux = forfeitCard(
+                "General Hux", Zone.AT_LOCATION, CardCategory.CHARACTER, 5.0f);
+        PhysicalCard reserveEffect = card(
+                "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+        when(hux.getAttachedTo()).thenReturn(shuttle);
+        when(hux.isPassengerOf()).thenReturn(true);
+
+        Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
+        candidates.put(229, shuttle);
+        candidates.put(242, reserveEffect);
+        GameState gameState = battleGameState(
+                candidates, List.of(), List.of(), 11, 0, 1, 2, 0);
+        when(gameState.getAboardCards(shuttle, true))
+                .thenReturn(List.of(hux));
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+        var randoContext = randoContext(
+                gameState, prompt, List.of("229", "242"), Phase.BATTLE);
+        randoContext.setSelectable(List.of(true, false));
+        var chosenContext = chosenContext(
+                gameState, prompt, List.of("229", "242"), Phase.BATTLE);
+        chosenContext.setSelectable(List.of(true, false));
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertActionParity(rando, chosen);
+        assertFalse(action(rando, "229").isHardVetoed());
+        assertFalse(hasReason(action(rando, "229"),
+                "V48 SHIP WITH CREW"));
+    }
+
+    @Test
+    public void nonSelectableCrewDoesNotCreateAFalseForfeitAlternative() {
+        PhysicalCard shuttle = forfeitCard(
+                "Kylo Ren's Command Shuttle", Zone.AT_LOCATION,
+                CardCategory.STARSHIP, 5.0f);
+        PhysicalCard hux = forfeitCard(
+                "General Hux", Zone.AT_LOCATION, CardCategory.CHARACTER, 5.0f);
+        when(hux.getAttachedTo()).thenReturn(shuttle);
+        when(hux.isPassengerOf()).thenReturn(true);
+
+        Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
+        candidates.put(229, shuttle);
+        candidates.put(230, hux);
+        GameState gameState = battleGameState(
+                candidates, List.of(), List.of(), 11, 0, 1, 2, 0);
+        when(gameState.getAboardCards(shuttle, true))
+                .thenReturn(List.of(hux));
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var randoContext = randoContext(
+                gameState, prompt, List.of("229", "230"), Phase.BATTLE);
+        randoContext.setSelectable(List.of(true, false));
+        var chosenContext = chosenContext(
+                gameState, prompt, List.of("229", "230"), Phase.BATTLE);
+        chosenContext.setSelectable(List.of(true, false));
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertActionParity(rando, chosen);
+        assertFalse(action(rando, "229").isHardVetoed());
+        assertFalse(hasReason(action(rando, "229"),
+                "V48 SHIP WITH CREW"));
+    }
+
+    @Test
     public void turnFourBroadWielderProtectionIsAppliedOnceWithBotParity() {
         PhysicalCard weapon = card("Unmatched Blaster", Zone.HAND,
                 CardCategory.WEAPON);
@@ -442,6 +695,13 @@ public class ForceLossCardSelectionPolicyParityTest {
         if (attritionRemaining > 0) {
             battleState.baseAttritionCalculated();
             battleState.setAttritionTotal("tester", attritionRemaining);
+            for (PhysicalCard candidate : candidates.values()) {
+                if (candidate.getZone() == Zone.AT_LOCATION) {
+                    battleState.addDarkCardParticipant(candidate);
+                    when(modifiersQuerying.mayBeForfeitedInBattle(
+                            gameState, candidate)).thenReturn(true);
+                }
+            }
         }
         when(game.getGameState()).thenReturn(gameState);
         when(game.getModifiersQuerying()).thenReturn(modifiersQuerying);
@@ -466,6 +726,14 @@ public class ForceLossCardSelectionPolicyParityTest {
         when(card.getZone()).thenReturn(zone);
         when(card.getBlueprint()).thenReturn(blueprint);
         when(card.getOwner()).thenReturn("tester");
+        return card;
+    }
+
+    private static PhysicalCard forfeitCard(
+            String title, Zone zone, CardCategory category, float forfeit) {
+        PhysicalCard card = card(title, zone, category);
+        when(card.getBlueprint().hasForfeitAttribute()).thenReturn(true);
+        when(card.getBlueprint().getForfeit()).thenReturn(forfeit);
         return card;
     }
 
@@ -506,6 +774,10 @@ public class ForceLossCardSelectionPolicyParityTest {
             assertEquals(rando.get(i).getActionId(), chosen.get(i).getActionId());
             assertBits(rando.get(i).getScore(), chosen.get(i).getScore());
             assertEquals(rando.get(i).getReasoning(), chosen.get(i).getReasoning());
+            assertEquals(rando.get(i).isHardVetoed(),
+                    chosen.get(i).isHardVetoed());
+            assertEquals(rando.get(i).getVetoReason(),
+                    chosen.get(i).getVetoReason());
         }
     }
 
