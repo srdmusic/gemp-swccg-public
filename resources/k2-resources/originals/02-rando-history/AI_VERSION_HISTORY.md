@@ -9163,3 +9163,65 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     hall remained empty. No push. A fresh autonomous replay remains separate
     proof. Restore web.jar.pre-first-order-ded8b785d and revert ded8b785d;
     V48 and original Batch Six remain independent.
+
+  ==== FIRST ORDER REIGNS NAVY CHILD-CHAIN REPLAY REPAIR
+       (2026-07-30, both bots) ====
+    Replay fqqpnf3alc42sgz6 exposed the exact missing link after the earlier
+    chase repair. Navy Of The First Order's parent action was selected on
+    three turns, but its hand child sent owned First Order pilots through
+    generic V38.3 at about -9949 and canceled. Rando spent on Supremacy:
+    Throne Room, Snoke, and other ground cards, played Battle Order before
+    occupying both theaters, and never put a ship on the chase route.
+
+    Older replays explain why this once looked better. 5ea4050oscpp6s31
+    proves Supremacy's objective download and movement route still worked.
+    In y5f6xl0r75pbudpa, Command Shuttle began in hand and bypassed Navy via
+    generic direct deployment. Navy's child still failed. The objective did
+    not revert wholesale; the apparent older success avoided the broken
+    branch.
+
+    The repair exact-scopes blueprint 225_24, its parent action, both package
+    prompts, the simultaneous destination, and source provenance. Package
+    legality mirrors the real card source's paid false/false simultaneous
+    filter, exact modified cost, stage restriction, Episode VII route, nav
+    computer, and live hyperspeed. General Hux plus Kylo Ren's Command
+    Shuttle costs exactly six Force. Typed +1500 ownership makes the parent,
+    preferred package cards, and Crait destination beat the replay's ground
+    distractions and Pass. Provenance survives both package children and an
+    intervening Optional responses window, is consumed at destination, and
+    clears on an ordinary Deploy menu or phase exit. The retained global
+    capacity rule selects Pilot over Passenger.
+
+    Six Force is deliberately sufficient for the legal package. After the
+    ship enters play, the existing route reserve switches to the exact next
+    hyperspace cost and blocks later paid deploy spending until movement is
+    funded. Ground deployment is held at every site, including Throne Room
+    and Crait, while a chase remains. Boarding route crew is exempt, and the
+    hold releases after flip or route loss. Battle Order once again requires
+    our battleground site plus system before opponent pressure can make it
+    live.
+
+    Real-card engine proof runs both objective printings at exactly six Force:
+    reveal Hux, upload Command Shuttle, reject D'Qar as the Tracked Fleet
+    host, deploy both to Crait, and board Hux as pilot. Replay-shaped
+    CombinedEvaluator proof covers parent, hand, Reserve, optional response,
+    destination, and capacity children for both bots; wrong-source V38.3,
+    ordinary-menu cleanup, ground-hold release, and Battle Order boundaries
+    are also explicit.
+
+    Final focused gate 120/0/0/0 across 10 suites; completed isolated reactor
+    2877/0/0/26 across 379 suites. Independent legality, dominance,
+    provenance, false-positive, and mirror reviews passed. Async packaging
+    and diff checks passed. All 95 changed-source classes byte-match
+    target/classes, the server jar, and web.jar. Server jar SHA-256
+    e749d4d3f735d89fce099ed6e4b8db8411df4977a1b397813cee868a2015cb27;
+    web.jar SHA-256
+    a9e1dc68b66607c4552608bc13ac3c61c248f0ed3fca51fb41732c70ed31b5a8.
+
+    Local code commit 9451ae2c7 on codex/v48-combined-forfeit-repair. Scope is
+    shared AI strategy and deploy-phase logic, mirrored Rando and Chosen One
+    adapters, AI tests, and these two approved evidence records. No engine,
+    card Java, objective profile, deck, database, or client source changed.
+    Nothing was pushed. The package is not deployed; fresh JVM and autonomous
+    replay proof remain separate gates. Revert 9451ae2c7; ded8b785d, V48, and
+    original Batch Six remain independent.
