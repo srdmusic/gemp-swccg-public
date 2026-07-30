@@ -280,24 +280,55 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
-    public void firstOrderPreFlipCraitGroundIsAnExactHardVeto() {
+    public void firstOrderNavyRouteScoresOnlyTheExecutableChain() {
+        PolicyResult parent =
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsNavyRouteAction(
+                        "a", true);
+        PolicyResult candidate =
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsNavyRouteCandidate(
+                        "b", true);
+
+        assertOperation(
+                parent.operations().get(0),
+                "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE",
+                1500.0f);
+        assertOperation(
+                candidate.operations().get(0),
+                "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_CANDIDATE",
+                1500.0f);
+        assertTrue(
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsNavyRouteAction(
+                        "a", false)
+                    .operations().isEmpty());
+        assertTrue(
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsNavyRouteCandidate(
+                        "b", false)
+                    .operations().isEmpty());
+    }
+
+    @Test
+    public void firstOrderPreFlipGroundIsAnExactHardVeto() {
         PolicyResult blocked =
                 DeployObjectiveSitingPolicy
-                    .blockFirstOrderReignsPreFlipCraitGround(
+                    .blockFirstOrderReignsPreFlipGround(
                         "a", true);
         PolicyResult neutral =
                 DeployObjectiveSitingPolicy
-                    .blockFirstOrderReignsPreFlipCraitGround(
+                    .blockFirstOrderReignsPreFlipGround(
                         "a", false);
 
         assertEquals(
-                "DEPLOY_FIRST_ORDER_PRE_FLIP_CRAIT_POLICY",
+                "DEPLOY_FIRST_ORDER_PRE_FLIP_GROUND_POLICY",
                 blocked.producerId());
         assertEquals(1, blocked.operations().size());
         PolicyOperation operation =
                 blocked.operations().get(0);
         assertEquals(
-                "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_CRAIT_HOLD",
+                "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_GROUND_HOLD",
                 operation.ruleArmId().id());
         assertEquals(
                 PolicyOperationKind.HARD_VETO,
@@ -309,7 +340,7 @@ public class DeployObjectiveSitingPolicyTest {
                 TraceOutputKind.VETO,
                 operation.outputKind());
         assertEquals(
-                "DEPLOY_FIRST_ORDER_PRE_FLIP_CRAIT_POLICY",
+                "DEPLOY_FIRST_ORDER_PRE_FLIP_GROUND_POLICY",
                 neutral.producerId());
         assertTrue(neutral.operations().isEmpty());
     }

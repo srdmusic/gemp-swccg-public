@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.framework.StartingSetup;
@@ -87,6 +88,8 @@ public class FirstOrderReignsObjectiveEngineContractTest {
         darkCards.put("supremacy", "225_27");
         darkCards.put("navy", "225_24");
         darkCards.put("fulminatrix", "225_20");
+        darkCards.put("hux", "204_41");
+        darkCards.put("commandShuttle", "204_55");
         darkCards.put("dantooine", "1_282");
         darkCards.put("kylo", "209_37");
         darkCards.put("firstOrderTrooperA", "204_40");
@@ -268,6 +271,105 @@ public class FirstOrderReignsObjectiveEngineContractTest {
             assertAtLocation(dqar, fulminatrix);
             assertTrue("The cheap crew must remain aboard throughout the chase",
                     scn.IsAboardAsPassenger(fulminatrix, cheapCrew));
+        }
+    }
+
+    @Test
+    public void navyUploadsTheAffordableReplayShipAndPilotPackageToCrait() {
+        for (Printing printing : PRINTINGS) {
+            var scn = scenario(printing);
+            var dqar = scn.GetDSCard("dqar");
+            var crait = scn.GetDSCard("crait");
+            var fleet = scn.GetDSCard("fleet");
+            var navy = scn.GetDSCard("navy");
+            var hux = scn.GetDSCard("hux");
+            var commandShuttle = scn.GetDSCard("commandShuttle");
+
+            scn.StartGame();
+
+            assertInZone(Zone.ATTACHED, fleet);
+            assertTrue("Tracked Fleet must physically attach to D'Qar",
+                    scn.IsAttachedTo(dqar, fleet));
+            scn.MoveCardsToDSSideOfTable(navy);
+            scn.MoveCardsToDSHand(hux);
+            scn.MoveCardsToBottomOfDSReserveDeck(commandShuttle);
+
+            while (scn.GetDSForcePileCount() > 0) {
+                scn.MoveCardsToHand(scn.GetTopOfDSForcePile());
+            }
+            scn.DSActivateForceCheat(6);
+            scn.SkipToPhase(Phase.DEPLOY);
+
+            for (ObjectiveAnalyzer analyzer : List.of(
+                    new com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer(),
+                    new com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer())) {
+                analyzer.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+                assertEquals("Analyzer must resolve the physical attachment host",
+                        dqar, analyzer.getFirstOrderReignsTrackedFleetHostSystem(
+                                scn.game(), VirtualTableScenario.DS));
+                assertTrue(analyzer.isFirstOrderReignsRouteOpen(
+                        scn.game(), VirtualTableScenario.DS));
+                assertTrue(analyzer.isFirstOrderReignsNavyRouteAction(
+                        scn.game(), VirtualTableScenario.DS, navy,
+                        "Reveal starship or pilot from hand"));
+                String destinationPrompt =
+                        "Choose where to deploy "
+                                + "<div class='cardHint' value='"
+                                + commandShuttle.getBlueprintId(true)
+                                + "'>" + commandShuttle.getTitle()
+                                + "</div> and "
+                                + "<div class='cardHint' value='"
+                                + hux.getBlueprintId(true)
+                                + "'>" + hux.getTitle()
+                                + "</div> simultaneously";
+                assertTrue(analyzer
+                        .isFirstOrderReignsNavyRouteDestinationCandidate(
+                                scn.game(), VirtualTableScenario.DS,
+                                navy, destinationPrompt, crait));
+                assertFalse(analyzer
+                        .isFirstOrderReignsNavyRouteDestinationCandidate(
+                                scn.game(), VirtualTableScenario.DS,
+                                navy, destinationPrompt, dqar));
+                assertEquals("The route must preserve the engine's six-Force legal-selection boundary",
+                        6, analyzer.getFirstOrderReignsRouteForceReserve(
+                                scn.game(), VirtualTableScenario.DS, null));
+            }
+
+            assertEquals(6.0f,
+                    scn.game().getModifiersQuerying().getSimultaneousDeployCost(
+                            scn.gameState(), navy,
+                            commandShuttle, false, 0,
+                            hux, false, 0,
+                            crait, null, false),
+                    0.0f);
+            assertTrue(scn.DSCardActionAvailable(
+                    navy, "Reveal starship or pilot from hand"));
+            scn.DSUseCardAction(
+                    navy, "Reveal starship or pilot from hand");
+            assertTrue(scn.DSDecisionAvailable(
+                    "Choose card from hand, or click 'Done' to cancel"));
+            assertTrue(scn.DSHasCardChoiceAvailable(hux));
+            scn.DSChooseCard(hux);
+
+            assertTrue(scn.DSDecisionAvailable(
+                    "Choose card to deploy from Reserve Deck simultaneously with"));
+            assertTrue(scn.DSHasCardChoiceAvailable(commandShuttle));
+            scn.DSChooseCard(commandShuttle);
+            scn.PassAllResponses();
+
+            assertTrue(scn.DSDecisionAvailable("Choose where to deploy")
+                    || scn.DSDecisionAvailable("Choose location where to deploy"));
+            assertTrue(scn.DSHasCardChoiceAvailable(crait));
+            assertFalse("Tracked Fleet prohibits deployment directly to its host",
+                    scn.DSHasCardChoiceAvailable(dqar));
+            scn.DSChooseCard(crait);
+            if (scn.DSDecisionAvailable("Choose capacity slot")) {
+                scn.DSChoose("Pilot");
+            }
+            scn.PassAllResponses();
+
+            assertAtLocation(crait, commandShuttle);
+            assertTrue(scn.IsAboardAsPilot(commandShuttle, hux));
         }
     }
 

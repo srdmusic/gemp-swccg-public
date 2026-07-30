@@ -1758,6 +1758,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
             boolean firstOrderReignsObjectiveDownload = false;
             boolean firstOrderReignsLostPileDeploy = false;
             boolean firstOrderReignsLostPileDeployReady = false;
+            boolean firstOrderReignsNavyRoute = false;
             if (cardId != null && gameState != null
                     && context.getObjectiveAnalyzer() != null) {
                 try {
@@ -1778,9 +1779,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     context.getGame(),
                                     context.getPlayerId(),
                                     sourceCard);
+                    firstOrderReignsNavyRoute =
+                            context.getObjectiveAnalyzer()
+                                .isFirstOrderReignsNavyRouteAction(
+                                    context.getGame(),
+                                    context.getPlayerId(),
+                                    sourceCard,
+                                    actionText);
                 } catch (NumberFormatException ignored) {
                     // Non-card source ids cannot be the objective action.
                 }
+            }
+            if (firstOrderReignsNavyRoute) {
+                action.setActionType(ActionType.DEPLOY);
             }
 
             // ========== Skip ALL Deploy Actions ==========
@@ -1847,7 +1858,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             || textLower.startsWith("deploy ")
                             || textLower.startsWith("play a card ");
                         boolean locationFirstExempt = isLocationSearch || isAmsdAction
-                            || isReservePull || isDeployEntry;
+                            || isReservePull || isDeployEntry
+                            || firstOrderReignsNavyRoute;
                         DeploySequencingPolicy.Evaluation locationFirst =
                             DeploySequencingPolicy.locationsFirstNonDeploy(
                                 actionId, true, locationFirstExempt);
@@ -1868,6 +1880,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         }
                     }
                 }
+            }
+
+            if (firstOrderReignsNavyRoute) {
+                applyDeployActionTextPolicy(
+                    action,
+                    DeployObjectiveSitingPolicy
+                        .scoreFirstOrderReignsNavyRouteAction(
+                            actionId, true));
+                actions.add(action);
+                continue;
             }
 
             // ========== V23: EMPTY PILE GUARD ==========

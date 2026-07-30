@@ -61,6 +61,16 @@ public class ObjectiveAnalyzer {
             "objectiveDockingTransitDestinationCardId";
     public static final String OBJECTIVE_DEPLOYING_CARD_ID_EXTRA =
             "objectiveDeployingPhysicalCardId";
+    private static final String FIRST_ORDER_NAVY_BLUEPRINT_ID =
+            "225_24";
+    private static final String FIRST_ORDER_NAVY_ROUTE_ACTION =
+            "Reveal starship or pilot from hand";
+    private static final String FIRST_ORDER_NAVY_HAND_PROMPT =
+            "Choose card from hand, or click 'Done' to cancel";
+    private static final String FIRST_ORDER_NAVY_RESERVE_PROMPT =
+            "choose card to deploy from reserve deck simultaneously with";
+    private static final Pattern CARD_HINT_BLUEPRINT_PATTERN =
+            Pattern.compile("value=['\"]([^'\"]+)['\"]");
     private final Logger LOG;
 
     protected ObjectiveAnalyzer(Logger logger) {
@@ -4567,6 +4577,138 @@ public class ObjectiveAnalyzer {
                     game, playerId);
     }
 
+    public boolean isFirstOrderReignsNavyRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return FIRST_ORDER_NAVY_ROUTE_ACTION.equals(actionText)
+                && isFirstOrderReignsNavySource(
+                    game, playerId, sourceCard)
+                && selectFirstOrderReignsNavyPackage(
+                    game, playerId, sourceCard,
+                    null, null, true) != null;
+    }
+
+    public boolean isFirstOrderReignsNavyRouteSelectionPrompt(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String decisionText) {
+        if (decisionText == null
+                || !FIRST_ORDER_NAVY_HAND_PROMPT.equals(
+                        decisionText.trim())
+                && !decisionText.toLowerCase(Locale.ROOT)
+                    .startsWith(FIRST_ORDER_NAVY_RESERVE_PROMPT)) {
+            return false;
+        }
+        return isFirstOrderReignsNavySource(
+                    game, playerId, sourceCard)
+                && selectFirstOrderReignsNavyPackage(
+                    game, playerId, sourceCard,
+                    null, null, true) != null;
+    }
+
+    public boolean isFirstOrderReignsNavyHandRouteCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String decisionText,
+            PhysicalCard candidate) {
+        if (!FIRST_ORDER_NAVY_HAND_PROMPT.equals(
+                    decisionText)
+                || !isFirstOrderReignsNavySource(
+                    game, playerId, sourceCard)
+                || candidate == null
+                || candidate.getZone() != Zone.HAND) {
+            return false;
+        }
+        FirstOrderReignsNavyPackage preferred =
+                selectFirstOrderReignsNavyPackage(
+                    game, playerId, sourceCard,
+                    null, null, true);
+        return preferred != null
+                && preferred.handCard == candidate;
+    }
+
+    public boolean isFirstOrderReignsNavyReserveRouteCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String decisionText,
+            PhysicalCard candidate) {
+        if (decisionText == null
+                || !decisionText.toLowerCase(Locale.ROOT)
+                    .startsWith(FIRST_ORDER_NAVY_RESERVE_PROMPT)
+                || !isFirstOrderReignsNavySource(
+                    game, playerId, sourceCard)
+                || candidate == null
+                || candidate.getZone() != Zone.RESERVE_DECK) {
+            return false;
+        }
+        String selectedHandBlueprint = null;
+        Matcher matcher =
+                CARD_HINT_BLUEPRINT_PATTERN.matcher(
+                    decisionText);
+        if (matcher.find()) {
+            selectedHandBlueprint =
+                    matcher.group(1);
+        }
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        if (hand == null) return false;
+        for (PhysicalCard handCard : hand) {
+            if (handCard == null
+                    || selectedHandBlueprint != null
+                    && !selectedHandBlueprint.equals(
+                        handCard.getBlueprintId(true))) {
+                continue;
+            }
+            FirstOrderReignsNavyPackage preferred =
+                    selectFirstOrderReignsNavyPackage(
+                    game, playerId, sourceCard,
+                    handCard, null, true);
+            if (preferred != null
+                    && preferred.reserveCard
+                        == candidate) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isFirstOrderReignsNavyRouteDestinationCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String decisionText,
+            PhysicalCard candidate) {
+        if (decisionText == null
+                || candidate == null
+                || !decisionText.toLowerCase(Locale.ROOT)
+                    .startsWith("choose where to deploy ")
+                || !decisionText.toLowerCase(Locale.ROOT)
+                    .contains(" simultaneously")
+                || !isFirstOrderReignsNavySource(
+                    game, playerId, sourceCard)) {
+            return false;
+        }
+        FirstOrderReignsNavyPackage preferred =
+                selectFirstOrderReignsNavyPackage(
+                    game, playerId, sourceCard,
+                    null, null, true);
+        if (preferred == null
+                || !samePhysicalLocation(
+                    preferred.stage, candidate)) {
+            return false;
+        }
+        List<String> hintedBlueprints =
+                new ArrayList<>();
+        Matcher matcher =
+                CARD_HINT_BLUEPRINT_PATTERN.matcher(
+                    decisionText);
+        while (matcher.find()) {
+            hintedBlueprints.add(
+                    matcher.group(1));
+        }
+        return hintedBlueprints.contains(
+                    preferred.handCard
+                        .getBlueprintId(true))
+                && hintedBlueprints.contains(
+                    preferred.reserveCard
+                        .getBlueprintId(true));
+    }
+
     public boolean isFirstOrderReignsDownloadAction(
             PhysicalCard sourceCard, String actionText) {
         if (!analyzed || !isFirstOrderReigns
@@ -4889,6 +5031,331 @@ public class ObjectiveAnalyzer {
                     "First Order Reigns chase-ship assessment failed: {}",
                     e.getMessage());
             return false;
+        }
+    }
+
+    private boolean isFirstOrderReignsNavySource(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        return isFirstOrderReignsRouteOpen(
+                    game, playerId)
+                && sourceCard != null
+                && playerId.equals(
+                    sourceCard.getOwner())
+                && FIRST_ORDER_NAVY_BLUEPRINT_ID.equals(
+                    sourceCard.getBlueprintId(true))
+                && sourceCard.getZone() != null
+                && sourceCard.getZone().isInPlay()
+                && isActiveForSpot(
+                    game, sourceCard, true);
+    }
+
+    private boolean isFirstOrderReignsNavyPair(
+            SwccgGame game,
+            PhysicalCard handCard,
+            PhysicalCard reserveCard) {
+        if (game == null || handCard == null
+                || reserveCard == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        boolean handPilot =
+                Filters.First_Order_pilot.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    handCard);
+        boolean handStarship =
+                Filters.First_Order_starship.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    handCard);
+        boolean reservePilot =
+                Filters.First_Order_pilot.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    reserveCard);
+        boolean reserveStarship =
+                Filters.First_Order_starship.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    reserveCard);
+        return handPilot && reserveStarship
+                || handStarship && reservePilot;
+    }
+
+    private boolean canFirstOrderReignsNavyShipReachHost(
+            SwccgGame game, PhysicalCard starship,
+            PhysicalCard stage, PhysicalCard host) {
+        if (game == null || starship == null
+                || stage == null || host == null
+                || samePhysicalLocation(stage, host)
+                || !isFirstOrderReignsEpisodeSevenSystem(
+                    game, stage, false)
+                || starship.getBlueprint() == null
+                || !starship.getBlueprint()
+                    .hasIcon(Icon.EPISODE_VII)
+                || !game.getModifiersQuerying()
+                    .hasAstromechOrNavComputer(
+                        game.getGameState(), starship)) {
+            return false;
+        }
+        try {
+            if (game.getModifiersQuerying()
+                    .hasNoHyperdrive(
+                        game.getGameState(), starship)
+                    || game.getModifiersQuerying()
+                        .mayNotMoveUsingHyperspeed(
+                            game.getGameState(), starship)
+                    || game.getModifiersQuerying()
+                        .mayNotMoveFromLocationToLocationUsingHyperspeed(
+                            game.getGameState(), starship,
+                            stage, host, false)) {
+                return false;
+            }
+            return game.getModifiersQuerying()
+                    .getHyperspeed(
+                        game.getGameState(), starship,
+                        stage, host)
+                    >= Math.abs(
+                        stage.getParsec()
+                            - host.getParsec());
+        } catch (Exception e) {
+            LOG.debug(
+                    "First Order Navy chase-range assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private FirstOrderReignsNavyPackage
+            selectFirstOrderReignsNavyPackage(
+                    SwccgGame game, String playerId,
+                    PhysicalCard sourceCard,
+                    PhysicalCard requiredHandCard,
+                    PhysicalCard requiredReserveCard,
+                    boolean requireAffordable) {
+        if (!isFirstOrderReignsNavySource(
+                    game, playerId, sourceCard)
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        List<PhysicalCard> reserve =
+                game.getGameState()
+                    .getReserveDeck(playerId);
+        List<PhysicalCard> locations =
+                game.getGameState()
+                    .getLocationsInOrder();
+        PhysicalCard host =
+                getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId);
+        if (hand == null || reserve == null
+                || locations == null || host == null) {
+            return null;
+        }
+        float availableForce =
+                game.getModifiersQuerying()
+                    .getForceAvailableToUse(
+                        game.getGameState(), playerId);
+        FirstOrderReignsNavyPackage best = null;
+        for (PhysicalCard handCard : hand) {
+            if (handCard == null
+                    || handCard.getZone() != Zone.HAND
+                    || requiredHandCard != null
+                    && handCard != requiredHandCard) {
+                continue;
+            }
+            for (PhysicalCard reserveCard : reserve) {
+                if (reserveCard == null
+                        || reserveCard.getZone()
+                            != Zone.RESERVE_DECK
+                        || requiredReserveCard != null
+                        && reserveCard
+                            != requiredReserveCard
+                        || !isFirstOrderReignsNavyPair(
+                            game, handCard,
+                            reserveCard)) {
+                    continue;
+                }
+                PhysicalCard starship =
+                        Filters.First_Order_starship
+                            .accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(),
+                                handCard)
+                        ? handCard : reserveCard;
+                PhysicalCard pilot =
+                        starship == handCard
+                        ? reserveCard : handCard;
+                for (PhysicalCard stage : locations) {
+                    if (!canFirstOrderReignsNavyShipReachHost(
+                            game, starship,
+                            stage, host)) {
+                        continue;
+                    }
+                    try {
+                        boolean legalShape =
+                                Filters
+                                    .deployableToLocationSimultaneouslyWith(
+                                        sourceCard,
+                                        handCard,
+                                        false, 0.0f,
+                                        Filters.sameCardId(
+                                            stage),
+                                        false, 0.0f)
+                                    .accepts(
+                                        game.getGameState(),
+                                        game.getModifiersQuerying(),
+                                        reserveCard);
+                        if (!legalShape) continue;
+                        float exactCost =
+                                game.getModifiersQuerying()
+                                    .getSimultaneousDeployCost(
+                                        game.getGameState(),
+                                        sourceCard,
+                                        starship,
+                                        false, 0.0f,
+                                        pilot,
+                                        false, 0.0f,
+                                        stage, null, true);
+                        if (requireAffordable
+                                && exactCost
+                                    > availableForce) {
+                            continue;
+                        }
+                        int cost = (int) Math.ceil(
+                                Math.max(0.0f,
+                                    exactCost));
+                        FirstOrderReignsNavyPackage
+                                candidate =
+                                    new FirstOrderReignsNavyPackage(
+                                        handCard,
+                                        reserveCard,
+                                        starship,
+                                        pilot,
+                                        stage,
+                                        cost,
+                                        firstOrderReignsPrintedDeployCost(
+                                            starship));
+                        if (best == null
+                                || candidate.cost
+                                    < best.cost
+                                || candidate.cost
+                                    == best.cost
+                                && candidate
+                                    .starshipPrintedDeployCost
+                                    < best
+                                        .starshipPrintedDeployCost
+                                || candidate.cost
+                                    == best.cost
+                                && candidate
+                                    .starshipPrintedDeployCost
+                                    == best
+                                        .starshipPrintedDeployCost
+                                && candidate.reserveCard
+                                    .getPermanentCardId()
+                                    < best.reserveCard
+                                        .getPermanentCardId()) {
+                            best = candidate;
+                        }
+                    } catch (Exception e) {
+                        LOG.debug(
+                                "First Order Navy package assessment failed: {}",
+                                e.getMessage());
+                    }
+                }
+            }
+        }
+        return best;
+    }
+
+    private float firstOrderReignsPrintedDeployCost(
+            PhysicalCard card) {
+        if (card == null
+                || card.getBlueprint() == null) {
+            return Float.MAX_VALUE;
+        }
+        try {
+            Float cost =
+                    card.getBlueprint()
+                        .getDeployCost();
+            return cost != null
+                    ? cost : Float.MAX_VALUE;
+        } catch (UnsupportedOperationException e) {
+            return Float.MAX_VALUE;
+        }
+    }
+
+    private int getFirstOrderReignsNavyPackageReserve(
+            SwccgGame game, String playerId) {
+        PhysicalCard navy =
+                findFirstOrderReignsNavySource(
+                    game, playerId);
+        FirstOrderReignsNavyPackage route =
+                selectFirstOrderReignsNavyPackage(
+                    game, playerId, navy,
+                    null, null, false);
+        return route == null ? 0 : route.cost;
+    }
+
+    private boolean hasFirstOrderReignsNavyPackage(
+            SwccgGame game, String playerId) {
+        PhysicalCard navy =
+                findFirstOrderReignsNavySource(
+                    game, playerId);
+        return selectFirstOrderReignsNavyPackage(
+                    game, playerId, navy,
+                    null, null, false) != null;
+    }
+
+    private PhysicalCard findFirstOrderReignsNavySource(
+            SwccgGame game, String playerId) {
+        if (game == null
+                || game.getGameState() == null) {
+            return null;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState()
+                    .getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard card : permanents) {
+            if (isFirstOrderReignsNavySource(
+                    game, playerId, card)) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    private static final class
+            FirstOrderReignsNavyPackage {
+        private final PhysicalCard handCard;
+        private final PhysicalCard reserveCard;
+        private final PhysicalCard starship;
+        private final PhysicalCard pilot;
+        private final PhysicalCard stage;
+        private final int cost;
+        private final float starshipPrintedDeployCost;
+
+        private FirstOrderReignsNavyPackage(
+                PhysicalCard handCard,
+                PhysicalCard reserveCard,
+                PhysicalCard starship,
+                PhysicalCard pilot,
+                PhysicalCard stage,
+                int cost,
+                float starshipPrintedDeployCost) {
+            this.handCard = handCard;
+            this.reserveCard = reserveCard;
+            this.starship = starship;
+            this.pilot = pilot;
+            this.stage = stage;
+            this.cost = cost;
+            this.starshipPrintedDeployCost =
+                    starshipPrintedDeployCost;
         }
     }
 
@@ -5411,7 +5878,7 @@ public class ObjectiveAnalyzer {
     }
 
     public boolean
-            isFirstOrderReignsPrematureCraitGroundDeploymentAt(
+            isFirstOrderReignsPrematureGroundDeploymentAt(
                     SwccgGame game, String playerId,
                     PhysicalCard candidate,
                     PhysicalCard destination) {
@@ -5423,10 +5890,17 @@ public class ObjectiveAnalyzer {
                 || candidate.getBlueprint() == null
                 || candidate.getBlueprint().getCardCategory()
                     != CardCategory.CHARACTER
-                || !Filters.Crait_site.accepts(
-                    game.getGameState(),
-                    game.getModifiersQuerying(),
-                    destination)) {
+                || destination.getBlueprint() == null
+                || destination.getBlueprint()
+                    .getCardCategory()
+                    != CardCategory.LOCATION
+                || destination.getBlueprint()
+                    .getCardSubtype()
+                    != com.gempukku.swccgo.common.CardSubtype
+                        .SITE
+                || advancesFirstOrderReignsRouteCrewAt(
+                    game, playerId,
+                    candidate, destination)) {
             return false;
         }
         PhysicalCard host =
@@ -5438,7 +5912,18 @@ public class ObjectiveAnalyzer {
                     game, playerId,
                     getFirstOrderReignsAccessibleChaseShipCards(
                         game, playerId),
-                    null, host);
+                    null, host)
+                || hasFirstOrderReignsNavyPackage(
+                    game, playerId);
+    }
+
+    public boolean
+            isFirstOrderReignsPrematureCraitGroundDeploymentAt(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate,
+                    PhysicalCard destination) {
+        return isFirstOrderReignsPrematureGroundDeploymentAt(
+                game, playerId, candidate, destination);
     }
 
     public int getFirstOrderReignsRouteForceReserve(
@@ -5470,9 +5955,22 @@ public class ObjectiveAnalyzer {
                     currentDeployCandidate)) {
             return 0;
         }
-        return getFirstOrderReignsChaseShipDeployReserve(
+        int directRouteReserve =
+                getFirstOrderReignsChaseShipDeployReserve(
                 game, playerId, host,
                 currentDeployCandidate);
+        int navyRouteReserve =
+                getFirstOrderReignsNavyPackageReserve(
+                    game, playerId);
+        if (directRouteReserve <= 0) {
+            return navyRouteReserve;
+        }
+        if (navyRouteReserve <= 0) {
+            return directRouteReserve;
+        }
+        return Math.min(
+                directRouteReserve,
+                navyRouteReserve);
     }
 
     public int getFirstOrderReignsCurrentMoveForceReserve(

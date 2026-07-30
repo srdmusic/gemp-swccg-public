@@ -476,6 +476,129 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
     }
 
+    private boolean isFirstOrderReignsNavyRouteSelection(
+            DecisionContext context) {
+        if (context == null) {
+            return false;
+        }
+        PhysicalCard source =
+                bhbmActionSource(context);
+        if (context.getPhase() != Phase.DEPLOY
+                || context.getDecisionText() == null
+                || context.getObjectiveAnalyzer() == null
+                || source == null
+                || !"225_24".equals(
+                    source.getBlueprintId(true))) {
+            return false;
+        }
+        String text =
+                context.getDecisionText().trim();
+        boolean navyPrompt =
+                "CARD_SELECTION".equals(
+                        context.getDecisionType())
+                    && "Choose card from hand, or click 'Done' to cancel"
+                        .equals(text)
+                || "ARBITRARY_CARDS".equals(
+                    context.getDecisionType())
+                    && text.toLowerCase(Locale.ROOT)
+                        .startsWith(
+                            "choose card to deploy from reserve deck simultaneously with");
+        return navyPrompt
+                && context.getObjectiveAnalyzer()
+                    .isFirstOrderReignsNavyRouteSelectionPrompt(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        source,
+                        text);
+    }
+
+    private List<EvaluatedAction>
+            evaluateFirstOrderReignsNavyRouteSelection(
+                    DecisionContext context) {
+        List<EvaluatedAction> actions =
+                new ArrayList<>();
+        List<String> cardIds =
+                context.getCardIds();
+        List<String> blueprints =
+                context.getBlueprints();
+        List<Boolean> selectable =
+                context.getSelectable();
+        boolean reserveSelection =
+                "ARBITRARY_CARDS".equals(
+                    context.getDecisionType());
+        PhysicalCard source =
+                bhbmActionSource(context);
+        for (int index = 0;
+                cardIds != null
+                    && index < cardIds.size();
+                index++) {
+            String cardId =
+                    cardIds.get(index);
+            PhysicalCard candidate = null;
+            if (reserveSelection
+                    && blueprints != null
+                    && index < blueprints.size()) {
+                candidate =
+                        findExactReservePullCandidate(
+                            context, cardId,
+                            blueprints.get(index));
+            } else if (context.getGameState()
+                    != null) {
+                try {
+                    candidate =
+                            context.getGameState()
+                                .findCardById(
+                                    Integer.parseInt(
+                                        cardId));
+                } catch (NumberFormatException ignored) {
+                    // Exact hand decisions use physical numeric ids.
+                }
+            }
+            boolean advancesRoute =
+                    candidate != null
+                    && (reserveSelection
+                        ? context.getObjectiveAnalyzer()
+                            .isFirstOrderReignsNavyReserveRouteCandidate(
+                                context.getGame(),
+                                context.getPlayerId(),
+                                source,
+                                context.getDecisionText(),
+                                candidate)
+                        : context.getObjectiveAnalyzer()
+                            .isFirstOrderReignsNavyHandRouteCandidate(
+                                context.getGame(),
+                                context.getPlayerId(),
+                                source,
+                                context.getDecisionText(),
+                                candidate));
+            EvaluatedAction action =
+                    new EvaluatedAction(
+                        cardId,
+                        ActionType.DEPLOY,
+                        50.0f,
+                        "Navy Of The First Order route candidate");
+            PolicyContributionLedger ledger =
+                    new PolicyContributionLedger(
+                        "first-order-navy-route-"
+                            + cardId);
+            ledger.register(
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsNavyRouteCandidate(
+                        cardId, advancesRoute));
+            PolicyOperationAdapter.apply(
+                    action, ledger);
+            if (selectable != null
+                    && index < selectable.size()
+                    && !Boolean.TRUE.equals(
+                        selectable.get(index))) {
+                action.hardVeto(
+                    "Engine marked this Navy package card non-selectable");
+            }
+            actions.add(action);
+        }
+        return actions;
+    }
+
     private boolean bhbmDeployFormationSafe(
             DecisionContext context,
             PhysicalCard candidate,
@@ -1035,6 +1158,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
         if (isCaptureSetupHutDecision(context)) {
             return evaluateCaptureSetupHut(context);
+        }
+
+        if (isFirstOrderReignsNavyRouteSelection(
+                context)) {
+            return evaluateFirstOrderReignsNavyRouteSelection(
+                    context);
         }
 
         // If we have blueprints but no cardIds, handle reserve deck selection
@@ -1717,10 +1846,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 location)));
                             applyDeploySitingPolicy(action,
                                 DeployObjectiveSitingPolicy
-                                    .blockFirstOrderReignsPreFlipCraitGround(
+                                    .scoreFirstOrderReignsNavyRouteDestination(
                                         action.getActionId(),
                                         objectiveProgressAnalyzer
-                                            .isFirstOrderReignsPrematureCraitGroundDeploymentAt(
+                                            .isFirstOrderReignsNavyRouteDestinationCandidate(
+                                                game, playerId,
+                                                bhbmActionSource(context),
+                                                context.getDecisionText(),
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .blockFirstOrderReignsPreFlipGround(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .isFirstOrderReignsPrematureGroundDeploymentAt(
                                                 game, playerId,
                                                 objectiveProgressDeployingCard,
                                                 location)));

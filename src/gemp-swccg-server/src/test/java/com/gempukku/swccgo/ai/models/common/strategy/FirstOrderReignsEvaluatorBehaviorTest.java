@@ -20,7 +20,10 @@ import com.gempukku.swccgo.game.state.BattleState;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
+import com.gempukku.swccgo.logic.decisions.CardActionSelectionDecision;
+import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
+import com.gempukku.swccgo.logic.timing.Action;
 import org.apache.logging.log4j.LogManager;
 import org.junit.Test;
 
@@ -84,6 +87,9 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
     private static final int FULMINATRIX_ID = 210;
     private static final int CHEAP_CREW_ID = 211;
     private static final int COMMAND_SHUTTLE_ID = 212;
+    private static final int NAVY_ID = 213;
+    private static final int HUX_ID = 214;
+    private static final int THRONE_ROOM_ID = 215;
 
     private static final String MOVE_START_RULE =
             "MOVE.OBJECTIVE.ACTOR_LOCATION_START";
@@ -141,6 +147,12 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             "Board a cheap First Order character";
     private static final String PREMATURE_CRAIT_RULE =
             "Do not spend the Tracked Fleet chase budget";
+    private static final String NAVY_ROUTE_RULE =
+            "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE";
+    private static final String NAVY_CANDIDATE_RULE =
+            "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_CANDIDATE";
+    private static final String NAVY_DESTINATION_RULE =
+            "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_DESTINATION";
 
     @Test
     public void routeDownloadRequiresADeployableCandidateAtForceBoundary() {
@@ -194,6 +206,291 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             assertEquals("download",
                     combined(freeStage, download)
                             .actionId());
+        }
+    }
+
+    @Test
+    public void navyReplayPackageWinsEveryParentAndChildDecision() {
+        for (Variant variant : variants()) {
+            Fixture fixture =
+                    fixture(variant, false);
+            PhysicalCard navy = card(
+                    "Navy Of The First Order",
+                    "225_24", PLAYER,
+                    Zone.SIDE_OF_TABLE,
+                    CardCategory.EFFECT,
+                    null, NAVY_ID);
+            PhysicalCard hux = card(
+                    "General Hux", "204_41",
+                    PLAYER, Zone.HAND,
+                    CardCategory.CHARACTER,
+                    null, HUX_ID);
+            PhysicalCard shuttle = card(
+                    "Kylo Ren's Command Shuttle",
+                    "204_55", PLAYER,
+                    Zone.RESERVE_DECK,
+                    CardCategory.STARSHIP,
+                    null, COMMAND_SHUTTLE_ID);
+            PhysicalCard throneRoom = card(
+                    "Supremacy: Throne Room",
+                    "225_29", PLAYER,
+                    Zone.HAND,
+                    CardCategory.LOCATION,
+                    CardSubtype.SITE,
+                    THRONE_ROOM_ID);
+            register(fixture.cards, navy);
+            register(fixture.cards, hux);
+            register(fixture.cards, shuttle);
+            register(fixture.cards, throneRoom);
+            fixture.permanents.add(navy);
+            fixture.hand.add(hux);
+            fixture.hand.add(fixture.alternative);
+            fixture.hand.add(throneRoom);
+            fixture.reserve.add(shuttle);
+            fixture.locations.add(fixture.origin);
+            when(fixture.alternative.getZone())
+                    .thenReturn(Zone.HAND);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, hux,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, hux,
+                    Icon.PILOT)).thenReturn(true);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, shuttle,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState,
+                    fixture.origin,
+                    Icon.EPISODE_VII)).thenReturn(true);
+            when(shuttle.getBlueprint()
+                    .hasIcon(Icon.EPISODE_VII))
+                    .thenReturn(true);
+            when(shuttle.getBlueprint()
+                    .getDeployCost()).thenReturn(4.0f);
+            when(hux.getBlueprint()
+                    .getDeployCost()).thenReturn(3.0f);
+            when(fixture.alternative.getBlueprint()
+                    .getDeployCost()).thenReturn(1.0f);
+            when(fixture.modifiers
+                    .hasAstromechOrNavComputer(
+                        fixture.gameState,
+                        shuttle)).thenReturn(true);
+            when(fixture.modifiers.getHyperspeed(
+                    fixture.gameState, shuttle,
+                    fixture.origin,
+                    fixture.host)).thenReturn(4.0f);
+            when(fixture.modifiers
+                    .getForceAvailableToUse(
+                        fixture.gameState,
+                        PLAYER)).thenReturn(6);
+            when(fixture.gameState
+                    .getForcePileSize(PLAYER))
+                    .thenReturn(6);
+            when(fixture.modifiers
+                    .getSimultaneousDeployCost(
+                        fixture.gameState,
+                        navy,
+                        shuttle, false, 0.0f,
+                        hux, false, 0.0f,
+                        fixture.origin,
+                        null, true))
+                    .thenReturn(6.0f);
+            setActive(
+                    fixture.gameState,
+                    navy, true);
+
+            assertTrue(
+                    com.gempukku.swccgo.filters.Filters
+                        .First_Order_pilot.accepts(
+                            fixture.gameState,
+                            fixture.modifiers,
+                            hux));
+            assertTrue(
+                    com.gempukku.swccgo.filters.Filters
+                        .First_Order_starship.accepts(
+                            fixture.gameState,
+                            fixture.modifiers,
+                            shuttle));
+            assertTrue(
+                    fixture.analyzer
+                        .isFirstOrderReignsNavyRouteAction(
+                            fixture.game, PLAYER,
+                            navy,
+                            "Reveal starship or pilot from hand"));
+
+            Decision parent =
+                    Decision.navyRouteAction(
+                        navy,
+                        throneRoom,
+                        fixture.alternative);
+            TracedActions tracedParent =
+                    tracedActionTextAdapter(
+                        fixture, parent);
+            Outcome parentAction = only(
+                    tracedParent.actions(),
+                    "navy-route");
+            assertHasTypedRule(
+                    tracedParent.trace(),
+                    "navy-route",
+                    NAVY_ROUTE_RULE);
+            assertNotContains(
+                    parentAction,
+                    "LOCATIONS FIRST");
+            assertEquals(
+                    "navy-route",
+                    combined(fixture, parent)
+                        .actionId());
+
+            Decision handChild =
+                    Decision.selection(
+                        "Choose card from hand, or click 'Done' to cancel",
+                        Phase.DEPLOY, null,
+                        hux, fixture.alternative);
+            TracedActions tracedHand =
+                    tracedCardSelectionAdapter(
+                        fixture, handChild, navy);
+            Outcome huxChoice = only(
+                    tracedHand.actions(),
+                    id(hux));
+            assertHasTypedRule(
+                    tracedHand.trace(),
+                    id(hux),
+                    NAVY_CANDIDATE_RULE);
+            assertNotContains(
+                    huxChoice,
+                    "Harmful effect targeting own card");
+            assertEquals(
+                    id(hux),
+                    combined(
+                        fixture, handChild,
+                        navy).actionId());
+            Outcome wrongSourceTarget = only(
+                    cardSelectionAdapter(
+                        fixture, handChild,
+                        fixture.kylo),
+                    id(hux));
+            assertTrue(
+                    wrongSourceTarget.score()
+                        < -9000.0f);
+            assertContains(
+                    wrongSourceTarget,
+                    "V38.3 SELF-TARGET");
+
+            Decision reserveChild =
+                    Decision.navyReserveSelection(
+                        hux, shuttle);
+            TracedActions tracedReserve =
+                    tracedCardSelectionAdapter(
+                        fixture, reserveChild, navy);
+            assertHasTypedRule(
+                    tracedReserve.trace(),
+                    "temp0",
+                    NAVY_CANDIDATE_RULE);
+            assertEquals(
+                    "temp0",
+                    combined(
+                        fixture, reserveChild,
+                        navy).actionId());
+
+            Decision destinationChild =
+                    Decision
+                        .deployDestinationsSimultaneously(
+                            shuttle, hux,
+                            fixture.origin,
+                            fixture.farther);
+            TracedActions tracedDestination =
+                    tracedCardSelectionAdapter(
+                        fixture, destinationChild,
+                        navy);
+            Outcome craitDestination = only(
+                    tracedDestination.actions(),
+                    id(fixture.origin));
+            Outcome nonRouteDestination = only(
+                    tracedDestination.actions(),
+                    id(fixture.farther));
+            assertHasTypedRule(
+                    tracedDestination.trace(),
+                    id(fixture.origin),
+                    NAVY_DESTINATION_RULE);
+            assertNoTypedRule(
+                    tracedDestination.trace(),
+                    id(fixture.farther),
+                    NAVY_DESTINATION_RULE);
+            assertEquals(
+                    id(fixture.origin),
+                    combined(
+                        fixture, destinationChild,
+                        navy).actionId());
+            assertEquals(
+                    "1",
+                    combined(
+                        fixture,
+                        Decision.navyCapacitySlot())
+                        .actionId());
+
+            Outcome huxDirect = only(
+                    deployAdapter(
+                        fixture,
+                        Decision.directDeploys(hux)),
+                    "deploy-" + HUX_ID);
+            assertTrue(huxDirect.hardVeto());
+            assertContains(
+                    huxDirect,
+                    DEPLOY_ROUTE_RESERVE_RULE);
+
+            Decision groundDestinations =
+                    Decision.deployDestinations(
+                        fixture.alternative,
+                        throneRoom,
+                        fixture.salt);
+            List<Outcome> groundChoices =
+                    cardSelectionAdapter(
+                        fixture,
+                        groundDestinations);
+            for (PhysicalCard site : List.of(
+                    throneRoom,
+                    fixture.salt)) {
+                Outcome ground = only(
+                        groundChoices, id(site));
+                assertTrue(ground.hardVeto());
+                assertContains(
+                        ground,
+                        PREMATURE_CRAIT_RULE);
+            }
+        }
+    }
+
+    @Test
+    public void broadGroundHoldReleasesAfterFlipOrRouteLoss() {
+        for (Variant variant : variants()) {
+            for (boolean flipped : List.of(false, true)) {
+                Fixture fixture =
+                        fixture(variant, flipped);
+                PhysicalCard throneRoom = card(
+                        "Supremacy: Throne Room",
+                        "225_29", PLAYER,
+                        Zone.LOCATIONS,
+                        CardCategory.LOCATION,
+                        CardSubtype.SITE,
+                        THRONE_ROOM_ID);
+                register(fixture.cards, throneRoom);
+                fixture.hand.add(
+                        fixture.alternative);
+                when(fixture.alternative.getZone())
+                        .thenReturn(Zone.HAND);
+
+                Outcome destination = only(
+                        cardSelectionAdapter(
+                            fixture,
+                            Decision.deployDestinations(
+                                fixture.alternative,
+                                throneRoom)),
+                        id(throneRoom));
+                assertNotContains(
+                        destination,
+                        PREMATURE_CRAIT_RULE);
+            }
         }
     }
 
@@ -1666,6 +1963,199 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
     }
 
     @Test
+    public void botNavyLatchSurvivesBothPackageChildrenAndThenClears()
+            throws Exception {
+        for (Bot bot : Bot.values()) {
+            Fixture fixture = fixture(
+                    new Variant(bot, "225_32"),
+                    false);
+            PhysicalCard navy = card(
+                    "Navy Of The First Order",
+                    "225_24", PLAYER,
+                    Zone.SIDE_OF_TABLE,
+                    CardCategory.EFFECT,
+                    null, NAVY_ID);
+            register(fixture.cards, navy);
+            fixture.permanents.add(navy);
+            when(fixture.gameState
+                    .getCurrentPhase())
+                    .thenReturn(Phase.DEPLOY);
+
+            Action engineAction =
+                    mock(Action.class);
+            when(engineAction
+                    .getActionAttachedToCard())
+                    .thenReturn(navy);
+            when(engineAction.getActionSource())
+                    .thenReturn(navy);
+            when(engineAction.getText())
+                    .thenReturn(
+                        "Reveal starship or pilot from hand");
+            CardActionSelectionDecision parent =
+                    new CardActionSelectionDecision(
+                        90, "Choose Deploy action or Pass",
+                        List.of(engineAction),
+                        true, false,
+                        false, false, false) {
+                        @Override
+                        public void decisionMade(
+                                String result)
+                                throws DecisionResultInvalidException {
+                        }
+                    };
+            Decision parentDecision =
+                    Decision.navyRouteLatchAction(navy);
+
+            Object ai;
+            Object parentContext;
+            Object selected;
+            if (bot == Bot.RANDO) {
+                ai = new com.gempukku.swccgo.ai.models.rando
+                        .RandoCalAi();
+                parentContext =
+                        randoContext(
+                            fixture, parentDecision);
+                selected =
+                        new com.gempukku.swccgo.ai.models.rando
+                            .evaluators.EvaluatedAction(
+                                "0",
+                                com.gempukku.swccgo.ai.models.rando
+                                    .evaluators.ActionType.DEPLOY,
+                                1500.0f,
+                                "Navy route");
+            } else {
+                ai = new com.gempukku.swccgo.ai.models.chosenone
+                        .TheChosenOneAi();
+                parentContext =
+                        chosenContext(
+                            fixture, parentDecision);
+                selected =
+                        new com.gempukku.swccgo.ai.models.chosenone
+                            .evaluators.EvaluatedAction(
+                                "0",
+                                com.gempukku.swccgo.ai.models.chosenone
+                                    .evaluators.ActionType.DEPLOY,
+                                1500.0f,
+                                "Navy route");
+            }
+
+            Method remember = ai.getClass()
+                    .getDeclaredMethod(
+                        "rememberSelectedDeployCard",
+                        parentContext.getClass(),
+                        selected.getClass(),
+                        AwaitingDecision.class);
+            remember.setAccessible(true);
+            remember.invoke(
+                    ai, parentContext,
+                    selected, parent);
+
+            Method builder = ai.getClass()
+                    .getDeclaredMethod(
+                        "buildEvaluatorContext",
+                        String.class,
+                        AwaitingDecision.class,
+                        GameState.class,
+                        boolean.class);
+            builder.setAccessible(true);
+            Method getExtra = parentContext.getClass()
+                    .getMethod(
+                        "getExtra", String.class);
+            String sourceExtra =
+                    com.gempukku.swccgo.ai.models.common.phase
+                        .BhbmForceDripUrgencyFactsReader
+                        .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA;
+
+            Object handContext = builder.invoke(
+                    ai, PLAYER,
+                    childDecision(
+                        91,
+                        AwaitingDecisionType
+                            .CARD_SELECTION,
+                        "Choose card from hand, or click 'Done' to cancel"),
+                    fixture.gameState, false);
+            assertEquals(
+                    NAVY_ID,
+                    getExtra.invoke(
+                        handContext,
+                        sourceExtra));
+
+            Object reserveContext = builder.invoke(
+                    ai, PLAYER,
+                    childDecision(
+                        92,
+                        AwaitingDecisionType
+                            .ARBITRARY_CARDS,
+                        "Choose card to deploy from Reserve Deck simultaneously with General Hux"),
+                    fixture.gameState, false);
+            assertEquals(
+                    NAVY_ID,
+                    getExtra.invoke(
+                        reserveContext,
+                        sourceExtra));
+
+            Object responseContext = builder.invoke(
+                    ai, PLAYER,
+                    childDecision(
+                        93,
+                        AwaitingDecisionType
+                            .CARD_ACTION_CHOICE,
+                        "Optional responses"),
+                    fixture.gameState, false);
+            assertNull(getExtra.invoke(
+                    responseContext,
+                    sourceExtra));
+
+            AwaitingDecision destination =
+                    childDecision(
+                        94,
+                        AwaitingDecisionType
+                            .CARD_SELECTION,
+                        "Choose where to deploy Kylo Ren's Command Shuttle");
+            Object destinationContext =
+                    builder.invoke(
+                        ai, PLAYER,
+                        destination,
+                        fixture.gameState,
+                        false);
+            assertEquals(
+                    NAVY_ID,
+                    getExtra.invoke(
+                        destinationContext,
+                        sourceExtra));
+
+            Object cleared = builder.invoke(
+                    ai, PLAYER,
+                    destination,
+                    fixture.gameState,
+                    false);
+            assertNull(getExtra.invoke(
+                    cleared, sourceExtra));
+
+            remember.invoke(
+                    ai, parentContext,
+                    selected, parent);
+            builder.invoke(
+                    ai, PLAYER,
+                    childDecision(
+                        95,
+                        AwaitingDecisionType
+                            .CARD_ACTION_CHOICE,
+                        "Choose Deploy action or Pass"),
+                    fixture.gameState, false);
+            Object afterOrdinaryDeployMenu =
+                    builder.invoke(
+                        ai, PLAYER,
+                        destination,
+                        fixture.gameState,
+                        false);
+            assertNull(getExtra.invoke(
+                    afterOrdinaryDeployMenu,
+                    sourceExtra));
+        }
+    }
+
+    @Test
     public void postFlipLostPileTrooperJoinsTheOneBodyDrainPair() {
         for (Variant variant : variants()) {
             Fixture fixture = fixture(variant, true);
@@ -2904,17 +3394,34 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
 
     private static List<Outcome> cardSelectionAdapter(
             Fixture fixture, Decision decision) {
+        return cardSelectionAdapter(
+                fixture, decision, null);
+    }
+
+    private static List<Outcome> cardSelectionAdapter(
+            Fixture fixture, Decision decision,
+            PhysicalCard actionSource) {
         if (fixture.variant.bot == Bot.RANDO) {
+            var context =
+                    randoContext(
+                        fixture, decision);
+            setActionSource(
+                    context, actionSource);
             return new com.gempukku.swccgo.ai.models.rando.evaluators
                     .CardSelectionEvaluator()
-                    .evaluate(randoContext(fixture, decision))
+                    .evaluate(context)
                     .stream()
                     .map(FirstOrderReignsEvaluatorBehaviorTest::outcome)
                     .toList();
         }
+        var context =
+                chosenContext(
+                    fixture, decision);
+        setActionSource(
+                context, actionSource);
         return new com.gempukku.swccgo.ai.models.chosenone.evaluators
                 .CardSelectionEvaluator()
-                .evaluate(chosenContext(fixture, decision))
+                .evaluate(context)
                 .stream()
                 .map(FirstOrderReignsEvaluatorBehaviorTest::outcome)
                 .toList();
@@ -2922,6 +3429,13 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
 
     private static TracedActions tracedCardSelectionAdapter(
             Fixture fixture, Decision decision) {
+        return tracedCardSelectionAdapter(
+                fixture, decision, null);
+    }
+
+    private static TracedActions tracedCardSelectionAdapter(
+            Fixture fixture, Decision decision,
+            PhysicalCard actionSource) {
         assertTrue(TraceSession.open(
                 fixture.variant.bot.name(),
                 "first-order-reigns-card-selection",
@@ -2933,7 +3447,8 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
         DecisionTrace trace;
         try {
             actions = cardSelectionAdapter(
-                    fixture, decision);
+                    fixture, decision,
+                    actionSource);
         } finally {
             trace = TraceSession.close();
         }
@@ -2961,18 +3476,35 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
 
     private static Outcome combined(
             Fixture fixture, Decision decision) {
+        return combined(
+                fixture, decision, null);
+    }
+
+    private static Outcome combined(
+            Fixture fixture, Decision decision,
+            PhysicalCard actionSource) {
         if (fixture.variant.bot == Bot.RANDO) {
+            var context =
+                    randoContext(
+                        fixture, decision);
+            setActionSource(
+                    context, actionSource);
             return outcome(
                     new com.gempukku.swccgo.ai.models.rando.evaluators
                         .CombinedEvaluator()
                         .evaluateDecision(
-                            randoContext(fixture, decision)));
+                            context));
         }
+        var context =
+                chosenContext(
+                    fixture, decision);
+        setActionSource(
+                context, actionSource);
         return outcome(
                 new com.gempukku.swccgo.ai.models.chosenone.evaluators
                     .CombinedEvaluator()
                     .evaluateDecision(
-                        chosenContext(fixture, decision)));
+                        context));
     }
 
     private static com.gempukku.swccgo.ai.models.rando.evaluators
@@ -3052,6 +3584,32 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             context.setExtra(
                     "movePhysicalCardId",
                     decision.mover.getCardId());
+        }
+    }
+
+    private static void setActionSource(
+            com.gempukku.swccgo.ai.models.rando.evaluators
+                    .DecisionContext context,
+            PhysicalCard actionSource) {
+        if (actionSource != null) {
+            context.setExtra(
+                com.gempukku.swccgo.ai.models.common.phase
+                    .BhbmForceDripUrgencyFactsReader
+                    .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA,
+                actionSource.getPermanentCardId());
+        }
+    }
+
+    private static void setActionSource(
+            com.gempukku.swccgo.ai.models.chosenone.evaluators
+                    .DecisionContext context,
+            PhysicalCard actionSource) {
+        if (actionSource != null) {
+            context.setExtra(
+                com.gempukku.swccgo.ai.models.common.phase
+                    .BhbmForceDripUrgencyFactsReader
+                    .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA,
+                actionSource.getPermanentCardId());
         }
     }
 
@@ -3392,6 +3950,23 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                 .thenReturn(deployable);
     }
 
+    private static AwaitingDecision childDecision(
+            int decisionId,
+            AwaitingDecisionType type,
+            String text) {
+        AwaitingDecision decision =
+                mock(AwaitingDecision.class);
+        when(decision.getAwaitingDecisionId())
+                .thenReturn(decisionId);
+        when(decision.getDecisionType())
+                .thenReturn(type);
+        when(decision.getText())
+                .thenReturn(text);
+        when(decision.getDecisionParameters())
+                .thenReturn(Map.of());
+        return decision;
+    }
+
     private static String id(PhysicalCard card) {
         return String.valueOf(card.getCardId());
     }
@@ -3444,6 +4019,102 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     List.of(objectiveBlueprintId, ""),
                     List.of("The First Order Reigns", ""),
                     false, 0, null);
+        }
+
+        private static Decision navyRouteAction(
+                PhysicalCard navy,
+                PhysicalCard... distractions) {
+            List<String> actionIds =
+                    new ArrayList<>();
+            List<String> actionTexts =
+                    new ArrayList<>();
+            List<String> cardIds =
+                    new ArrayList<>();
+            List<String> blueprints =
+                    new ArrayList<>();
+            List<String> titles =
+                    new ArrayList<>();
+            actionIds.add("navy-route");
+            actionTexts.add(
+                    "Reveal starship or pilot from hand");
+            cardIds.add(id(navy));
+            blueprints.add(
+                    navy.getBlueprintId(true));
+            titles.add(navy.getTitle());
+            for (PhysicalCard distraction
+                    : distractions) {
+                actionIds.add(
+                        "deploy-"
+                            + distraction
+                                .getCardId());
+                actionTexts.add(
+                        "Deploy <div class='cardHint' value='"
+                            + distraction
+                                .getBlueprintId(true)
+                            + "'>"
+                            + distraction.getTitle()
+                            + "</div>");
+                cardIds.add(id(distraction));
+                blueprints.add(
+                        distraction
+                            .getBlueprintId(true));
+                titles.add(
+                        distraction.getTitle());
+            }
+            actionIds.add("");
+            actionTexts.add("Pass");
+            cardIds.add("");
+            blueprints.add("");
+            titles.add("Pass");
+            return new Decision(
+                    "CARD_ACTION_CHOICE",
+                    "Choose deploy action",
+                    Phase.DEPLOY,
+                    actionIds,
+                    actionTexts,
+                    cardIds,
+                    blueprints,
+                    titles,
+                    false, 0, null);
+        }
+
+        private static Decision navyRouteLatchAction(
+                PhysicalCard navy) {
+            return new Decision(
+                    "CARD_ACTION_CHOICE",
+                    "Choose deploy action",
+                    Phase.DEPLOY,
+                    List.of("0"),
+                    List.of(
+                        "Reveal starship or pilot from hand"),
+                    List.of(id(navy)),
+                    List.of(
+                        navy.getBlueprintId(true)),
+                    List.of(navy.getTitle()),
+                    false, 0, null);
+        }
+
+        private static Decision navyReserveSelection(
+                PhysicalCard selectedHandCard,
+                PhysicalCard reserveCard) {
+            return new Decision(
+                    "ARBITRARY_CARDS",
+                    "Choose card to deploy from Reserve Deck simultaneously with "
+                            + "<div class='cardHint' value='"
+                            + selectedHandCard
+                                .getBlueprintId(true)
+                            + "'>"
+                            + selectedHandCard.getTitle()
+                            + "</div>",
+                    Phase.DEPLOY,
+                    List.of("temp0"),
+                    List.of(reserveCard.getTitle()),
+                    List.of("temp0"),
+                    List.of(
+                            reserveCard
+                                .getBlueprintId(true)),
+                    List.of(reserveCard.getTitle()),
+                    true, 1, null);
         }
 
         private static Decision backLostPileDeploy() {
@@ -3585,6 +4256,38 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                             + "'>" + deployingCard.getTitle()
                             + "</div>",
                     Phase.DEPLOY, null, destinations);
+        }
+
+        private static Decision
+                deployDestinationsSimultaneously(
+                    PhysicalCard starship,
+                    PhysicalCard character,
+                    PhysicalCard... destinations) {
+            return selection(
+                    "Choose where to deploy "
+                            + "<div class='cardHint' value='"
+                            + starship.getBlueprintId(true)
+                            + "'>" + starship.getTitle()
+                            + "</div> and "
+                            + "<div class='cardHint' value='"
+                            + character.getBlueprintId(true)
+                            + "'>" + character.getTitle()
+                            + "</div> simultaneously",
+                    Phase.DEPLOY, null, destinations);
+        }
+
+        private static Decision navyCapacitySlot() {
+            return new Decision(
+                    "MULTIPLE_CHOICE",
+                    "Choose capacity slot for General Hux aboard "
+                            + "Kylo Ren's Command Shuttle",
+                    Phase.DEPLOY,
+                    List.of("0", "1"),
+                    List.of(
+                            "Passenger capacity slot",
+                            "Pilot capacity slot"),
+                    List.of(), List.of(), List.of(),
+                    false, 0, null);
         }
 
         private static Decision moveDestinations(

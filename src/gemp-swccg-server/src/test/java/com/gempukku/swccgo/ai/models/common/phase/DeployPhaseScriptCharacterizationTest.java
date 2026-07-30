@@ -109,6 +109,54 @@ public class DeployPhaseScriptCharacterizationTest {
                 }));
     }
 
+    @Test
+    public void firstOrderNavyRouteJoinsTheTopBucketOnlyWhenExecutable() {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard navy = mock(PhysicalCard.class);
+        ObjectiveAnalyzer objectiveAnalyzer = mock(ObjectiveAnalyzer.class);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId", new String[] {"navy", "throne", "ground"});
+        parameters.put("actionText", new String[] {
+                "Reveal starship or pilot from hand",
+                "Deploy a location",
+                "Deploy a character"
+        });
+        parameters.put("cardId", new String[] {"225", null, null});
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(gameState.findCardById(225)).thenReturn(navy);
+        when(objectiveAnalyzer.getStrategyCharacterTokens(game, "p"))
+                .thenReturn(Collections.emptySet());
+        when(objectiveAnalyzer.isFirstOrderReignsNavyRouteAction(
+                game, "p", navy, "Reveal starship or pilot from hand"))
+                .thenReturn(true);
+
+        for (DeployPhaseScript script : new DeployPhaseScript[] {
+                new com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript(),
+                new com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript()
+        }) {
+            DeployPhaseScript.Result result = script.selectAllowedActions(
+                    decision, gameState, game, "p", objectiveAnalyzer);
+            assertEquals("[LOCATIONS, OTHER_CHARACTERS]",
+                    result.stepBucketLabels.toString());
+            assertEquals("[[navy, throne], [ground]]",
+                    result.stepBuckets.toString());
+        }
+
+        when(objectiveAnalyzer.isFirstOrderReignsNavyRouteAction(
+                game, "p", navy, "Reveal starship or pilot from hand"))
+                .thenReturn(false);
+        DeployPhaseScript.Result wrongSource =
+                new com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript()
+                        .selectAllowedActions(
+                                decision, gameState, game, "p", objectiveAnalyzer);
+        assertEquals("[[throne], [ground]]",
+                wrongSource.stepBuckets.toString());
+    }
+
     @SuppressWarnings("unchecked")
     private static Set<Object> resolveSteps(Object script, String text) throws Exception {
         Method method = findMethod(script.getClass(),

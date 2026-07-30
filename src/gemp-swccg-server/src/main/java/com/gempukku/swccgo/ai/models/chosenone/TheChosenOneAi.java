@@ -1597,7 +1597,40 @@ public class TheChosenOneAi extends HeuristicAiBase {
             pendingMovePhysicalCardId = null;
             pendingMoveActionSourcePermanentCardId = null;
         }
-        if ((pendingObjectiveDeployingCardId != null
+        PhysicalCard pendingDeployActionSource =
+                findCardByPermanentId(
+                    gameState,
+                    pendingDeployActionSourcePermanentCardId);
+        boolean pendingFirstOrderNavyAction =
+                pendingDeployActionSource != null
+                && "225_24".equals(
+                    pendingDeployActionSource
+                        .getBlueprintId(true));
+        boolean firstOrderNavyHandChild =
+                pendingFirstOrderNavyAction
+                && "CARD_SELECTION".equals(
+                    decisionType.name())
+                && "choose card from hand, or click 'done' to cancel"
+                    .equals(promptLower.trim());
+        boolean firstOrderNavyReserveChild =
+                pendingFirstOrderNavyAction
+                && "ARBITRARY_CARDS".equals(
+                    decisionType.name())
+                && promptLower.trim().startsWith(
+                    "choose card to deploy from reserve deck simultaneously with");
+        boolean firstOrderNavyResponseWindow =
+                pendingFirstOrderNavyAction
+                && decisionType.name()
+                    .contains("ACTION_CHOICE")
+                && promptLower.contains(
+                    "optional responses");
+        if (firstOrderNavyHandChild
+                || firstOrderNavyReserveChild) {
+            evalContext.setExtra(
+                BhbmForceDripUrgencyFactsReader
+                    .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA,
+                pendingDeployActionSourcePermanentCardId);
+        } else if ((pendingObjectiveDeployingCardId != null
                 || pendingDeployActionSourcePermanentCardId != null)
                 && "CARD_SELECTION".equals(
                     decisionType.name())
@@ -1622,7 +1655,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 || pendingDeployActionSourcePermanentCardId != null)
                 && (phase != Phase.DEPLOY
                     || decisionType.name()
-                        .contains("ACTION_CHOICE"))) {
+                        .contains("ACTION_CHOICE")
+                    && !firstOrderNavyResponseWindow)) {
             pendingObjectiveDeployingCardId = null;
             pendingDeployActionSourcePermanentCardId = null;
         }

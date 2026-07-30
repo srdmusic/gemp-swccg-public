@@ -279,23 +279,80 @@ public final class DeployObjectiveSitingPolicy {
                         "Board a cheap First Order character on the Tracked Fleet chase ship before committing ground forces"));
     }
 
-    public static PolicyResult blockFirstOrderReignsPreFlipCraitGround(
-            String actionId, boolean prematureCraitGround) {
+    public static PolicyResult scoreFirstOrderReignsNavyRouteAction(
+            String actionId, boolean executableRoute) {
         Objects.requireNonNull(actionId, "actionId");
-        if (!prematureCraitGround) {
+        if (!executableRoute) {
             return new PolicyResult(
-                    "DEPLOY_FIRST_ORDER_PRE_FLIP_CRAIT_POLICY",
+                    "DEPLOY_FIRST_ORDER_NAVY_ROUTE_ACTION_POLICY",
                     List.of());
         }
         return single(
-                "DEPLOY_FIRST_ORDER_PRE_FLIP_CRAIT_POLICY",
+                "DEPLOY_FIRST_ORDER_NAVY_ROUTE_ACTION_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE",
+                        TraceOutputKind.BANDED,
+                        1500.0f,
+                        "Use Navy Of The First Order to deploy the affordable ship-and-pilot chase package"));
+    }
+
+    public static PolicyResult scoreFirstOrderReignsNavyRouteCandidate(
+            String actionId, boolean advancesRoute) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!advancesRoute) {
+            return new PolicyResult(
+                    "DEPLOY_FIRST_ORDER_NAVY_ROUTE_CANDIDATE_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_FIRST_ORDER_NAVY_ROUTE_CANDIDATE_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_CANDIDATE",
+                        TraceOutputKind.BANDED,
+                        1500.0f,
+                        "Choose the affordable Navy ship-and-pilot package that can reach Tracked Fleet"));
+    }
+
+    public static PolicyResult scoreFirstOrderReignsNavyRouteDestination(
+            String actionId, boolean advancesRoute) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!advancesRoute) {
+            return new PolicyResult(
+                    "DEPLOY_FIRST_ORDER_NAVY_ROUTE_DESTINATION_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_FIRST_ORDER_NAVY_ROUTE_DESTINATION_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_DESTINATION",
+                        TraceOutputKind.BANDED,
+                        1500.0f,
+                        "Deploy the Navy ship-and-pilot package to the system that reaches Tracked Fleet"));
+    }
+
+    public static PolicyResult blockFirstOrderReignsPreFlipGround(
+            String actionId, boolean prematureGround) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!prematureGround) {
+            return new PolicyResult(
+                    "DEPLOY_FIRST_ORDER_PRE_FLIP_GROUND_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_FIRST_ORDER_PRE_FLIP_GROUND_POLICY",
                 PolicyOperation.hardVeto(
                         actionId,
                         TraceRuleId.of(
-                                "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_CRAIT_HOLD"),
+                                "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_GROUND_HOLD"),
                         TraceDomainId.DEPLOY_SITING,
                         TraceOutputKind.VETO,
-                        "Do not spend the Tracked Fleet chase budget on Crait ground forces before the objective flips"));
+                        "Do not spend the Tracked Fleet chase budget on ground forces before the objective flips"));
+    }
+
+    public static PolicyResult blockFirstOrderReignsPreFlipCraitGround(
+            String actionId, boolean prematureCraitGround) {
+        return blockFirstOrderReignsPreFlipGround(
+                actionId, prematureCraitGround);
     }
 
     public static PolicyResult blockTerminalObjectiveExposure(

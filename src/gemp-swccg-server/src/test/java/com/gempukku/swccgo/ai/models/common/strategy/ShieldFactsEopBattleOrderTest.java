@@ -93,6 +93,26 @@ public class ShieldFactsEopBattleOrderTest {
         assertFalse(fixture.reserve());
     }
 
+    @Test
+    public void battleOrderRequiresOwnSiteAndSystemBeforeItCanGoLive() {
+        Fixture fixture = new Fixture();
+
+        assertFalse("Out-draining must not bypass our own two-theater prerequisite",
+                ShieldFacts.battleOrderLive(fixture.game, PLAYER, true));
+
+        when(fixture.modifiers.occupiesLocation(
+                fixture.gameState, fixture.endor, PLAYER)).thenReturn(true);
+        assertTrue("Own battleground site plus system may play Battle Order",
+                ShieldFacts.battleOrderLive(fixture.game, PLAYER, false));
+
+        when(fixture.modifiers.occupiesLocation(
+                fixture.gameState, fixture.landingPlatform, OPPONENT)).thenReturn(true);
+        when(fixture.modifiers.occupiesLocation(
+                fixture.gameState, fixture.endor, OPPONENT)).thenReturn(true);
+        assertFalse("Do not play Battle Order once opponent also occupies both theaters",
+                ShieldFacts.battleOrderLive(fixture.game, PLAYER, true));
+    }
+
     private static final class Fixture {
         private final GameState gameState = mock(GameState.class);
         private final ModifiersQuerying modifiers = mock(ModifiersQuerying.class);

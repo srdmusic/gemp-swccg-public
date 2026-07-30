@@ -239,18 +239,16 @@ public final class ShieldFacts {
     }
 
     /**
-     * V51/V112 corrected gate (2026-07-27, Hoth repair #2): Battle Order /
-     * Battle Plan is worth playing when the opponent would be taxed (they
-     * lack both theaters) AND either we are self-exempt (we occupy both) or
-     * the opponent out-drains us by 2+ so accepting our own tax is justified.
-     * The old keying was occupiesBothTheaters(self) alone, which inverted the
-     * card law: it demanded the state that makes the card unnecessary.
+     * Battle Order / Battle Plan may be played only after we occupy both a
+     * battleground site and system, and only while the opponent still lacks
+     * that same exemption. The out-drain fact remains in the stable signature
+     * for existing callers, but it may not bypass the deployment prerequisite.
      */
     public static boolean battleOrderLive(SwccgGame game, String playerId,
                                           boolean opponentOutDrainsByTwoPlus) {
-        return opponentLacksBothTheaters(game, playerId)
-                && (occupiesBothTheaters(game, playerId)
-                    || opponentOutDrainsByTwoPlus);
+        return occupiesBothTheaters(game, playerId)
+                && opponentLacksBothTheaters(
+                    game, playerId);
     }
 
     /**

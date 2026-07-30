@@ -244,13 +244,24 @@ public abstract class DeployPhaseScript {
         if (actionText == null) return steps;
         String txt = actionText.toLowerCase(Locale.ROOT).trim();
 
+        PhysicalCard sourceCard =
+                findCardByIdSafe(
+                    gameState, cardIdStr);
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isFirstOrderReignsNavyRouteAction(
+                        game, playerId,
+                        sourceCard, actionText)) {
+            steps.add(Step.LOCATIONS);
+            return steps;
+        }
+
         // EXCLUDE pulls that go INTO HAND / pile, not to table — these are not
         // deploy-step actions. The narrow exception is an upload that fetches a
         // still-missing typed objective actor needed by this phase's formation.
         if (txt.contains("into hand") || txt.contains("into your hand")
                 || txt.contains("into used pile") || txt.contains("into reserve")
                 || txt.contains("into force pile")) {
-            PhysicalCard sourceCard = findCardByIdSafe(gameState, cardIdStr);
             if (objectiveAnalyzer != null
                     && objectiveAnalyzer.isFlipGateActorUploadIntoHandAction(
                         game, playerId, sourceCard, actionText)) {
