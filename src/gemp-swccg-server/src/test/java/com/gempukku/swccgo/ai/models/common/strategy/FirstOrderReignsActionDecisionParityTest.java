@@ -446,6 +446,12 @@ public class FirstOrderReignsActionDecisionParityTest {
                 anyBoolean(), anyFloat(), any(), any(), any(),
                 any(), any(), anyBoolean(), anyFloat()))
                 .thenReturn(deployable);
+        when(modifiers.isDeployableToTarget(
+                any(), any(), any(), anyBoolean(),
+                any(), anyBoolean(), anyFloat(),
+                any(), any(), any(), any(), any(),
+                any(), anyBoolean(), anyFloat()))
+                .thenReturn(deployable);
     }
 
     private static PhysicalCard objective() {
@@ -514,6 +520,12 @@ public class FirstOrderReignsActionDecisionParityTest {
         when(card.isBlownAway()).thenReturn(false);
         when(blueprint.getTitle()).thenReturn(title);
         when(blueprint.getCardCategory()).thenReturn(category);
+        if (category == CardCategory.STARSHIP
+                && title.contains("Supremacy")) {
+            when(blueprint.hasIcon(
+                    Icon.EPISODE_VII))
+                    .thenReturn(true);
+        }
         if (subtype != null) {
             when(blueprint.getCardSubtype()).thenReturn(subtype);
         }

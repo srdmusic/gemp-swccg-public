@@ -81,6 +81,9 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
     private static final int THIRD_PAIR_MATE_ID = 208;
     private static final int DUPLICATE_LOST_PILE_TROOPER_ID =
             209;
+    private static final int FULMINATRIX_ID = 210;
+    private static final int CHEAP_CREW_ID = 211;
+    private static final int COMMAND_SHUTTLE_ID = 212;
 
     private static final String MOVE_START_RULE =
             "MOVE.OBJECTIVE.ACTOR_LOCATION_START";
@@ -130,6 +133,14 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             "LADDER: R3 SURVIVAL base";
     private static final String PULL_REQUIRED_LOCATION_RULE =
             "Pull a missing location required by the counted objective";
+    private static final String DEPLOY_CHASE_SHIP_RULE =
+            "OBJECTIVE FIRST ORDER CHASE SHIP";
+    private static final String DEPLOY_ROUTE_CREW_PARENT_RULE =
+            "OBJECTIVE FIRST ORDER ROUTE CREW";
+    private static final String DEPLOY_ROUTE_CREW_CHILD_RULE =
+            "Board a cheap First Order character";
+    private static final String PREMATURE_CRAIT_RULE =
+            "Do not spend the Tracked Fleet chase budget";
 
     @Test
     public void routeDownloadRequiresADeployableCandidateAtForceBoundary() {
@@ -336,6 +347,76 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
     }
 
     @Test
+    public void chaseShipParentBeatsPrematureKyloAtRealCraitRange() {
+        for (Variant variant : variants()) {
+            Fixture fixture = fixture(variant, false);
+            PhysicalCard fulminatrix = card(
+                    "Fulminatrix", "225_20",
+                    PLAYER, Zone.HAND,
+                    CardCategory.STARSHIP,
+                    null, FULMINATRIX_ID);
+            register(fixture.cards, fulminatrix);
+            fixture.hand.add(fulminatrix);
+            fixture.hand.add(fixture.kylo);
+            fixture.locations.add(fixture.origin);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, fixture.origin,
+                    Icon.EPISODE_VII)).thenReturn(true);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, fulminatrix,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            when(fulminatrix.getBlueprint()
+                    .hasIcon(Icon.EPISODE_VII))
+                    .thenReturn(true);
+            when(fixture.modifiers.getHighestAbilityPiloting(
+                    fixture.gameState, fulminatrix,
+                    true, false)).thenReturn(2.0f);
+            when(fixture.modifiers.hasPermanentPilot(
+                    fixture.gameState, fulminatrix))
+                    .thenReturn(true);
+            when(fixture.modifiers.hasAstromechOrNavComputer(
+                    fixture.gameState, fulminatrix))
+                    .thenReturn(true);
+            when(fixture.modifiers.getHyperspeed(
+                    fixture.gameState, fulminatrix,
+                    fixture.origin, fixture.host))
+                    .thenReturn(4.0f);
+            when(fixture.modifiers.getDeployCost(
+                    fixture.gameState, fulminatrix))
+                    .thenReturn(6.0f);
+            when(fulminatrix.getBlueprint()
+                    .getDeployCost()).thenReturn(9.0f);
+            when(fixture.kylo.getBlueprint()
+                    .getDeployCost()).thenReturn(5.0f);
+            when(fixture.gameState.getForcePileSize(PLAYER))
+                    .thenReturn(10);
+
+            Decision decision = Decision.directDeploys(
+                    fixture.kylo, fulminatrix);
+            List<Outcome> actions =
+                    deployAdapter(fixture, decision);
+            Outcome ship = only(
+                    actions, "deploy-" + FULMINATRIX_ID);
+            Outcome kylo = only(
+                    actions, "deploy-" + KYLO_ID);
+
+            assertContains(ship, DEPLOY_CHASE_SHIP_RULE);
+            assertNotContains(kylo, DEPLOY_CHASE_SHIP_RULE);
+            assertFalse(
+                    "Chase ship must remain admissible: " + ship,
+                    ship.hardVeto());
+            Outcome winner = combined(
+                    fixture, decision);
+            assertEquals(
+                    "ship=" + ship
+                            + " kylo=" + kylo
+                            + " winner=" + winner,
+                    "deploy-" + FULMINATRIX_ID,
+                    winner.actionId());
+        }
+    }
+
+    @Test
     public void supremacyDeployDestinationChoosesTheLegalStagingSystem() {
         for (Variant variant : variants()) {
             Fixture fixture = fixture(variant, false);
@@ -361,6 +442,168 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     nonAdvancing, DEPLOY_STAGE_RULE);
             assertEquals(id(fixture.stage),
                     combined(fixture, destinations)
+                            .actionId());
+        }
+    }
+
+    @Test
+    public void commandShuttleChaseBeatsPassAndTargetsThePhysicalFleetHost() {
+        for (Variant variant : variants()) {
+            Fixture fixture = fixture(variant, false);
+            PhysicalCard shuttle = card(
+                    "Kylo Ren's Command Shuttle",
+                    "204_55", PLAYER,
+                    Zone.AT_LOCATION,
+                    CardCategory.STARSHIP,
+                    null, COMMAND_SHUTTLE_ID);
+            register(fixture.cards, shuttle);
+            fixture.permanents.add(shuttle);
+            fixture.locations.add(fixture.origin);
+            place(fixture, shuttle, fixture.origin);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, shuttle,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            when(shuttle.getBlueprint()
+                    .hasIcon(Icon.EPISODE_VII))
+                    .thenReturn(true);
+            when(fixture.modifiers.getHighestAbilityPiloting(
+                    fixture.gameState, shuttle,
+                    true, false)).thenReturn(2.0f);
+            when(fixture.modifiers.hasAstromechOrNavComputer(
+                    fixture.gameState, shuttle))
+                    .thenReturn(true);
+            when(fixture.modifiers.isPiloted(
+                    fixture.gameState, shuttle, false))
+                    .thenReturn(true);
+            when(fixture.modifiers.getHyperspeed(
+                    fixture.gameState, shuttle,
+                    fixture.origin, fixture.host))
+                    .thenReturn(4.0f);
+            when(fixture.modifiers.getForceAvailableToUse(
+                    fixture.gameState, PLAYER))
+                    .thenReturn(10);
+            setActive(
+                    fixture.gameState, shuttle, true);
+
+            Decision parent =
+                    Decision.topLevelHyperspace(shuttle);
+            Outcome move = only(
+                    moveAdapter(fixture, parent),
+                    "move-" + COMMAND_SHUTTLE_ID);
+            assertContains(move, MOVE_START_RULE);
+            assertEquals(
+                    "move-" + COMMAND_SHUTTLE_ID,
+                    combined(fixture, parent).actionId());
+
+            Decision destination =
+                    Decision.moveDestinations(
+                            shuttle, fixture.host);
+            Outcome host = only(
+                    cardSelectionAdapter(
+                            fixture, destination),
+                    id(fixture.host));
+            assertContains(host, MOVE_DESTINATION_RULE);
+            assertEquals(id(fixture.host),
+                    combined(fixture, destination)
+                            .actionId());
+        }
+    }
+
+    @Test
+    public void cheapCrewParentAndShipChildBeatPreFlipCraitGround() {
+        for (Variant variant : variants()) {
+            Fixture fixture = fixture(variant, false);
+            PhysicalCard shuttle = card(
+                    "Kylo Ren's Command Shuttle",
+                    "204_55", PLAYER,
+                    Zone.AT_LOCATION,
+                    CardCategory.STARSHIP,
+                    null, COMMAND_SHUTTLE_ID);
+            PhysicalCard crew = card(
+                    "FN-2003", "204_39",
+                    PLAYER, Zone.HAND,
+                    CardCategory.CHARACTER,
+                    null, CHEAP_CREW_ID);
+            register(fixture.cards, shuttle);
+            register(fixture.cards, crew);
+            fixture.permanents.add(shuttle);
+            fixture.hand.add(crew);
+            fixture.hand.add(fixture.kylo);
+            fixture.locations.add(fixture.origin);
+            fixture.locations.add(fixture.salt);
+            place(fixture, shuttle, fixture.origin);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, shuttle,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            when(shuttle.getBlueprint()
+                    .hasIcon(Icon.EPISODE_VII))
+                    .thenReturn(true);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, crew,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            when(fixture.modifiers.getHighestAbilityPiloting(
+                    fixture.gameState, shuttle,
+                    true, false)).thenReturn(2.0f);
+            when(fixture.modifiers.hasAstromechOrNavComputer(
+                    fixture.gameState, shuttle))
+                    .thenReturn(true);
+            when(fixture.modifiers.isPiloted(
+                    fixture.gameState, shuttle, false))
+                    .thenReturn(true);
+            when(fixture.modifiers.getHyperspeed(
+                    fixture.gameState, shuttle,
+                    fixture.origin, fixture.host))
+                    .thenReturn(4.0f);
+            when(fixture.modifiers.getForceAvailableToUse(
+                    fixture.gameState, PLAYER))
+                    .thenReturn(10);
+            when(fixture.modifiers.getDeployCost(
+                    fixture.gameState, crew))
+                    .thenReturn(2.0f);
+            when(fixture.modifiers.getDeployCost(
+                    fixture.gameState, crew, crew,
+                    shuttle, false, null, false,
+                    0.0f, null, true))
+                    .thenReturn(2.0f);
+            when(crew.getBlueprint()
+                    .getDeployCost()).thenReturn(2.0f);
+            when(fixture.kylo.getBlueprint()
+                    .getDeployCost()).thenReturn(5.0f);
+            when(fixture.gameState.getAvailablePilotCapacity(
+                    fixture.modifiers, shuttle, crew))
+                    .thenReturn(1);
+            setActive(
+                    fixture.gameState, shuttle, true);
+
+            Decision parent = Decision.directDeploys(
+                    fixture.kylo, crew);
+            Outcome crewParent = only(
+                    deployAdapter(fixture, parent),
+                    "deploy-" + CHEAP_CREW_ID);
+            assertContains(
+                    crewParent,
+                    DEPLOY_ROUTE_CREW_PARENT_RULE);
+            assertEquals(
+                    "deploy-" + CHEAP_CREW_ID,
+                    combined(fixture, parent).actionId());
+
+            Decision destination =
+                    Decision.deployDestinations(
+                            crew, shuttle, fixture.salt);
+            List<Outcome> children =
+                    cardSelectionAdapter(
+                            fixture, destination);
+            Outcome aboard = only(
+                    children, id(shuttle));
+            Outcome crait = only(
+                    children, id(fixture.salt));
+            assertContains(
+                    aboard,
+                    DEPLOY_ROUTE_CREW_CHILD_RULE);
+            assertTrue(crait.hardVeto());
+            assertContains(crait, PREMATURE_CRAIT_RULE);
+            assertEquals(id(shuttle),
+                    combined(fixture, destination)
                             .actionId());
         }
     }
@@ -556,6 +799,94 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                             .isPreferredFirstOrderReignsRouteForceLossCandidate(
                                 fixture.game, PLAYER,
                                 fixture.trackedFleet));
+        }
+    }
+
+    @Test
+    public void forceLossProtectsOnlyTheSoleAlternateChaseShip() {
+        for (Variant variant : variants()) {
+            Fixture sole = fixture(variant, false);
+            PhysicalCard fulminatrix = alternateChaseShip(
+                    sole, "Fulminatrix", "225_20",
+                    FULMINATRIX_ID);
+            sole.locations.add(sole.stage);
+            sole.hand.add(fulminatrix);
+            sole.hand.add(sole.alternative);
+            when(sole.alternative.getZone())
+                    .thenReturn(Zone.HAND);
+
+            Decision soleLoss = Decision.forceLoss(
+                    fulminatrix, sole.alternative);
+            Outcome protectedShip = only(
+                    cardSelectionAdapter(sole, soleLoss),
+                    id(fulminatrix));
+            Outcome expendable = only(
+                    cardSelectionAdapter(sole, soleLoss),
+                    id(sole.alternative));
+
+            assertContains(protectedShip, FORCE_LOSS_RULE);
+            assertNotContains(expendable, FORCE_LOSS_RULE);
+            assertEquals(id(sole.alternative),
+                    combined(sole, soleLoss).actionId());
+            assertTrue(
+                    sole.analyzer
+                        .isPreferredFirstOrderReignsRouteForceLossCandidate(
+                            sole.game, PLAYER, fulminatrix));
+
+            Fixture duplicate = fixture(variant, false);
+            PhysicalCard duplicateFulminatrix =
+                    alternateChaseShip(
+                        duplicate, "Fulminatrix",
+                        "225_20", FULMINATRIX_ID);
+            PhysicalCard commandShuttle =
+                    alternateChaseShip(
+                        duplicate,
+                        "Kylo Ren's Command Shuttle",
+                        "204_55", COMMAND_SHUTTLE_ID);
+            duplicate.locations.add(duplicate.stage);
+            duplicate.hand.add(duplicateFulminatrix);
+            duplicate.hand.add(commandShuttle);
+
+            assertFalse(
+                    duplicate.analyzer
+                        .isPreferredFirstOrderReignsRouteForceLossCandidate(
+                            duplicate.game, PLAYER,
+                            duplicateFulminatrix));
+            Outcome releasedDuplicate = only(
+                    cardSelectionAdapter(
+                        duplicate,
+                        Decision.forceLoss(
+                            duplicateFulminatrix,
+                            commandShuttle)),
+                    id(duplicateFulminatrix));
+            assertNotContains(
+                    releasedDuplicate, FORCE_LOSS_RULE);
+
+            Fixture closed = fixture(variant, true);
+            PhysicalCard closedFulminatrix =
+                    alternateChaseShip(
+                        closed, "Fulminatrix",
+                        "225_20", FULMINATRIX_ID);
+            closed.locations.add(closed.stage);
+            closed.hand.add(closedFulminatrix);
+            closed.hand.add(closed.alternative);
+            when(closed.alternative.getZone())
+                    .thenReturn(Zone.HAND);
+
+            Outcome releasedClosed = only(
+                    cardSelectionAdapter(
+                        closed,
+                        Decision.forceLoss(
+                            closedFulminatrix,
+                            closed.alternative)),
+                    id(closedFulminatrix));
+            assertNotContains(
+                    releasedClosed, FORCE_LOSS_RULE);
+            assertFalse(
+                    closed.analyzer
+                        .isPreferredFirstOrderReignsRouteForceLossCandidate(
+                            closed.game, PLAYER,
+                            closedFulminatrix));
         }
     }
 
@@ -2229,6 +2560,7 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
     private static void configureDeployedSupremacyBridge(
             Fixture fixture) {
         fixture.locations.add(fixture.origin);
+        fixture.locations.add(fixture.closer);
         fixture.permanents.add(fixture.supremacy);
         when(fixture.trackedFleet.getAttachedTo())
                 .thenReturn(fixture.origin);
@@ -2924,6 +3256,32 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
         return cavern;
     }
 
+    private static PhysicalCard alternateChaseShip(
+            Fixture fixture, String title,
+            String blueprintId, int cardId) {
+        PhysicalCard ship = card(
+                title, blueprintId, PLAYER,
+                Zone.HAND, CardCategory.STARSHIP,
+                null, cardId);
+        register(fixture.cards, ship);
+        when(ship.getBlueprint()
+                .hasIcon(Icon.EPISODE_VII))
+                .thenReturn(true);
+        when(fixture.modifiers
+                .getHighestAbilityPiloting(
+                    fixture.gameState, ship,
+                    true, false)).thenReturn(2.0f);
+        when(fixture.modifiers
+                .hasAstromechOrNavComputer(
+                    fixture.gameState, ship))
+                .thenReturn(true);
+        when(fixture.modifiers.getHyperspeed(
+                fixture.gameState, ship,
+                fixture.stage, fixture.host))
+                .thenReturn(3.0f);
+        return ship;
+    }
+
     private static PhysicalCard card(
             String title, String blueprintId,
             String owner, Zone zone,
@@ -3171,16 +3529,30 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
         }
 
         private static Decision topLevelHyperspace() {
+            return topLevelHyperspace(null);
+        }
+
+        private static Decision topLevelHyperspace(
+                PhysicalCard mover) {
+            PhysicalCard actualMover =
+                    mover != null ? mover : null;
+            int moverId = actualMover != null
+                    ? actualMover.getCardId()
+                    : SUPREMACY_ID;
             return new Decision(
                     "ACTION_CHOICE",
                     "Choose move action",
                     Phase.MOVE,
-                    List.of("move-supremacy", "pass"),
+                    List.of(
+                            actualMover != null
+                                ? "move-" + moverId
+                                : "move-supremacy",
+                            "pass"),
                     List.of(
                             "Move using hyperspeed",
                             "Pass"),
                     List.of(
-                            String.valueOf(SUPREMACY_ID),
+                            String.valueOf(moverId),
                             ""),
                     List.of(), List.of(),
                     false, 0, null);

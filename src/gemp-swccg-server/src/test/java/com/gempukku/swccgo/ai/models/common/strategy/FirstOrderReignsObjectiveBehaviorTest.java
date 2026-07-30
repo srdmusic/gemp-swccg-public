@@ -28,6 +28,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -294,6 +296,219 @@ public class FirstOrderReignsObjectiveBehaviorTest {
     }
 
     @Test
+    public void navyModifiedCraitStageAndAlternateShipOwnTheLiveChase() {
+        for (ObjectiveAnalyzer analyzer : facades()) {
+            Fixture fixture = fixture(
+                    analyzer, "225_32", false);
+            PhysicalCard crait = system(
+                    "Crait", 8, 321);
+            PhysicalCard shuttle = card(
+                    "Kylo Ren's Command Shuttle", PLAYER_ID,
+                    Zone.HAND, CardCategory.STARSHIP,
+                    null, 322);
+            fixture.locations.add(crait);
+            fixture.hand.add(shuttle);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, crait,
+                    Icon.EPISODE_VII)).thenReturn(true);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, shuttle,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            when(fixture.modifiers.getHighestAbilityPiloting(
+                    fixture.gameState, shuttle,
+                    true, false)).thenReturn(2.0f);
+            when(fixture.modifiers.hasAstromechOrNavComputer(
+                    fixture.gameState, shuttle)).thenReturn(true);
+            when(fixture.modifiers.getHyperspeed(
+                    fixture.gameState, shuttle,
+                    crait, fixture.host)).thenReturn(4.0f);
+
+            assertEquals(
+                    ObjectiveAnalyzer.ObjectiveProgressCandidateRole
+                            .REQUIRED_ACTOR,
+                    analyzer.classifyPreFlipProgressCandidate(
+                            fixture.game, PLAYER_ID, shuttle));
+            assertEquals(0,
+                    analyzer.getFirstOrderReignsRouteForceReserve(
+                            fixture.game, PLAYER_ID, shuttle));
+
+            when(shuttle.getZone())
+                    .thenReturn(Zone.AT_LOCATION);
+            when(shuttle.getAtLocation())
+                    .thenReturn(crait);
+            when(fixture.gameState.findCardByPermanentId(322))
+                    .thenReturn(shuttle);
+            when(fixture.modifiers.getLocationThatCardIsAt(
+                    fixture.gameState, shuttle))
+                    .thenReturn(crait);
+            when(fixture.modifiers.isPiloted(
+                    fixture.gameState, shuttle, false))
+                    .thenReturn(true);
+            when(fixture.modifiers.getHyperspeed(
+                    fixture.gameState, shuttle,
+                    crait, fixture.host)).thenReturn(4.0f);
+            when(fixture.modifiers.getForceAvailableToUse(
+                    fixture.gameState, PLAYER_ID))
+                    .thenReturn(10);
+            setActive(
+                    fixture.gameState, shuttle, true);
+            fixture.permanents.add(shuttle);
+
+            assertTrue(analyzer
+                    .advancesPreFlipActorAtRuntimeLocation(
+                            fixture.game, PLAYER_ID,
+                            shuttle, fixture.host));
+        }
+    }
+
+    @Test
+    public void cheapCrewBoardsBeforeCraitGroundAndItsBudgetIsProtected() {
+        for (ObjectiveAnalyzer analyzer : facades()) {
+            Fixture fixture = fixture(
+                    analyzer, "225_32", false);
+            PhysicalCard crait = system(
+                    "Crait", 8, 331);
+            PhysicalCard fulminatrix = card(
+                    "Fulminatrix", PLAYER_ID,
+                    Zone.AT_LOCATION, CardCategory.STARSHIP,
+                    null, 332);
+            PhysicalCard trooper = card(
+                    "FN-2003", PLAYER_ID,
+                    Zone.HAND, CardCategory.CHARACTER,
+                    null, 333);
+            fixture.locations.add(crait);
+            fixture.permanents.add(fulminatrix);
+            fixture.hand.add(trooper);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, fulminatrix,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, trooper,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            when(fixture.modifiers.getHighestAbilityPiloting(
+                    fixture.gameState, fulminatrix,
+                    true, false)).thenReturn(2.0f);
+            when(fixture.modifiers.hasAstromechOrNavComputer(
+                    fixture.gameState, fulminatrix))
+                    .thenReturn(true);
+            when(fixture.modifiers.getLocationThatCardIsAt(
+                    fixture.gameState, fulminatrix))
+                    .thenReturn(crait);
+            when(fulminatrix.getAtLocation())
+                    .thenReturn(crait);
+            when(fixture.modifiers.isPiloted(
+                    fixture.gameState, fulminatrix, false))
+                    .thenReturn(true);
+            when(fixture.gameState.findCardByPermanentId(332))
+                    .thenReturn(fulminatrix);
+            when(fixture.modifiers.getHyperspeed(
+                    fixture.gameState, fulminatrix,
+                    crait, fixture.host)).thenReturn(4.0f);
+            when(fixture.modifiers.getForceAvailableToUse(
+                    fixture.gameState, PLAYER_ID))
+                    .thenReturn(10);
+            when(fixture.modifiers.getMoveUsingHyperspeedCost(
+                    fixture.gameState, fulminatrix,
+                    crait, fixture.host,
+                    false, 0.0f)).thenReturn(1.0f);
+            when(fixture.modifiers.getDeployCost(
+                    fixture.gameState, trooper))
+                    .thenReturn(2.0f);
+            when(fixture.modifiers.getDeployCost(
+                    fixture.gameState,
+                    trooper, trooper, fulminatrix,
+                    false, null, false,
+                    0.0f, null, true))
+                    .thenReturn(2.0f);
+            when(fixture.gameState.getAvailablePilotCapacity(
+                    fixture.modifiers, fulminatrix, trooper))
+                    .thenReturn(1);
+            setActive(
+                    fixture.gameState, fulminatrix, true);
+
+            assertTrue(analyzer
+                    .advancesFirstOrderReignsRouteCrewAt(
+                            fixture.game, PLAYER_ID,
+                            trooper, fulminatrix));
+            assertTrue(analyzer
+                    .isFirstOrderReignsPrematureCraitGroundDeploymentAt(
+                            fixture.game, PLAYER_ID,
+                            trooper, fixture.saltPlateau));
+            assertEquals(1,
+                    analyzer.getFirstOrderReignsRouteForceReserve(
+                            fixture.game, PLAYER_ID, trooper));
+            assertEquals(3,
+                    analyzer.getFirstOrderReignsRouteForceReserve(
+                            fixture.game, PLAYER_ID, fixture.kylo));
+        }
+    }
+
+    @Test
+    public void contestedFleetHostKeepsTheShipCrewAndCraitSequenceOpen() {
+        for (ObjectiveAnalyzer analyzer : facades()) {
+            Fixture fixture = fixture(
+                    analyzer, "225_32", false);
+            PhysicalCard fulminatrix = card(
+                    "Fulminatrix", PLAYER_ID,
+                    Zone.AT_LOCATION, CardCategory.STARSHIP,
+                    null, 342);
+            PhysicalCard trooper = card(
+                    "First Order Stormtrooper", PLAYER_ID,
+                    Zone.HAND, CardCategory.CHARACTER,
+                    null, 343);
+            fixture.permanents.add(fulminatrix);
+            fixture.hand.add(trooper);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, trooper,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            when(fixture.modifiers.isPiloted(
+                    fixture.gameState, fulminatrix, false))
+                    .thenReturn(true);
+            when(fixture.modifiers.hasAstromechOrNavComputer(
+                    fixture.gameState, fulminatrix))
+                    .thenReturn(true);
+            when(fixture.modifiers.getLocationThatCardIsAt(
+                    fixture.gameState, fulminatrix))
+                    .thenReturn(fixture.host);
+            when(fulminatrix.getAtLocation())
+                    .thenReturn(fixture.host);
+            when(fixture.gameState.findCardByPermanentId(342))
+                    .thenReturn(fulminatrix);
+            when(fixture.gameState.getAvailablePilotCapacity(
+                    fixture.modifiers, fulminatrix, trooper))
+                    .thenReturn(1);
+            when(fixture.modifiers.getDeployCost(
+                    fixture.gameState,
+                    trooper, trooper, fulminatrix,
+                    false, null, false,
+                    0.0f, null, true))
+                    .thenReturn(2.0f);
+            setActive(
+                    fixture.gameState, fulminatrix, true);
+
+            assertEquals(0,
+                    analyzer.getFirstOrderReignsCurrentMoveForceReserve(
+                            fixture.game, PLAYER_ID));
+            assertTrue(analyzer
+                    .advancesFirstOrderReignsRouteCrewAt(
+                            fixture.game, PLAYER_ID,
+                            trooper, fulminatrix));
+            assertEquals(2,
+                    analyzer.getFirstOrderReignsRouteForceReserve(
+                            fixture.game, PLAYER_ID,
+                            fixture.kylo));
+            assertTrue(analyzer
+                    .isFirstOrderReignsPrematureCraitGroundDeploymentAt(
+                            fixture.game, PLAYER_ID,
+                            trooper, fixture.saltPlateau));
+            assertTrue(analyzer
+                    .isPreferredFirstOrderReignsRouteForceLossCandidate(
+                            fixture.game, PLAYER_ID,
+                            fulminatrix));
+        }
+    }
+
+    @Test
     public void postFlipKyloGetsNoEmptySiteBonusAndHeroConjunctionIsVetoed() {
         for (ObjectiveAnalyzer analyzer : facades()) {
             Fixture fixture = fixture(
@@ -426,6 +641,12 @@ public class FirstOrderReignsObjectiveBehaviorTest {
         when(gameState.getGame()).thenReturn(game);
         when(gameState.getOpponent(PLAYER_ID))
                 .thenReturn(OPPONENT_ID);
+        when(modifiers.isDeployableToTarget(
+                any(), any(), any(), anyBoolean(),
+                any(), anyBoolean(), anyFloat(),
+                any(), any(), any(), any(), any(),
+                any(), anyBoolean(), anyFloat()))
+                .thenReturn(true);
 
         when(objective.getOwner()).thenReturn(PLAYER_ID);
         when(objective.getZone())
@@ -498,6 +719,8 @@ public class FirstOrderReignsObjectiveBehaviorTest {
                 Zone.LOCATIONS,
                 CardCategory.LOCATION,
                 CardSubtype.SITE, 105);
+        when(saltPlateau.getPartOfSystem())
+                .thenReturn("Crait");
         when(modifiers.hasPersona(
                 gameState, kylo, Persona.KYLO))
                 .thenReturn(true);
@@ -624,6 +847,14 @@ public class FirstOrderReignsObjectiveBehaviorTest {
         when(card.isBlownAway()).thenReturn(false);
         when(blueprint.getCardCategory())
                 .thenReturn(category);
+        if (category == CardCategory.STARSHIP
+                && (title.contains("Supremacy")
+                    || title.contains("Fulminatrix")
+                    || title.contains("Command Shuttle"))) {
+            when(blueprint.hasIcon(
+                    Icon.EPISODE_VII))
+                    .thenReturn(true);
+        }
         if (subtype != null) {
             when(blueprint.getCardSubtype())
                     .thenReturn(subtype);

@@ -1786,7 +1786,7 @@ public class DeployEvaluator extends ActionEvaluator {
                             && availableForce - cost
                                 < firstOrderReignsRouteReserve) {
                         action.hardVeto(
-                            "OBJECTIVE.FIRST_ORDER_REIGNS.RESERVE_7: preserve 7 Force for Supremacy's objective route");
+                            "OBJECTIVE.FIRST_ORDER_REIGNS.RESERVE_7: preserve Force for the Tracked Fleet chase ship, crew, and movement");
                     }
 
                     boolean obligationMaintenance = false;

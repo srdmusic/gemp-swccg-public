@@ -85,6 +85,8 @@ public class FirstOrderReignsObjectiveEngineContractTest {
         HashMap<String, String> darkCards = new HashMap<>();
         darkCards.put("kijimi", "214_6");
         darkCards.put("supremacy", "225_27");
+        darkCards.put("navy", "225_24");
+        darkCards.put("fulminatrix", "225_20");
         darkCards.put("dantooine", "1_282");
         darkCards.put("kylo", "209_37");
         darkCards.put("firstOrderTrooperA", "204_40");
@@ -201,6 +203,72 @@ public class FirstOrderReignsObjectiveEngineContractTest {
 
         assertInZone(Zone.LOST_PILE, kylo);
         assertInZone(Zone.OUT_OF_PLAY, objective);
+    }
+
+    @Test
+    public void navyMakesARealCrewedFirstOrderChaseShipReachDqarFromCrait() {
+        for (Printing printing : PRINTINGS) {
+            var scn = scenario(printing);
+            var crait = scn.GetDSCard("crait");
+            var dqar = scn.GetDSCard("dqar");
+            var navy = scn.GetDSCard("navy");
+            var fulminatrix = scn.GetDSCard("fulminatrix");
+            var supremacy = scn.GetDSCard("supremacy");
+            var cheapCrew = scn.GetDSCard("firstOrderTrooperA");
+
+            scn.StartGame();
+            scn.MoveCardsToLocation(
+                    crait, fulminatrix, supremacy);
+
+            int chaseDistance = Math.abs(crait.getParsec() - dqar.getParsec());
+            assertEquals("Crait must retain its real printed parsec", 8, crait.getParsec());
+            assertEquals("D'Qar must retain its real printed parsec", 5, dqar.getParsec());
+            assertEquals("The objective's real chase leg spans three parsecs",
+                    3, chaseDistance);
+            assertTrue("Fulminatrix must be a real First Order starship",
+                    Filters.First_Order_starship.accepts(scn.game(), fulminatrix));
+            assertEquals("Fulminatrix begins with its printed hyperspeed",
+                    3, scn.GetHyperspeed(fulminatrix));
+            assertEquals("Supremacy begins one parsec short of the real chase leg",
+                    2, scn.GetHyperspeed(supremacy));
+
+            scn.MoveCardsToDSSideOfTable(navy);
+
+            assertInZone(Zone.SIDE_OF_TABLE, navy);
+            assertEquals("Navy Of The First Order must add one real hyperspeed",
+                    4, scn.GetHyperspeed(fulminatrix));
+            assertEquals("Navy must make Supremacy reach the three-parsec chase leg",
+                    3, scn.GetHyperspeed(supremacy));
+            assertTrue("The Navy-modified ship must cover Crait to D'Qar",
+                    scn.GetHyperspeed(fulminatrix) >= chaseDistance);
+            assertTrue("The Navy-modified Supremacy must also cover Crait to D'Qar",
+                    scn.GetHyperspeed(supremacy) >= chaseDistance);
+
+            scn.MoveCardsToDSHand(cheapCrew);
+            scn.DSActivateForceCheat(4);
+            scn.SkipToPhase(Phase.DEPLOY);
+
+            assertTrue("First Order Stormtrooper must be a legal cheap crew deploy",
+                    scn.DSDeployAvailable(cheapCrew));
+            scn.DSDeployCard(cheapCrew);
+            assertTrue("Fulminatrix must be a legal destination for the cheap crew",
+                    scn.DSHasCardChoiceAvailable(fulminatrix));
+            scn.DSChooseCard(fulminatrix);
+            scn.PassAllResponses();
+
+            assertTrue("The real First Order character must deploy aboard as a passenger",
+                    scn.IsAboardAsPassenger(fulminatrix, cheapCrew));
+
+            scn.SkipToPhase(Phase.MOVE);
+            assertTrue("The crewed Fulminatrix must receive a legal hyperspace move",
+                    scn.DSMoveAvailable(fulminatrix));
+            scn.DSMoveCard(fulminatrix, dqar);
+            scn.PassAllResponses();
+
+            assertAtLocation(dqar, fulminatrix);
+            assertTrue("The cheap crew must remain aboard throughout the chase",
+                    scn.IsAboardAsPassenger(fulminatrix, cheapCrew));
+        }
     }
 
     @Test

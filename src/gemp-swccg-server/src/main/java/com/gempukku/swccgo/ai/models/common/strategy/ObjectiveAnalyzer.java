@@ -668,29 +668,33 @@ public class ObjectiveAnalyzer {
         if (host == null) {
             return ObjectiveProgressCandidateRole.NONE;
         }
-        PhysicalCard deployedSupremacy =
-                getFirstOrderReignsSupremacyOnTable(
-                    game, playerId);
-        if (deployedSupremacy != null) {
-            return isFirstOrderReignsReachableBridgeSystem(
+        List<PhysicalCard> chaseShips =
+                getFirstOrderReignsAdvancingChaseShipsOnTable(
+                        game, playerId, host);
+        if (!chaseShips.isEmpty()) {
+            for (PhysicalCard chaseShip : chaseShips) {
+                if (isFirstOrderReignsReachableBridgeSystem(
                         game, playerId, host,
-                        deployedSupremacy, candidate)
-                    ? ObjectiveProgressCandidateRole
-                        .REQUIRED_LOCATION
-                    : ObjectiveProgressCandidateRole.NONE;
+                        chaseShip, candidate)) {
+                    return ObjectiveProgressCandidateRole
+                            .REQUIRED_LOCATION;
+                }
+            }
+            return ObjectiveProgressCandidateRole.NONE;
         }
         if (!hasFirstOrderReignsStagingSystem(
                     game, playerId, host)) {
             return isFirstOrderReignsStageSystem(
-                        game, host, candidate, true)
+                        game, playerId, host,
+                        candidate, true)
                     ? ObjectiveProgressCandidateRole
                         .REQUIRED_LOCATION
                     : ObjectiveProgressCandidateRole.NONE;
         }
-        if (!hasFirstOrderReignsSupremacyOnTable(
-                    game, playerId)
-                && isFirstOrderReignsSupremacy(
-                    game, candidate)) {
+        if (isFirstOrderReignsChaseShipCandidate(
+                    game, playerId, candidate)
+                && hasFirstOrderReignsStageForShip(
+                    game, playerId, host, candidate)) {
             return ObjectiveProgressCandidateRole
                     .REQUIRED_ACTOR;
         }
@@ -2866,7 +2870,7 @@ public class ObjectiveAnalyzer {
                 game, playerId, candidate, location)) {
             return true;
         }
-        if (advancesFirstOrderReignsSupremacyRouteAt(
+        if (advancesFirstOrderReignsChaseShipRouteAt(
                 game, playerId, candidate, location)) {
             return true;
         }
@@ -2898,7 +2902,7 @@ public class ObjectiveAnalyzer {
                 || activeFlipLocationRules == null) {
             return false;
         }
-        if (advancesFirstOrderReignsSupremacyRouteAt(
+        if (advancesFirstOrderReignsChaseShipRouteAt(
                 game, playerId, candidate, location)) {
             return true;
         }
@@ -2935,8 +2939,8 @@ public class ObjectiveAnalyzer {
                 || game.getModifiersQuerying() == null) {
             return false;
         }
-        if (isFirstOrderReignsSupremacy(
-                    game, candidate)
+        if (isFirstOrderReignsChaseShipCandidate(
+                    game, playerId, candidate)
                 && samePhysicalLocation(
                     getFirstOrderReignsTrackedFleetHostSystem(
                         game, playerId),
@@ -4842,19 +4846,126 @@ public class ObjectiveAnalyzer {
                 game.getModifiersQuerying(), card);
     }
 
+    private boolean isFirstOrderReignsChaseShipCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard card) {
+        if (game == null || playerId == null
+                || card == null
+                || !playerId.equals(card.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || card.getBlueprint() == null
+                || card.getBlueprint().getCardCategory()
+                    != CardCategory.STARSHIP) {
+            return false;
+        }
+        if (isFirstOrderReignsSupremacy(
+                game, card)) {
+            return true;
+        }
+        try {
+            boolean inPlay = card.getZone() != null
+                    && card.getZone().isInPlay();
+            if (!inPlay
+                    && !card.getBlueprint()
+                        .hasIcon(Icon.EPISODE_VII)) {
+                return false;
+            }
+            boolean piloted = inPlay
+                    ? game.getModifiersQuerying()
+                        .isPiloted(
+                            game.getGameState(),
+                            card, false)
+                    : game.getModifiersQuerying()
+                        .getHighestAbilityPiloting(
+                            game.getGameState(),
+                            card, true, false) >= 1.0f;
+            return piloted
+                    && game.getModifiersQuerying()
+                        .hasAstromechOrNavComputer(
+                            game.getGameState(), card);
+        } catch (Exception e) {
+            LOG.debug(
+                    "First Order Reigns chase-ship assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean canFirstOrderReignsShipStageAt(
+            SwccgGame game, String playerId,
+            PhysicalCard host, PhysicalCard stage,
+            PhysicalCard chaseShip,
+            boolean requireBattleground) {
+        if (game == null || playerId == null
+                || host == null || stage == null
+                || chaseShip == null
+                || samePhysicalLocation(host, stage)
+                || !isFirstOrderReignsEpisodeSevenSystem(
+                    game, stage, requireBattleground)
+                || !isFirstOrderReignsChaseShipCandidate(
+                    game, playerId, chaseShip)) {
+            return false;
+        }
+        try {
+            if (game.getModifiersQuerying()
+                    .hasNoHyperdrive(
+                        game.getGameState(), chaseShip)
+                    || game.getModifiersQuerying()
+                        .mayNotMoveUsingHyperspeed(
+                            game.getGameState(), chaseShip)
+                    || game.getModifiersQuerying()
+                        .mayNotMoveFromLocationToLocationUsingHyperspeed(
+                            game.getGameState(), chaseShip,
+                            stage, host, false)) {
+                return false;
+            }
+            float hyperspeed =
+                    game.getModifiersQuerying()
+                        .getHyperspeed(
+                            game.getGameState(), chaseShip,
+                            stage, host);
+            if (hyperspeed <= 0
+                    && isFirstOrderReignsSupremacy(
+                        game, chaseShip)) {
+                hyperspeed = 2.0f;
+            }
+            return hyperspeed >= Math.abs(
+                    stage.getParsec() - host.getParsec());
+        } catch (Exception e) {
+            LOG.debug(
+                    "First Order Reigns staging-range assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
     private boolean isFirstOrderReignsStageSystem(
-            SwccgGame game, PhysicalCard host,
+            SwccgGame game, String playerId,
+            PhysicalCard host,
             PhysicalCard candidate,
             boolean requireBattleground) {
-        if (game == null || host == null
+        if (game == null || playerId == null
+                || host == null
                 || candidate == null
                 || samePhysicalLocation(host, candidate)
                 || !isFirstOrderReignsEpisodeSevenSystem(
                     game, candidate, requireBattleground)) {
             return false;
         }
-        // Supremacy has hyperspeed 2, so a fresh deployment stage must be
-        // within one ordinary move of the Fleet's current host.
+        for (PhysicalCard chaseShip
+                : getFirstOrderReignsAccessibleChaseShipCards(
+                    game, playerId)) {
+            if (canFirstOrderReignsShipStageAt(
+                    game, playerId, host,
+                    candidate, chaseShip,
+                    requireBattleground)) {
+                return true;
+            }
+        }
+        // The objective can always download Supremacy. Its printed
+        // hyperspeed 2 remains the source-backed fallback when no physical
+        // copy is visible in a searchable pile.
         return Math.abs(
                 candidate.getParsec() - host.getParsec())
                 <= 2;
@@ -4885,10 +4996,10 @@ public class ObjectiveAnalyzer {
 
     private boolean isFirstOrderReignsReachableBridgeSystem(
             SwccgGame game, String playerId,
-            PhysicalCard host, PhysicalCard supremacy,
+            PhysicalCard host, PhysicalCard chaseShip,
             PhysicalCard candidate) {
         if (game == null || playerId == null
-                || host == null || supremacy == null
+                || host == null || chaseShip == null
                 || candidate == null
                 || !isFirstOrderReignsEpisodeSevenSystem(
                     game, candidate, true)
@@ -4899,7 +5010,7 @@ public class ObjectiveAnalyzer {
         PhysicalCard origin =
                 game.getModifiersQuerying()
                     .getLocationThatCardIsAt(
-                        game.getGameState(), supremacy);
+                        game.getGameState(), chaseShip);
         if (origin == null
                 || Math.abs(candidate.getParsec()
                         - host.getParsec())
@@ -4908,7 +5019,7 @@ public class ObjectiveAnalyzer {
             return false;
         }
         return Filters.canMoveToUsingHyperspeed(
-                playerId, supremacy,
+                playerId, chaseShip,
                 false, true, 0.0f).accepts(
                     game.getGameState(),
                     game.getModifiersQuerying(),
@@ -4929,51 +5040,88 @@ public class ObjectiveAnalyzer {
         if (locations == null) return false;
         for (PhysicalCard location : locations) {
             if (isFirstOrderReignsStageSystem(
-                    game, host, location, false)) {
+                    game, playerId, host,
+                    location, false)) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean hasFirstOrderReignsStageCandidateInReserve(
+    private boolean hasFirstOrderReignsStageForShip(
             SwccgGame game, String playerId,
-            PhysicalCard host) {
+            PhysicalCard host,
+            PhysicalCard chaseShip) {
         if (game == null || playerId == null
-                || host == null
+                || host == null || chaseShip == null
                 || game.getGameState() == null) {
             return false;
         }
-        List<PhysicalCard> reserve =
+        List<PhysicalCard> locations =
                 game.getGameState()
-                    .getReserveDeck(playerId);
-        if (reserve == null) return false;
-        for (PhysicalCard card : reserve) {
-            if (playerId.equals(card.getOwner())
-                    && isFirstOrderReignsStageSystem(
-                        game, host, card, true)) {
+                    .getLocationsInOrder();
+        if (locations == null) return false;
+        for (PhysicalCard location : locations) {
+            if (canFirstOrderReignsShipStageAt(
+                    game, playerId, host,
+                    location, chaseShip, false)
+                    && canFirstOrderReignsShipDeployAt(
+                        game, playerId,
+                        chaseShip, location)) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean hasFirstOrderReignsSupremacyOnTable(
-            SwccgGame game, String playerId) {
-        return getFirstOrderReignsSupremacyOnTable(
-                game, playerId) != null;
+    private boolean canFirstOrderReignsShipDeployAt(
+            SwccgGame game, String playerId,
+            PhysicalCard chaseShip,
+            PhysicalCard stage) {
+        if (game == null || playerId == null
+                || chaseShip == null || stage == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            PhysicalCard source = chaseShip;
+            if (chaseShip.getZone()
+                    == Zone.RESERVE_DECK
+                    && isFirstOrderReignsSupremacy(
+                        game, chaseShip)) {
+                source = findOurObjective(
+                        game.getGameState(), playerId);
+            }
+            return source != null
+                    && Filters.deployableToLocation(
+                        source,
+                        Filters.sameCardId(stage),
+                        true, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            chaseShip);
+        } catch (Exception e) {
+            LOG.debug(
+                    "First Order Reigns ship-deploy assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
     }
 
-    private PhysicalCard getFirstOrderReignsSupremacyOnTable(
+    private List<PhysicalCard>
+            getFirstOrderReignsChaseShipsOnTable(
             SwccgGame game, String playerId) {
         if (game == null || playerId == null
                 || game.getGameState() == null) {
-            return null;
+            return List.of();
         }
         Collection<PhysicalCard> permanents =
                 game.getGameState()
                     .getAllPermanentCards();
-        if (permanents == null) return null;
+        if (permanents == null) return List.of();
+        List<PhysicalCard> result =
+                new ArrayList<>();
         for (PhysicalCard card : permanents) {
             if (card != null
                     && playerId.equals(card.getOwner())
@@ -4981,28 +5129,316 @@ public class ObjectiveAnalyzer {
                     && card.getZone().isInPlay()
                     && isActiveForSpot(
                         game, card, true)
-                    && isFirstOrderReignsSupremacy(
-                        game, card)) {
-                return card;
+                    && isFirstOrderReignsChaseShipCandidate(
+                        game, playerId, card)) {
+                result.add(card);
             }
         }
-        return null;
+        return result;
     }
 
-    private boolean hasFirstOrderReignsSupremacyIn(
+    private List<PhysicalCard>
+            getFirstOrderReignsAdvancingChaseShipsOnTable(
+                    SwccgGame game, String playerId,
+                    PhysicalCard host) {
+        List<PhysicalCard> result =
+                new ArrayList<>();
+        for (PhysicalCard chaseShip
+                : getFirstOrderReignsChaseShipsOnTable(
+                    game, playerId)) {
+            if (getFirstOrderReignsNextMoveForceReserve(
+                    game, playerId,
+                    chaseShip, host) >= 0) {
+                result.add(chaseShip);
+            }
+        }
+        return result;
+    }
+
+    private List<PhysicalCard>
+            getFirstOrderReignsAccessibleChaseShipCards(
+                    SwccgGame game, String playerId) {
+        if (game == null || playerId == null
+                || game.getGameState() == null) {
+            return List.of();
+        }
+        List<PhysicalCard> result =
+                new ArrayList<>();
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        if (hand != null) result.addAll(hand);
+        List<PhysicalCard> reserve =
+                game.getGameState()
+                    .getReserveDeck(playerId);
+        if (reserve != null) {
+            for (PhysicalCard card : reserve) {
+                if (isFirstOrderReignsSupremacy(
+                        game, card)) {
+                    result.add(card);
+                }
+            }
+        }
+        return result;
+    }
+
+    private boolean hasFirstOrderReignsChaseShipIn(
             SwccgGame game, String playerId,
             Iterable<PhysicalCard> cards,
-            PhysicalCard excluded) {
+            PhysicalCard excluded,
+            PhysicalCard host) {
         if (cards == null) return false;
         for (PhysicalCard card : cards) {
             if (card != null && card != excluded
                     && playerId.equals(card.getOwner())
-                    && isFirstOrderReignsSupremacy(
-                        game, card)) {
+                    && isFirstOrderReignsChaseShipCandidate(
+                        game, playerId, card)
+                    && hasFirstOrderReignsStageForShip(
+                        game, playerId, host, card)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private int getFirstOrderReignsChaseShipDeployReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard host,
+            PhysicalCard excluded) {
+        if (game == null || playerId == null
+                || host == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        int minimum = Integer.MAX_VALUE;
+        for (PhysicalCard candidate
+                : getFirstOrderReignsAccessibleChaseShipCards(
+                    game, playerId)) {
+            if (candidate == null || candidate == excluded
+                    || !isFirstOrderReignsChaseShipCandidate(
+                        game, playerId, candidate)
+                    || !hasFirstOrderReignsStageForShip(
+                        game, playerId, host, candidate)) {
+                continue;
+            }
+            float cost = isFirstOrderReignsSupremacy(
+                    game, candidate)
+                    ? 7.0f
+                    : game.getModifiersQuerying()
+                        .getDeployCost(
+                            game.getGameState(), candidate);
+            minimum = Math.min(
+                    minimum,
+                    (int) Math.ceil(Math.max(0.0f, cost)));
+        }
+        return minimum == Integer.MAX_VALUE
+                ? 0 : minimum;
+    }
+
+    private boolean isFirstOrderReignsCrewCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || candidate.getBlueprint() == null
+                || candidate.getBlueprint().getCardCategory()
+                    != CardCategory.CHARACTER
+                || !Filters.First_Order_character.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    candidate)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean canFirstOrderReignsCrewBoard(
+            SwccgGame game, PhysicalCard crew,
+            PhysicalCard chaseShip) {
+        if (game == null || crew == null
+                || chaseShip == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            boolean hasCapacity =
+                    game.getGameState()
+                        .getAvailablePilotCapacity(
+                            game.getModifiersQuerying(),
+                            chaseShip, crew) > 0
+                    || game.getGameState()
+                        .getAvailablePassengerCapacity(
+                            game.getModifiersQuerying(),
+                            chaseShip, crew) > 0;
+            if (!hasCapacity
+                    || !Filters.deployableToTarget(
+                        crew,
+                        Filters.sameCardId(chaseShip),
+                        true, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            crew)) {
+                return false;
+            }
+            return getFirstOrderReignsCrewDeployCost(
+                    game, crew, chaseShip) <= 3.0f;
+        } catch (Exception e) {
+            LOG.debug(
+                    "First Order Reigns crew-boarding assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private float getFirstOrderReignsCrewDeployCost(
+            SwccgGame game, PhysicalCard crew,
+            PhysicalCard chaseShip) {
+        return game.getModifiersQuerying()
+                .getDeployCost(
+                    game.getGameState(),
+                    crew, crew, chaseShip,
+                    false, null, false,
+                    0.0f, null, true);
+    }
+
+    public boolean advancesFirstOrderReignsRouteCrewAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!isFirstOrderReignsRouteOpen(
+                    game, playerId)
+                || !isFirstOrderReignsCrewCandidate(
+                    game, playerId, candidate)
+                || destination == null
+                || !getFirstOrderReignsAdvancingChaseShipsOnTable(
+                    game, playerId,
+                    getFirstOrderReignsTrackedFleetHostSystem(
+                        game, playerId))
+                    .contains(destination)) {
+            return false;
+        }
+        return canFirstOrderReignsCrewBoard(
+                game, candidate, destination);
+    }
+
+    private boolean hasFirstOrderReignsCrewAboard(
+            SwccgGame game, String playerId,
+            List<PhysicalCard> chaseShips) {
+        if (game == null || playerId == null
+                || chaseShips == null
+                || chaseShips.isEmpty()
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState()
+                    .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card == null
+                    || !playerId.equals(card.getOwner())
+                    || card.getZone() == null
+                    || !card.getZone().isInPlay()
+                    || !Filters.First_Order_character.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        card)) {
+                continue;
+            }
+            for (PhysicalCard chaseShip : chaseShips) {
+                if (samePhysicalLocation(
+                        card.getAttachedTo(), chaseShip)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private int getFirstOrderReignsCrewReserve(
+            SwccgGame game, String playerId,
+            List<PhysicalCard> chaseShips,
+            PhysicalCard currentDeployCandidate) {
+        if (chaseShips == null || chaseShips.isEmpty()
+                || hasFirstOrderReignsCrewAboard(
+                    game, playerId, chaseShips)) {
+            return 0;
+        }
+        if (isFirstOrderReignsCrewCandidate(
+                game, playerId, currentDeployCandidate)) {
+            for (PhysicalCard chaseShip : chaseShips) {
+                if (canFirstOrderReignsCrewBoard(
+                        game, currentDeployCandidate,
+                        chaseShip)) {
+                    return 0;
+                }
+            }
+        }
+        int minimum = Integer.MAX_VALUE;
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        if (hand == null) return 0;
+        for (PhysicalCard candidate : hand) {
+            if (!isFirstOrderReignsCrewCandidate(
+                    game, playerId, candidate)) {
+                continue;
+            }
+            int candidateMinimum = Integer.MAX_VALUE;
+            for (PhysicalCard chaseShip : chaseShips) {
+                if (canFirstOrderReignsCrewBoard(
+                        game, candidate, chaseShip)) {
+                    candidateMinimum = Math.min(
+                            candidateMinimum,
+                            (int) Math.ceil(
+                                getFirstOrderReignsCrewDeployCost(
+                                    game, candidate,
+                                    chaseShip)));
+                }
+            }
+            if (candidateMinimum
+                    == Integer.MAX_VALUE) continue;
+            minimum = Math.min(
+                    minimum,
+                    Math.max(0, candidateMinimum));
+        }
+        return minimum == Integer.MAX_VALUE
+                ? 0 : minimum;
+    }
+
+    public boolean
+            isFirstOrderReignsPrematureCraitGroundDeploymentAt(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate,
+                    PhysicalCard destination) {
+        if (!isFirstOrderReignsRouteOpen(
+                    game, playerId)
+                || candidate == null
+                || destination == null
+                || !playerId.equals(candidate.getOwner())
+                || candidate.getBlueprint() == null
+                || candidate.getBlueprint().getCardCategory()
+                    != CardCategory.CHARACTER
+                || !Filters.Crait_site.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    destination)) {
+            return false;
+        }
+        PhysicalCard host =
+                getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId);
+        return !getFirstOrderReignsAdvancingChaseShipsOnTable(
+                    game, playerId, host).isEmpty()
+                || hasFirstOrderReignsChaseShipIn(
+                    game, playerId,
+                    getFirstOrderReignsAccessibleChaseShipCards(
+                        game, playerId),
+                    null, host);
     }
 
     public int getFirstOrderReignsRouteForceReserve(
@@ -5010,35 +5446,33 @@ public class ObjectiveAnalyzer {
             PhysicalCard currentDeployCandidate) {
         if (!isFirstOrderReignsRouteOpen(
                     game, playerId)
-                || isFirstOrderReignsSupremacy(
-                    game, currentDeployCandidate)
                 || game.getGameState() == null) {
             return 0;
         }
         PhysicalCard host =
                 getFirstOrderReignsTrackedFleetHostSystem(
                     game, playerId);
-        PhysicalCard supremacy =
-                getFirstOrderReignsSupremacyOnTable(
-                    game, playerId);
-        if (supremacy != null) {
+        List<PhysicalCard> chaseShips =
+                getFirstOrderReignsAdvancingChaseShipsOnTable(
+                        game, playerId, host);
+        if (!chaseShips.isEmpty()) {
             return getFirstOrderReignsCurrentMoveForceReserve(
-                    game, playerId);
+                        game, playerId)
+                    + getFirstOrderReignsCrewReserve(
+                        game, playerId, chaseShips,
+                        currentDeployCandidate);
         }
-        if (!hasFirstOrderReignsStagingSystem(
-                    game, playerId, host)) {
+        if (isFirstOrderReignsChaseShipCandidate(
+                    game, playerId,
+                    currentDeployCandidate)
+                && hasFirstOrderReignsStageForShip(
+                    game, playerId, host,
+                    currentDeployCandidate)) {
             return 0;
         }
-        boolean accessible =
-                hasFirstOrderReignsSupremacyIn(
-                    game, playerId,
-                    game.getGameState().getHand(
-                        playerId), null)
-                || hasFirstOrderReignsSupremacyIn(
-                    game, playerId,
-                    game.getGameState().getReserveDeck(
-                        playerId), null);
-        return accessible ? 7 : 0;
+        return getFirstOrderReignsChaseShipDeployReserve(
+                game, playerId, host,
+                currentDeployCandidate);
     }
 
     public int getFirstOrderReignsCurrentMoveForceReserve(
@@ -5047,39 +5481,55 @@ public class ObjectiveAnalyzer {
                     game, playerId)) {
             return 0;
         }
-        PhysicalCard supremacy =
-                getFirstOrderReignsSupremacyOnTable(
-                    game, playerId);
         PhysicalCard host =
                 getFirstOrderReignsTrackedFleetHostSystem(
                     game, playerId);
-        return supremacy == null ? 0
-                : getFirstOrderReignsNextMoveForceReserve(
-                    game, playerId, supremacy, host);
+        int minimum = Integer.MAX_VALUE;
+        for (PhysicalCard chaseShip
+                : getFirstOrderReignsAdvancingChaseShipsOnTable(
+                    game, playerId, host)) {
+            int reserve =
+                    getFirstOrderReignsNextMoveForceReserve(
+                        game, playerId,
+                        chaseShip, host);
+            if (reserve >= 0) {
+                minimum = Math.min(
+                        minimum, reserve);
+            }
+        }
+        return minimum == Integer.MAX_VALUE
+                ? 0 : minimum;
     }
 
     private int getFirstOrderReignsNextMoveForceReserve(
             SwccgGame game, String playerId,
-            PhysicalCard supremacy, PhysicalCard host) {
+            PhysicalCard chaseShip, PhysicalCard host) {
         if (game == null || playerId == null
-                || supremacy == null || host == null
+                || chaseShip == null || host == null
                 || game.getGameState() == null
                 || game.getModifiersQuerying() == null) {
-            return 0;
+            return -1;
         }
         PhysicalCard origin =
                 game.getModifiersQuerying()
                     .getLocationThatCardIsAt(
-                        game.getGameState(), supremacy);
+                        game.getGameState(), chaseShip);
+        if (origin == null) {
+            return -1;
+        }
+        if (samePhysicalLocation(
+                origin, host)) {
+            return 0;
+        }
         List<PhysicalCard> locations =
                 game.getGameState()
                     .getLocationsInOrder();
-        if (origin == null || locations == null) {
-            return 0;
+        if (locations == null) {
+            return -1;
         }
         com.gempukku.swccgo.filters.Filter structuralMove =
                 Filters.canMoveToUsingHyperspeed(
-                    playerId, supremacy,
+                    playerId, chaseShip,
                     false, true, 0.0f);
         int originDistance = Math.abs(
                 origin.getParsec() - host.getParsec());
@@ -5102,7 +5552,7 @@ public class ObjectiveAnalyzer {
             }
             float cost = game.getModifiersQuerying()
                     .getMoveUsingHyperspeedCost(
-                        game.getGameState(), supremacy,
+                        game.getGameState(), chaseShip,
                         origin, destination,
                         false, 0.0f);
             minimum = Math.min(
@@ -5110,7 +5560,7 @@ public class ObjectiveAnalyzer {
                     (int) Math.ceil(cost));
         }
         return minimum == Integer.MAX_VALUE
-                ? 0 : minimum;
+                ? -1 : minimum;
     }
 
     public boolean
@@ -5121,42 +5571,62 @@ public class ObjectiveAnalyzer {
                     game, playerId)
                 || candidate == null
                 || !playerId.equals(candidate.getOwner())
-                || !isFirstOrderReignsSupremacy(
-                    game, candidate)
+                || !isFirstOrderReignsChaseShipCandidate(
+                    game, playerId, candidate)
                 || game.getGameState() == null) {
             return false;
         }
         PhysicalCard host =
                 getFirstOrderReignsTrackedFleetHostSystem(
                     game, playerId);
-        boolean routeCanStage =
-                hasFirstOrderReignsStagingSystem(
-                    game, playerId, host)
-                || hasFirstOrderReignsStageCandidateInReserve(
-                    game, playerId, host);
-        if (!routeCanStage) {
-            return false;
-        }
         if (candidate.getZone() != null
                 && candidate.getZone().isInPlay()) {
+            List<PhysicalCard> advancingShips =
+                    getFirstOrderReignsAdvancingChaseShipsOnTable(
+                        game, playerId, host);
             return isActiveForSpot(
-                    game, candidate, true);
+                    game, candidate, true)
+                    && advancingShips.size() == 1
+                    && advancingShips.contains(candidate);
         }
-        if (hasFirstOrderReignsSupremacyOnTable(
-                game, playerId)) {
+        if (!hasFirstOrderReignsStageForShip(
+                game, playerId, host, candidate)) {
             return false;
         }
-        return !hasFirstOrderReignsSupremacyIn(
+        if (!getFirstOrderReignsAdvancingChaseShipsOnTable(
+                    game, playerId, host).isEmpty()) {
+            return false;
+        }
+        return !hasFirstOrderReignsChaseShipIn(
                     game, playerId,
-                    game.getGameState().getHand(
-                        playerId), candidate)
-                && !hasFirstOrderReignsSupremacyIn(
-                    game, playerId,
-                    game.getGameState().getReserveDeck(
-                        playerId), candidate);
+                    getFirstOrderReignsAccessibleChaseShipCards(
+                        game, playerId),
+                    candidate, host);
     }
 
-    private boolean advancesFirstOrderReignsSupremacyRouteAt(
+    public boolean isFirstOrderReignsRouteShipCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isFirstOrderReignsRouteOpen(
+                    game, playerId)
+                || !isFirstOrderReignsChaseShipCandidate(
+                    game, playerId, candidate)) {
+            return false;
+        }
+        PhysicalCard host =
+                getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId);
+        if (candidate.getZone() != null
+                && candidate.getZone().isInPlay()) {
+            return getFirstOrderReignsAdvancingChaseShipsOnTable(
+                    game, playerId, host)
+                    .contains(candidate);
+        }
+        return hasFirstOrderReignsStageForShip(
+                game, playerId, host, candidate);
+    }
+
+    private boolean advancesFirstOrderReignsChaseShipRouteAt(
             SwccgGame game, String playerId,
             PhysicalCard candidate,
             PhysicalCard destination) {
@@ -5165,8 +5635,8 @@ public class ObjectiveAnalyzer {
                 || candidate == null
                 || destination == null
                 || !playerId.equals(candidate.getOwner())
-                || !isFirstOrderReignsSupremacy(
-                    game, candidate)) {
+                || !isFirstOrderReignsChaseShipCandidate(
+                    game, playerId, candidate)) {
             return false;
         }
         PhysicalCard host =
@@ -5179,8 +5649,9 @@ public class ObjectiveAnalyzer {
                     .getLocationThatCardIsAt(
                         game.getGameState(), candidate);
         if (origin == null) {
-            return isFirstOrderReignsStageSystem(
-                    game, host, destination, false);
+            return canFirstOrderReignsShipStageAt(
+                    game, playerId, host,
+                    destination, candidate, false);
         }
 
         com.gempukku.swccgo.filters.Filter legalMove =
@@ -10279,6 +10750,40 @@ public class ObjectiveAnalyzer {
         String actionLower = actionText.toLowerCase(Locale.ROOT);
         boolean isCharacter = blueprint.getCardCategory() == CardCategory.CHARACTER;
 
+        if (analyzed && !isFlipped
+                && classifyFirstOrderReignsProgressCandidate(
+                    game, playerId, card)
+                    == ObjectiveProgressCandidateRole
+                        .REQUIRED_ACTOR) {
+            notes.add(new ScoreNote(
+                    1200.0f,
+                    "OBJECTIVE FIRST ORDER CHASE SHIP: deploy '"
+                            + card.getTitle()
+                            + "' before ground forces so it can pursue Tracked Fleet"));
+        }
+        if (analyzed && !isFlipped
+                && isFirstOrderReignsRouteOpen(
+                    game, playerId)
+                && isCharacter
+                && isFirstOrderReignsCrewCandidate(
+                    game, playerId, card)) {
+            PhysicalCard host =
+                    getFirstOrderReignsTrackedFleetHostSystem(
+                        game, playerId);
+            for (PhysicalCard chaseShip
+                    : getFirstOrderReignsAdvancingChaseShipsOnTable(
+                        game, playerId, host)) {
+                if (canFirstOrderReignsCrewBoard(
+                        game, card, chaseShip)) {
+                    notes.add(new ScoreNote(
+                            1000.0f,
+                            "OBJECTIVE FIRST ORDER ROUTE CREW: deploy '"
+                                    + card.getTitle()
+                                    + "' aboard the Tracked Fleet chase ship before committing ground forces"));
+                    break;
+                }
+            }
+        }
         if (analyzed && !isFlipped && isCharacter
                 && hasFlipGateActorRequirement()) {
             boolean stagingRoute = hasLegalPreFlipActorRouteStage(

@@ -248,6 +248,73 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
+    public void firstOrderRouteCrewScoresOnlyDirectBoarding() {
+        PolicyResult boardsChaseShip =
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsRouteCrew(
+                        "a", true);
+        PolicyResult neutral =
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsRouteCrew(
+                        "a", false);
+
+        assertEquals(
+                "DEPLOY_FIRST_ORDER_ROUTE_CREW_POLICY",
+                boardsChaseShip.producerId());
+        assertOperation(
+                boardsChaseShip.operations().get(0),
+                "DEPLOY.OBJECTIVE.FIRST_ORDER_ROUTE_CREW",
+                1200.0f);
+        assertEquals(
+                TraceDomainId.DEPLOY_SITING,
+                boardsChaseShip.operations().get(0)
+                    .domainId());
+        assertEquals(
+                PolicyOperationKind.ADD,
+                boardsChaseShip.operations().get(0)
+                    .kind());
+        assertEquals(
+                "DEPLOY_FIRST_ORDER_ROUTE_CREW_POLICY",
+                neutral.producerId());
+        assertTrue(neutral.operations().isEmpty());
+    }
+
+    @Test
+    public void firstOrderPreFlipCraitGroundIsAnExactHardVeto() {
+        PolicyResult blocked =
+                DeployObjectiveSitingPolicy
+                    .blockFirstOrderReignsPreFlipCraitGround(
+                        "a", true);
+        PolicyResult neutral =
+                DeployObjectiveSitingPolicy
+                    .blockFirstOrderReignsPreFlipCraitGround(
+                        "a", false);
+
+        assertEquals(
+                "DEPLOY_FIRST_ORDER_PRE_FLIP_CRAIT_POLICY",
+                blocked.producerId());
+        assertEquals(1, blocked.operations().size());
+        PolicyOperation operation =
+                blocked.operations().get(0);
+        assertEquals(
+                "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_CRAIT_HOLD",
+                operation.ruleArmId().id());
+        assertEquals(
+                PolicyOperationKind.HARD_VETO,
+                operation.kind());
+        assertEquals(
+                TraceDomainId.DEPLOY_SITING,
+                operation.domainId());
+        assertEquals(
+                TraceOutputKind.VETO,
+                operation.outputKind());
+        assertEquals(
+                "DEPLOY_FIRST_ORDER_PRE_FLIP_CRAIT_POLICY",
+                neutral.producerId());
+        assertTrue(neutral.operations().isEmpty());
+    }
+
+    @Test
     public void cloudCityEnginePreservesBlockedPriorityAndSafeBranches() {
         DeployObjectiveSitingPolicy.CloudCityEngineEvaluation blocked =
                 DeployObjectiveSitingPolicy.evaluateCloudCityEngine(

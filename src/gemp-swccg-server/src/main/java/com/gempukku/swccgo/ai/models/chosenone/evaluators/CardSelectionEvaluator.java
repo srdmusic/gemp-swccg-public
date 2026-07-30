@@ -1708,6 +1708,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 location)));
                             applyDeploySitingPolicy(action,
                                 DeployObjectiveSitingPolicy
+                                    .scoreFirstOrderReignsRouteCrew(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .advancesFirstOrderReignsRouteCrewAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .blockFirstOrderReignsPreFlipCraitGround(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .isFirstOrderReignsPrematureCraitGroundDeploymentAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
                                     .blockTerminalObjectiveExposure(
                                         action.getActionId(),
                                         objectiveProgressAnalyzer
@@ -4849,6 +4867,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         : com.gempukku.swccgo.ai.models.common.strategy
                             .ObjectiveAnalyzer
                             .ObjectiveProgressCandidateRole.NONE;
+        boolean preferredFirstOrderReignsRouteCard =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isPreferredFirstOrderReignsRouteForceLossCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
+        boolean firstOrderReignsRouteShip =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isFirstOrderReignsRouteShipCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
         boolean requiredActor = !objectiveAnalyzer.isFlipped()
                 && context.getGame() != null
                 && context.getPlayerId() != null
@@ -4864,7 +4900,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         != com.gempukku.swccgo.ai.models.common.strategy
                             .ObjectiveAnalyzer
                             .ObjectiveProgressCandidateRole
-                            .REQUIRED_ON_TABLE_CARD);
+                            .REQUIRED_ON_TABLE_CARD)
+                && (!firstOrderReignsRouteShip
+                    || preferredFirstOrderReignsRouteCard);
         boolean requiredOnTableCard =
                 physicalCard != null
                 && objectiveAnalyzer
@@ -4884,15 +4922,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 && physicalCard != null
                 && objectiveAnalyzer
                     .isPreferredShieldRoutePackageForceLossCandidate(
-                        context.getGame(),
-                        context.getPlayerId(),
-                        physicalCard);
-        boolean preferredFirstOrderReignsRouteCard =
-                context.getGame() != null
-                && context.getPlayerId() != null
-                && physicalCard != null
-                && objectiveAnalyzer
-                    .isPreferredFirstOrderReignsRouteForceLossCandidate(
                         context.getGame(),
                         context.getPlayerId(),
                         physicalCard);

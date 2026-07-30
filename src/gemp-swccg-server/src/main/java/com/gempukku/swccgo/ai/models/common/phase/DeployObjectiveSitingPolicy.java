@@ -262,6 +262,42 @@ public final class DeployObjectiveSitingPolicy {
                         "Deploy the second First Order character to activate the objective's +1 battleground drain"));
     }
 
+    public static PolicyResult scoreFirstOrderReignsRouteCrew(
+            String actionId, boolean boardsChaseShip) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!boardsChaseShip) {
+            return new PolicyResult(
+                    "DEPLOY_FIRST_ORDER_ROUTE_CREW_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_FIRST_ORDER_ROUTE_CREW_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.FIRST_ORDER_ROUTE_CREW",
+                        TraceOutputKind.BANDED,
+                        1200.0f,
+                        "Board a cheap First Order character on the Tracked Fleet chase ship before committing ground forces"));
+    }
+
+    public static PolicyResult blockFirstOrderReignsPreFlipCraitGround(
+            String actionId, boolean prematureCraitGround) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!prematureCraitGround) {
+            return new PolicyResult(
+                    "DEPLOY_FIRST_ORDER_PRE_FLIP_CRAIT_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_FIRST_ORDER_PRE_FLIP_CRAIT_POLICY",
+                PolicyOperation.hardVeto(
+                        actionId,
+                        TraceRuleId.of(
+                                "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_CRAIT_HOLD"),
+                        TraceDomainId.DEPLOY_SITING,
+                        TraceOutputKind.VETO,
+                        "Do not spend the Tracked Fleet chase budget on Crait ground forces before the objective flips"));
+    }
+
     public static PolicyResult blockTerminalObjectiveExposure(
             String actionId, boolean terminalExposure) {
         Objects.requireNonNull(actionId, "actionId");

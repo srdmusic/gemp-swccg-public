@@ -9103,3 +9103,44 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     authenticated hall return 200, AI/private games are enabled, startup is
     clean, and the hall remained empty. No push. Fresh branch firing in a game
     remains separate proof. Revert b0f5e8997 and restore the preserved jar.
+
+  ==== THE FIRST ORDER REIGNS BATCH SIX LIVE-REPLAY CHASE REPAIR
+       (2026-07-30, both bots) ====
+    Replays 5ea4050oscpp6s31 and y5f6xl0r75pbudpa exposed the same old Batch
+    Six gap. Supremacy sometimes began the pursuit, but Rando spent the route
+    budget on Kylo or Snoke, failed to replace crew/control, or passed a legal
+    Fleet-host move. Command Shuttle's correct Crait chase scored -50 below
+    Pass +10. The implementation owned only exact Supremacy and assumed
+    printed hyperspeed 2, so it ignored Navy Of The First Order's live
+    modifier and gave Fulminatrix and Command Shuttle no route ownership.
+
+    Supremacy remains the Reserve-download fallback. A legally deployable
+    self-piloted Episode VII ship in hand, or an active piloted ship with a nav
+    computer on table, may own the chase when the live modified hyperspeed and
+    movement prohibitions prove the route. Chase-ship parent deploy gets
+    +1200. A legally boardable First Order character whose target-specific
+    modified deploy cost is at most 3 gets parent +1000 and aboard-child +1200.
+    Dynamic reserve protects the cheapest legal ship, one cheap crew body, and
+    the next paid move. The existing +600 mover and +1000 physical-host
+    destination rules then beat Pass and follow every legal Fleet relocation.
+
+    Pre-flip Crait character deployment is hard-vetoed only while a legal
+    chase route exists, and releases after flip/control or route loss. A chase
+    ship already at the contested Fleet host owns a zero-cost remaining move,
+    can receive cheap crew, remains protected from optional Force loss, and
+    keeps the Crait hold until control is secured. Duplicate viable chase ships
+    release sole-route-ship protection, including the inherited generic
+    required-actor arm.
+
+    Real-card proof shows Navy changes Supremacy hyperspeed 2 to 3 and
+    Fulminatrix 3 to 4 across real Crait 8 to D'Qar 5. A real cheap First Order
+    Stormtrooper legally boards Fulminatrix, remains aboard, and the crewed ship
+    legally moves. First Order family gate 49/0/0/0; shared impact gate
+    172/0/0/0; final isolated reactor 2870/0/0/26 across 379 suites.
+    Independent blocker review, exact bot-source parity, JSON, and diff checks
+    passed. Scope is shared AI logic, mirrored bot adapters, AI tests, both
+    approved evidence records, and AI history. No engine, card Java, objective
+    profile, deck, database, or client source changed. Packaging and zero-table
+    deployment remain pending. A fresh autonomous replay remains separate
+    proof. Revert this repair commit and restore its preserved predecessor jar;
+    V48 and original Batch Six remain independent.
