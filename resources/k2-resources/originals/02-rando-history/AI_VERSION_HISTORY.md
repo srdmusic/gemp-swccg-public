@@ -9140,7 +9140,26 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Independent blocker review, exact bot-source parity, JSON, and diff checks
     passed. Scope is shared AI logic, mirrored bot adapters, AI tests, both
     approved evidence records, and AI history. No engine, card Java, objective
-    profile, deck, database, or client source changed. Packaging and zero-table
-    deployment remain pending. A fresh autonomous replay remains separate
-    proof. Revert this repair commit and restore its preserved predecessor jar;
+    profile, deck, database, or client source changed.
+
+    Local commit ded8b785d on codex/v48-combined-forfeit-repair packaged
+    successfully. objective_playbooks.json is 260855 bytes with SHA-256
+    bc96ea8f7fdc76c66346c39d9df56c29b115fa57c26b8551da0cdd54618244d3
+    in source, server jar, and web.jar. All 84 changed-source classes byte-match
+    target/classes, server jar, and web.jar. Server jar SHA-256 is
+    70280777d51bb430855078e8d49b702d7b7233d833e26636133085f06849bd57;
+    web.jar SHA-256 is
+    a3aae14d0f769fe93f633d3927e8830ef838eec18c767fa42825b75bf2516cb6.
+
+    Deployment froze table creation and proved zero authenticated hall tables.
+    Prior live jar
+    1c89708180c681abe06d0b97fe28e6a2458fd18723d65a0c618d9141fc9667e6
+    is preserved as web.jar.pre-first-order-ded8b785d. Candidate, host, and
+    container hashes match. The fresh app started at
+    2026-07-30T18:10:02.803455003Z after jar mtime 2026-07-30T18:10:01Z,
+    with restart count zero and Java PID 1. Eight shared and mirrored markers
+    are present. HTTP, login, switch posts, and authenticated hall returned
+    200; all four gameplay switches were restored; startup is clean; and the
+    hall remained empty. No push. A fresh autonomous replay remains separate
+    proof. Restore web.jar.pre-first-order-ded8b785d and revert ded8b785d;
     V48 and original Batch Six remain independent.
