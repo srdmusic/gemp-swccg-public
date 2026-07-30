@@ -9222,6 +9222,25 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     shared AI strategy and deploy-phase logic, mirrored Rando and Chosen One
     adapters, AI tests, and these two approved evidence records. No engine,
     card Java, objective profile, deck, database, or client source changed.
-    Nothing was pushed. The package is not deployed; fresh JVM and autonomous
-    replay proof remain separate gates. Revert 9451ae2c7; ded8b785d, V48, and
-    original Batch Six remain independent.
+    Nothing was pushed.
+
+    Steve authorized deployment. Table creation was frozen and the
+    authenticated hall contained zero tables before replacement. Prior live
+    jar a3aae14d0f769fe93f633d3927e8830ef838eec18c767fa42825b75bf2516cb6
+    is preserved as web.jar.pre-first-order-navy-9451ae2c7. Candidate,
+    live-host, and running-container hashes all equal
+    a9e1dc68b66607c4552608bc13ac3c61c248f0ed3fca51fb41732c70ed31b5a8.
+    The fresh app started at 2026-07-30T22:54:50.200425925Z, after jar mtime
+    2026-07-30T20:02:00Z, with restart count 0 and Java PID 1. All five
+    sampled shared and mirrored repair markers are present. UI, login, switch
+    posts, and authenticated hall returned HTTP 200; all four gameplay
+    switches were restored; AI tables and private games report enabled;
+    startup completed with zero material exceptions.
+
+    After reopening, Steve began a live asdf versus Rando First Order Reigns
+    test. Logs show Rando selected Navy Of The First Order during setup. That
+    game remains in progress, so the Navy package, chase movement, Tracked
+    Fleet destruction, Crait control, and objective flip remain separate
+    gameplay proof gates. Revert by restoring
+    web.jar.pre-first-order-navy-9451ae2c7 and reverting 9451ae2c7.
+    ded8b785d, V48, and original Batch Six remain independent.
