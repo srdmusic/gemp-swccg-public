@@ -89,6 +89,9 @@ public class ObjectiveAnalyzerSharedGoldenTest {
     public void objectiveFixturesPreserveSharedIdentityAndProfileBehavior() {
         ObjectiveAnalyzer myLord = analyzed("12_179", "My Lord, Is That Legal?",
                 "Deploy Galactic Senate. Flip this card if you have 3 senators at Galactic Senate.");
+        ObjectiveAnalyzer plead = analyzed("12_88",
+                "Plead My Case To The Senate",
+                "Deploy Galactic Senate. Flip this card if you have 3 senators at Galactic Senate.");
         ObjectiveAnalyzer invasion = analyzed("14_113", "Invasion",
                 "Deploy Naboo system. Flip this card if you control Theed Palace Throne Room and Naboo system.");
         ObjectiveAnalyzer weHaveAPlan = analyzed("14_52", "We Have A Plan",
@@ -116,6 +119,9 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         assertEquals("My Lord, Is That Legal?", myLord.getActivePlaybook().label);
         assertTrue(myLord.isMyLord());
         assertTrue(myLord.getFlipConditionText().contains("3 senators"));
+        assertEquals("Plead My Case To The Senate",
+                plead.getActivePlaybook().label);
+        assertTrue(plead.isMyLord());
 
         assertEquals("Invasion", invasion.getActivePlaybook().label);
         assertTrue(invasion.isInvasion());
@@ -220,8 +226,9 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // 31 -> 32 enabled, 59 -> 60 profiles.
         // Extension batch (2026-07-29): 501_94 and 501_19 authored and
         // enabled, 32 -> 34 enabled, 60 -> 62 profiles.
-        assertEquals(34, enabled);
-        assertEquals(28, profiles.size() - enabled);
+        // Senate family batch: Plead My Case activated, 34 -> 35.
+        assertEquals(35, enabled);
+        assertEquals(27, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);

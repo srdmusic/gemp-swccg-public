@@ -1251,6 +1251,7 @@
     },
     {
       "label": "Plead My Case To The Senate",
+      "loaderEnabled": true,
       "blueprintIds": [
         "12_88",
         "12_88_BACK"
@@ -1264,12 +1265,39 @@
       "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [],
+      "startingLocations": [
+        {
+          "label": "Galactic Senate",
+          "blueprintIds": [],
+          "titleFragments": [
+            "galactic senate"
+          ],
+          "runtimeFilter": "Filters.Galactic_Senate",
+          "sourceEvidence": "Card12_088.java lines 61-67 DeployCardFromReserveDeckEffect(Filters.Galactic_Senate)",
+          "enablesFlip": true
+        },
+        {
+          "label": "Any other Episode I location",
+          "blueprintIds": [],
+          "titleFragments": [
+            "any other episode i location"
+          ],
+          "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))",
+          "sourceEvidence": "Card12_088.java lines 68-74 DeployCardFromReserveDeckEffect(Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate)))",
+          "enablesFlip": false
+        }
+      ],
       "startingEffects": [],
       "startingInterrupts": [],
-      "keyCharacterFilter": null,
-      "keySiteFilter": null,
-      "weights": {},
+      "keyCharacterFilter": "senator",
+      "keySiteFilter": "Galactic_Senate",
+      "weights": {
+        "rewardKeyCharAtKeySite": 1500,
+        "penalizeKeyCharOffKeySite": -2000,
+        "prioritizeKeyCharDeploy": 500,
+        "holdNonKeyCharNoSite": -2000,
+        "deployFlipGateSite": 0
+      },
       "frontBp": "12_88",
       "backBp": "12_88_BACK",
       "abbreviation": "PMCTTS",
@@ -1320,7 +1348,97 @@
           "runtimeFilter": "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))"
         }
       ],
-      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json"
+      "sourceCanonicalFile": "resources/Objective_Playbook_Facts_2026-07-08.json",
+      "flipLocationRules": [
+        {
+          "id": "plead-front-two-senators-floor",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "self",
+              "actorFilterKey": "senator_at_Galactic_Senate",
+              "locationFilterKey": "Galactic_Senate",
+              "locationFragments": [
+                "galactic senate"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "CNF floor: every flip path needs at least two of your senators at the Galactic Senate (Card12_088.java L165-L168; captives do not count)"
+            }
+          ]
+        },
+        {
+          "id": "plead-front-third-senator-or-peace",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "self",
+              "actorFilterKey": "senator_at_Galactic_Senate",
+              "locationFilterKey": "Galactic_Senate",
+              "locationFragments": [
+                "galactic senate"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 3
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "three of your senators at the Galactic Senate (Card12_088.java L167)"
+            },
+            {
+              "relation": "onTable",
+              "controller": "self",
+              "actorFilterKey": "senator_with_peace_agenda_at_Galactic_Senate",
+              "locationFilterKey": "Galactic_Senate",
+              "locationFragments": [
+                "galactic senate"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "with the two-senator floor held, one of them carrying a peace agenda completes the alternative (Card12_088.java L168)"
+            }
+          ]
+        },
+        {
+          "id": "plead-back-hold-two-senators",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "self",
+              "actorFilterKey": "senator_at_Galactic_Senate",
+              "locationFilterKey": "Galactic_Senate",
+              "locationFragments": [
+                "galactic senate"
+              ],
+              "count": {
+                "comparator": "<=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "flips back when fewer than two of your senators remain at the Galactic Senate (Card12_088_BACK.java L171); holding two or more keeps the back stable"
+            }
+          ]
+        }
+      ]
     },
     {
       "label": "The Hyperdrive Generator's Gone",

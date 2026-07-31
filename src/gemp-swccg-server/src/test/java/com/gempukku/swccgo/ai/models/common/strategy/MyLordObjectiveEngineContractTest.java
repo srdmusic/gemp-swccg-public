@@ -13,8 +13,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Batch Eleven (2026-07-27): native engine contract for My Lord, Is That
- * Legal? / I Will Make It Legal (12_179, DARK). Card Java unchanged.
+ * Native engine contract for the mirrored Coruscant Senate objectives:
+ * My Lord (12_179, DARK) and Plead My Case (12_88, LIGHT). Card Java
+ * remains unchanged.
  *
  * Law (Card12_179.java L165-L185): flips when three of your senators are at
  * the Galactic Senate, or two are and at least one of them carries a
@@ -51,6 +52,28 @@ public class MyLordObjectiveEngineContractTest {
         }
     };
 
+    private static final StartingSetup PLEAD_MY_CASE = new StartingSetup() {
+        @Override
+        public HashMap<String, String> Cards() {
+            return new HashMap<>() {{
+                put("objective", "12_88");
+                put("senate", "12_75");
+                put("otherSite", "12_74");
+            }};
+        }
+
+        @Override
+        public void Setup(VirtualTableScenario scn) {
+            for (int i = 0; i < 6; i++) {
+                if (scn.LSDecisionAvailable("On which side")) {
+                    scn.LSChoose("Left");
+                } else if (scn.LSDecisionAvailable("to deploy")) {
+                    scn.LSChooseCard(scn.GetLSCard("senate"));
+                }
+            }
+        }
+    };
+
     private VirtualTableScenario mlitlScenario() {
         return new VirtualTableScenario(
                 new HashMap<>() {{
@@ -71,6 +94,111 @@ public class MyLordObjectiveEngineContractTest {
                 StartingSetup.NoDSShields,
                 VirtualTableScenario.Open
         );
+    }
+
+    private VirtualTableScenario pleadScenario() {
+        return new VirtualTableScenario(
+                new HashMap<>() {{
+                    put("yarua", "12_34");
+                    put("leia", "202_1");
+                    put("horox", "12_28");
+                    put("liana", "12_11");
+                }},
+                new HashMap<>(),
+                24,
+                24,
+                PLEAD_MY_CASE,
+                StartingSetup.DefaultDSGroundLocation,
+                StartingSetup.NoLSStartingInterrupts,
+                StartingSetup.NoDSStartingInterrupts,
+                StartingSetup.NoLSShields,
+                StartingSetup.NoDSShields,
+                VirtualTableScenario.Open
+        );
+    }
+
+    @Test
+    public void pleadFrontFlipsOnThreePlainSenatorsAtTheSenate() {
+        var scn = pleadScenario();
+        var objective = scn.GetLSCard("objective");
+        var senate = scn.GetLSCard("senate");
+        var yarua = scn.GetLSCard("yarua");
+        var leia = scn.GetLSCard("leia");
+        var horox = scn.GetLSCard("horox");
+
+        scn.MoveCardsToLSHand(yarua, leia, horox);
+        scn.StartGame();
+        scn.LSActivateForceCheat(16);
+        scn.SkipToLSTurn(Phase.DEPLOY);
+
+        scn.LSDeployCardAndPassResponses(yarua, senate);
+        assertFalse("One senator must not flip", objective.isFlipped());
+        scn.DSPass();
+        scn.LSDeployCardAndPassResponses(leia, senate);
+        assertFalse("Two agenda-less senators must not flip",
+                objective.isFlipped());
+        scn.DSPass();
+        scn.LSDeployCardAndPassResponses(horox, senate);
+        assertTrue("Three of your senators at the Senate must flip",
+                objective.isFlipped());
+    }
+
+    @Test
+    public void pleadFrontFlipsOnTwoSenatorsWithAPeaceAgenda() {
+        var scn = pleadScenario();
+        var objective = scn.GetLSCard("objective");
+        var senate = scn.GetLSCard("senate");
+        var yarua = scn.GetLSCard("yarua");
+        var liana = scn.GetLSCard("liana");
+
+        scn.MoveCardsToLSHand(yarua, liana);
+        scn.StartGame();
+        scn.LSActivateForceCheat(16);
+        scn.SkipToLSTurn(Phase.DEPLOY);
+
+        scn.LSDeployCardAndPassResponses(yarua, senate);
+        assertFalse("One senator must not flip", objective.isFlipped());
+        scn.DSPass();
+        scn.LSDeployCardAndPassResponses(liana, senate);
+        assertTrue("Two senators with a peace agenda among them must flip",
+                objective.isFlipped());
+    }
+
+    @Test
+    public void pleadBackFlipsBackBelowTwoSenatorsAndHoldsAtTwo() {
+        var scn = pleadScenario();
+        var objective = scn.GetLSCard("objective");
+        var senate = scn.GetLSCard("senate");
+        var otherSite = scn.GetLSCard("otherSite");
+        var yarua = scn.GetLSCard("yarua");
+        var leia = scn.GetLSCard("leia");
+        var horox = scn.GetLSCard("horox");
+        var pulseOne = scn.GetLSFiller(1);
+        var pulseTwo = scn.GetLSFiller(2);
+
+        scn.MoveCardsToLSHand(
+                yarua, leia, horox, pulseOne, pulseTwo);
+        scn.StartGame();
+        scn.LSActivateForceCheat(20);
+        scn.SkipToLSTurn(Phase.DEPLOY);
+        scn.LSDeployCardAndPassResponses(yarua, senate);
+        scn.DSPass();
+        scn.LSDeployCardAndPassResponses(leia, senate);
+        scn.DSPass();
+        scn.LSDeployCardAndPassResponses(horox, senate);
+        assertTrue("Three senators must flip", objective.isFlipped());
+        scn.DSPass();
+
+        scn.MoveOutOfPlay(horox);
+        scn.LSDeployCardAndPassResponses(pulseOne, otherSite);
+        assertTrue("Two senators remaining must hold the back",
+                objective.isFlipped());
+        scn.DSPass();
+
+        scn.MoveOutOfPlay(leia);
+        scn.LSDeployCardAndPassResponses(pulseTwo, otherSite);
+        assertFalse("Fewer than two senators must flip the back to front",
+                objective.isFlipped());
     }
 
     @Test

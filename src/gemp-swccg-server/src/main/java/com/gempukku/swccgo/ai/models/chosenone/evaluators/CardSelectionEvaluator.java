@@ -3387,6 +3387,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 }
                                                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer fsObj =
                                                     context.getObjectiveAnalyzer();
+                                                boolean fsSenateProgress = fsObj != null
+                                                    && fsObj.isSenateObjectiveSenatorDeployment(
+                                                        context.getGame(), context.getPlayerId(),
+                                                        v136DeployingCard, location);
                                                 String fsFlipGate = (fsObj != null && fsObj.isAnalyzed())
                                                     ? fsObj.getFlipCriticalControlSite() : null;
                                                 if (fsObj != null && fsObj.hasFlipGateActorRequirement()) {
@@ -3431,9 +3435,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     v212FormationReason = fsVerdict.reason();
                                                     logger.warn("FORMATION SAFETY (deploy-site): {}", fsVerdict.reason());
                                                 } else if (fsVerdict.constraint() == com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployConstraint.DEFER_UNSUPPORTED_SOLO) {
-                                                    v212FormationState = DeploySitingPolicy.FormationState.DEFER_UNSUPPORTED_SOLO;
-                                                    v212FormationReason = fsVerdict.reason();
-                                                    logger.warn("V201 DEPLOY DEFER: {}", fsVerdict.reason());
+                                                    if (fsSenateProgress) {
+                                                        action.addReasoning("SENATE OBJECTIVE FORMATION: allow senator to advance the Galactic Senate count");
+                                                        logger.warn("SENATE OBJECTIVE FORMATION: releasing unsupported-solo defer at Galactic Senate");
+                                                    } else {
+                                                        v212FormationState = DeploySitingPolicy.FormationState.DEFER_UNSUPPORTED_SOLO;
+                                                        v212FormationReason = fsVerdict.reason();
+                                                        logger.warn("V201 DEPLOY DEFER: {}", fsVerdict.reason());
+                                                    }
                                                 } else if (fsVerdict.constraint() == com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployConstraint.UNKNOWN) {
                                                     v212FormationState = DeploySitingPolicy.FormationState.UNKNOWN;
                                                     v212FormationReason = fsVerdict.reason();

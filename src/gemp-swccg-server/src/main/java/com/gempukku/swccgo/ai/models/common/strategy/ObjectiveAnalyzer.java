@@ -155,7 +155,9 @@ public class ObjectiveAnalyzer {
     // silently flip decisions) but now gate on these getters. Steve 2026-07-07: "move the version
     // logic to ObjectiveAnalyzer — that's what the deploy evaluator should be looking at."
     private boolean isInvasion = false;   // objective title contains "invasion"
-    private boolean isMyLord = false;      // title contains "my lord" OR "make it legal" (MLITL)
+    // Historical accessor name retained for adapter compatibility. This flag
+    // covers both mirrored Galactic Senate objectives.
+    private boolean isMyLord = false;
     private boolean isEndor = false;       // title contains "endor operations" (ENDOR_PLAYBOOK pilot 2026-07-07)
     private boolean isTdigwatt = false;    // title contains "this deal is getting worse all the time"
     private boolean isFirstOrderReigns = false;
@@ -347,7 +349,10 @@ public class ObjectiveAnalyzer {
             // old inline checks in Deploy/CardSelection (title.toLowerCase().contains(...)).
             String titleLowerId = (title != null) ? title.toLowerCase(Locale.ROOT) : "";
             this.isInvasion = titleLowerId.contains("invasion");
-            this.isMyLord = titleLowerId.contains("my lord") || titleLowerId.contains("make it legal");
+            this.isMyLord = titleLowerId.contains("my lord")
+                    || titleLowerId.contains("make it legal")
+                    || titleLowerId.contains("plead my case")
+                    || titleLowerId.contains("sanity and compassion");
             this.isEndor = titleLowerId.contains("endor operations");
             this.isTdigwatt = titleLowerId.contains("this deal is getting worse all the time");
             this.isFirstOrderReigns =
@@ -3540,6 +3545,13 @@ public class ObjectiveAnalyzer {
             return false;
         }
         try {
+            // A location-scoped on-table actor stops matching when it leaves
+            // that location. Global on-table actors, such as Vader for Hunt
+            // Down, remain valid after ordinary movement.
+            if (wouldDepartureTriggerOnTableFlipBack(
+                    game, playerId, mover)) {
+                return true;
+            }
             GameState gameState = game.getGameState();
             PhysicalCard location = game.getModifiersQuerying()
                     .getLocationThatCardIsPresentAt(gameState, mover);
@@ -9490,6 +9502,19 @@ public class ObjectiveAnalyzer {
 
     private boolean wouldRemovalTriggerOnTableFlipBack(
             SwccgGame game, String playerId, PhysicalCard candidate) {
+        return wouldCandidateLossTriggerOnTableFlipBack(
+                game, playerId, candidate, false);
+    }
+
+    private boolean wouldDepartureTriggerOnTableFlipBack(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        return wouldCandidateLossTriggerOnTableFlipBack(
+                game, playerId, candidate, true);
+    }
+
+    private boolean wouldCandidateLossTriggerOnTableFlipBack(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            boolean departureOnly) {
         try {
             GameState gameState = game.getGameState();
             if (gameState == null || game.getModifiersQuerying() == null
@@ -9509,9 +9534,14 @@ public class ObjectiveAnalyzer {
                             || (!"requiredActorMissing".equals(
                                     alternative.scoreRole)
                                 && !"requiredOnTableCardMissing".equals(
+                                    alternative.scoreRole)
+                                && !"stayFlipped".equals(
                                     alternative.scoreRole))
                             || !candidateMatchesOnTableAlternative(
                                     game, playerId, candidate,
+                                    alternative)
+                            || departureOnly
+                                && !isLocationScopedOnTableAlternative(
                                     alternative)) {
                         continue;
                     }
@@ -9549,6 +9579,14 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return false;
+    }
+
+    private boolean isLocationScopedOnTableAlternative(
+            FlipLocationAlternative alternative) {
+        return alternative != null
+                && (alternative.locationFilterKey != null
+                    || alternative.locationFragments != null
+                        && !alternative.locationFragments.isEmpty());
     }
 
     private boolean matchesRequiredOnTableCardFlipBackAlternative(
@@ -9642,11 +9680,13 @@ public class ObjectiveAnalyzer {
                     int qualified = countAlternativeMatches(
                             game, playerId, playerId, alternative);
                     if (qualified <= 0 || qualified > required
-                            || !relationSatisfiedAt(
+                            || (!"onTable".equals(
+                                    alternative.relation)
+                                && !relationSatisfiedAt(
                                     game, playerId, playerId, location,
                                     alternative.relation,
                                     alternative.actorFilterKey,
-                                    alternative.includeExcludedFromBattle)) {
+                                    alternative.includeExcludedFromBattle))) {
                         continue;
                     }
 
@@ -9657,9 +9697,10 @@ public class ObjectiveAnalyzer {
                                     gameState,
                                     game.getModifiersQuerying(), candidate);
                     if (candidateIsActor
-                            && !hasOtherMatchingActorAtLocation(
+                            && ("onTable".equals(alternative.relation)
+                                || !hasOtherMatchingActorAtLocation(
                                     game, playerId, location,
-                                    alternative, candidate)) {
+                                    alternative, candidate))) {
                         if ("anyOf".equals(rule.mode)
                                 && anyCountedAlternativeMeetsThresholdAfterRemoval(
                                     game, playerId, rule,
@@ -9669,7 +9710,8 @@ public class ObjectiveAnalyzer {
                         return FlipGateFormationRole.LAST_REQUIRED_ACTOR;
                     }
 
-                    if (!candidateIsActor
+                    if (!"onTable".equals(alternative.relation)
+                            && !candidateIsActor
                             && hasMatchingActorAtLocation(
                                     game, playerId, location,
                                     alternative.actorFilterKey,
@@ -9700,7 +9742,6 @@ public class ObjectiveAnalyzer {
         for (FlipLocationAlternative alternative : rule.alternatives) {
             if (alternative == null || alternative.count == null
                     || alternative.count.value == null
-                    || alternative.count.value <= 1
                     || alternative.actorFilterKey == null) {
                 continue;
             }
@@ -9709,6 +9750,20 @@ public class ObjectiveAnalyzer {
             int required = expectedCount(
                     game, playerId, alternative.count);
             if (qualified < required) continue;
+
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(alternative.actorFilterKey);
+            boolean candidateIsActor = actorFilter != null
+                    && actorFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+            if ("onTable".equals(alternative.relation)) {
+                if (!candidateIsActor
+                        || qualified - 1 >= required) {
+                    return true;
+                }
+                continue;
+            }
             if (!locationMatchesAlternative(
                     game.getGameState(), game, playerId,
                     candidateLocation, alternative)
@@ -9720,12 +9775,6 @@ public class ObjectiveAnalyzer {
                 return true;
             }
 
-            com.gempukku.swccgo.filters.Filter actorFilter =
-                    resolveFilter(alternative.actorFilterKey);
-            boolean candidateIsActor = actorFilter != null
-                    && actorFilter.accepts(
-                        game.getGameState(),
-                        game.getModifiersQuerying(), candidate);
             boolean breaksThisLocation = candidateIsActor
                     ? !hasOtherMatchingActorAtLocation(
                             game, playerId, candidateLocation,
@@ -10272,12 +10321,41 @@ public class ObjectiveAnalyzer {
     // CardSelection scoring branches that used to re-match the title string inline.
     //   isInvasion()  consumers: DeployEvaluator V86 (Neimoidian-pilot-aboard-capital-ship),
     //                            CardSelectionEvaluator V121 (same, deploy-target side)
-    //   isMyLord()    consumers: DeployEvaluator V83/V108/V110/V88 (senator↔Galactic Senate),
-    //                            CardSelectionEvaluator V88/V109 (senator deploy priority)
+    //   isMyLord()    historical Senate-family accessor used by DeployEvaluator
+    //                 V83/V108/V110/V88 and CardSelectionEvaluator V88/V109
     //   (V99 SENATE GUARD is DELIBERATELY left ungated — it keys on Galactic Senate being on
     //    table, not on the objective, so it stays a typed-Filter check, NOT isMyLord()-gated.)
     public boolean isInvasion() { return isInvasion; }
     public boolean isMyLord() { return isMyLord; }
+
+    /**
+     * Exact Senate-family deploy fact used to release only the ordinary
+     * unsupported-solo defer. A contested deployment remains governed by
+     * FormationSafety's hard block.
+     */
+    public boolean isSenateObjectiveSenatorDeployment(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!analyzed || isFlipped || !isMyLord || game == null
+                || playerId == null || candidate == null
+                || destination == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            return com.gempukku.swccgo.filters.Filters.senator.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    && com.gempukku.swccgo.filters.Filters.Galactic_Senate
+                        .accepts(game.getGameState(),
+                            game.getModifiersQuerying(), destination);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public boolean isTdigwatt() { return isTdigwatt; }
     public boolean isTdigwattPreFlip() {
         return analyzed && isTdigwatt && !isFlipped;
@@ -10865,7 +10943,7 @@ public class ObjectiveAnalyzer {
             // Batch Fourteen (2026-07-27): the back-hold exception ship.
             case "Rogue_One":
                 return com.gempukku.swccgo.filters.Filters.Rogue_One;
-            // Batch Eleven (2026-07-27): My Lord senator-count law. Composite
+            // Senate-family senator-count law. Composite
             // keys fold the location into the actor filter because the
             // "onTable" relation counts ACTORS, not locations.
             case "senator_at_Galactic_Senate":
@@ -10877,6 +10955,12 @@ public class ObjectiveAnalyzer {
                 return com.gempukku.swccgo.filters.Filters.and(
                         com.gempukku.swccgo.filters.Filters.senator,
                         com.gempukku.swccgo.filters.Filters.blockade_agenda,
+                        com.gempukku.swccgo.filters.Filters.at(
+                                com.gempukku.swccgo.filters.Filters.Galactic_Senate));
+            case "senator_with_peace_agenda_at_Galactic_Senate":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.senator,
+                        com.gempukku.swccgo.filters.Filters.peace_agenda,
                         com.gempukku.swccgo.filters.Filters.at(
                                 com.gempukku.swccgo.filters.Filters.Galactic_Senate));
             // Batch Twenty-One (2026-07-29): SYCFA back hard-loss threat.
