@@ -109,6 +109,7 @@ public class ShieldTwinObjectiveEngineContractTest {
             put("cannon", "222_3");
             put("cannon2", "222_3");
             put("classicCannon", "3_158");
+            put("classicRangefinder", "3_95");
             put("classicPrepare", "13_82");
             put("blizzard4", "13_56");
             put("tableChangeTrigger", "3_110");
@@ -2006,6 +2007,12 @@ public class ShieldTwinObjectiveEngineContractTest {
                         .getShieldMainGeneratorRouteMoveForceReserve(
                             scn.game(),
                             VirtualTableScenario.DS) > 0);
+                assertEquals("The dedicated movement gate owns this reserve exactly once",
+                        0,
+                        analyzer.getRequiredOnTableCardForceReserve(
+                                scn.game(),
+                                VirtualTableScenario.DS,
+                                distractor));
                 EvaluatedCandidate deploy =
                         evaluatedCandidate(
                             deployActionAdapter(
@@ -2026,6 +2033,54 @@ public class ShieldTwinObjectiveEngineContractTest {
                             List.of("distractor", "pass"),
                             List.of("Deploy", "Pass"));
                 assertEquals("pass", winner.actionId());
+            }
+        }
+    }
+
+    @Test
+    public void classicRangefinderStopsTheRouteAtTheFirstActuallyInRangeMarker() {
+        for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
+            VirtualTableScenario scn = scenario(objectiveBlueprintId);
+            var thirdMarker = scn.GetDSCard("thirdMarker");
+            var secondMarker = scn.GetLSCard("secondMarker");
+            var mainPowerGenerators =
+                    scn.GetDSCard("mainPowerGenerators");
+            var target = scn.GetDSCard("target");
+            var routeHost = scn.GetDSCard("blizzard2");
+            var classicCannon = scn.GetDSCard("classicCannon");
+            var classicRangefinder =
+                    scn.GetDSCard("classicRangefinder");
+
+            scn.StartGame();
+            scn.MoveLocationToTable(secondMarker);
+            scn.MoveLocationToTable(thirdMarker);
+            scn.MoveCardsToLocation(thirdMarker, routeHost);
+            scn.AttachCardsTo(routeHost, classicCannon);
+            scn.AttachCardsTo(thirdMarker, target);
+
+            assertEquals(Integer.valueOf(2),
+                    scn.game().getModifiersQuerying()
+                            .getDistanceBetweenSites(
+                                    scn.gameState(), thirdMarker,
+                                    mainPowerGenerators));
+            assertFalse(Filters.canBeFiredAtLocationInRange(
+                            mainPowerGenerators)
+                    .accepts(scn.game(), classicCannon));
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertTrue(analyzer.advancesShieldMainGeneratorRoute(
+                        scn.game(), VirtualTableScenario.DS,
+                        routeHost, secondMarker));
+            }
+
+            scn.AttachCardsTo(classicCannon, classicRangefinder);
+            assertTrue(Filters.canBeFiredAtLocationInRange(
+                            mainPowerGenerators)
+                    .accepts(scn.game(), classicCannon));
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertFalse("Do not walk past an actual legal firing site",
+                        analyzer.advancesShieldMainGeneratorRoute(
+                                scn.game(), VirtualTableScenario.DS,
+                                routeHost, secondMarker));
             }
         }
     }
@@ -2421,36 +2476,19 @@ public class ShieldTwinObjectiveEngineContractTest {
                     scn.game(), firstWalker));
             assertTrue(Filters.piloted.accepts(
                     scn.game(), secondWalker));
-            List<ObjectiveAnalyzer> analyzers =
-                    analyzers(scn);
-            boolean firstSelected =
-                    analyzers.get(0)
-                        .advancesShieldMainGeneratorRoute(
-                            scn.game(),
-                            VirtualTableScenario.DS,
-                            firstWalker, secondMarker);
-            boolean secondSelected =
-                    analyzers.get(0)
-                        .advancesShieldMainGeneratorRoute(
-                            scn.game(),
-                            VirtualTableScenario.DS,
-                            secondWalker, secondMarker);
-            assertTrue(firstSelected != secondSelected);
-            PhysicalCard decoy =
-                    firstSelected ? secondWalker : firstWalker;
+            List<ObjectiveAnalyzer> analyzers = analyzers(scn);
+            PhysicalCard selected = firstWalker.getCardId()
+                    < secondWalker.getCardId()
+                    ? firstWalker : secondWalker;
+            PhysicalCard decoy = selected == firstWalker
+                    ? secondWalker : firstWalker;
             for (ObjectiveAnalyzer analyzer : analyzers) {
-                assertEquals(firstSelected,
-                        analyzer
-                            .advancesShieldMainGeneratorRoute(
-                                scn.game(),
-                                VirtualTableScenario.DS,
-                                firstWalker, secondMarker));
-                assertEquals(secondSelected,
-                        analyzer
-                            .advancesShieldMainGeneratorRoute(
-                                scn.game(),
-                                VirtualTableScenario.DS,
-                                secondWalker, secondMarker));
+                assertTrue(analyzer.advancesShieldMainGeneratorRoute(
+                        scn.game(), VirtualTableScenario.DS,
+                        selected, secondMarker));
+                assertFalse(analyzer.advancesShieldMainGeneratorRoute(
+                        scn.game(), VirtualTableScenario.DS,
+                        decoy, secondMarker));
             }
 
             positionFollowFixture(

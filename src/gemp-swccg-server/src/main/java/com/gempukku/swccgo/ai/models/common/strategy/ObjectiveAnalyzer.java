@@ -94,7 +94,7 @@ public class ObjectiveAnalyzer {
     private boolean hydratedFromJson = false;   // true once a JSON profile hydrated this objective
     // Loader-extension step 3b (2026-07-10): the active loaderEnabled profile's rules, stored so the
     // filter-based objective-relevance overload can evaluate them against real location cards at runtime.
-    // Null unless a loaderEnabled profile carried rules (none do yet → behavior-neutral).
+    // Null unless the active loaderEnabled profile carries typed rules.
     private List<FlipLocationRule> activeFlipLocationRules = null;
     private List<ActorLocationRule> activeActorLocationRules = null;
     private List<DynamicLocationRule> activeDynamicLocationRules = null;
@@ -354,11 +354,9 @@ public class ObjectiveAnalyzer {
                     titleLowerId.contains("the first order reigns")
                     || titleLowerId.contains(
                         "the resistance is doomed");
-            // ObjectivePlaybook (2026-07-08): when the objective has a loaderEnabled JSON profile, the ACTIVE
-            // playbook is BUILT FROM THE JSON (analyzer = pointer to the data). Otherwise fall back to the
-            // compiled statics (My Lord/Endor) — the loaderEnabled=false path. prof/loaderOn reused post-parse
-            // for slot hydration (one lookup). buildPlaybookFromProfile weights == the compiled statics for the
-            // two enabled pilots (boundary-verified), so this is behavior-neutral today.
+            // A loaderEnabled profile owns the active JSON playbook. Disabled or
+            // missing profiles retain the compiled My Lord/Endor fallbacks.
+            // Reuse this lookup after parsing for typed slot hydration.
             JsonProfile prof = findProfile(bpId, title);
             boolean loaderOn = prof != null && Boolean.TRUE.equals(prof.loaderEnabled);
             this.activePlaybook = loaderOn ? buildPlaybookFromProfile(prof)
@@ -382,13 +380,10 @@ public class ObjectiveAnalyzer {
             LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] Game text: {}", gameText);
 
             parseGameText(gameText, backGameText);
-            // ObjectivePlaybook JSON hydration (2026-07-08): pull scoring-slot data from the single
-            // runtime source (objective_playbooks.json) for the active objective. ADDITIVE + idempotent
-            // — runs AFTER the text parser / hardcoded blocks, so where both fill a slot the values are
-            // identical. Hard fallback: no profile / empty registry → parser output stands unchanged.
-            // GATED per-objective by loaderEnabled (computed above): the canonical file carries all 58
-            // profiles, but only boundary-math-VERIFIED objectives (My Lord + Endor today) hydrate. This
-            // prevents the 56 un-verified profiles from silently altering behavior.
+            // ObjectivePlaybook JSON hydration (2026-07-08): loader-enabled profiles own their
+            // declared runtime slots. Most slots augment parser output; authoritative list slots may
+            // replace it so stale parser-derived cards cannot survive. With no enabled profile, parser
+            // output remains the hard fallback. Disabled profiles stay research-only.
             if (loaderOn) hydrateFromProfile(prof);
             updateFlipStatus(
                     gameState, playerId, objectiveCard);
@@ -10433,7 +10428,7 @@ public class ObjectiveAnalyzer {
     }
     static final class JsonProfile {
         String label;
-        Boolean loaderEnabled;   // hydrate ONLY when true — per-objective migration switch (verified equivalent)
+        Boolean loaderEnabled;   // hydrate only when true: per-objective migration switch
         List<String> blueprintIds;
         List<String> titleFragments;
         List<String> locationFragments;
@@ -10639,8 +10634,8 @@ public class ObjectiveAnalyzer {
         return null;
     }
 
-    /** Hydrate the analyzer's scoring/setup slots from a JSON profile. ADDITIVE + idempotent: never
-     *  clears a slot; where the text parser already filled one, the same value is written again. */
+    /** Hydrate analyzer scoring/setup slots from a JSON profile. Most slots are
+     * additive and idempotent; explicitly authoritative slots replace parser output. */
     private void hydrateFromProfile(JsonProfile p) {
         if (p == null) return;
         if (p.locationFragments != null)
@@ -10665,11 +10660,9 @@ public class ObjectiveAnalyzer {
         addRefs(p.startingLocations, startingLocationIds, startingLocationFragments);
         addRefs(p.startingEffects, startingEffectIds, startingEffectFragments);
         addRefs(p.startingInterrupts, startingInterruptIds, startingInterruptFragments);
-        // Loader-extension step 3a (2026-07-08): COARSE relevance from flipLocationRules — each rule
-        // alternative's locationFragments feed the EXISTING +200 objective-relevance mechanism (same proven
-        // lever as profile locationFragments). This makes the rule DTOs functional at the coarse-steer level.
-        // The count/actor/opponent-aware SCORER (registry-filter based, step 3b) is the next increment and will
-        // dominate, not replace, this coarse pass. Neutral until a profile carries flipLocationRules (none yet).
+        // Legacy coarse relevance from locationFragments remains alongside the
+        // live typed count/actor/opponent scorer. The typed scorer owns the full
+        // condition; profiles without flipLocationRules remain neutral here.
         if (p.flipLocationRules != null) {
             for (FlipLocationRule rule : p.flipLocationRules) {
                 if (rule == null || rule.alternatives == null) continue;
@@ -12233,8 +12226,6 @@ public class ObjectiveAnalyzer {
                 && packagePlan.cannon.getZone() == Zone.HAND) {
             reserve += packagePlan.cannonCost;
         }
-        reserve += getShieldMainGeneratorRouteMoveForceReserve(
-                game, playerId);
         return reserve;
     }
 
@@ -12953,6 +12944,8 @@ public class ObjectiveAnalyzer {
                 game.getGameState().getAllPermanentCards();
         if (cards == null) return false;
         for (PhysicalCard card : cards) {
+            // Crew attached to the mover leaves with it and is not independent
+            // tactical support for holding an otherwise isolated marker.
             if (card == null || card == mover
                     || card.getAttachedTo() == mover
                     || !playerId.equals(card.getOwner())
@@ -13142,7 +13135,7 @@ public class ObjectiveAnalyzer {
                 && destinationMarker >= 1
                 && destinationMarker < originMarker
                 && !isShieldMainGeneratorFiringSite(
-                    game, origin)
+                    game, playerId, origin)
                 && game.getModifiersQuerying()
                     .isAdjacentSites(
                         game.getGameState(), origin,
@@ -13206,7 +13199,7 @@ public class ObjectiveAnalyzer {
                     || destinationMarker < 1
                     || destinationMarker >= originMarker
                     || isShieldMainGeneratorFiringSite(
-                        game, origin)
+                        game, playerId, origin)
                     || !game.getModifiersQuerying()
                         .isAdjacentSites(
                             gameState, origin,
@@ -13291,7 +13284,7 @@ public class ObjectiveAnalyzer {
                         game.getGameState(), location);
             if (marker == null || marker <= 1
                     || isShieldMainGeneratorFiringSite(
-                        game, location)) {
+                        game, playerId, location)) {
                 return false;
             }
             for (PhysicalCard card
@@ -13324,8 +13317,9 @@ public class ObjectiveAnalyzer {
     }
 
     /**
-     * 222_13 may fire only at 3rd Marker or lower, and both AT-AT Cannon
-     * printings used by this package target the same or an adjacent site.
+     * 222_13 may fire only at 3rd Marker or lower. Both AT-AT Cannon
+     * printings have same-or-adjacent base range, while a live modifier such
+     * as the classic Electro-Rangefinder can extend the actual range.
      */
     private boolean isShieldMainGeneratorFiringMarker(
             SwccgGame game, PhysicalCard location) {
@@ -13341,15 +13335,28 @@ public class ObjectiveAnalyzer {
     }
 
     private boolean isShieldMainGeneratorFiringSite(
-            SwccgGame game, PhysicalCard location) {
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
         if (!isShieldMainGeneratorFiringMarker(
-                game, location)) {
+                game, location) || playerId == null) {
             return false;
         }
         PhysicalCard generators =
                 Filters.findFirstFromTopLocationsOnTable(
                     game, Filters.Main_Power_Generators);
         if (generators == null) return false;
+        com.gempukku.swccgo.filters.Filter liveFiringPackage =
+                resolveFilter(
+                    "AT_AT_Cannon_on_piloted_AT_AT_in_range_of_Main_Power_Generators");
+        if (liveFiringPackage != null
+                && Filters.canSpot(
+                    game, null,
+                    Filters.and(
+                        Filters.owner(playerId),
+                        Filters.at(location),
+                        liveFiringPackage))) {
+            return true;
+        }
         Integer distance = game.getModifiersQuerying()
                 .getDistanceBetweenSites(
                     game.getGameState(), location,

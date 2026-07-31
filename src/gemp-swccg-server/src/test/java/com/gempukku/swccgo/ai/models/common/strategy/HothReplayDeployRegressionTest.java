@@ -98,7 +98,7 @@ public class HothReplayDeployRegressionTest {
                 CardCategory.CHARACTER, true, 2.0f);
         PhysicalCard fullWalker = card(331, "Blizzard 1", "217_4",
                 CardCategory.VEHICLE, false, null);
-        PhysicalCard openWalker = card(332, "Blizzard 2", "4_170",
+        PhysicalCard openWalker = card(332, "Blizzard 2", "3_155",
                 CardCategory.VEHICLE, false, null);
         GameState state = state(
                 Map.of(331, fullWalker, 332, openWalker), pilot);
@@ -134,7 +134,7 @@ public class HothReplayDeployRegressionTest {
                 341, "Restricted Walker", "fixture_341",
                 CardCategory.VEHICLE, false, null);
         PhysicalCard openWalker = card(
-                342, "Blizzard 2", "4_170",
+                342, "Blizzard 2", "3_155",
                 CardCategory.VEHICLE, false, null);
         when(passengerOnlyWalker.getBlueprint()
                 .getValidPilotFilter(
