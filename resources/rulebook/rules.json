@@ -1,16 +1,16 @@
 {
- "head": "b0f5e8997",
+ "head": "e684c597c",
  "counts": {
-  "total": 787,
+  "total": 793,
   "by_family": {
-   "B": 106,
-   "A": 440,
-   "A-inline": 45,
+   "B": 107,
+   "A": 444,
+   "A-inline": 46,
    "C": 187,
    "D": 9
   },
   "by_id_source": {
-   "typed": 541,
+   "typed": 547,
    "typed-dynamic": 50,
    "none": 69,
    "prose-vtag": 127
@@ -214,7 +214,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleActionTextPolicy.java",
-   "line": 431,
+   "line": 459,
    "family": "A"
   },
   {
@@ -234,7 +234,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleActionTextPolicy.java",
-   "line": 436,
+   "line": 464,
    "family": "A"
   },
   {
@@ -254,7 +254,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleActionTextPolicy.java",
-   "line": 442,
+   "line": 470,
    "family": "A"
   },
   {
@@ -274,7 +274,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleActionTextPolicy.java",
-   "line": 448,
+   "line": 476,
    "family": "A"
   },
   {
@@ -294,7 +294,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleActionTextPolicy.java",
-   "line": 454,
+   "line": 482,
    "family": "A"
   },
   {
@@ -314,7 +314,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleActionTextPolicy.java",
-   "line": 460,
+   "line": 488,
    "family": "A"
   },
   {
@@ -334,7 +334,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleActionTextPolicy.java",
-   "line": 473,
+   "line": 501,
    "family": "A"
   },
   {
@@ -352,7 +352,7 @@
    "reason_kind": "expression",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/BattleActionTextPolicy.java",
-   "line": 515,
+   "line": 543,
    "family": "A-inline"
   },
   {
@@ -3704,6 +3704,78 @@
    "family": "A"
   },
   {
+   "id": "DEPLOY.OBJECTIVE.FIRST_ORDER_ROUTE_CREW",
+   "id_source": "typed",
+   "phase": "DEPLOY",
+   "domain": "DEPLOY_SITING",
+   "policy": "DeployObjectiveSitingPolicy",
+   "method": "scoreFirstOrderReignsRouteCrew",
+   "kind": "BANDED",
+   "delta": 1200.0,
+   "delta_expr": null,
+   "delta_kind": "literal",
+   "reason": "Board a cheap First Order character on the Tracked Fleet chase ship before committing ground forces",
+   "reason_kind": "literal",
+   "provenance": [],
+   "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
+   "line": 275,
+   "family": "A"
+  },
+  {
+   "id": "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE",
+   "id_source": "typed",
+   "phase": "DEPLOY",
+   "domain": "DEPLOY_SITING",
+   "policy": "DeployObjectiveSitingPolicy",
+   "method": "scoreFirstOrderReignsNavyRouteAction",
+   "kind": "BANDED",
+   "delta": 1500.0,
+   "delta_expr": null,
+   "delta_kind": "literal",
+   "reason": "Use Navy Of The First Order to deploy the affordable ship-and-pilot chase package",
+   "reason_kind": "literal",
+   "provenance": [],
+   "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
+   "line": 292,
+   "family": "A"
+  },
+  {
+   "id": "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_CANDIDATE",
+   "id_source": "typed",
+   "phase": "DEPLOY",
+   "domain": "DEPLOY_SITING",
+   "policy": "DeployObjectiveSitingPolicy",
+   "method": "scoreFirstOrderReignsNavyRouteCandidate",
+   "kind": "BANDED",
+   "delta": 1500.0,
+   "delta_expr": null,
+   "delta_kind": "literal",
+   "reason": "Choose the affordable Navy ship-and-pilot package that can reach Tracked Fleet",
+   "reason_kind": "literal",
+   "provenance": [],
+   "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
+   "line": 309,
+   "family": "A"
+  },
+  {
+   "id": "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_DESTINATION",
+   "id_source": "typed",
+   "phase": "DEPLOY",
+   "domain": "DEPLOY_SITING",
+   "policy": "DeployObjectiveSitingPolicy",
+   "method": "scoreFirstOrderReignsNavyRouteDestination",
+   "kind": "BANDED",
+   "delta": 1500.0,
+   "delta_expr": null,
+   "delta_kind": "literal",
+   "reason": "Deploy the Navy ship-and-pilot package to the system that reaches Tracked Fleet",
+   "reason_kind": "literal",
+   "provenance": [],
+   "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
+   "line": 326,
+   "family": "A"
+  },
+  {
    "id": "DEPLOY.OBJECTIVE.ACTOR_ROUTE_STAGING",
    "id_source": "typed",
    "phase": "DEPLOY",
@@ -3718,7 +3790,7 @@
    "reason_kind": "concat",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 314,
+   "line": 407,
    "family": "A"
   },
   {
@@ -3738,7 +3810,7 @@
     "V67ak"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 329,
+   "line": 422,
    "family": "A"
   },
   {
@@ -3758,7 +3830,7 @@
     "V22.7"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 341,
+   "line": 434,
    "family": "A"
   },
   {
@@ -3778,7 +3850,7 @@
     "V24"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 346,
+   "line": 439,
    "family": "A"
   },
   {
@@ -3798,7 +3870,7 @@
     "V22.7"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 351,
+   "line": 444,
    "family": "A"
   },
   {
@@ -3818,7 +3890,7 @@
     "V24.1"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 363,
+   "line": 456,
    "family": "A"
   },
   {
@@ -3838,7 +3910,7 @@
     "V22.7"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 373,
+   "line": 466,
    "family": "A"
   },
   {
@@ -3858,7 +3930,7 @@
     "V29.7"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 423,
+   "line": 516,
    "family": "A"
   },
   {
@@ -3878,7 +3950,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 438,
+   "line": 531,
    "family": "A"
   },
   {
@@ -3898,7 +3970,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 447,
+   "line": 540,
    "family": "A"
   },
   {
@@ -3918,7 +3990,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 452,
+   "line": 545,
    "family": "A"
   },
   {
@@ -3938,7 +4010,7 @@
     "V24.13"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 472,
+   "line": 565,
    "family": "A"
   },
   {
@@ -3958,7 +4030,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 479,
+   "line": 572,
    "family": "A"
   },
   {
@@ -3978,7 +4050,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 487,
+   "line": 580,
    "family": "A"
   },
   {
@@ -3998,7 +4070,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 494,
+   "line": 587,
    "family": "A"
   },
   {
@@ -4018,7 +4090,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 501,
+   "line": 594,
    "family": "A"
   },
   {
@@ -4038,7 +4110,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 508,
+   "line": 601,
    "family": "A"
   },
   {
@@ -4058,7 +4130,7 @@
     "V41"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 526,
+   "line": 619,
    "family": "A"
   },
   {
@@ -4078,7 +4150,7 @@
     "V47"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 535,
+   "line": 628,
    "family": "A"
   },
   {
@@ -4098,7 +4170,7 @@
     "V41"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 542,
+   "line": 635,
    "family": "A"
   },
   {
@@ -4118,7 +4190,7 @@
     "V29"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 566,
+   "line": 659,
    "family": "A"
   },
   {
@@ -4138,7 +4210,7 @@
     "V29"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 571,
+   "line": 664,
    "family": "A"
   },
   {
@@ -4158,7 +4230,7 @@
     "V22.2"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 596,
+   "line": 689,
    "family": "A"
   },
   {
@@ -4178,7 +4250,7 @@
     "V22"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 604,
+   "line": 697,
    "family": "A"
   },
   {
@@ -4198,7 +4270,7 @@
     "V22.2"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 610,
+   "line": 703,
    "family": "A"
   },
   {
@@ -4218,7 +4290,7 @@
     "V24.10"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 630,
+   "line": 723,
    "family": "A"
   },
   {
@@ -4238,7 +4310,7 @@
     "V24.10"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 640,
+   "line": 733,
    "family": "A"
   },
   {
@@ -4258,7 +4330,7 @@
     "V29.2"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 660,
+   "line": 753,
    "family": "A"
   },
   {
@@ -4278,7 +4350,7 @@
     "V47"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 665,
+   "line": 758,
    "family": "A"
   },
   {
@@ -4298,7 +4370,7 @@
     "V29.2"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 672,
+   "line": 765,
    "family": "A"
   },
   {
@@ -4318,7 +4390,7 @@
     "V47"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 677,
+   "line": 770,
    "family": "A"
   },
   {
@@ -4338,7 +4410,7 @@
     "V36"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 755,
+   "line": 848,
    "family": "A"
   },
   {
@@ -4358,7 +4430,7 @@
     "V31"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 764,
+   "line": 857,
    "family": "A"
   },
   {
@@ -4378,7 +4450,7 @@
     "V31"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 771,
+   "line": 864,
    "family": "A"
   },
   {
@@ -4398,7 +4470,7 @@
     "V40"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 777,
+   "line": 870,
    "family": "A"
   },
   {
@@ -4416,7 +4488,7 @@
    "reason_kind": "expression",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 1094,
+   "line": 1187,
    "family": "A"
   },
   {
@@ -4438,6 +4510,24 @@
    "family": "A-inline"
   },
   {
+   "id": "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_GROUND_HOLD",
+   "id_source": "typed",
+   "phase": "DEPLOY",
+   "domain": "DEPLOY_SITING",
+   "policy": "DeployObjectiveSitingPolicy",
+   "method": "blockFirstOrderReignsPreFlipGround",
+   "kind": "VETO",
+   "delta": 0.0,
+   "delta_expr": null,
+   "delta_kind": "literal",
+   "reason": "Do not spend the Tracked Fleet chase budget on ground forces before the objective flips",
+   "reason_kind": "literal",
+   "provenance": [],
+   "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
+   "line": 343,
+   "family": "A-inline"
+  },
+  {
    "id": "DEPLOY.OBJECTIVE.TERMINAL_ACTOR_EXPOSURE",
    "id_source": "typed",
    "phase": "DEPLOY",
@@ -4452,7 +4542,7 @@
    "reason_kind": "literal",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 275,
+   "line": 368,
    "family": "A-inline"
   },
   {
@@ -4470,7 +4560,7 @@
    "reason_kind": "literal",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java",
-   "line": 294,
+   "line": 387,
    "family": "A-inline"
   },
   {
@@ -4488,7 +4578,7 @@
    "reason_kind": "expression",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployPilotShipPolicy.java",
-   "line": 563,
+   "line": 565,
    "family": "A"
   },
   {
@@ -4506,7 +4596,7 @@
    "reason_kind": "expression",
    "provenance": [],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/DeployPilotShipPolicy.java",
-   "line": 579,
+   "line": 581,
    "family": "A"
   },
   {
@@ -7367,6 +7457,24 @@
    "family": "B"
   },
   {
+   "id": "HOTH.SHIELD.PACKAGE_RETAIN",
+   "id_source": "typed",
+   "phase": "FORCE_LOSS",
+   "domain": "FORCE_LOSS_PAYMENT",
+   "policy": "ForceLossPolicy",
+   "method": "scoreUnknownObjectiveRetention",
+   "kind": "VETO",
+   "delta": -9999.0,
+   "delta_expr": null,
+   "delta_kind": "literal",
+   "reason": "HOTH SHIELD PACKAGE: retain the selected host, pilot, and Cannon",
+   "reason_kind": "literal",
+   "provenance": [],
+   "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
+   "line": 124,
+   "family": "B"
+  },
+  {
    "id": "FORCE-LOSS-unknown-effect-interrupt",
    "id_source": "typed",
    "phase": "FORCE_LOSS",
@@ -7493,7 +7601,7 @@
     "V109"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 144,
+   "line": 156,
    "family": "A"
   },
   {
@@ -7513,7 +7621,7 @@
     "V153"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 154,
+   "line": 166,
    "family": "A"
   },
   {
@@ -7533,7 +7641,7 @@
     "V175"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 162,
+   "line": 174,
    "family": "A"
   },
   {
@@ -7553,7 +7661,7 @@
     "V178"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 171,
+   "line": 183,
    "family": "A"
   },
   {
@@ -7573,7 +7681,7 @@
     "V153"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 178,
+   "line": 190,
    "family": "A"
   },
   {
@@ -7593,7 +7701,7 @@
     "V28"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 187,
+   "line": 199,
    "family": "A"
   },
   {
@@ -7613,7 +7721,7 @@
     "V153"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 194,
+   "line": 206,
    "family": "A"
   },
   {
@@ -7633,7 +7741,7 @@
     "V21"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 201,
+   "line": 213,
    "family": "A"
   },
   {
@@ -7653,7 +7761,7 @@
     "V21"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 207,
+   "line": 219,
    "family": "A"
   },
   {
@@ -7673,7 +7781,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 212,
+   "line": 224,
    "family": "A"
   },
   {
@@ -7693,7 +7801,7 @@
     "V25"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 224,
+   "line": 236,
    "family": "A"
   },
   {
@@ -7713,7 +7821,7 @@
     "V153"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 233,
+   "line": 245,
    "family": "A"
   },
   {
@@ -7733,7 +7841,7 @@
     "V153"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 241,
+   "line": 253,
    "family": "A"
   },
   {
@@ -7753,7 +7861,7 @@
     "V21"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 249,
+   "line": 261,
    "family": "A"
   },
   {
@@ -7773,7 +7881,7 @@
     "V21"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 252,
+   "line": 264,
    "family": "A"
   },
   {
@@ -7793,7 +7901,7 @@
     "V153"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 258,
+   "line": 270,
    "family": "A"
   },
   {
@@ -7813,7 +7921,7 @@
     "V153"
    ],
    "file": "src/gemp-swccg-server/src/main/java/com/gempukku/swccgo/ai/models/common/phase/ForceLossPolicy.java",
-   "line": 292,
+   "line": 304,
    "family": "A"
   },
   {

@@ -9244,3 +9244,64 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     gameplay proof gates. Revert by restoring
     web.jar.pre-first-order-navy-9451ae2c7 and reverting 9451ae2c7.
     ded8b785d, V48, and original Batch Six remain independent.
+
+  ==== FIRST ORDER BATTLE-DESTINY AND HOTH WALKER REPLAY REPAIR
+       (2026-07-30, both bots) ====
+    First Order replays 52sdyes1qtk55umm for asdf and lzld3t1amcmry20h for
+    Rando showed the Navy package, chase, Crait hold, Battle Order gate, and
+    loaded-carrier protection working. The remaining defect was Rando leaving
+    its stacked Coarse And Rough And Irritating unused when taking it into
+    hand would cap more opponent excess battle destiny than its own. The exact
+    200_109 battle action now receives +500 only in that favorable state and
+    -50 otherwise, so Pass wins when the cap is neutral or harmful. Wrong
+    source, phase, owner, action text, and blueprint near misses remain neutral.
+
+    Hoth replay 654sd6i7mhzvs3wy.xml.gz, game
+    0082f80382e4-77f9-7ea1-1033-97c81f10, exposed delayed Cannon deployment,
+    an ignored Blizzard 4 free-warrior action, passenger pileup while another
+    legal pilot seat was open, a held route walker, and an exposed secondary
+    walker. The selected legal Cannon now enters the early deploy script after
+    locations and before characters, is retained through the exact
+    Reserve-bottom prompt, and releases stale priority only when actually
+    legal and affordable. Blizzard 4's exact free-warrior action receives
+    +800 with a legal target and is skipped when its search is empty.
+
+    A selected piloted walker may now move toward the Main Generator before
+    its retained Cannon attaches, and Target The Main Generator follows that
+    selected host. Competing walkers cannot borrow that Cannon or route.
+    Card217_012 makes North Ridge to the Third Marker free, so the turn-one
+    correction removes the formation veto rather than reserving nonexistent
+    Force. The paid Third Marker to Second Marker hop reserves its live
+    landspeed cost and blocks unrelated spending. Low-ability characters
+    prefer a real legal open pilot seat, not unused passenger capacity. A solo
+    secondary walker may advance; a supported spare may still wait.
+
+    Focused gate 131/0/0/0; impacted gate 185/0/0/0 across 14 suites;
+    independent rerun 157/0/0/0. Diff checks and async packaging passed. The
+    regenerated Rulebook at e684c597c contains 793 extracted rules; its current
+    helper-method limitation omits the Coarse and Blizzard 4 helper trace IDs,
+    so tests and packaged byte proof remain the behavioral evidence. All 82
+    class outputs from 12 production sources byte-match target/classes, server
+    jar, and web.jar. Server jar SHA-256 is
+    41b1fe1742e1d1bc34a539ebbe8c19ec0e5fa3659a05531c4888f30a1ec8fbe8;
+    web.jar SHA-256 is
+    7e76f165709f9b04476da626b6480e1b6b70ad40a9b88bf7d9aa0fd23df9b7b6.
+
+    Local code commit e684c597c on codex/v49-fo-hoth-live-repair. Scope is
+    shared AI strategy and phase logic, mirrored Rando and Chosen One
+    adapters, AI tests, generated Rulebook data, and these two approved
+    records. No engine, card Java, objective profile, deck, database, or
+    client source changed. Nothing was pushed.
+
+    Deployment froze table creation and proved zero authenticated hall tables.
+    Prior live jar
+    a9e1dc68b66607c4552608bc13ac3c61c248f0ed3fca51fb41732c70ed31b5a8
+    is preserved as web.jar.pre-fo-hoth-e684c597c. Candidate, host, and
+    running-container hashes match. The fresh app started at
+    2026-07-31T02:36:44.841283504Z after jar mtime
+    2026-07-31T02:35:17.586607151Z, with restart count zero and Java PID 1.
+    Health, login, switch posts, and authenticated hall returned 200; table
+    creation and all four gameplay switches were restored; startup completed;
+    and the hall remained empty. Fresh autonomous gameplay remains separate
+    proof. Restore web.jar.pre-fo-hoth-e684c597c and revert e684c597c;
+    9451ae2c7, ded8b785d, V48, and prior Hoth Shield work remain independent.
