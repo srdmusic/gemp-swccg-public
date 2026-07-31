@@ -35,9 +35,20 @@ public final class ForceLossPolicy {
     public record ObjectiveFlags(boolean myLordSenatorProtection,
                                  boolean huntDown,
                                  boolean requiredForFlip,
-                                 boolean pullable) {
+                                 boolean pullable,
+                                 boolean preferredPayoffActor) {
+        public ObjectiveFlags(
+                boolean myLordSenatorProtection,
+                boolean huntDown,
+                boolean requiredForFlip,
+                boolean pullable) {
+            this(myLordSenatorProtection, huntDown,
+                    requiredForFlip, pullable, false);
+        }
+
         public static ObjectiveFlags none() {
-            return new ObjectiveFlags(false, false, false, false);
+            return new ObjectiveFlags(
+                    false, false, false, false, false);
         }
     }
 
@@ -158,6 +169,13 @@ public final class ForceLossPolicy {
                             + "' — never discard/lose senators in this deck -300");
         }
 
+        if (objective.preferredPayoffActor()) {
+            add(operations, actionId,
+                    "OBJECTIVE.NABOO_DUEL.DUELIST_RETAIN",
+                    TraceOutputKind.BANDED, -700.0f,
+                    "NABOO DUEL: retain exactly one typed Jedi or Dark Jedi for the objective's executable payoff");
+        }
+
         addZoneScore(operations, actionId, decision, candidate, true);
 
         boolean protectChars = decision.lifeForce() >= 4;
@@ -235,6 +253,13 @@ public final class ForceLossPolicy {
         if (objective.huntDown() && isLightsaber(title)) {
             add(operations, actionId, "V25", TraceOutputKind.ORDERING,
                     -400.0f, "V25 HUNT DOWN: PROTECT LIGHTSABER from loss!");
+        }
+
+        if (objective.preferredPayoffActor()) {
+            add(operations, actionId,
+                    "OBJECTIVE.NABOO_DUEL.DUELIST_RETAIN",
+                    TraceOutputKind.BANDED, -700.0f,
+                    "NABOO DUEL: retain exactly one typed Jedi or Dark Jedi for the objective's executable payoff");
         }
 
         addZoneScore(operations, actionId, decision, candidate, false);

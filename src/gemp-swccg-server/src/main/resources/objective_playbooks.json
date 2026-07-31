@@ -1573,6 +1573,7 @@
     },
     {
       "label": "We'll Handle This",
+      "loaderEnabled": true,
       "blueprintIds": [
         "13_46",
         "13_46_BACK"
@@ -1586,12 +1587,133 @@
       "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [],
-      "startingEffects": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "13_32"
+          ],
+          "titleFragments": [
+            "naboo: theed palace generator core"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "13_31",
+            "220_8"
+          ],
+          "titleFragments": [
+            "naboo: theed palace generator"
+          ]
+        }
+      ],
+      "startingEffects": [
+        {
+          "blueprintIds": [
+            "13_24"
+          ],
+          "titleFragments": [
+            "inner strength"
+          ]
+        }
+      ],
       "startingInterrupts": [],
-      "keyCharacterFilter": null,
+      "keyCharacterFilter": "Jedi",
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "wlht-front-opponent-dark-jedi-present",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "presentAt",
+              "controller": "opponent",
+              "locationFilterKey": "interior_Naboo_battleground_site",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Dark_Jedi",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "Flip when an opponent Dark Jedi is present at an interior Naboo battleground site, including an actor excluded from battle"
+            }
+          ]
+        },
+        {
+          "id": "wlht-front-target-loss-payoff",
+          "phase": "preFlip",
+          "purpose": "payoff",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "presentAt",
+              "controller": "self",
+              "locationFilterKey": "interior_Theed_Palace_with_targetable_opponent_character_to_be_lost",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Jedi",
+              "includeExcludedFromBattle": false,
+              "gamePhase": "CONTROL",
+              "whosePhase": "self",
+              "scoreRole": "preFlipPrimary",
+              "sourceText": "Stage your Jedi with a targetable opponent character at an interior Theed Palace site to use the front-side target-loss action"
+            }
+          ]
+        },
+        {
+          "id": "wlht-back-no-opponent-dark-jedi",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "presentAt",
+              "controller": "opponent",
+              "locationFilterKey": "interior_Naboo_battleground_site",
+              "locationFragments": [],
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "Dark_Jedi",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "Flip back and retrieve 1 Force when no opponent Dark Jedi remains present at an interior Naboo battleground"
+            }
+          ]
+        },
+        {
+          "id": "wlht-back-lightsaber-combat-payoff",
+          "phase": "postFlip",
+          "purpose": "payoff",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "presentAt",
+              "controller": "self",
+              "locationFilterKey": "location_with_targetable_opponent_Dark_Jedi",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Jedi",
+              "includeExcludedFromBattle": false,
+              "gamePhase": "MOVE",
+              "whosePhase": "self",
+              "scoreRole": "postFlipPrimary",
+              "sourceText": "Stage your Jedi at the exact location of a targetable opponent Dark Jedi to initiate the back-side lightsaber combat"
+            }
+          ]
+        }
+      ],
       "frontBp": "13_46",
       "backBp": "13_46_BACK",
       "abbreviation": "WLHT",
@@ -5792,6 +5914,7 @@
     },
     {
       "label": "Let Them Make The First Move",
+      "loaderEnabled": true,
       "blueprintIds": [
         "13_73",
         "13_73_BACK"
@@ -5805,12 +5928,132 @@
       "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [],
-      "startingEffects": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "13_77"
+          ],
+          "titleFragments": [
+            "naboo: theed palace generator core"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "13_76"
+          ],
+          "titleFragments": [
+            "naboo: theed palace generator"
+          ]
+        }
+      ],
+      "startingEffects": [
+        {
+          "blueprintIds": [
+            "13_65"
+          ],
+          "titleFragments": [
+            "deep hatred"
+          ]
+        }
+      ],
       "startingInterrupts": [],
-      "keyCharacterFilter": null,
+      "keyCharacterFilter": "Dark_Jedi",
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "ltmtfm-front-opponent-jedi-present",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "presentAt",
+              "controller": "opponent",
+              "locationFilterKey": "interior_Naboo_battleground_site",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Jedi",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "Flip when an opponent Jedi is present at an interior Naboo battleground site, including an actor excluded from battle"
+            }
+          ]
+        },
+        {
+          "id": "ltmtfm-front-target-loss-payoff",
+          "phase": "preFlip",
+          "purpose": "payoff",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "presentAt",
+              "controller": "self",
+              "locationFilterKey": "interior_Theed_Palace_with_targetable_opponent_character_to_be_lost",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Dark_Jedi",
+              "includeExcludedFromBattle": false,
+              "gamePhase": "CONTROL",
+              "whosePhase": "self",
+              "scoreRole": "preFlipPrimary",
+              "sourceText": "Stage your Dark Jedi with a targetable opponent character at an interior Theed Palace site to use the front-side target-loss action"
+            }
+          ]
+        },
+        {
+          "id": "ltmtfm-back-no-opponent-jedi",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "presentAt",
+              "controller": "opponent",
+              "locationFilterKey": "interior_Naboo_battleground_site",
+              "locationFragments": [],
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "Jedi",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "Flip back and retrieve 1 Force when no opponent Jedi remains present at an interior Naboo battleground"
+            }
+          ]
+        },
+        {
+          "id": "ltmtfm-back-lightsaber-combat-payoff",
+          "phase": "postFlip",
+          "purpose": "payoff",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "presentAt",
+              "controller": "self",
+              "locationFilterKey": "location_with_targetable_opponent_Jedi",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Dark_Jedi",
+              "includeExcludedFromBattle": false,
+              "gamePhase": "MOVE",
+              "whosePhase": "self",
+              "scoreRole": "postFlipPrimary",
+              "sourceText": "Stage your Dark Jedi at the exact location of a targetable opponent Jedi to initiate the back-side lightsaber combat"
+            }
+          ]
+        }
+      ],
       "frontBp": "13_73",
       "backBp": "13_73_BACK",
       "abbreviation": "LTMTFM",

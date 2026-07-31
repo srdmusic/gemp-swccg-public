@@ -27,6 +27,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveGateHoldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.NabooDuelObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveHardLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
@@ -290,6 +291,35 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     actions.add(action);
                     continue;
                 }
+            }
+
+            NabooDuelObjectivePolicy.ActionKind nabooDuelAction = null;
+            if (exactDeployAnalyzer != null) {
+                if (exactDeployAnalyzer
+                        .isNabooDuelFrontTargetLossAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText)) {
+                    nabooDuelAction = NabooDuelObjectivePolicy
+                            .ActionKind.FRONT_TARGET_LOSS;
+                } else if (exactDeployAnalyzer
+                        .isNabooDuelLightsaberCombatAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText)) {
+                    nabooDuelAction = NabooDuelObjectivePolicy
+                            .ActionKind.INITIATE_LIGHTSABER_COMBAT;
+                }
+            }
+            if (nabooDuelAction != null) {
+                PolicyContributionLedger nabooDuelLedger =
+                        new PolicyContributionLedger(
+                            "naboo-duel-objective-" + actionId);
+                nabooDuelLedger.register(
+                        NabooDuelObjectivePolicy.score(
+                            actionId, nabooDuelAction));
+                PolicyOperationAdapter.apply(
+                        action, nabooDuelLedger);
+                actions.add(action);
+                continue;
             }
 
             boolean exactShieldFreeWarriorSource =

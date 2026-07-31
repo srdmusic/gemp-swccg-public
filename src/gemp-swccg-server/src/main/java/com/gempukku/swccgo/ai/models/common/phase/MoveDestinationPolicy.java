@@ -134,6 +134,54 @@ public final class MoveDestinationPolicy {
                 600.0f);
     }
 
+    public static Contribution objectiveNabooDuelFrontRouteStart(
+            boolean hasSafeTargetRoute,
+            String actorTitle) {
+        if (!hasSafeTargetRoute) return Contribution.none();
+        return new Contribution(
+                true,
+                "NABOO DUEL FRONT ROUTE: "
+                        + (actorTitle != null
+                            ? actorTitle : "typed duelist")
+                        + " has a safe move to the legal interior Theed Palace target",
+                600.0f);
+    }
+
+    public static Contribution objectiveNabooDuelFrontRouteDestination(
+            boolean advancesTargetRoute,
+            String actorTitle,
+            String destinationTitle) {
+        if (!advancesTargetRoute) return Contribution.none();
+        return new Contribution(
+                true,
+                "NABOO DUEL FRONT ROUTE: "
+                        + (actorTitle != null
+                            ? actorTitle : "typed duelist")
+                        + " reaches the legal target-loss pairing at "
+                        + (destinationTitle != null
+                            ? destinationTitle : "this location"),
+                1200.0f);
+    }
+
+    public static Contribution objectiveNabooDuelFrontRouteRetention(
+            boolean currentlyPaired,
+            boolean remainsPaired,
+            String actorTitle,
+            String destinationTitle) {
+        if (!currentlyPaired || remainsPaired) {
+            return Contribution.none();
+        }
+        return new Contribution(
+                true,
+                "NABOO DUEL FRONT ROUTE: "
+                        + (actorTitle != null
+                            ? actorTitle : "typed duelist")
+                        + " would abandon the legal target-loss pairing at "
+                        + (destinationTitle != null
+                            ? destinationTitle : "this destination"),
+                -1600.0f);
+    }
+
     public static Contribution objectivePostFlipPayoffDestination(
             ObjectiveAnalyzer.ObjectivePostFlipPayoffRole role,
             String actorTitle,

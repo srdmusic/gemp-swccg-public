@@ -654,7 +654,9 @@ public class MoveEvaluator extends ActionEvaluator {
                     boolean runtimeLocationHop = false;
                     boolean runtimeBlockerChaseHop = false;
                     boolean requiredCardEnablerHop = false;
+                    boolean nabooDuelFrontRouteHop = false;
                     boolean postFlipPayoffHop = false;
+                    boolean safeNabooDuelFrontRouteRetentionHop = false;
                     boolean safePostFlipPayoffRetentionHop = false;
                     boolean terminalEscapeHop = false;
                     boolean firstOrderDrainPairHop = false;
@@ -666,12 +668,18 @@ public class MoveEvaluator extends ActionEvaluator {
                             com.gempukku.swccgo.ai.models.common.strategy
                                 .ObjectiveAnalyzer
                                 .ObjectivePostFlipPayoffRole.NONE;
+                    boolean currentNabooDuelFrontRoute = false;
                     if (routeAnalyzer != null && routeAnalyzer.isAnalyzed()
                             && routeOrigin != null) {
                         currentPostFlipPayoff =
                             routeAnalyzer.classifyPostFlipPayoffRoleAt(
                                 game, playerId, cardToMove,
                                 routeOrigin);
+                        currentNabooDuelFrontRoute =
+                            routeAnalyzer
+                                .qualifiesNabooDuelFrontTargetRouteAt(
+                                    game, playerId, cardToMove,
+                                    routeOrigin);
                         terminalExposureAtOrigin =
                             routeAnalyzer
                                 .isFirstOrderReignsTerminalExposureAt(
@@ -735,6 +743,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                     != com.gempukku.swccgo.ai.models.common
                                         .strategy.ObjectiveAnalyzer
                                         .ObjectivePostFlipPayoffRole.NONE;
+                            boolean nabooDuelFrontHop = routeAnalyzer
+                                    .advancesNabooDuelFrontTargetRouteAt(
+                                            game, playerId,
+                                            cardToMove,
+                                            routeDestination);
                             boolean terminalEscape =
                                     terminalExposureAtOrigin
                                     && !routeAnalyzer
@@ -758,11 +771,19 @@ public class MoveEvaluator extends ActionEvaluator {
                                             game, playerId,
                                             cardToMove,
                                             routeDestination);
+                            boolean retainsNabooDuelFrontRoute =
+                                    currentNabooDuelFrontRoute
+                                    && routeAnalyzer
+                                        .qualifiesNabooDuelFrontTargetRouteAt(
+                                            game, playerId,
+                                            cardToMove,
+                                            routeDestination);
                             if (!actorRouteHop
                                     && !actorLocationHop
                                     && !blockerChaseHop
                                     && !requiredEnablerHop
                                     && !mainGeneratorHop
+                                    && !nabooDuelFrontHop
                                     && !payoffHop
                                     && !terminalEscape
                                     && !drainPairHop
@@ -770,7 +791,8 @@ public class MoveEvaluator extends ActionEvaluator {
                                         == com.gempukku.swccgo.ai.models
                                             .common.strategy
                                             .ObjectiveAnalyzer
-                                            .ObjectivePostFlipPayoffRole.NONE) {
+                                            .ObjectivePostFlipPayoffRole.NONE
+                                    && !currentNabooDuelFrontRoute) {
                                 continue;
                             }
                             String routeVeto =
@@ -793,6 +815,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                         || blockerChaseHop
                                         || requiredEnablerHop
                                         || mainGeneratorHop
+                                        || nabooDuelFrontHop
                                         || payoffHop;
                                 runtimeLocationHop |=
                                         actorLocationHop;
@@ -800,7 +823,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                         blockerChaseHop;
                                 requiredCardEnablerHop |=
                                         requiredEnablerHop;
+                                nabooDuelFrontRouteHop |=
+                                        nabooDuelFrontHop;
                                 postFlipPayoffHop |= payoffHop;
+                                safeNabooDuelFrontRouteRetentionHop |=
+                                        retainsNabooDuelFrontRoute;
                                 safePostFlipPayoffRetentionHop |=
                                         retainsCurrentPayoff;
                                 terminalEscapeHop |= terminalEscape;
@@ -819,7 +846,12 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                     }
                     MoveDestinationPolicy.Contribution objectiveRoute =
-                            postFlipPayoffHop
+                            nabooDuelFrontRouteHop
+                            ? MoveDestinationPolicy
+                                .objectiveNabooDuelFrontRouteStart(
+                                    safeAdvancingHop,
+                                    cardToMove.getTitle())
+                            : postFlipPayoffHop
                             ? MoveDestinationPolicy
                                 .objectivePostFlipPayoffStart(
                                     safeAdvancingHop,
@@ -844,7 +876,15 @@ public class MoveEvaluator extends ActionEvaluator {
                                     safeAdvancingHop,
                                     cardToMove.getTitle());
                     if (objectiveRoute.applies()) {
-                        if (postFlipPayoffHop) {
+                        if (nabooDuelFrontRouteHop) {
+                            action.addReasoning(
+                                    objectiveRoute.reason(),
+                                    objectiveRoute.delta(),
+                                    TraceRuleId.of(
+                                        "MOVE.OBJECTIVE.NABOO_DUEL_FRONT_ROUTE_START"),
+                                    TraceDomainId.MOVE,
+                                    TraceOutputKind.BANDED);
+                        } else if (postFlipPayoffHop) {
                             action.addReasoning(
                                     objectiveRoute.reason(),
                                     objectiveRoute.delta(),
@@ -876,6 +916,8 @@ public class MoveEvaluator extends ActionEvaluator {
                         ladderClaimR2(
                                 postFlipPayoffHop
                                     ? "OBJECTIVE POST-FLIP PAYOFF"
+                                    : nabooDuelFrontRouteHop
+                                    ? "NABOO DUEL FRONT ROUTE"
                                     : requiredCardEnablerHop
                                     ? "OBJECTIVE REQUIRED-CARD ENABLER"
                                     : runtimeLocationHop
@@ -909,6 +951,23 @@ public class MoveEvaluator extends ActionEvaluator {
                                 payoffHold.delta(),
                                 TraceRuleId.of(
                                     "MOVE.OBJECTIVE.POST_FLIP_PAYOFF_HOLD"),
+                                TraceDomainId.MOVE,
+                                    TraceOutputKind.ORDERING);
+                    }
+                    MoveDestinationPolicy.Contribution
+                            nabooDuelFrontRouteHold =
+                                MoveDestinationPolicy
+                                    .objectiveNabooDuelFrontRouteRetention(
+                                        currentNabooDuelFrontRoute,
+                                        safeNabooDuelFrontRouteRetentionHop,
+                                        cardToMove.getTitle(),
+                                        "every legal destination");
+                    if (nabooDuelFrontRouteHold.applies()) {
+                        action.addReasoning(
+                                nabooDuelFrontRouteHold.reason(),
+                                nabooDuelFrontRouteHold.delta(),
+                                TraceRuleId.of(
+                                    "MOVE.OBJECTIVE.NABOO_DUEL_FRONT_ROUTE_HOLD"),
                                 TraceDomainId.MOVE,
                                 TraceOutputKind.ORDERING);
                     }

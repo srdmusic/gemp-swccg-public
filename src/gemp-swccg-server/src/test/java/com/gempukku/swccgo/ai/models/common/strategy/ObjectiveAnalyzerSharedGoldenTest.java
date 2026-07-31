@@ -227,8 +227,10 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // Extension batch (2026-07-29): 501_94 and 501_19 authored and
         // enabled, 32 -> 34 enabled, 60 -> 62 profiles.
         // Senate family batch: Plead My Case activated, 34 -> 35.
-        assertEquals(35, enabled);
-        assertEquals(27, profiles.size() - enabled);
+        // Naboo duel family batch: both mirrored profiles activated,
+        // 35 -> 37.
+        assertEquals(37, enabled);
+        assertEquals(25, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);

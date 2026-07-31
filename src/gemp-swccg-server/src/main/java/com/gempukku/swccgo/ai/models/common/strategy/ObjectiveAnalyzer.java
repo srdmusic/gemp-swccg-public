@@ -7,6 +7,7 @@ import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -6289,6 +6290,16 @@ public class ObjectiveAnalyzer {
                         alternative.includeExcludedFromBattle)) {
             return false;
         }
+        String controller = resolveController(
+                game.getGameState(), playerId,
+                alternative.controller);
+        if ((controller != null
+                && !controller.equals(candidate.getOwner()))
+                || (controller == null
+                    && alternative.controller != null
+                    && !"any".equals(alternative.controller))) {
+            return false;
+        }
         com.gempukku.swccgo.filters.Filter actorFilter =
                 resolveFilter(alternative.actorFilterKey);
         if (actorFilter == null || !actorFilter.accepts(
@@ -6305,14 +6316,16 @@ public class ObjectiveAnalyzer {
                         ? SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE
                         : null;
         if ("controlWith".equals(alternative.relation)
+                && controller != null
                 && game.getModifiersQuerying().controlsLocation(
-                        game.getGameState(), location, playerId,
+                        game.getGameState(), location, controller,
                         overrides)) {
             return true;
         }
         if ("occupyWith".equals(alternative.relation)
+                && controller != null
                 && game.getModifiersQuerying().occupiesLocation(
-                        game.getGameState(), location, playerId,
+                        game.getGameState(), location, controller,
                         overrides)) {
             return true;
         }
@@ -6341,7 +6354,7 @@ public class ObjectiveAnalyzer {
 
         if ("controlWith".equals(alternative.relation)) {
             String opponent =
-                    game.getGameState().getOpponent(playerId);
+                    game.getGameState().getOpponent(controller);
             return opponent == null
                     || !game.getModifiersQuerying().occupiesLocation(
                             game.getGameState(), location,
@@ -6704,9 +6717,15 @@ public class ObjectiveAnalyzer {
         }
         if (activeFlipLocationRules != null) {
             for (FlipLocationRule rule : activeFlipLocationRules) {
-                if (rule == null || rule.alternatives == null) continue;
+                if (rule == null || rule.alternatives == null
+                        || !(isFlipped ? "postFlip" : "preFlip")
+                            .equals(rule.phase)) continue;
                 for (FlipLocationAlternative alt : rule.alternatives) {
                     if (alt == null || alt.locationFilterKey == null) continue;
+                    if ("opponent".equals(alt.controller)
+                            && alt.actorFilterKey != null) {
+                        continue;
+                    }
                     com.gempukku.swccgo.filters.Filter f = resolveLocationFilter(alt.locationFilterKey, playerId);
                     if (f != null && f.accepts(gs, game.getModifiersQuerying(), loc)) return true;
                 }
@@ -8547,6 +8566,10 @@ public class ObjectiveAnalyzer {
                     game, playerId, candidate, destination)) {
             return ObjectivePostFlipPayoffRole.NONE;
         }
+        if (!canNabooDuelBackTargetOwnActor(
+                game, playerId, candidate)) {
+            return ObjectivePostFlipPayoffRole.NONE;
+        }
         ObjectivePostFlipPayoffRole secondary =
                 ObjectivePostFlipPayoffRole.NONE;
         try {
@@ -8617,6 +8640,100 @@ public class ObjectiveAnalyzer {
                 ? 1 : 0;
     }
 
+    public boolean advancesNabooDuelFrontTargetRouteAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!isNabooDuelObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null || destination == null
+                || activeFlipLocationRules == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        try {
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isNabooDuelFrontPayoffRule(rule)) continue;
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if ("preFlipPrimary".equals(
+                                alternative.scoreRole)
+                            && advancesAlternativeAt(
+                                game, playerId, candidate,
+                                destination, alternative)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Naboo duel front target-route assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean qualifiesNabooDuelFrontTargetRouteAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (!isNabooDuelObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null || destination == null
+                || activeFlipLocationRules == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        try {
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isNabooDuelFrontPayoffRule(rule)) continue;
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if ("preFlipPrimary".equals(
+                                alternative.scoreRole)
+                            && candidateWouldSatisfyAlternativeAt(
+                                game, playerId, candidate,
+                                destination, alternative)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Naboo duel front target-route role failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean wouldDowngradeNabooDuelFrontTargetRouteIfMoved(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        if (game == null || candidate == null
+                || destination == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard origin = game.getModifiersQuerying()
+                .getLocationThatCardIsPresentAt(
+                    game.getGameState(), candidate);
+        return qualifiesNabooDuelFrontTargetRouteAt(
+                    game, playerId, candidate, origin)
+                && !qualifiesNabooDuelFrontTargetRouteAt(
+                    game, playerId, candidate, destination);
+    }
+
+    private static boolean isNabooDuelFrontPayoffRule(
+            FlipLocationRule rule) {
+        return rule != null
+                && "preFlip".equals(rule.phase)
+                && "payoff".equals(rule.purpose)
+                && rule.alternatives != null
+                && !rule.alternatives.isEmpty();
+    }
+
     public ObjectivePostFlipPayoffRole classifyPostFlipPayoffAt(
             SwccgGame game, String playerId,
             PhysicalCard candidate,
@@ -8638,6 +8755,10 @@ public class ObjectiveAnalyzer {
                 || game.getModifiersQuerying() == null
                 || isFirstOrderReignsTerminalExposureAt(
                     game, playerId, candidate, destination)) {
+            return ObjectivePostFlipPayoffRole.NONE;
+        }
+        if (!canNabooDuelBackTargetOwnActor(
+                game, playerId, candidate)) {
             return ObjectivePostFlipPayoffRole.NONE;
         }
         ObjectivePostFlipPayoffRole secondary =
@@ -8987,6 +9108,193 @@ public class ObjectiveAnalyzer {
     public String getObjectiveTitle() { return objectiveTitle; }
     public String getObjectiveBlueprintId() { return objectiveBlueprintId; }
     public String getFlipConditionText() { return flipConditionText; }
+
+    public boolean isNabooDuelFrontTargetLossAction(
+            SwccgGame game, String playerId,
+            PhysicalCard actionSource, String actionText) {
+        return isExactNabooDuelObjectiveActionSource(
+                    game, playerId, actionSource)
+                && !isFlipped
+                && actionText != null
+                && "target character".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT));
+    }
+
+    public boolean isNabooDuelLightsaberCombatAction(
+            SwccgGame game, String playerId,
+            PhysicalCard actionSource, String actionText) {
+        return isExactNabooDuelObjectiveActionSource(
+                    game, playerId, actionSource)
+                && isFlipped
+                && actionText != null
+                && "initiate lightsaber combat".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT));
+    }
+
+    /** Protect exactly one undeployed typed duelist, never every duplicate. */
+    public boolean isPreferredNabooDuelForceLossCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isNabooDuelObjectiveFamily()
+                || game == null || playerId == null
+                || candidate == null
+                || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !isStrategyKeyCharacter(
+                    game, playerId, candidate)) {
+            return false;
+        }
+        try {
+            Collection<PhysicalCard> permanents =
+                    game.getGameState().getAllPermanentCards();
+            if (permanents != null) {
+                for (PhysicalCard card : permanents) {
+                    if (card != null
+                            && playerId.equals(card.getOwner())
+                            && card.getZone() != null
+                            && card.getZone().isInPlay()
+                            && isActiveForSpot(game, card, true)
+                            && isStrategyKeyCharacter(
+                                game, playerId, card)) {
+                        return false;
+                    }
+                }
+            }
+            List<PhysicalCard> hand =
+                    game.getGameState().getHand(playerId);
+            if (hand == null) return false;
+            for (PhysicalCard card : hand) {
+                if (card == null
+                        || !playerId.equals(card.getOwner())
+                        || !isStrategyKeyCharacter(
+                            game, playerId, card)) {
+                    continue;
+                }
+                return card == candidate
+                        || card.getCardId()
+                            == candidate.getCardId();
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Naboo duel Force-loss retention assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * A deployed typed duelist fills this role only after it reaches an
+     * executable objective pairing. Until then, a hand copy that can deploy
+     * directly to such a pairing still deserves key-character priority.
+     */
+    public boolean needsAdditionalNabooDuelPayoffActor(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isNabooDuelObjectiveFamily()
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !isStrategyKeyCharacter(
+                    game, playerId, candidate)) {
+            return false;
+        }
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (locations == null || permanents == null) {
+            return false;
+        }
+        try {
+            for (PhysicalCard actor : permanents) {
+                if (actor == null
+                        || !playerId.equals(actor.getOwner())
+                        || actor.getZone() == null
+                        || !actor.getZone().isInPlay()
+                        || !isActiveForSpot(game, actor, false)
+                        || !isStrategyKeyCharacter(
+                            game, playerId, actor)) {
+                    continue;
+                }
+                PhysicalCard actorLocation =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsPresentAt(
+                                game.getGameState(), actor);
+                if (isFlipped
+                        ? classifyPostFlipPayoffRoleAt(
+                            game, playerId, actor, actorLocation)
+                            != ObjectivePostFlipPayoffRole.NONE
+                        : qualifiesNabooDuelFrontTargetRouteAt(
+                            game, playerId, actor, actorLocation)) {
+                    return false;
+                }
+            }
+            for (PhysicalCard location : locations) {
+                if (isFlipped
+                        ? classifyPostFlipPayoffRoleAt(
+                            game, playerId, candidate, location)
+                            != ObjectivePostFlipPayoffRole.NONE
+                        : qualifiesNabooDuelFrontTargetRouteAt(
+                            game, playerId, candidate, location)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Naboo duel additional payoff-actor assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    private boolean isExactNabooDuelObjectiveActionSource(
+            SwccgGame game, String playerId,
+            PhysicalCard actionSource) {
+        if (!isNabooDuelObjectiveFamily()
+                || game == null || playerId == null
+                || actionSource == null
+                || !playerId.equals(actionSource.getOwner())
+                || game.getGameState() == null) {
+            return false;
+        }
+        PhysicalCard objective =
+                findOurObjective(
+                    game.getGameState(), playerId);
+        return objective != null
+                && (objective == actionSource
+                    || objective.getCardId()
+                        == actionSource.getCardId());
+    }
+
+    private boolean isNabooDuelObjectiveFamily() {
+        return analyzed
+                && ("13_46".equals(objectiveBlueprintId)
+                    || "13_46_BACK".equals(objectiveBlueprintId)
+                    || "13_73".equals(objectiveBlueprintId)
+                    || "13_73_BACK".equals(objectiveBlueprintId));
+    }
+
+    private boolean canNabooDuelBackTargetOwnActor(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isNabooDuelObjectiveFamily()) return true;
+        if (game == null || playerId == null || candidate == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard objective =
+                findOurObjective(game.getGameState(), playerId);
+        return objective != null
+                && game.getModifiersQuerying().canBeTargetedBy(
+                    game.getGameState(), candidate, objective,
+                    Collections.singleton(TargetingReason.OTHER));
+    }
+
     // V193 (Steve, 2026-07-07): the site Rando must CONTROL to enable an objective flip
     // (e.g. Endor: Bunker for Establish Secret Base (V)). null when the objective has none.
     public String getFlipCriticalControlSite() { return flipCriticalControlSite; }
@@ -10516,6 +10824,8 @@ public class ObjectiveAnalyzer {
         String flipGateCardName;
         List<String> flipGateCardIds;
         List<JsonCardRef> startingLocations;
+        // Historical non-location setup bucket. It includes Effects and
+        // Epic Events because both deploy to the side of the table.
         List<JsonCardRef> startingEffects;
         List<JsonCardRef> startingInterrupts;
         String keyCharacterFilter;
@@ -10575,7 +10885,7 @@ public class ObjectiveAnalyzer {
         // (no spot override), mirroring the card law's inner with() that
         // takes no SpotOverride.
         Integer minActorsPerLocation;
-        String scoreRole;             // setupLocation | flipProgress | flipGate | stayFlipped | postFlipPrimary | postFlipSecondary
+        String scoreRole;             // setupLocation | flipProgress | flipGate | stayFlipped | preFlipPrimary | postFlipPrimary | postFlipSecondary
         String sourceText;            // audit only — runtime must not parse this
     }
     static final class ProspectiveActorPair {
@@ -11197,6 +11507,16 @@ public class ObjectiveAnalyzer {
             // COMPOSITE
             case "Alderaan_location":
                 return com.gempukku.swccgo.filters.Filters.partOfSystem(com.gempukku.swccgo.common.Title.Alderaan);
+            case "interior_Theed_Palace_with_targetable_opponent_character_to_be_lost":
+                return nabooDuelFrontTargetLocationFilter(playerId);
+            case "location_with_targetable_opponent_Dark_Jedi":
+                return nabooDuelOpponentActorLocationFilter(
+                        playerId,
+                        com.gempukku.swccgo.filters.Filters.Dark_Jedi);
+            case "location_with_targetable_opponent_Jedi":
+                return nabooDuelOpponentActorLocationFilter(
+                        playerId,
+                        com.gempukku.swccgo.filters.Filters.Jedi);
             case "interior_Naboo_battleground_site":
                 return com.gempukku.swccgo.filters.Filters.and(
                     com.gempukku.swccgo.filters.Filters.interior_Naboo_site,
@@ -11210,6 +11530,183 @@ public class ObjectiveAnalyzer {
                 LOG.warn("[ObjectiveAnalyzer] unknown/dynamic location filter key '{}' — fail-closed (no score).", key);
                 return null;
         }
+    }
+
+    private com.gempukku.swccgo.filters.Filter
+            nabooDuelFrontTargetLocationFilter(String playerId) {
+        if (playerId == null) return null;
+        return new com.gempukku.swccgo.filters.Filter() {
+            @Override
+            public boolean accepts(
+                    GameState gameState,
+                    com.gempukku.swccgo.logic.modifiers.querying
+                        .ModifiersQuerying modifiersQuerying,
+                    PhysicalCard candidate) {
+                if (gameState == null || modifiersQuerying == null
+                        || candidate == null
+                        || !com.gempukku.swccgo.filters.Filters
+                            .interior_Theed_Palace_site.accepts(
+                                gameState, modifiersQuerying,
+                                candidate)) {
+                    return false;
+                }
+                String opponent = gameState.getOpponent(playerId);
+                SwccgGame game = gameState.getGame();
+                PhysicalCard objective =
+                        findOurObjective(gameState, playerId);
+                Collection<PhysicalCard> permanents =
+                        gameState.getAllPermanentCards();
+                if (opponent == null || game == null
+                        || objective == null || permanents == null) {
+                    return false;
+                }
+                for (PhysicalCard target : permanents) {
+                    if (target == null
+                            || !opponent.equals(target.getOwner())
+                            || target.isCaptive()
+                            || !isActiveForSpot(game, target, false)
+                            || !com.gempukku.swccgo.filters.Filters
+                                .character.accepts(
+                                    gameState,
+                                    modifiersQuerying, target)
+                            || !isNabooDuelFrontTargetAllowedByGameText(
+                                gameState, modifiersQuerying,
+                                objective, target)
+                            || !com.gempukku.swccgo.filters.Filters
+                                .canBeTargetedBy(
+                                    objective,
+                                    TargetingReason.TO_BE_LOST)
+                                .accepts(
+                                    gameState,
+                                    modifiersQuerying, target)) {
+                        continue;
+                    }
+                    PhysicalCard targetLocation =
+                            modifiersQuerying
+                                .getLocationThatCardIsPresentAt(
+                                    gameState, target);
+                    if (samePhysicalLocation(
+                            targetLocation, candidate)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
+    }
+
+    private boolean isNabooDuelFrontTargetAllowedByGameText(
+            GameState gameState,
+            com.gempukku.swccgo.logic.modifiers.querying
+                .ModifiersQuerying modifiersQuerying,
+            PhysicalCard objective,
+            PhysicalCard target) {
+        if ("13_46".equals(objectiveBlueprintId)) {
+            if (modifiersQuerying.hasGameTextModification(
+                    gameState, objective,
+                    ModifyGameTextType
+                        .WELL_HANDLE_THIS__ONLY_TARGET_UNDERCOVER_SPIES_AND_5D6RA7)) {
+                return com.gempukku.swccgo.filters.Filters.or(
+                        com.gempukku.swccgo.filters.Filters
+                            .undercover_spy,
+                        com.gempukku.swccgo.filters.Filters
+                            ._5D6RA7).accepts(
+                                gameState,
+                                modifiersQuerying, target);
+            }
+            if (modifiersQuerying.hasGameTextModification(
+                    gameState, objective,
+                    ModifyGameTextType
+                        .LEGACY__WELL_HANDLE_THIS__ONLY_TARGET_DROIDS_AND_SPIES)) {
+                return com.gempukku.swccgo.filters.Filters.or(
+                        com.gempukku.swccgo.filters.Filters.spy,
+                        com.gempukku.swccgo.filters.Filters.droid)
+                    .accepts(
+                        gameState, modifiersQuerying, target);
+            }
+            return true;
+        }
+        if ("13_73".equals(objectiveBlueprintId)) {
+            if (modifiersQuerying.hasGameTextModification(
+                    gameState, objective,
+                    ModifyGameTextType
+                        .LET_THEM_MAKE_THE_FIRST_MOVE__ONLY_TARGET_UNDERCOVER_SPIES)) {
+                return com.gempukku.swccgo.filters.Filters
+                        .undercover_spy.accepts(
+                            gameState,
+                            modifiersQuerying, target);
+            }
+            if (modifiersQuerying.hasGameTextModification(
+                    gameState, objective,
+                    ModifyGameTextType
+                        .LET_THEM_MAKE_THE_FIRST_MOVE__ONLY_TARGET_UNDERCOVER_SPIES_AND_R2D2)) {
+                return com.gempukku.swccgo.filters.Filters.or(
+                        com.gempukku.swccgo.filters.Filters
+                            .undercover_spy,
+                        com.gempukku.swccgo.filters.Filters.R2D2)
+                    .accepts(
+                        gameState, modifiersQuerying, target);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private com.gempukku.swccgo.filters.Filter
+            nabooDuelOpponentActorLocationFilter(
+                    String playerId,
+                    com.gempukku.swccgo.filters.Filter actorFilter) {
+        if (playerId == null || actorFilter == null) return null;
+        return new com.gempukku.swccgo.filters.Filter() {
+            @Override
+            public boolean accepts(
+                    GameState gameState,
+                    com.gempukku.swccgo.logic.modifiers.querying
+                        .ModifiersQuerying modifiersQuerying,
+                    PhysicalCard candidate) {
+                if (gameState == null || modifiersQuerying == null
+                        || candidate == null
+                        || !com.gempukku.swccgo.filters.Filters.location.accepts(
+                            gameState, modifiersQuerying, candidate)) {
+                    return false;
+                }
+                String opponent = gameState.getOpponent(playerId);
+                SwccgGame game = gameState.getGame();
+                PhysicalCard objective =
+                        findOurObjective(gameState, playerId);
+                Collection<PhysicalCard> permanents =
+                        gameState.getAllPermanentCards();
+                if (opponent == null || game == null
+                        || objective == null
+                        || permanents == null) {
+                    return false;
+                }
+                for (PhysicalCard actor : permanents) {
+                    if (actor == null
+                            || !opponent.equals(actor.getOwner())
+                            || actor.isCaptive()
+                            || !isActiveForSpot(game, actor, false)
+                            || !actorFilter.accepts(
+                                gameState, modifiersQuerying, actor)
+                            || !com.gempukku.swccgo.filters.Filters
+                                .canBeTargetedBy(objective)
+                                .accepts(
+                                    gameState,
+                                    modifiersQuerying, actor)) {
+                        continue;
+                    }
+                    PhysicalCard actorLocation =
+                            modifiersQuerying
+                                .getLocationThatCardIsPresentAt(
+                                    gameState, actor);
+                    if (samePhysicalLocation(
+                            actorLocation, candidate)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
     }
 
     private com.gempukku.swccgo.filters.Filter

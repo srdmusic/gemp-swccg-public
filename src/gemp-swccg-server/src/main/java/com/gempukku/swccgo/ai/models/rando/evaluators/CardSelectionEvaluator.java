@@ -31,6 +31,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveConsolidationPoli
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.NabooDuelObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
@@ -1813,6 +1814,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         action.getActionId(),
                                         objectiveProgressAnalyzer
                                             .advancesRequiredCardDeployPrerequisiteAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                NabooDuelObjectivePolicy
+                                    .scoreFrontDeployDestination(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .advancesNabooDuelFrontTargetRouteAt(
                                                 game, playerId,
                                                 objectiveProgressDeployingCard,
                                                 location)));
@@ -5090,6 +5100,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         context.getGame(),
                         context.getPlayerId(),
                         physicalCard);
+        boolean preferredNabooDuelDuelist =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isPreferredNabooDuelForceLossCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
         if (route == ForceLossPolicy.Route.STANDALONE) {
             myLord = objectiveAnalyzer.getObjectiveTitle() != null
                     && objectiveAnalyzer.isMyLord();
@@ -5118,7 +5137,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 myLord,
                 huntDown,
                 required,
-                pullable);
+                pullable,
+                preferredNabooDuelDuelist);
     }
 
     /**
@@ -7293,6 +7313,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         boolean objectiveActorLocationDestination = false;
                         boolean objectiveRequiredCardEnablerDestination =
                                 false;
+                        boolean objectiveNabooDuelFrontRouteDestination =
+                                false;
+                        boolean objectiveNabooDuelFrontRouteCurrent = false;
+                        boolean objectiveNabooDuelFrontRouteAtDestination =
+                                false;
                         com.gempukku.swccgo.ai.models.common.strategy
                             .ObjectiveAnalyzer.ObjectivePostFlipPayoffRole
                             objectivePostFlipPayoffDestination =
@@ -7346,6 +7371,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         .advancesRequiredCardDeployPrerequisiteByMovingTo(
                                                 game, playerId, fsMover,
                                                 location);
+                                objectiveNabooDuelFrontRouteDestination =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    && routeAnalyzer
+                                        .advancesNabooDuelFrontTargetRouteAt(
+                                            game, playerId, fsMover,
+                                            location);
                                 objectivePostFlipPayoffDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -7358,6 +7390,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         .ObjectivePostFlipPayoffRole.NONE;
                                 if (routeAnalyzer != null
                                         && routeAnalyzer.isAnalyzed()) {
+                                    objectiveNabooDuelFrontRouteCurrent =
+                                        routeAnalyzer
+                                            .qualifiesNabooDuelFrontTargetRouteAt(
+                                                game, playerId,
+                                                fsMover, fsOrigin);
+                                    objectiveNabooDuelFrontRouteAtDestination =
+                                        routeAnalyzer
+                                            .qualifiesNabooDuelFrontTargetRouteAt(
+                                                game, playerId,
+                                                fsMover, location);
                                     objectivePostFlipPayoffCurrent =
                                         routeAnalyzer
                                             .classifyPostFlipPayoffRoleAt(
@@ -7705,6 +7747,37 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     logger.warn(
                                         "OBJECTIVE ACTOR LOCATION DEST: {} to {} +1000",
                                         fsMover.getTitle(), title);
+                                }
+                                MoveDestinationPolicy.Contribution
+                                    nabooDuelFrontRoute =
+                                        MoveDestinationPolicy
+                                            .objectiveNabooDuelFrontRouteDestination(
+                                                objectiveNabooDuelFrontRouteDestination,
+                                                fsMover.getTitle(), title);
+                                if (nabooDuelFrontRoute.applies()) {
+                                    action.addReasoning(
+                                        nabooDuelFrontRoute.reason(),
+                                        nabooDuelFrontRoute.delta(),
+                                        TraceRuleId.of(
+                                            "MOVE.OBJECTIVE.NABOO_DUEL_FRONT_ROUTE_DESTINATION"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.BANDED);
+                                }
+                                MoveDestinationPolicy.Contribution
+                                    nabooDuelFrontRouteRetention =
+                                        MoveDestinationPolicy
+                                            .objectiveNabooDuelFrontRouteRetention(
+                                                objectiveNabooDuelFrontRouteCurrent,
+                                                objectiveNabooDuelFrontRouteAtDestination,
+                                                fsMover.getTitle(), title);
+                                if (nabooDuelFrontRouteRetention.applies()) {
+                                    action.addReasoning(
+                                        nabooDuelFrontRouteRetention.reason(),
+                                        nabooDuelFrontRouteRetention.delta(),
+                                        TraceRuleId.of(
+                                            "MOVE.OBJECTIVE.NABOO_DUEL_FRONT_ROUTE_HOLD"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.ORDERING);
                                 }
                                 MoveDestinationPolicy.Contribution
                                     postFlipPayoff =
@@ -8601,6 +8674,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     || objectiveActorLocationDestination
                                                     || objectiveFirstOrderDrainPairDestination
                                                     || objectiveTerminalEscapeDestination
+                                                    || objectiveNabooDuelFrontRouteDestination
                                                     || exactTdigwattLandoDestination
                                                     || objectivePostFlipPayoffDestination
                                                         != com.gempukku.swccgo.ai.models

@@ -3108,6 +3108,13 @@ public class DeployEvaluator extends ActionEvaluator {
                                     game, context.getPlayerId(), card)) {
                                 boolean typedKeyRole =
                                         akObj.hasTypedStrategyKeyCharacter();
+                                boolean needsAdditionalNabooDuelActor =
+                                        typedKeyRole
+                                        && akObj
+                                            .needsAdditionalNabooDuelPayoffActor(
+                                                game,
+                                                context.getPlayerId(),
+                                                card);
                                 java.util.Set<String> candidateTokens =
                                         new java.util.HashSet<>();
                                 if (!typedKeyRole) {
@@ -3149,7 +3156,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                                         .toLowerCase(
                                                             Locale.ROOT)
                                                         .contains(token));
-                                    if (fillsSameRole) {
+                                    if (fillsSameRole
+                                            && !needsAdditionalNabooDuelActor) {
                                         alreadyOnTable = true;
                                         break;
                                     }
