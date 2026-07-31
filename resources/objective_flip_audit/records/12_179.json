@@ -125,13 +125,68 @@
   "profile": {
     "exists": true,
     "loaderEnabled": true,
-    "profileGaps": [
-      "flipGateSite is null even though the flip law has a single unambiguous gate site (Galactic Senate); keySiteFilter='Galactic_Senate' partially compensates.",
-      "Count thresholds not encoded: 3 senators, or 2 senators when one has a blockade agenda; the blockade-agenda alternative has no representation (keyCharacterFilter is just 'senator').",
-      "flipGateCardIds empty: Galactic Senate blueprint ids (12_167, 12_75) exist only inside objectiveNamedLocations.",
-      "Back-side hold requirement (keep >= 2 senators at Senate or flip back) is only implicitly covered by the keyChar/keySite weights; the numeric threshold is absent.",
-      "Back-side Political Effect Reserve-Deck tutor is not in pullableCards (empty)."
-    ]
+    "startingLocationRules": [
+      "Filters.Galactic_Senate",
+      "Filters.and(Icon.EPISODE_I, Filters.location, Filters.not(Filters.Galactic_Senate))"
+    ],
+    "keyCharacterFilter": "senator",
+    "keySiteFilter": "Galactic_Senate",
+    "weights": {
+      "rewardKeyCharAtKeySite": 1500,
+      "penalizeKeyCharOffKeySite": -2000,
+      "prioritizeKeyCharDeploy": 500,
+      "holdNonKeyCharNoSite": -2000
+    },
+    "frontStructuredRules": [
+      "preFlip/flip allOf: your senator_at_Galactic_Senate count >= 2",
+      "preFlip/flip anyOf: your senator_at_Galactic_Senate count >= 3 OR your senator_with_blockade_agenda_at_Galactic_Senate count >= 1"
+    ],
+    "backStructuredRule": "postFlip/flipBack allOf: your senator_at_Galactic_Senate count <= 1",
+    "legacyGateFields": "flipGateSite remains null and flipGateCardIds remains empty because the exact location-scoped actor-count rules supersede the older single-site proxy.",
+    "profileGaps": []
   },
-  "proofGate": "SOURCE_VERIFIED"
+  "missingStateCalculation": [
+    "ObjectiveAnalyzer evaluates the front in exact CNF: every route needs two senators at Galactic Senate, then either a third senator or a blockade-agenda senator among that location-scoped actor set.",
+    "Two agenda-less senators satisfy only the floor. Three senators satisfy both rules. Two senators with the exact blockade agenda satisfy both rules. A peace agenda does not complete the Dark alternative.",
+    "On the back, the analyzer arms flip-back risk only when the owner count at Galactic Senate is one or zero. Two senators are stable."
+  ],
+  "flipPreservation": [
+    "V108 makes a senator deploy beat a generic character and Pass; V88 makes Galactic Senate beat the other Episode I setup site.",
+    "An exact pre-flip senator-to-Senate deployment releases only Formation Safety's ordinary unsupported-solo defer. The contested weak-solo hard block remains dominant.",
+    "Before flip, a counted senator is held while its removal would leave neither the three-senator route nor the two-plus-blockade route complete. Redundant senators release when another exact route survives.",
+    "After flip, either of the last two senators is protected against movement, standalone Force loss, and battle forfeit while another legal expendable card exists. A third senator is redundant."
+  ],
+  "runtimeOwners": [
+    "ObjectiveAnalyzer owns Senate-family identity, typed profile hydration, exact CNF state, counted onTable removal arithmetic, and pre-flip/post-flip formation roles.",
+    "The existing V83/V88/V108/V110 deploy adjustments own senator priority, Galactic Senate destination priority, off-site penalties, and non-senator holds without new magnitudes.",
+    "Mirrored CardSelectionEvaluator adapters release only the exact unsupported-solo defer and preserve Formation Safety's hard danger result.",
+    "MoveObjectiveGateHoldPolicy, ForceLossPolicy V109, and BattleForfeitPolicy consume the shared counted formation roles. Rando and Chosen One use identical owners and winners."
+  ],
+  "contradictions": [
+    "Control or occupation of Galactic Senate is not required. The law counts the owner's senators at that location.",
+    "The agenda shortcut is blockade for this Dark printing. Peace agenda is the Light sibling's route and must remain neutral here.",
+    "Exactly three agenda-less senators are not redundant before the flip: removing one leaves two agenda-less senators and breaks the front condition. A fourth plain senator is redundant.",
+    "The structured actor-count rules, not null legacy flipGateSite or empty flipGateCardIds fields, own the exact gate.",
+    "Batch Eleven's native flip test did not prove live removal protection. Commit 4942781ab repairs the previously inert relation:onTable and stayFlipped consumers."
+  ],
+  "testEvidence": {
+    "positiveAndNegative": [
+      "MyLordObjectiveEngineContractTest uses unchanged card and engine code to prove the three-senator route, two-plus-blockade route, agenda-less and non-senator near misses, hold at two, and flip-back below two.",
+      "SenateObjectiveBehaviorTest proves exact CNF hydration, wrong-agenda rejection, pre-flip release boundaries, post-flip last-two protection, and actual battle-policy consumption through both bot analyzers."
+    ],
+    "candidateChoice": [
+      "SenateObjectiveCombinedEvaluatorDecisionTest offers senator deploy against a generic character and Pass, and Galactic Senate against the other setup site, through both public bot facades.",
+      "The same production-evaluator suite makes pre-flip and post-flip critical movement lose to Pass, selects a disposable Effect for standalone Force loss, selects battle fodder over a last-two senator, and keeps the contested weak-solo hard block above objective progress."
+    ],
+    "sequence": "Deterministic engine and evaluator tests jointly prove the exact native front/back transitions and preserve every counted senator until an alternative route or redundant copy survives. The test-first Senate behavior baseline failed 4/4 before the repair.",
+    "parity": "Rando and Chosen One profile state, raw decision winners, movement holds, Force-loss choices, and battle-forfeit choices are identical.",
+    "verification": "Focused Senate gate 28/0/0/0. Impacted shared-policy and objective gate 250/0/0/0 across 26 suites. JSON validation and diff checks passed.",
+    "packaged": "Isolated package succeeded. All 44 changed/common class files and objective_playbooks.json byte-match target/classes, the server jar, and web.jar. Candidate, live-host, and running-container web.jar SHA-256 is 8545993e2982ae35e7d20d90aad389e5ea9256a6114b43ee4386309670ddd235; live playbook SHA-256 is df67bd876324c155f36e316d18d33183c18c18282f1b9e69c757a03d7b611e9a. Fresh JVM started after jar mtime with restart count zero; HTTP and all five switch posts returned 200; authenticated hall had zero tables.",
+    "replay": "No live replay or production rule-firing claim. Deterministic unchanged-engine tests provide FLIP_OBSERVED."
+  },
+  "knownLimits": [
+    "Back-side Political Effect tutoring and optional payoff choices were not part of this flip-chain behavior seal.",
+    "Live rule firing and replay observation remain separate proof gates; package and fresh-JVM load are verified."
+  ],
+  "proofGate": "FLIP_OBSERVED"
 }

@@ -9358,3 +9358,65 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     changed. Nothing was pushed. Restore
     web.jar.pre-hoth-range-3411b744a and revert 3411b744a to remove only this
     follow-up.
+
+  ==== Galactic Senate objective family behavior seal (2026-07-31) ====
+
+    Dark 12_179/12_179_BACK and Light 12_88/12_88_BACK share the
+    source-defined three-senator or two-with-agenda front law and the
+    below-two flip-back law. The typed agenda is blockade for Dark and peace
+    for Light. Both engine checks include cards excluded from battle while
+    captives do not count.
+
+    This batch corrects the proof claim from Batch Eleven. The Dark profile's
+    exact CNF was present, but the generic counted relation:onTable removal
+    path called relationSatisfiedAt, which has no onTable branch. Counted
+    formation retention was therefore inert. Post-flip removal also omitted
+    the existing stayFlipped score role. The earlier native card test proved
+    the card law, not movement, Force-loss, or forfeit preservation.
+
+    Plead My Case is now loader-enabled with the matching exact CNF, its
+    peace-agenda composite key, the <=1 post-flip rule, both source setup
+    locations, and the existing V83/V88/V108/V110 magnitudes. The historical
+    isMyLord accessor is retained for adapter compatibility but now covers
+    both Senate objectives. No new V-tag or magnitude was added.
+
+    Exact senator deployment beats a generic character and Pass, and
+    Galactic Senate beats the other Episode I start site. Only the ordinary
+    unsupported-solo formation defer is released for an exact pre-flip
+    senator-to-Senate deployment. A contested weak solo remains hard-blocked.
+    Counted onTable removal now decrements the global matching-actor count.
+    Pre-flip actors remain protected until either exact route survives;
+    redundant copies release. On the back, either of the last two senators
+    is preserved by movement, standalone Force loss, and battle forfeit when
+    an expendable legal alternative exists. A third senator releases.
+
+    Test-first evidence: the four-case Senate behavior baseline failed all
+    four before the repair. Final Senate gate 28/0/0/0, consisting of eight
+    unchanged-engine tests, five profile and formation-boundary tests, seven
+    real CombinedEvaluator decision tests, and eight shared golden tests.
+    Final impacted gate 250/0/0/0 across 26 suites. It covered counted
+    onTable consumers, deploy formation, move, Force loss, battle forfeit,
+    Hunt Down, Endor, ISB, Profit, No Money, More Systems, regional families,
+    First Order-adjacent deployment, and both-bot parity. JSON validation and
+    diff checks passed.
+
+    The isolated package completed successfully. All 44 changed/common class
+    files and objective_playbooks.json byte-match target/classes, the server
+    jar, and web.jar. Candidate, live-host, and running-container web.jar
+    SHA-256 is 8545993e2982ae35e7d20d90aad389e5ea9256a6114b43ee4386309670ddd235;
+    live playbook SHA-256 is
+    df67bd876324c155f36e316d18d33183c18c18282f1b9e69c757a03d7b611e9a.
+    The prior jar is preserved as web.jar.pre-senate-4942781ab. After a
+    zero-table freeze, the fresh app started at
+    2026-07-31T20:47:07.062649093Z, four seconds after the jar mtime, with
+    restart count zero. HTTP and all five gameplay-switch posts returned 200;
+    the authenticated hall had zero tables with AI and private games enabled.
+
+    Local code commit 4942781ab changes shared AI strategy, mirrored Rando
+    and Chosen One card-selection adapters, approved objective data, and AI
+    tests only. No engine, card Java, client, deck library, or database source
+    changed. Both bots select identical winners. Unchanged-engine tests
+    provide FLIP_OBSERVED; package and fresh-JVM deployment are verified.
+    Live branch-firing and replay proof remain separate pending gates. Nothing
+    was pushed. Revert 4942781ab to remove this family seal; prior objective
+    batches remain independent.

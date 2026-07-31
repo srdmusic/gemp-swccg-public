@@ -1,17 +1,17 @@
 {
- "generatedBy": "K-2 Phase A+B merge 2026-07-24; engineClass merge from 33 family dossiers + Codex/evidence-packet results 2026-07-25; TDIGWATT evidence reconciliation 2026-07-26",
+ "generatedBy": "K-2 Phase A+B merge 2026-07-24; engineClass merge from 33 family dossiers + Codex/evidence-packet results 2026-07-25; TDIGWATT evidence reconciliation 2026-07-26; Galactic Senate behavior reconciliation 2026-07-31 at 4942781ab",
  "baselineHead": "192abf72d",
  "counts": {
   "objectives": 66,
   "ABSENT_NO_PROFILE": 8,
-  "ABSENT_DISABLED": 41,
-  "PARTIAL": 16,
+  "ABSENT_DISABLED": 40,
+  "PARTIAL": 15,
   "WRONG": 1,
-  "COMPLETE": 0,
-  "engineClass_EXISTING_ENGINE_FIT": 13,
+  "COMPLETE": 2,
+  "engineClass_EXISTING_ENGINE_FIT": 12,
   "engineClass_NEW_PRIMITIVE": 24,
-  "engineClass_PROVEN_BY_CODEX": 12,
-  "engineClass_SMALL_SHARED_EXTENSION": 16,
+  "engineClass_PROVEN_BY_CODEX": 14,
+  "engineClass_SMALL_SHARED_EXTENSION": 15,
   "engineClass_STUB_NA": 1
  },
  "rows": [
@@ -243,15 +243,15 @@
    "frontBp": "12_88",
    "title": "Plead My Case To The Senate",
    "side": "LIGHT",
-   "classification": "ABSENT",
-   "subclass": "DISABLED",
-   "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
+   "classification": "COMPLETE",
+   "subclass": "ENABLED",
+   "why": "The loader-enabled profile encodes the exact two-rule front CNF and below-two back law. Existing Senate deploy weights plus live counted-onTable consumers now drive deploy, destination, movement, standalone Force-loss, and battle-forfeit decisions in both bots without bypassing hard Formation Safety.",
    "flipLaw": "Flip if you have 3+ of your senators AT Galactic Senate, or 2+ of your senators AT Galactic Senate at least one of which has a peace agenda. Count is a filterActive collection size, spotting includes ",
    "flipBackLaw": "Back flips to front if you have fewer than two of your senators AT Galactic Senate.",
-   "profileGaps": 4,
+   "profileGaps": 0,
    "seedMismatches": 1,
-   "engineClass": "SMALL_SHARED_EXTENSION",
-   "engineClassNote": "LIGHT mirror of My Lord; broaden isMyLord into senate-family flag + mirror 12_179 profile"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven at 4942781ab by MyLordObjectiveEngineContractTest, SenateObjectiveBehaviorTest, SenateObjectiveCombinedEvaluatorDecisionTest, and ObjectiveAnalyzerSharedGoldenTest. Unchanged Card12_088 performs the actual front and back flips."
   },
   {
    "frontBp": "12_89",
@@ -271,15 +271,15 @@
    "frontBp": "12_179",
    "title": "My Lord, Is That Legal?",
    "side": "DARK",
-   "classification": "PARTIAL",
+   "classification": "COMPLETE",
    "subclass": "ENABLED",
-   "why": "unambiguous gate site (Galactic Senate) left null; counts and blockade-agenda alternative missing; keySiteFilter is a dead field so it compensates for nothing",
+   "why": "The loader-enabled profile encodes the exact two-rule front CNF and below-two back law. Commit 4942781ab repairs the previously inert counted-onTable removal and stayFlipped consumers, so deploy, destination, movement, standalone Force-loss, and battle-forfeit decisions preserve the source law in both bots.",
    "flipLaw": "Collect your senators AT Galactic Senate (Filters.filterActive with SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE). Flip if that collection has >= 3 senators, OR >= 2 senators with at least one of them ha",
    "flipBackLaw": "Back flips to front if you have FEWER than 2 senators at Galactic Senate (cannot spot 2 of your senators at Galactic Senate; spot includes battle-excluded).",
-   "profileGaps": 5,
+   "profileGaps": 0,
    "seedMismatches": 1,
-   "engineClass": "EXISTING_ENGINE_FIT",
-   "engineClassNote": "only loaderEnabled:true My-Lord profile; V83/V88/V108/V110 senator arms already drive it"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven at 4942781ab by MyLordObjectiveEngineContractTest, SenateObjectiveBehaviorTest, SenateObjectiveCombinedEvaluatorDecisionTest, and ObjectiveAnalyzerSharedGoldenTest. Unchanged Card12_179 performs the actual front and back flips."
   },
   {
    "frontBp": "12_180",
