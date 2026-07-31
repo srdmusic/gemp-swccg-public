@@ -9305,3 +9305,56 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     and the hall remained empty. Fresh autonomous gameplay remains separate
     proof. Restore web.jar.pre-fo-hoth-e684c597c and revert e684c597c;
     9451ae2c7, ded8b785d, V48, and prior Hoth Shield work remain independent.
+
+  ==== Hoth walker firing-range and movement-reserve follow-up (2026-07-31) ====
+
+    K-2 mailbox review m01486 found four proof defects in the first Hoth replay
+    repair: printed Cannon range substituted for live modified range, the paid
+    route move appeared in two reserve owners, Blizzard 2 was represented by
+    Mist Hunter 4_170, and the route-host test asked production which walker
+    should win its own tie. The lead retained the support-gated spare-walker
+    hold because crew attached to the mover leave with it and cannot
+    independently protect the vacated marker.
+
+    The route now stops at the first site where an owned live AT-AT Cannon
+    package satisfies the engine's exact canBeFiredAtLocationInRange filter.
+    A real classic Electro-Rangefinder 3_95 fixture proves that an attached
+    device extends a classic Cannon at the Third Marker across an inserted
+    Second Marker to Main Power Generators. The printed same-or-adjacent check
+    remains only as the prospective fallback before the selected Cannon is
+    attached. The dedicated deploy hard gate is now the sole owner of paid
+    movement reserve; required-card reserve owns only host, pilot, and Cannon
+    costs. The route-host tiebreak is still the lower physical card id.
+
+    Both Blizzard 2 fixtures now use real 3_155. The tiebreak expectation is
+    independently derived from physical card ids. Final focused gate:
+    53/0/0/0. Final impacted First Order, Hoth, shared phase, and bot-parity
+    gate: 194/0/0/0 across 15 suites. Diff checks and independent follow-up
+    review passed. Rulebook regeneration at code commit 3411b744a produced 793
+    entries. All 40 common ObjectiveAnalyzer class outputs plus
+    objective_playbooks.json byte-match target/classes, server jar, and
+    web.jar. Runtime metadata now reports the actual 62 profiles, while the
+    objective mission denominator remains the original 58. Server jar SHA-256:
+    2dd642c4d3ea31770c8c3fe6a7fc6571d2274bc9483b1020bc2e40f714bb134a.
+    web.jar SHA-256:
+    e75e99ff9e01fb787b8ed5e88d8b804626013bb9381059ccae4530e607b5a86b.
+    Playbook SHA-256:
+    5481784ba84cc8559aa8e6b303a9abc8d701892714daa81928ec6ad96649e3dd.
+
+    Before deployment, the existing app process was recovered from a MariaDB
+    startup race on the unchanged prior jar. Table creation was then frozen
+    and the authenticated hall contained zero tables. Prior jar
+    7e76f165709f9b04476da626b6480e1b6b70ad40a9b88bf7d9aa0fd23df9b7b6
+    is preserved as web.jar.pre-hoth-range-3411b744a. Candidate, host, and
+    running-container hashes match. The fresh app started at
+    2026-07-31T19:32:35.391927301Z with restart count zero; PID 1 runs the
+    exact live jar. HTTP and all five switch posts returned 200, startup was
+    clean, and the hall remained empty.
+
+    The production change is shared AI strategy plus approved objective data,
+    so Rando and Chosen One are identical without adapter edits. Tests,
+    generated Rulebook artifacts, and these two approved records are the only
+    other changes. No engine, card Java, deck, database, or client source
+    changed. Nothing was pushed. Restore
+    web.jar.pre-hoth-range-3411b744a and revert 3411b744a to remove only this
+    follow-up.
