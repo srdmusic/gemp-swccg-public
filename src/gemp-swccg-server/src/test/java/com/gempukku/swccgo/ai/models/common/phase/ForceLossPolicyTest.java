@@ -318,6 +318,20 @@ public class ForceLossPolicyTest {
                         "V25 HUNT DOWN: PROTECT LIGHTSABER from loss!"));
     }
 
+    @Test
+    public void unknownLossRetainsOnlyTheSelectedShieldRoutePackage() {
+        assertOperations(
+                ForceLossPolicy.scoreUnknownObjectiveRetention(
+                    ACTION_ID, true),
+                op("HOTH.SHIELD.PACKAGE_RETAIN", -9999.0f,
+                    "HOTH SHIELD PACKAGE: retain the selected host, pilot, and Cannon",
+                    TraceOutputKind.VETO));
+        assertTrue(ForceLossPolicy
+                .scoreUnknownObjectiveRetention(
+                    ACTION_ID, false)
+                .operations().isEmpty());
+    }
+
     private static void assertZone(ZoneCase zoneCase, int lifeForce,
                                    float expectedScore, boolean protectChars) {
         ForceLossFacts.CandidateFacts candidate = candidate("Zone Card",

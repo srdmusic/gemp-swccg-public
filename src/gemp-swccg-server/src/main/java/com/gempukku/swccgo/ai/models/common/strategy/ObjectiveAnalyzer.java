@@ -11545,6 +11545,142 @@ public class ObjectiveAnalyzer {
         return analyzed && !isFlipped && isShieldWillBeDown;
     }
 
+    /**
+     * The exact still-needed Cannon in Shield's selected physical route
+     * package must deploy before unrelated characters. This is deliberately
+     * narrower than a global weapons-before-characters rule.
+     */
+    public boolean isShieldMainGeneratorPriorityCannonDeploy(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!hasShieldMainGeneratorFormationRule()
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            ShieldRoutePackage packagePlan =
+                    selectShieldRoutePackage(game, playerId);
+            if (packagePlan == null
+                    || packagePlan.cannon != candidate
+                    || candidate.getZone() != Zone.HAND
+                    || candidate.getAttachedTo() != null
+                    || shieldPackageZoneRank(
+                        game, packagePlan.host,
+                        packagePlan.stagingLocation) != 0
+                    || !Filters.piloted.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(),
+                        packagePlan.host)
+                    || !Filters.deployableToTarget(
+                            candidate,
+                            Filters.sameCardId(
+                                packagePlan.host),
+                            false, 0.0f)
+                        .accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            candidate)
+                    || hasActiveShieldCannonAttached(
+                        game, playerId, packagePlan.host)) {
+                return false;
+            }
+            int moveReserve =
+                    getShieldMainGeneratorRouteMoveForceReserve(
+                            game, playerId);
+            int availableForce =
+                    game.getGameState()
+                        .getForcePileSize(playerId);
+            return moveReserve == 0
+                    || availableForce
+                        - packagePlan.cannonCost
+                        >= moveReserve;
+        } catch (Exception e) {
+            LOG.debug(
+                    "Shield priority cannon assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean isShieldMainGeneratorPriorityCannonDeployAction(
+            SwccgGame game, String playerId,
+            PhysicalCard source, String actionText) {
+        return actionText != null
+                && "deploy".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT))
+                && isShieldMainGeneratorPriorityCannonDeploy(
+                    game, playerId, source);
+    }
+
+    /**
+     * Blizzard 4's source-owned Reserve Deck deploy is free and engine-gated
+     * to a legal Imperial warrior. The generic deploy scorer otherwise reads
+     * Blizzard 4 itself as the deploying card.
+     */
+    public boolean isShieldBlizzardFourWarriorDeployAction(
+            SwccgGame game, String playerId,
+            PhysicalCard source, String actionText) {
+        return isShieldBlizzardFourWarriorDeployActionSource(
+                    game, playerId, source, actionText)
+                && hasDeployableBlizzardFourWarrior(
+                    game, playerId, source);
+    }
+
+    public boolean isShieldBlizzardFourWarriorDeployActionSource(
+            SwccgGame game, String playerId,
+            PhysicalCard source, String actionText) {
+        return hasShieldMainGeneratorFormationRule()
+                && game != null && playerId != null
+                && source != null
+                && playerId.equals(source.getOwner())
+                && "13_56".equals(source.getBlueprintId(true))
+                && isActiveForSpot(game, source, true)
+                && actionText != null
+                && "deploy an imperial warrior from reserve deck"
+                    .equals(actionText.trim().toLowerCase(Locale.ROOT));
+    }
+
+    private boolean hasDeployableBlizzardFourWarrior(
+            SwccgGame game, String playerId,
+            PhysicalCard source) {
+        try {
+            List<PhysicalCard> reserve =
+                    game.getGameState()
+                        .getReserveDeck(playerId);
+            if (reserve == null || reserve.isEmpty()) {
+                return false;
+            }
+            com.gempukku.swccgo.filters.Filter eligible =
+                    Filters.and(
+                        Filters.Imperial,
+                        Filters.warrior,
+                        Filters.deployableToTarget(
+                            source,
+                            Filters.sameCardId(source),
+                            true, 0.0f));
+            for (PhysicalCard candidate : reserve) {
+                if (candidate != null
+                        && playerId.equals(
+                            candidate.getOwner())
+                        && eligible.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            candidate)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Blizzard 4 warrior route unavailable: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
     private static final class ShieldRoutePackage {
         private final PhysicalCard stagingLocation;
         private final PhysicalCard host;
@@ -12097,7 +12233,92 @@ public class ObjectiveAnalyzer {
                 && packagePlan.cannon.getZone() == Zone.HAND) {
             reserve += packagePlan.cannonCost;
         }
+        reserve += getShieldMainGeneratorRouteMoveForceReserve(
+                game, playerId);
         return reserve;
+    }
+
+    /**
+     * Exact Force payment for the selected Shield route host's next legal
+     * forward landspeed hop. The reserve becomes live only after that host is
+     * staged and can carry the retained Cannon route forward.
+     */
+    public int getShieldMainGeneratorRouteMoveForceReserve(
+            SwccgGame game, String playerId) {
+        if (!hasShieldMainGeneratorFormationRule()
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        try {
+            ShieldRoutePackage packagePlan =
+                    selectShieldRoutePackage(
+                            game, playerId);
+            if (packagePlan == null
+                    || packagePlan.host == null
+                    || packagePlan.host.getZone() == null
+                    || !packagePlan.host.getZone().isInPlay()
+                    || game.getModifiersQuerying()
+                        .mayNotMove(
+                            game.getGameState(),
+                            packagePlan.host)
+                    || game.getModifiersQuerying()
+                        .hasPerformedRegularMoveThisTurn(
+                            packagePlan.host)) {
+                return 0;
+            }
+            PhysicalCard origin =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            game.getGameState(),
+                            packagePlan.host);
+            List<PhysicalCard> locations =
+                    game.getGameState()
+                        .getLocationsInOrder();
+            if (origin == null || locations == null) {
+                return 0;
+            }
+            com.gempukku.swccgo.filters.Filter legal =
+                    Filters.canMoveToUsingLandspeed(
+                        playerId, packagePlan.host,
+                        false, false, false,
+                        0.0f, null);
+            int minimum = Integer.MAX_VALUE;
+            for (PhysicalCard destination : locations) {
+                if (destination == null
+                        || !advancesShieldMainGeneratorRoute(
+                            game, playerId,
+                            packagePlan.host,
+                            destination)
+                        || !legal.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            destination)) {
+                    continue;
+                }
+                float cost = game.getModifiersQuerying()
+                        .getMoveUsingLandspeedCost(
+                            game.getGameState(),
+                            packagePlan.host,
+                            origin, destination,
+                            false, 0.0f);
+                if (Float.isFinite(cost)) {
+                    minimum = Math.min(
+                            minimum,
+                            Math.max(
+                                0,
+                                (int) Math.ceil(cost)));
+                }
+            }
+            return minimum == Integer.MAX_VALUE
+                    ? 0 : minimum;
+        } catch (Exception e) {
+            LOG.debug(
+                    "Shield route move Force reserve unavailable: {}",
+                    e.getMessage());
+            return 0;
+        }
     }
 
     /**
@@ -12523,6 +12744,241 @@ public class ObjectiveAnalyzer {
                     game.getModifiersQuerying(), host);
     }
 
+    private boolean isSelectedPreparedShieldRouteHost(
+            SwccgGame game, String playerId,
+            PhysicalCard host, PhysicalCard location) {
+        ShieldRoutePackage packagePlan =
+                selectShieldRoutePackage(game, playerId);
+        int cannonRank = packagePlan != null
+                ? shieldPackageZoneRank(
+                    game, packagePlan.cannon,
+                    packagePlan.stagingLocation)
+                : 9;
+        return packagePlan != null
+                && packagePlan.host == host
+                && samePhysicalLocation(
+                    packagePlan.stagingLocation, location)
+                && packagePlan.cannon != null
+                && (cannonRank == 1
+                    || cannonRank == 2
+                        && hasActiveShieldPrepare(
+                            game, playerId))
+                && packagePlan.cannon.getAttachedTo() == null
+                && Filters.piloted.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), host)
+                && !hasActiveShieldCannonAttached(
+                    game, playerId, host);
+    }
+
+    private boolean isPilotedShieldHostWithAccessibleCannon(
+            SwccgGame game, String playerId,
+            PhysicalCard host) {
+        if (host == null
+                || !playerId.equals(host.getOwner())
+                || !isActiveForSpot(game, host, true)
+                || !Filters.AT_AT.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), host)
+                || !Filters.piloted.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), host)) {
+            return false;
+        }
+        PhysicalCard location = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                    game.getGameState(), host);
+        if (isCompleteShieldRouteHost(
+                game, playerId, host, location)) {
+            return true;
+        }
+        List<PhysicalCard> candidates = new ArrayList<>();
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        if (hand != null) candidates.addAll(hand);
+        if (hasActiveShieldPrepare(game, playerId)) {
+            List<PhysicalCard> reserve =
+                    game.getGameState().getReserveDeck(playerId);
+            if (reserve != null) candidates.addAll(reserve);
+        }
+        for (PhysicalCard cannon : candidates) {
+            if (cannon == null
+                    || !playerId.equals(cannon.getOwner())
+                    || cannon.getAttachedTo() != null
+                    || !Filters.AT_AT_Cannon.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), cannon)
+                    || !shieldCannonCanDeployOnHost(
+                        game, cannon, host)
+                    || requiredCardDeployCostAt(
+                        game, cannon, host) == null) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Reconstructs the selected package after a walker has moved away from
+     * Target's current site. This prevents a different piloted walker from
+     * borrowing the selected package's Cannon and dragging Target off-route.
+     */
+    private boolean wasPreferredPreparedShieldRouteHostBeforeMove(
+            SwccgGame game, String playerId,
+            PhysicalCard movedHost,
+            PhysicalCard origin) {
+        ShieldRoutePackage movedPackage =
+                shieldRoutePackageForMovedHost(
+                        game, playerId,
+                        movedHost, origin);
+        if (movedPackage == null) {
+            return false;
+        }
+        ShieldRoutePackage stationaryPackage =
+                selectShieldRoutePackage(
+                        game, playerId);
+        return stationaryPackage == null
+                || !betterShieldRoutePackage(
+                    stationaryPackage,
+                    movedPackage);
+    }
+
+    private ShieldRoutePackage shieldRoutePackageForMovedHost(
+            SwccgGame game, String playerId,
+            PhysicalCard host,
+            PhysicalCard formerStagingLocation) {
+        if (host == null
+                || formerStagingLocation == null
+                || !playerId.equals(host.getOwner())
+                || !isActiveForSpot(game, host, true)
+                || !Filters.AT_AT.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), host)
+                || !Filters.piloted.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), host)) {
+            return null;
+        }
+        LinkedHashSet<PhysicalCard> accessible =
+                new LinkedHashSet<>();
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        if (hand != null) {
+            accessible.addAll(hand);
+        }
+        if (hasActiveShieldPrepare(game, playerId)) {
+            List<PhysicalCard> reserve =
+                    game.getGameState()
+                        .getReserveDeck(playerId);
+            if (reserve != null) {
+                accessible.addAll(reserve);
+            }
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState()
+                    .getAllPermanentCards();
+        if (permanents != null) {
+            accessible.addAll(permanents);
+        }
+
+        ShieldRoutePackage best = null;
+        for (PhysicalCard cannon : accessible) {
+            if (cannon == null
+                    || !playerId.equals(cannon.getOwner())
+                    || !Filters.AT_AT_Cannon.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), cannon)) {
+                continue;
+            }
+            int cannonRank;
+            int cannonCost;
+            if (cannon.getZone() != null
+                    && cannon.getZone().isInPlay()
+                    && cannon.getAttachedTo() == host
+                    && isActiveForSpot(
+                        game, cannon, true)) {
+                cannonRank = 0;
+                cannonCost = 0;
+            } else if (cannon.getAttachedTo() == null
+                    && cannon.getZone() == Zone.HAND
+                    && shieldCannonCanDeployOnHost(
+                        game, cannon, host)) {
+                Integer cost =
+                        requiredCardDeployCostAt(
+                            game, cannon, host);
+                if (cost == null) {
+                    continue;
+                }
+                cannonRank = 1;
+                cannonCost = cost;
+            } else if (cannon.getAttachedTo() == null
+                    && (cannon.getZone()
+                            == Zone.RESERVE_DECK
+                        || cannon.getZone()
+                            == Zone.TOP_OF_RESERVE_DECK)
+                    && hasActiveShieldPrepare(
+                        game, playerId)
+                    && shieldCannonCanDeployOnHost(
+                        game, cannon, host)) {
+                Integer cost =
+                        requiredCardDeployCostAt(
+                            game, cannon, host);
+                if (cost == null) {
+                    continue;
+                }
+                cannonRank = 2;
+                cannonCost = cost;
+            } else {
+                continue;
+            }
+            ShieldRoutePackage option =
+                    new ShieldRoutePackage(
+                        formerStagingLocation,
+                        host, null, cannon,
+                        0, 0, cannonCost,
+                        cannonRank * 10);
+            if (betterShieldRoutePackage(
+                    option, best)) {
+                best = option;
+            }
+        }
+        return best;
+    }
+
+    private boolean hasMeaningfulShieldWalkerSupportAt(
+            SwccgGame game, String playerId,
+            PhysicalCard mover, PhysicalCard origin) {
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card == null || card == mover
+                    || card.getAttachedTo() == mover
+                    || !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(game, card, true)
+                    || card.getBlueprint() == null) {
+                continue;
+            }
+            CardCategory category =
+                    card.getBlueprint().getCardCategory();
+            if (category != CardCategory.CHARACTER
+                    && category != CardCategory.VEHICLE
+                    && category != CardCategory.STARSHIP) {
+                continue;
+            }
+            PhysicalCard presentAt =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(
+                            game.getGameState(), card);
+            if (samePhysicalLocation(
+                    origin, presentAt)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Keep a spare piloted AT-AT on its quiet marker while a different
      * cannon-bearing walker advances the generator route.
@@ -12561,6 +13017,10 @@ public class ObjectiveAnalyzer {
                         .getTotalPowerAtLocation(
                             gameState, origin, opponent,
                             false, false) > 0.0f) {
+                return false;
+            }
+            if (!hasMeaningfulShieldWalkerSupportAt(
+                    game, playerId, mover, origin)) {
                 return false;
             }
             for (PhysicalCard card : gameState.getAllPermanentCards()) {
@@ -12664,9 +13124,10 @@ public class ObjectiveAnalyzer {
                         game.getGameState(), mover)
                 : null;
         if (origin == null || destination == null
-                || !isCompleteShieldRouteHost(
-                    game, playerId, mover,
-                    destination)) {
+                || !isPilotedShieldHostWithAccessibleCannon(
+                    game, playerId, mover)
+                || !wasPreferredPreparedShieldRouteHostBeforeMove(
+                    game, playerId, mover, origin)) {
             return false;
         }
         Integer originMarker = game.getModifiersQuerying()
@@ -12715,8 +13176,10 @@ public class ObjectiveAnalyzer {
             PhysicalCard origin = game.getModifiersQuerying()
                     .getLocationThatCardIsAt(gameState, mover);
             if (origin == null
-                    || !isCompleteShieldRouteHost(
-                        game, playerId, mover, origin)) {
+                    || (!isCompleteShieldRouteHost(
+                            game, playerId, mover, origin)
+                        && !isSelectedPreparedShieldRouteHost(
+                            game, playerId, mover, origin))) {
                 return false;
             }
             PhysicalCard activeTarget =

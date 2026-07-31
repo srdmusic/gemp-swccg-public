@@ -176,6 +176,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
             String actionText = i < actionTexts.size() ? actionTexts.get(i) : "";
             String cardId = i < cardIds.size() ? cardIds.get(i) : null;
             String textLower = actionText.toLowerCase();
+            PhysicalCard actionSource = null;
+            try {
+                if (gameState != null && cardId != null) {
+                    actionSource = gameState.findCardById(
+                            Integer.parseInt(cardId));
+                }
+            } catch (NumberFormatException ignored) {
+                // Unknown physical sources receive no exact-source exception.
+            }
 
             EvaluatedAction action = new EvaluatedAction(actionId, ActionType.UNKNOWN, 0.0f, actionText);
             boolean exactTdigwattPullAction = false;
@@ -201,7 +210,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Loop-breakers must DOMINATE (master discipline §2A). Follow the V87
             // hard-block pattern: huge negative + skip all further scoring so no
             // later rule can stack the action back above Pass.
-            if (blocked.contains(actionId) || blocked.contains(actionText)) {
+            var exactDeployAnalyzer =
+                    context.getObjectiveAnalyzer();
+            boolean exactShieldCannonDeploy =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isShieldMainGeneratorPriorityCannonDeployAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            if (!exactShieldCannonDeploy
+                    && (blocked.contains(actionId)
+                        || blocked.contains(actionText))) {
                 // V167 (Steve, 2026-06): NEVER hard-veto a phase-fundamental action.
                 // Live-game regression: "Activate Force" landed in the blocked set (a transient
                 // activate-flow cancel-loop) and V163's -100000 hard veto then killed it
@@ -271,6 +290,61 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     actions.add(action);
                     continue;
                 }
+            }
+
+            boolean exactShieldFreeWarriorSource =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isShieldBlizzardFourWarriorDeployActionSource(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            if (exactShieldFreeWarriorSource) {
+                boolean deployableWarriorExists =
+                        exactDeployAnalyzer
+                            .isShieldBlizzardFourWarriorDeployAction(
+                                game, context.getPlayerId(),
+                                actionSource, actionText);
+                applyDeployActionTextPolicy(
+                        action,
+                        DeployActionTextPolicy
+                            .scoreShieldBlizzardFourWarriorDeploy(
+                                actionId,
+                                deployableWarriorExists));
+                actions.add(action);
+                continue;
+            }
+
+            boolean exactCoarseDestinyCap =
+                    context.getPhase() == Phase.BATTLE
+                    && game != null
+                    && gameState != null
+                    && game.getModifiersQuerying() != null
+                    && actionSource != null
+                    && context.getPlayerId() != null
+                    && context.getPlayerId()
+                        .equals(actionSource.getOwner())
+                    && "200_109".equals(
+                        CARD_LIBRARY.stripBlueprintModifiers(
+                            actionSource.getBlueprintId(true)))
+                    && "take stacked card into hand"
+                        .equals(textLower.trim());
+            if (exactCoarseDestinyCap) {
+                int ourDraws = game.getModifiersQuerying()
+                        .getNumBattleDestinyDraws(
+                            gameState, context.getPlayerId(),
+                            false, false);
+                int opponentDraws = game.getModifiersQuerying()
+                        .getNumBattleDestinyDraws(
+                            gameState, context.getOpponentId(),
+                            false, false);
+                applyBattleActionTextPolicy(
+                        action,
+                        BattleActionTextPolicy
+                            .scoreSymmetricBattleDestinyCap(
+                                actionId, ourDraws,
+                                opponentDraws));
+                actions.add(action);
+                continue;
             }
 
             if (actionText.contains("Grab")) {

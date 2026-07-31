@@ -13,6 +13,7 @@ import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -2843,6 +2844,8 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                 .thenReturn(List.of());
         when(gameState.getForcePile(PLAYER))
                 .thenReturn(List.of());
+        when(gameState.getCaptivesOfEscort(any()))
+                .thenReturn(List.of());
         when(gameState.getAllStackedCards())
                 .thenReturn(List.of());
         when(gameState.getAllPermanentCards())
@@ -3883,6 +3886,14 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     .thenReturn(true);
             when(blueprint.getForfeit()).thenReturn(
                     id == KYLO_ID ? 7.0f : 2.0f);
+        }
+        if (category == CardCategory.VEHICLE
+                || category == CardCategory.STARSHIP) {
+            when(blueprint.getValidPilotFilter(
+                    any(String.class),
+                    any(SwccgGame.class),
+                    eq(card), anyBoolean()))
+                    .thenReturn(Filters.any);
         }
         return card;
     }

@@ -127,6 +127,34 @@ public final class BattleActionTextPolicy {
                 50.0f, "Race destiny always high priority");
     }
 
+    /**
+     * Coarse And Rough And Irritating (V) limits both players to one battle
+     * destiny. Fire it only when the opponent loses more excess draws than we
+     * do, so the exact action is tactical rather than unconditional.
+     */
+    public static PolicyResult scoreSymmetricBattleDestinyCap(
+            String actionId, int ourExpectedDraws,
+            int opponentExpectedDraws) {
+        Objects.requireNonNull(actionId, "actionId");
+        int ourExcess = Math.max(0, ourExpectedDraws - 1);
+        int opponentExcess =
+                Math.max(0, opponentExpectedDraws - 1);
+        if (opponentExcess <= ourExcess) {
+            return oneWeapons(
+                    actionId,
+                    "BATTLE.COARSE.BATTLE_DESTINY_CAP_SKIP",
+                    TraceOutputKind.ORDERING,
+                    -50.0f,
+                    "COARSE: preserve our equal or larger battle-destiny draw");
+        }
+        return oneWeapons(
+                actionId,
+                "BATTLE.COARSE.BATTLE_DESTINY_CAP",
+                TraceOutputKind.ORDERING,
+                500.0f,
+                "COARSE: limit the opponent's larger battle-destiny advantage to one draw");
+    }
+
     public static PolicyResult scoreHatred(BattleActionTextFacts.HatredFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>();

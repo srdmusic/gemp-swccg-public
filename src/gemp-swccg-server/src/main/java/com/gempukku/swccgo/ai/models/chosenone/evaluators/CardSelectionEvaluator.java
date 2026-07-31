@@ -1639,8 +1639,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         Float boardingAbility = boardingDeployBlueprint != null
                 && boardingDeployBlueprint.hasAbilityAttribute()
                 ? boardingDeployBlueprint.getAbility() : null;
-        boolean boardingAssetDestinationOffered = false;
-        if (gameState != null) {
+        boolean boardingOpenPilotDestinationOffered = false;
+        if (gameState != null && game != null
+                && game.getModifiersQuerying() != null
+                && objectiveProgressDeployingCard != null) {
             java.util.List<String> boardingDestinationIds = context.getCardIds();
             java.util.List<Boolean> boardingSelectable = context.getSelectable();
             for (int destinationIndex = 0;
@@ -1660,9 +1662,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     CardCategory destinationCategory = destination != null
                             && destination.getBlueprint() != null
                             ? destination.getBlueprint().getCardCategory() : null;
-                    if (destinationCategory == CardCategory.VEHICLE
-                            || destinationCategory == CardCategory.STARSHIP) {
-                        boardingAssetDestinationOffered = true;
+                    if ((destinationCategory == CardCategory.VEHICLE
+                            || destinationCategory == CardCategory.STARSHIP)
+                            && Filters.hasAvailablePilotCapacity(
+                                objectiveProgressDeployingCard)
+                                .accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(),
+                                    destination)) {
+                        boardingOpenPilotDestinationOffered = true;
                         break;
                     }
                 } catch (NumberFormatException ignored) {
@@ -1742,15 +1750,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         boolean destinationIsAsset =
                                 destinationCategory == CardCategory.VEHICLE
                                 || destinationCategory == CardCategory.STARSHIP;
+                        boolean destinationHasOpenPilotSlot =
+                                destinationIsAsset
+                                && game != null
+                                && game.getModifiersQuerying() != null
+                                && objectiveProgressDeployingCard != null
+                                && Filters.hasAvailablePilotCapacity(
+                                    objectiveProgressDeployingCard)
+                                    .accepts(
+                                        gameState,
+                                        game.getModifiersQuerying(),
+                                        location);
                         applyDeployPilotPolicy(action,
                                 DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
                                         new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
                                                 action.getActionId(), boardingPilot,
                                                 boardingAbility,
-                                                boardingAssetDestinationOffered,
-                                                destinationCategory == CardCategory.VEHICLE
-                                                        || destinationCategory
-                                                        == CardCategory.STARSHIP)));
+                                                boardingOpenPilotDestinationOffered,
+                                                destinationHasOpenPilotSlot)));
 
                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer
                             objectiveProgressAnalyzer = context.getObjectiveAnalyzer();
@@ -9797,6 +9814,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 }
                 forceLossLedger.register(ForceLossPolicy.scoreUnknownLoss(
                         cardId, category, huntDownLightsaber));
+                PhysicalCard unknownLossCard = null;
+                try {
+                    if (gameState != null && cardId != null
+                            && !cardId.startsWith("temp")) {
+                        unknownLossCard = gameState.findCardById(
+                                Integer.parseInt(cardId));
+                    }
+                } catch (NumberFormatException ignored) {
+                    // Unknown physical identities receive no package protection.
+                }
+                var unknownLossAnalyzer =
+                        context.getObjectiveAnalyzer();
+                forceLossLedger.register(
+                        ForceLossPolicy
+                            .scoreUnknownObjectiveRetention(
+                                cardId,
+                                unknownLossAnalyzer != null
+                                    && unknownLossAnalyzer
+                                        .isPreferredShieldRoutePackageForceLossCandidate(
+                                            game,
+                                            context.getPlayerId(),
+                                            unknownLossCard)));
                 PolicyOperationAdapter.apply(action, forceLossLedger);
             }
 

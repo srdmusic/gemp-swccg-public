@@ -114,6 +114,18 @@ public final class ForceLossPolicy {
         return new PolicyResult("FORCE_LOSS_POLICY", operations);
     }
 
+    public static PolicyResult scoreUnknownObjectiveRetention(
+            String actionId, boolean selectedShieldRoutePackageCard) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!selectedShieldRoutePackageCard) {
+            return new PolicyResult(
+                    "FORCE_LOSS_POLICY", List.of());
+        }
+        return one(actionId, "HOTH.SHIELD.PACKAGE_RETAIN",
+                TraceOutputKind.VETO, -9999.0f,
+                "HOTH SHIELD PACKAGE: retain the selected host, pilot, and Cannon");
+    }
+
     public static PolicyResult score(String actionId,
                                      Route route,
                                      ForceLossFacts.DecisionFacts decision,

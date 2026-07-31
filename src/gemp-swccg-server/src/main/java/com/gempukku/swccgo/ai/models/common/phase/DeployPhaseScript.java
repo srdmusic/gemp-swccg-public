@@ -38,10 +38,11 @@ import java.util.regex.Pattern;
  *
  * STRICT ORDER:
  *   STEP 1  LOCATIONS         — anything that puts a LOCATION on table
- *   STEP 2  KEY CHARACTERS    — chars matching ObjectiveAnalyzer.getStrategyCharacterTokens
- *   STEP 3  OTHER CHARACTERS  — remaining char/starship/vehicle deploys
- *   STEP 4  WEAPONS           — weapon deploys / pulls
- *   STEP 5  DEVICES           — device deploys / pulls
+ *   STEP 2  OBJECTIVE ROUTE ASSETS — exact still-needed objective package pieces
+ *   STEP 3  KEY CHARACTERS    — chars matching ObjectiveAnalyzer.getStrategyCharacterTokens
+ *   STEP 4  OTHER CHARACTERS  — remaining char/starship/vehicle deploys
+ *   STEP 5  WEAPONS           — weapon deploys / pulls
+ *   STEP 6  DEVICES           — device deploys / pulls
  *   (PASS only when every step has 0 candidates)
  *
  * KEY MECHANIC — per-action card RESOLUTION:
@@ -110,6 +111,7 @@ public abstract class DeployPhaseScript {
 
     public enum Step {
         LOCATIONS,
+        OBJECTIVE_ROUTE_ASSETS,
         KEY_CHARACTERS,
         OTHER_CHARACTERS,
         WEAPONS,
@@ -379,6 +381,13 @@ public abstract class DeployPhaseScript {
         if (card == null || card.getBlueprint() == null) return null;
         CardCategory cat = card.getBlueprint().getCardCategory();
         if (cat == null) return null;
+        if (cat == CardCategory.WEAPON
+                && objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isShieldMainGeneratorPriorityCannonDeploy(
+                        game, playerId, card)) {
+            return Step.OBJECTIVE_ROUTE_ASSETS;
+        }
         switch (cat) {
             case LOCATION: return Step.LOCATIONS;
             case CHARACTER: {

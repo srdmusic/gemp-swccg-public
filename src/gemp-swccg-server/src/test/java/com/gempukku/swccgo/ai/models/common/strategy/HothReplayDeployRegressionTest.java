@@ -8,6 +8,7 @@ import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.filters.Filters;
 import org.junit.Test;
 
 import java.util.List;
@@ -15,6 +16,8 @@ import java.util.Map;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -90,6 +93,78 @@ public class HothReplayDeployRegressionTest {
     }
 
     @Test
+    public void lowAbilityPilotChoosesTheOpenSeatInsteadOfAFullWalkerPassengerSlot() {
+        PhysicalCard pilot = card(330, "Admiral Ozzel", "3_82",
+                CardCategory.CHARACTER, true, 2.0f);
+        PhysicalCard fullWalker = card(331, "Blizzard 1", "217_4",
+                CardCategory.VEHICLE, false, null);
+        PhysicalCard openWalker = card(332, "Blizzard 2", "4_170",
+                CardCategory.VEHICLE, false, null);
+        GameState state = state(
+                Map.of(331, fullWalker, 332, openWalker), pilot);
+        when(state.getAvailablePilotCapacity(
+                any(), org.mockito.ArgumentMatchers.same(fullWalker),
+                org.mockito.ArgumentMatchers.same(pilot))).thenReturn(0);
+        when(state.getAvailablePilotCapacity(
+                any(), org.mockito.ArgumentMatchers.same(openWalker),
+                org.mockito.ArgumentMatchers.same(pilot))).thenReturn(1);
+
+        for (CandidateSet candidates : List.of(
+                evaluateRandoDeploy(
+                    state, deployPrompt(pilot, false),
+                    fullWalker, openWalker),
+                evaluateChosenDeploy(
+                    state, deployPrompt(pilot, false),
+                    fullWalker, openWalker))) {
+            Candidate full = candidates.byId("331");
+            Candidate open = candidates.byId("332");
+            assertTrue(open.score > full.score);
+            assertTrue(open.reasoning.contains(
+                    "fills an offered open pilot slot"));
+            assertTrue(full.reasoning.contains(
+                    "must fill an offered open pilot slot"));
+        }
+    }
+
+    @Test
+    public void selectablePassengerDestinationDoesNotMasqueradeAsAnOpenPilotSeat() {
+        PhysicalCard pilot = card(340, "Admiral Ozzel", "3_82",
+                CardCategory.CHARACTER, true, 2.0f);
+        PhysicalCard passengerOnlyWalker = card(
+                341, "Restricted Walker", "fixture_341",
+                CardCategory.VEHICLE, false, null);
+        PhysicalCard openWalker = card(
+                342, "Blizzard 2", "4_170",
+                CardCategory.VEHICLE, false, null);
+        when(passengerOnlyWalker.getBlueprint()
+                .getValidPilotFilter(
+                    any(), any(), any(), anyBoolean()))
+                .thenReturn(Filters.none);
+        GameState state = state(
+                Map.of(
+                    341, passengerOnlyWalker,
+                    342, openWalker),
+                pilot);
+
+        for (CandidateSet candidates : List.of(
+                evaluateRandoDeploy(
+                    state, deployPrompt(pilot, false),
+                    passengerOnlyWalker, openWalker),
+                evaluateChosenDeploy(
+                    state, deployPrompt(pilot, false),
+                    passengerOnlyWalker, openWalker))) {
+            Candidate passengerOnly =
+                    candidates.byId("341");
+            Candidate open = candidates.byId("342");
+            assertTrue(open.score > passengerOnly.score);
+            assertTrue(open.reasoning.contains(
+                    "fills an offered open pilot slot"));
+            assertTrue(passengerOnly.reasoning.contains(
+                    "must fill an offered open pilot slot"));
+        }
+    }
+
+    @Test
     public void veersRevealRequiresARealReserveTarget() {
         PhysicalCard veers = card(320, "Veers", "206_11",
                 CardCategory.CHARACTER, true, 5.0f);
@@ -146,6 +221,11 @@ public class HothReplayDeployRegressionTest {
         var context = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
                 state, PLAYER, "CARD_SELECTION", prompt,
                 "hoth-deploy-child", Phase.DEPLOY);
+        var game = mock(com.gempukku.swccgo.game.SwccgGame.class);
+        var modifiers = mock(
+                com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying.class);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        context.setGame(game);
         setDeployCandidates(context, selectable, destinations);
         return new CandidateSet(
                 new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
@@ -168,6 +248,11 @@ public class HothReplayDeployRegressionTest {
         var context = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
                 state, PLAYER, "CARD_SELECTION", prompt,
                 "hoth-deploy-child", Phase.DEPLOY);
+        var game = mock(com.gempukku.swccgo.game.SwccgGame.class);
+        var modifiers = mock(
+                com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying.class);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        context.setGame(game);
         setDeployCandidates(context, selectable, destinations);
         return new CandidateSet(
                 new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
@@ -307,10 +392,35 @@ public class HothReplayDeployRegressionTest {
         when(state.getPlayersLatestTurnNumber(PLAYER)).thenReturn(3);
         when(state.findCardById(anyInt())).thenAnswer(
                 call -> cards.get(call.getArgument(0, Integer.class)));
+        when(state.findCardByPermanentId(anyInt())).thenAnswer(call -> {
+            int permanentId =
+                    call.getArgument(0, Integer.class);
+            PhysicalCard mapped = cards.get(permanentId);
+            if (mapped != null) {
+                return mapped;
+            }
+            return handCard.getPermanentCardId()
+                    == permanentId ? handCard : null;
+        });
+        when(state.getCaptivesOfEscort(
+                any(PhysicalCard.class))).thenReturn(List.of());
         when(state.getHand(PLAYER)).thenReturn(List.of(handCard));
         when(state.getCardPile(PLAYER, Zone.RESERVE_DECK)).thenReturn(List.of());
         when(state.getLostPile(PLAYER)).thenReturn(List.of());
         when(state.getAllStackedCards()).thenReturn(List.of());
+        when(state.getAvailablePilotCapacity(
+                any(), any(PhysicalCard.class),
+                any(PhysicalCard.class))).thenAnswer(call -> {
+                    PhysicalCard destination =
+                            call.getArgument(1, PhysicalCard.class);
+                    CardCategory category = destination != null
+                            && destination.getBlueprint() != null
+                            ? destination.getBlueprint()
+                                .getCardCategory() : null;
+                    return category == CardCategory.VEHICLE
+                            || category == CardCategory.STARSHIP
+                            ? 1 : 0;
+                });
         return state;
     }
 
@@ -333,6 +443,12 @@ public class HothReplayDeployRegressionTest {
         when(card.getOwner()).thenReturn(PLAYER);
         when(card.getBlueprint()).thenReturn(blueprint);
         when(card.getBlueprintId(true)).thenReturn(blueprintId);
+        if (category == CardCategory.VEHICLE
+                || category == CardCategory.STARSHIP) {
+            when(blueprint.getValidPilotFilter(
+                    any(), any(), any(), anyBoolean()))
+                    .thenReturn(Filters.any);
+        }
         return card;
     }
 

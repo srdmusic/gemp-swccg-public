@@ -21,14 +21,14 @@ import static org.mockito.Mockito.when;
 public class DeployPhaseScriptCharacterizationTest {
     @Test
     public void randoBucketOrderIsFrozen() {
-        assertEquals("[LOCATIONS, KEY_CHARACTERS, OTHER_CHARACTERS, WEAPONS, DEVICES]",
+        assertEquals("[LOCATIONS, OBJECTIVE_ROUTE_ASSETS, KEY_CHARACTERS, OTHER_CHARACTERS, WEAPONS, DEVICES]",
                 java.util.Arrays.toString(
                         com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript.Step.values()));
     }
 
     @Test
     public void chosenBucketOrderIsFrozen() {
-        assertEquals("[LOCATIONS, KEY_CHARACTERS, OTHER_CHARACTERS, WEAPONS, DEVICES]",
+        assertEquals("[LOCATIONS, OBJECTIVE_ROUTE_ASSETS, KEY_CHARACTERS, OTHER_CHARACTERS, WEAPONS, DEVICES]",
                 java.util.Arrays.toString(
                         com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript.Step.values()));
     }
@@ -155,6 +155,72 @@ public class DeployPhaseScriptCharacterizationTest {
                                 decision, gameState, game, "p", objectiveAnalyzer);
         assertEquals("[[throne], [ground]]",
                 wrongSource.stepBuckets.toString());
+    }
+
+    @Test
+    public void exactShieldRouteCannonPrecedesUnrelatedCharactersForBothBots() {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ObjectiveAnalyzer objectiveAnalyzer =
+                mock(ObjectiveAnalyzer.class);
+        PhysicalCard cannon = mock(PhysicalCard.class);
+        PhysicalCard character = mock(PhysicalCard.class);
+        var cannonBlueprint = mock(
+                com.gempukku.swccgo.game.SwccgCardBlueprint.class);
+        var characterBlueprint = mock(
+                com.gempukku.swccgo.game.SwccgCardBlueprint.class);
+
+        when(cannon.getBlueprint()).thenReturn(cannonBlueprint);
+        when(character.getBlueprint()).thenReturn(characterBlueprint);
+        when(cannonBlueprint.getCardCategory()).thenReturn(
+                com.gempukku.swccgo.common.CardCategory.WEAPON);
+        when(characterBlueprint.getCardCategory()).thenReturn(
+                com.gempukku.swccgo.common.CardCategory.CHARACTER);
+        when(gameState.findCardById(10)).thenReturn(cannon);
+        when(gameState.findCardById(11)).thenReturn(character);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(objectiveAnalyzer.getStrategyCharacterTokens(game, "p"))
+                .thenReturn(Collections.emptySet());
+        when(objectiveAnalyzer.isStrategyKeyCharacter(
+                game, "p", character)).thenReturn(false);
+        when(objectiveAnalyzer
+                .isShieldMainGeneratorPriorityCannonDeploy(
+                    game, "p", cannon)).thenReturn(true);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId",
+                new String[] {"cannon", "character"});
+        parameters.put("actionText",
+                new String[] {"Deploy", "Deploy"});
+        parameters.put("cardId", new String[] {"10", "11"});
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+
+        for (DeployPhaseScript script : new DeployPhaseScript[] {
+                new com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript(),
+                new com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript()
+        }) {
+            DeployPhaseScript.Result result =
+                    script.selectAllowedActions(
+                        decision, gameState, game, "p",
+                        objectiveAnalyzer);
+            assertEquals(
+                    "[OBJECTIVE_ROUTE_ASSETS, OTHER_CHARACTERS]",
+                    result.stepBucketLabels.toString());
+            assertEquals("[[cannon], [character]]",
+                    result.stepBuckets.toString());
+        }
+
+        when(objectiveAnalyzer
+                .isShieldMainGeneratorPriorityCannonDeploy(
+                    game, "p", cannon)).thenReturn(false);
+        DeployPhaseScript.Result ordinary =
+                new com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript()
+                    .selectAllowedActions(
+                        decision, gameState, game, "p",
+                        objectiveAnalyzer);
+        assertEquals("[OTHER_CHARACTERS, WEAPONS]",
+                ordinary.stepBucketLabels.toString());
     }
 
     @SuppressWarnings("unchecked")

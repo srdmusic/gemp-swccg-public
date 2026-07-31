@@ -369,6 +369,14 @@ public class DeployPilotShipPolicyTest {
     }
 
     @Test
+    public void fullPassengerOnlyAssetsDoNotBorrowPilotProtection() {
+        assertTrue(DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
+                new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
+                        "full-walker", true, 3.0f,
+                        false, true)).operations().isEmpty());
+    }
+
+    @Test
     public void simultaneousPilotCannotConsumeReservedEopBunkerGarrison() {
         List<PolicyOperation> operations =
                 DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(

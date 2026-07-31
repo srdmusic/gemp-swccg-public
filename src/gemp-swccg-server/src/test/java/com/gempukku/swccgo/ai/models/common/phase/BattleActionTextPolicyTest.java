@@ -374,6 +374,34 @@ public class BattleActionTextPolicyTest {
                 "Re-target weapon at enemy - turn their weapon against them!");
     }
 
+    @Test
+    public void coarseDestinyCapFiresOnlyWhenItRemovesMoreOpponentDraws() {
+        assertOperation(
+                onlyWeapons(
+                    BattleActionTextPolicy
+                        .scoreSymmetricBattleDestinyCap(
+                            "coarse", 1, 3)),
+                "BATTLE.COARSE.BATTLE_DESTINY_CAP",
+                500.0f,
+                "COARSE: limit the opponent's larger battle-destiny advantage to one draw");
+        assertOperation(
+                onlyWeapons(
+                    BattleActionTextPolicy
+                        .scoreSymmetricBattleDestinyCap(
+                            "coarse", 2, 2)),
+                "BATTLE.COARSE.BATTLE_DESTINY_CAP_SKIP",
+                -50.0f,
+                "COARSE: preserve our equal or larger battle-destiny draw");
+        assertOperation(
+                onlyWeapons(
+                    BattleActionTextPolicy
+                        .scoreSymmetricBattleDestinyCap(
+                            "coarse", 3, 1)),
+                "BATTLE.COARSE.BATTLE_DESTINY_CAP_SKIP",
+                -50.0f,
+                "COARSE: preserve our equal or larger battle-destiny draw");
+    }
+
     private static BattleActionTextFacts.InitiationFacts resolved(
             float ourPower,
             float theirPower,

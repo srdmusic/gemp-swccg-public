@@ -46,6 +46,10 @@ public class FirstOrderReignsActionDecisionParityTest {
     private static final int FLEET_ID = 201;
     private static final int SUPREMACY_ID = 202;
     private static final int DISTRACTOR_ID = 203;
+    private static final int COARSE_ID = 250;
+    private static final int WRONG_COARSE_ID = 251;
+    private static final int ALTERNATE_COARSE_ID = 252;
+    private static final int OPPONENT_COARSE_ID = 253;
 
     @Test
     public void exactParentDownloadBeatsPassOnlyWhenTheRouteHasAReserveCandidate() {
@@ -206,6 +210,112 @@ public class FirstOrderReignsActionDecisionParityTest {
         assertParity(winners);
     }
 
+    @Test
+    public void coarseBattleDestinyCapBeatsPassOnlyForAnOpponentDrawAdvantage() {
+        List<Outcome> actionScores = new ArrayList<>();
+        List<Outcome> winners = new ArrayList<>();
+        for (Bot bot : Bot.values()) {
+            Fixture fixture = fixture(bot, true);
+            PhysicalCard coarse = card(
+                    "Coarse And Rough And Irritating",
+                    "200_109", Zone.SIDE_OF_TABLE,
+                    CardCategory.EFFECT, null, COARSE_ID);
+            when(fixture.gameState.findCardById(COARSE_ID))
+                    .thenReturn(coarse);
+            when(fixture.modifiers.getNumBattleDestinyDraws(
+                    fixture.gameState, PLAYER,
+                    false, false)).thenReturn(1);
+            when(fixture.modifiers.getNumBattleDestinyDraws(
+                    fixture.gameState, OPPONENT,
+                    false, false)).thenReturn(3);
+
+            Decision decision = Decision.coarse(
+                    COARSE_ID, "200_109");
+            Outcome action = only(
+                    actionText(bot, fixture, decision),
+                    "coarse");
+            assertReason(action,
+                    "COARSE");
+            Outcome winner = combined(
+                    bot, fixture, decision);
+            assertEquals("coarse", winner.actionId());
+            actionScores.add(action);
+            winners.add(winner);
+
+            when(fixture.modifiers.getNumBattleDestinyDraws(
+                    fixture.gameState, PLAYER,
+                    false, false)).thenReturn(2);
+            when(fixture.modifiers.getNumBattleDestinyDraws(
+                    fixture.gameState, OPPONENT,
+                    false, false)).thenReturn(2);
+            assertEquals("", combined(
+                    bot, fixture, decision).actionId());
+
+            PhysicalCard alternateCoarse = card(
+                    "Coarse And Rough And Irritating",
+                    "200_109^", Zone.SIDE_OF_TABLE,
+                    CardCategory.EFFECT, null,
+                    ALTERNATE_COARSE_ID);
+            when(fixture.gameState.findCardById(
+                    ALTERNATE_COARSE_ID))
+                    .thenReturn(alternateCoarse);
+            when(fixture.modifiers.getNumBattleDestinyDraws(
+                    fixture.gameState, PLAYER,
+                    false, false)).thenReturn(1);
+            when(fixture.modifiers.getNumBattleDestinyDraws(
+                    fixture.gameState, OPPONENT,
+                    false, false)).thenReturn(3);
+            assertEquals("coarse", combined(
+                    bot, fixture,
+                    Decision.coarse(
+                        ALTERNATE_COARSE_ID,
+                        "200_109^")).actionId());
+
+            assertEquals("", combined(
+                    bot, fixture,
+                    Decision.coarse(
+                        COARSE_ID, "200_109",
+                        "Take stacked card into Lost Pile",
+                        Phase.BATTLE)).actionId());
+            assertEquals("", combined(
+                    bot, fixture,
+                    Decision.coarse(
+                        COARSE_ID, "200_109",
+                        "Take stacked card into hand",
+                        Phase.DEPLOY)).actionId());
+
+            PhysicalCard opponentCoarse = card(
+                    "Coarse And Rough And Irritating",
+                    "200_109*", Zone.SIDE_OF_TABLE,
+                    CardCategory.EFFECT, null,
+                    OPPONENT_COARSE_ID);
+            when(opponentCoarse.getOwner()).thenReturn(OPPONENT);
+            when(fixture.gameState.findCardById(
+                    OPPONENT_COARSE_ID))
+                    .thenReturn(opponentCoarse);
+            assertEquals("", combined(
+                    bot, fixture,
+                    Decision.coarse(
+                        OPPONENT_COARSE_ID,
+                        "200_109*")).actionId());
+
+            PhysicalCard wrongSource = card(
+                    "Near Match", "fixture_200_109",
+                    Zone.SIDE_OF_TABLE,
+                    CardCategory.EFFECT, null,
+                    WRONG_COARSE_ID);
+            when(fixture.gameState.findCardById(
+                    WRONG_COARSE_ID)).thenReturn(wrongSource);
+            assertEquals("", combined(
+                    bot, fixture,
+                    Decision.coarse(
+                        WRONG_COARSE_ID,
+                        "fixture_200_109")).actionId());
+        }
+        assertParity(actionScores);
+        assertParity(winners);
+    }
+
     private static Outcome combined(
             Bot bot, Fixture fixture, Decision decision) {
         if (bot == Bot.RANDO) {
@@ -267,7 +377,7 @@ public class FirstOrderReignsActionDecisionParityTest {
                                 fixture.gameState, PLAYER,
                                 decision.type(), decision.text(),
                                 "first-order-reigns-action-decision",
-                                Phase.DEPLOY);
+                                decision.phase());
         context.setGame(fixture.game);
         context.setSide(Side.DARK);
         context.setObjectiveAnalyzer(
@@ -286,7 +396,7 @@ public class FirstOrderReignsActionDecisionParityTest {
                                 fixture.gameState, PLAYER,
                                 decision.type(), decision.text(),
                                 "first-order-reigns-action-decision",
-                                Phase.DEPLOY);
+                                decision.phase());
         context.setGame(fixture.game);
         context.setSide(Side.DARK);
         context.setObjectiveAnalyzer(
@@ -620,7 +730,8 @@ public class FirstOrderReignsActionDecisionParityTest {
             List<String> blueprints,
             List<String> testingTexts,
             boolean noPass,
-            int min) {
+            int min,
+            Phase phase) {
 
         private static Decision parent(String actionText) {
             return new Decision(
@@ -632,7 +743,8 @@ public class FirstOrderReignsActionDecisionParityTest {
                     List.of("225_32"),
                     List.of("The First Order Reigns"),
                     false,
-                    0);
+                    0,
+                    Phase.DEPLOY);
         }
 
         private static Decision child(
@@ -654,7 +766,32 @@ public class FirstOrderReignsActionDecisionParityTest {
                             .map(PhysicalCard::getTitle)
                             .toList(),
                     true,
-                    1);
+                    1,
+                    Phase.DEPLOY);
+        }
+
+        private static Decision coarse(
+                int sourceId, String blueprintId) {
+            return coarse(
+                    sourceId, blueprintId,
+                    "Take stacked card into hand",
+                    Phase.BATTLE);
+        }
+
+        private static Decision coarse(
+                int sourceId, String blueprintId,
+                String actionText, Phase phase) {
+            return new Decision(
+                    "CARD_ACTION_CHOICE",
+                    "Choose battle action or Pass",
+                    List.of("coarse"),
+                    List.of(actionText),
+                    List.of(String.valueOf(sourceId)),
+                    List.of(blueprintId),
+                    List.of("Coarse And Rough And Irritating"),
+                    false,
+                    0,
+                    phase);
         }
     }
 

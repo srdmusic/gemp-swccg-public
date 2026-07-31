@@ -110,6 +110,7 @@ public class ShieldTwinObjectiveEngineContractTest {
             put("cannon2", "222_3");
             put("classicCannon", "3_158");
             put("classicPrepare", "13_82");
+            put("blizzard4", "13_56");
             put("tableChangeTrigger", "3_110");
             put("offHothSite", "1_290");
         }};
@@ -168,6 +169,120 @@ public class ShieldTwinObjectiveEngineContractTest {
                 "When fired by Target The Main Generator, adds 1 to total."));
         assertTrue(new Card222_009().getLocationDarkSideGameText().contains(
                 "If 'blown away,' Light Side loses 5 Force."));
+    }
+
+    @Test
+    public void blizzardFourFreeWarriorActionBeatsWaitingForBothBots() {
+        for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
+            VirtualTableScenario scn =
+                    scenario(objectiveBlueprintId);
+            var icePlains = scn.GetDSCard("icePlains");
+            var blizzard4 = scn.GetDSCard("blizzard4");
+            var cannon = scn.GetDSCard("cannon");
+            var reserveWarrior = scn.GetDSCard("pilot");
+            String actionText =
+                    "Deploy an Imperial warrior from Reserve Deck";
+
+            scn.StartGame();
+            scn.MoveCardsToLocation(icePlains, blizzard4);
+            assertEquals(0, scn.GetDSForcePileCount());
+            assertInZone(Zone.RESERVE_DECK, reserveWarrior);
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertTrue(analyzer
+                        .isShieldBlizzardFourWarriorDeployAction(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            blizzard4, actionText));
+                assertFalse(analyzer
+                        .isShieldBlizzardFourWarriorDeployAction(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            cannon, actionText));
+                List<EvaluatedCandidate> candidates =
+                        actionTextAdapter(
+                            analyzer, scn, blizzard4,
+                            List.of("wait", "warrior"),
+                            List.of(
+                                "Take another action",
+                                actionText));
+                EvaluatedCandidate wait =
+                        evaluatedCandidate(
+                            candidates, "wait");
+                EvaluatedCandidate warrior =
+                        evaluatedCandidate(
+                            candidates, "warrior");
+                assertEquals(800.0f,
+                        warrior.score() - wait.score(),
+                        0.0f);
+                assertTrue(warrior.reasoning().contains(
+                        "HOTH SHIELD: take Blizzard 4's free legal Imperial warrior"));
+                EvaluatedCandidate combined =
+                        combinedActionAdapter(
+                            analyzer, scn, blizzard4,
+                            List.of("warrior"),
+                            List.of(actionText));
+                assertEquals("warrior",
+                        combined.actionId());
+                assertFalse(combined.reasoning(),
+                        combined.reasoning().contains(
+                            "Cannot afford"));
+                assertFalse(combined.reasoning(),
+                        combined.reasoning().contains(
+                            "MAINTENANCE"));
+            }
+
+            for (PhysicalCard candidate
+                    : scn.GetDSReserveDeck()
+                        .stream().toList()) {
+                if (Filters.and(
+                            Filters.Imperial,
+                            Filters.warrior)
+                        .accepts(
+                            scn.game(), candidate)) {
+                    scn.MoveOutOfPlay(
+                            (PhysicalCardImpl) candidate);
+                }
+            }
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertFalse(analyzer
+                        .isShieldBlizzardFourWarriorDeployAction(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            blizzard4, actionText));
+                assertTrue(analyzer
+                        .isShieldBlizzardFourWarriorDeployActionSource(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            blizzard4, actionText));
+                List<EvaluatedCandidate> candidates =
+                        actionTextAdapter(
+                            analyzer, scn, blizzard4,
+                            List.of("wait", "warrior"),
+                            List.of(
+                                "Take another action",
+                                actionText));
+                EvaluatedCandidate wait =
+                        evaluatedCandidate(
+                            candidates, "wait");
+                EvaluatedCandidate noTarget =
+                        evaluatedCandidate(
+                            candidates, "warrior");
+                assertFalse(noTarget.hardVeto());
+                assertTrue(noTarget.score()
+                        < wait.score() - 9000.0f);
+                assertTrue(noTarget.reasoning(),
+                        noTarget.reasoning().contains(
+                            "HOTH SHIELD: no legal Imperial warrior in Reserve, do not enter the cancel path"));
+                assertFalse(noTarget.reasoning().contains(
+                        "HOTH SHIELD: take Blizzard 4's free legal Imperial warrior"));
+                EvaluatedCandidate combined =
+                        combinedActionAdapter(
+                            analyzer, scn, blizzard4,
+                            List.of("warrior", "pass"),
+                            List.of(actionText, "Pass"));
+                assertEquals("pass", combined.actionId());
+            }
+        }
     }
 
     @Test
@@ -925,6 +1040,44 @@ public class ShieldTwinObjectiveEngineContractTest {
     }
 
     @Test
+    public void selectedPackageSurvivesTheReplayReserveBottomPrompt() {
+        for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
+            VirtualTableScenario scn =
+                    scenario(objectiveBlueprintId);
+            var target = scn.GetDSCard("target");
+            var host = scn.GetDSCard("unpilotedAtAt");
+            var pilot = scn.GetDSCard("pilot");
+            var cannon = scn.GetDSCard("cannon");
+            var disposable =
+                    scn.GetDSCard("tableChangeTrigger");
+
+            scn.StartGame();
+            scn.MoveCardsToDSHand(
+                    target, host, pilot,
+                    cannon, disposable);
+
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                List<EvaluatedCandidate> candidates =
+                        forceLossAdapter(
+                            analyzer, scn,
+                            "Choose card to put on bottom of Reserve Deck",
+                            pilot, disposable);
+                EvaluatedCandidate protectedPilot =
+                        evaluatedCandidate(candidates, pilot);
+                EvaluatedCandidate ordinaryLoss =
+                        evaluatedCandidate(candidates, disposable);
+                assertFalse(protectedPilot.hardVeto());
+                assertTrue(protectedPilot.reasoning(),
+                        protectedPilot.reasoning().contains(
+                            "HOTH SHIELD PACKAGE: retain the selected host, pilot, and Cannon"));
+                assertFalse(ordinaryLoss.hardVeto());
+                assertTrue(protectedPilot.score()
+                        < ordinaryLoss.score() - 9000.0f);
+            }
+        }
+    }
+
+    @Test
     public void incompleteTableHostDoesNotBeatTheActionableHandPackage() {
         for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
             VirtualTableScenario scn = scenario(objectiveBlueprintId);
@@ -1675,7 +1828,210 @@ public class ShieldTwinObjectiveEngineContractTest {
     }
 
     @Test
-    public void sparePilotedWalkerHoldsASeparateControlledMarker() {
+    public void selectedPilotedHostMayStartForwardBeforeItsRetainedCannonAttaches() {
+        for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
+            VirtualTableScenario scn = scenario(objectiveBlueprintId);
+            var icePlains = scn.GetDSCard("icePlains");
+            var northRidge = scn.GetDSCard("northRidge");
+            var thirdMarker = scn.GetDSCard("thirdMarker");
+            var target = scn.GetDSCard("target");
+            var blizzard2 = scn.GetDSCard("blizzard2");
+            var cannon = scn.GetDSCard("cannon");
+
+            scn.StartGame();
+            scn.MoveLocationToTable(thirdMarker);
+            scn.MoveCardsToLocation(northRidge, blizzard2);
+            scn.AttachCardsTo(northRidge, target);
+            scn.MoveCardsToDSHand(cannon);
+            scn.DSActivateForceCheat(2);
+
+            assertTrue(Filters.piloted.accepts(
+                    scn.game(), blizzard2));
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                int moveCost = Math.max(
+                        0,
+                        (int) Math.ceil(
+                            scn.game()
+                                .getModifiersQuerying()
+                                .getMoveUsingLandspeedCost(
+                                    scn.gameState(),
+                                    blizzard2,
+                                    northRidge,
+                                    thirdMarker,
+                                    false, 0.0f)));
+                assertEquals(0, moveCost);
+                assertEquals(0,
+                        analyzer
+                            .getShieldMainGeneratorRouteMoveForceReserve(
+                                scn.game(),
+                                VirtualTableScenario.DS));
+                assertEquals(0,
+                        analyzer
+                            .getRequiredOnTableCardForceReserve(
+                                scn.game(),
+                                VirtualTableScenario.DS,
+                                cannon));
+                assertTrue(analyzer
+                        .isShieldMainGeneratorPriorityCannonDeploy(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            cannon));
+                assertTrue(analyzer
+                        .advancesShieldMainGeneratorRoute(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            blizzard2, thirdMarker));
+                assertFalse(analyzer
+                        .advancesShieldMainGeneratorRoute(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            blizzard2, icePlains));
+                assertTrue(analyzer
+                        .hasShieldMainGeneratorRouteDestination(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            blizzard2));
+
+                MovementCandidate routeStart =
+                        movementCandidate(
+                            movementAdapter(
+                                analyzer, scn, blizzard2,
+                                List.of("prepared-package"),
+                                List.of("Move using landspeed")),
+                            "prepared-package");
+                assertFalse(routeStart.hardVeto());
+                assertFalse(routeStart.reasoning().contains(
+                        "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD"));
+            }
+            scn.MoveCardsToTopOfDSReserveDeck(cannon);
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertTrue(analyzer
+                        .advancesShieldMainGeneratorRoute(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            blizzard2, thirdMarker));
+                assertEquals(0, analyzer
+                        .getShieldMainGeneratorRouteMoveForceReserve(
+                            scn.game(),
+                            VirtualTableScenario.DS));
+            }
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertForwardFollow(
+                        analyzer, scn, target, blizzard2,
+                        northRidge, thirdMarker);
+            }
+        }
+    }
+
+    @Test
+    public void priorityCannonReleaseRequiresAnActuallyLegalDeploy() {
+        for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
+            VirtualTableScenario scn =
+                    scenario(objectiveBlueprintId);
+            var northRidge =
+                    scn.GetDSCard("northRidge");
+            var target = scn.GetDSCard("target");
+            var routeHost =
+                    scn.GetDSCard("blizzard2");
+            var virtualCannon =
+                    scn.GetDSCard("cannon");
+            var secondVirtualCannon =
+                    scn.GetDSCard("cannon2");
+            var classicCannon =
+                    scn.GetDSCard("classicCannon");
+
+            scn.StartGame();
+            scn.MoveOutOfPlay(virtualCannon);
+            scn.MoveOutOfPlay(secondVirtualCannon);
+            scn.MoveCardsToLocation(
+                    northRidge, routeHost);
+            scn.AttachCardsTo(northRidge, target);
+            scn.MoveCardsToDSHand(classicCannon);
+
+            assertTrue(Filters.piloted.accepts(
+                    scn.game(), routeHost));
+            assertEquals(0, scn.GetDSForcePileCount());
+            assertTrue(deployCostAt(
+                    scn, classicCannon, routeHost) > 0);
+            assertFalse(Filters.deployableToTarget(
+                        classicCannon,
+                        Filters.sameCardId(routeHost),
+                        false, 0.0f)
+                    .accepts(
+                        scn.game(), classicCannon));
+
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertFalse(analyzer
+                        .isShieldMainGeneratorPriorityCannonDeploy(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            classicCannon));
+            }
+        }
+    }
+
+    @Test
+    public void selectedWalkerMoveForceDominatesAnAffordableDistractorDeploy() {
+        for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
+            VirtualTableScenario scn =
+                    scenario(objectiveBlueprintId);
+            var northRidge =
+                    scn.GetDSCard("northRidge");
+            var thirdMarker =
+                    scn.GetDSCard("thirdMarker");
+            var secondMarker =
+                    scn.GetLSCard("secondMarker");
+            var target = scn.GetDSCard("target");
+            var routeHost =
+                    scn.GetDSCard("blizzard2");
+            var cannon = scn.GetDSCard("cannon");
+            var distractor = scn.GetDSCard("pilot");
+
+            scn.StartGame();
+            scn.MoveLocationToTable(thirdMarker);
+            scn.MoveLocationToTable(secondMarker);
+            scn.MoveCardsToLocation(
+                    thirdMarker, routeHost);
+            scn.AttachCardsTo(routeHost, cannon);
+            scn.AttachCardsTo(thirdMarker, target);
+            scn.MoveCardsToDSHand(distractor);
+            int deployCost = Math.max(
+                    1,
+                    distractor.getBlueprint()
+                        .getDeployCost().intValue());
+            scn.DSActivateForceCheat(deployCost);
+
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertTrue(analyzer
+                        .getShieldMainGeneratorRouteMoveForceReserve(
+                            scn.game(),
+                            VirtualTableScenario.DS) > 0);
+                EvaluatedCandidate deploy =
+                        evaluatedCandidate(
+                            deployActionAdapter(
+                                analyzer, scn,
+                                distractor,
+                                List.of("distractor"),
+                                List.of("Deploy")),
+                            "distractor");
+                assertTrue(deploy.hardVeto());
+                assertTrue(deploy.vetoReason(),
+                        deploy.vetoReason().contains(
+                            "HOTH.SHIELD.MOVE_FORCE_RESERVE"));
+
+                EvaluatedCandidate winner =
+                        combinedActionAdapter(
+                            analyzer, scn,
+                            distractor,
+                            List.of("distractor", "pass"),
+                            List.of("Deploy", "Pass"));
+                assertEquals("pass", winner.actionId());
+            }
+        }
+    }
+
+    @Test
+    public void sparePilotedWalkerHoldsOnlyWhenMeaningfullySupported() {
         for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
             VirtualTableScenario scn = scenario(objectiveBlueprintId, true);
             var icePlains = scn.GetDSCard("icePlains");
@@ -1683,6 +2039,7 @@ public class ShieldTwinObjectiveEngineContractTest {
             var carrier = scn.GetDSCard("blizzard2");
             var spare = scn.GetDSCard("blizzard2Duplicate");
             var cannon = scn.GetDSCard("cannon");
+            var support = scn.GetDSCard("pilot");
 
             scn.StartGame();
             scn.MoveCardsToLocation(northRidge, carrier);
@@ -1691,10 +2048,15 @@ public class ShieldTwinObjectiveEngineContractTest {
 
             assertTrue(Filters.piloted.accepts(scn.game(), spare));
             for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
-                assertTrue(analyzer.shouldHoldSecondaryShieldMarkerWalker(
+                assertFalse(analyzer.shouldHoldSecondaryShieldMarkerWalker(
                         scn.game(), VirtualTableScenario.DS, spare));
                 assertFalse(analyzer.shouldHoldSecondaryShieldMarkerWalker(
                         scn.game(), VirtualTableScenario.DS, carrier));
+            }
+            scn.MoveCardsToLocation(icePlains, support);
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertTrue(analyzer.shouldHoldSecondaryShieldMarkerWalker(
+                        scn.game(), VirtualTableScenario.DS, spare));
             }
         }
     }
@@ -2025,6 +2387,80 @@ public class ShieldTwinObjectiveEngineContractTest {
                         fire.score() - wait.score(), 0.0f);
                 assertTrue(fire.reasoning().contains(
                         "V160 PUSH TARGET THE MAIN GENERATOR"));
+            }
+        }
+    }
+
+    @Test
+    public void pilotedCompetingWalkerCannotBorrowTheSelectedCannonFollow() {
+        for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
+            VirtualTableScenario scn =
+                    scenario(objectiveBlueprintId, true);
+            var thirdMarker = scn.GetDSCard("thirdMarker");
+            var secondMarker = scn.GetLSCard("secondMarker");
+            var target = scn.GetDSCard("target");
+            var firstWalker = scn.GetDSCard("blizzard2");
+            var secondWalker =
+                    scn.GetDSCard("blizzard2Duplicate");
+            var cannon = scn.GetDSCard("cannon");
+            var secondCannon = scn.GetDSCard("cannon2");
+            var classicCannon =
+                    scn.GetDSCard("classicCannon");
+
+            scn.StartGame();
+            scn.MoveLocationToTable(thirdMarker);
+            scn.MoveLocationToTable(secondMarker);
+            scn.MoveOutOfPlay(secondCannon);
+            scn.MoveOutOfPlay(classicCannon);
+            scn.MoveCardsToLocation(
+                    thirdMarker, firstWalker, secondWalker);
+            scn.AttachCardsTo(thirdMarker, target);
+            scn.MoveCardsToDSHand(cannon);
+
+            assertTrue(Filters.piloted.accepts(
+                    scn.game(), firstWalker));
+            assertTrue(Filters.piloted.accepts(
+                    scn.game(), secondWalker));
+            List<ObjectiveAnalyzer> analyzers =
+                    analyzers(scn);
+            boolean firstSelected =
+                    analyzers.get(0)
+                        .advancesShieldMainGeneratorRoute(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            firstWalker, secondMarker);
+            boolean secondSelected =
+                    analyzers.get(0)
+                        .advancesShieldMainGeneratorRoute(
+                            scn.game(),
+                            VirtualTableScenario.DS,
+                            secondWalker, secondMarker);
+            assertTrue(firstSelected != secondSelected);
+            PhysicalCard decoy =
+                    firstSelected ? secondWalker : firstWalker;
+            for (ObjectiveAnalyzer analyzer : analyzers) {
+                assertEquals(firstSelected,
+                        analyzer
+                            .advancesShieldMainGeneratorRoute(
+                                scn.game(),
+                                VirtualTableScenario.DS,
+                                firstWalker, secondMarker));
+                assertEquals(secondSelected,
+                        analyzer
+                            .advancesShieldMainGeneratorRoute(
+                                scn.game(),
+                                VirtualTableScenario.DS,
+                                secondWalker, secondMarker));
+            }
+
+            positionFollowFixture(
+                    scn, target, decoy,
+                    thirdMarker, secondMarker);
+            for (ObjectiveAnalyzer analyzer : analyzers) {
+                assertNoV160RoutePush(
+                        analyzer, scn, target,
+                        "piloted-decoy-follow",
+                        "Follow vehicle moving from same site");
             }
         }
     }
@@ -2684,6 +3120,7 @@ public class ShieldTwinObjectiveEngineContractTest {
 
     private record MovementCandidate(
             String actionId, float score,
+            boolean hardVeto, String vetoReason,
             String reasoning) {
     }
 
@@ -2727,6 +3164,8 @@ public class ShieldTwinObjectiveEngineContractTest {
                     .map(action -> new MovementCandidate(
                             action.getActionId(),
                             action.getScore(),
+                            action.isHardVetoed(),
+                            action.getVetoReason(),
                             action.getReasoningString()))
                     .toList();
         }
@@ -2754,6 +3193,8 @@ public class ShieldTwinObjectiveEngineContractTest {
                     .map(action -> new MovementCandidate(
                             action.getActionId(),
                             action.getScore(),
+                            action.isHardVetoed(),
+                            action.getVetoReason(),
                             action.getReasoningString()))
                     .toList();
         }
@@ -2823,6 +3264,161 @@ public class ShieldTwinObjectiveEngineContractTest {
             context.setCardIds(cardIds);
             return new com.gempukku.swccgo.ai.models.chosenone.evaluators
                     .ActionTextEvaluator()
+                    .evaluate(context).stream()
+                    .map(action -> new EvaluatedCandidate(
+                            action.getActionId(),
+                            action.getScore(),
+                            action.isHardVetoed(),
+                            action.getVetoReason(),
+                            action.getReasoningString()))
+                    .toList();
+        }
+        throw new IllegalArgumentException(
+                "Unsupported Shield analyzer adapter");
+    }
+
+    private static EvaluatedCandidate combinedActionAdapter(
+            ObjectiveAnalyzer analyzer,
+            VirtualTableScenario scn,
+            PhysicalCard source,
+            List<String> actionIds,
+            List<String> actionTexts) {
+        List<String> cardIds = actionIds.stream()
+                .map(actionId ->
+                        String.valueOf(source.getCardId()))
+                .toList();
+        if (analyzer instanceof
+                com.gempukku.swccgo.ai.models.rando.strategy
+                        .ObjectiveAnalyzer randoAnalyzer) {
+            var context =
+                    new com.gempukku.swccgo.ai.models.rando.evaluators
+                            .DecisionContext(
+                                scn.gameState(),
+                                VirtualTableScenario.DS,
+                                "CARD_ACTION_CHOICE",
+                                "Choose Shield route action",
+                                "shield-combined-action",
+                                Phase.DEPLOY);
+            context.setGame(scn.game());
+            context.setSide(Side.DARK);
+            context.setObjectiveAnalyzer(randoAnalyzer);
+            context.setActionIds(actionIds);
+            context.setActionTexts(actionTexts);
+            context.setCardIds(cardIds);
+            var action =
+                    new com.gempukku.swccgo.ai.models.rando.evaluators
+                            .CombinedEvaluator()
+                            .evaluateDecision(context);
+            return new EvaluatedCandidate(
+                    action.getActionId(),
+                    action.getScore(),
+                    action.isHardVetoed(),
+                    action.getVetoReason(),
+                    action.getReasoningString());
+        }
+        if (analyzer instanceof
+                com.gempukku.swccgo.ai.models.chosenone.strategy
+                        .ObjectiveAnalyzer chosenAnalyzer) {
+            var context =
+                    new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                            .DecisionContext(
+                                scn.gameState(),
+                                VirtualTableScenario.DS,
+                                "CARD_ACTION_CHOICE",
+                                "Choose Shield route action",
+                                "shield-combined-action",
+                                Phase.DEPLOY);
+            context.setGame(scn.game());
+            context.setSide(Side.DARK);
+            context.setObjectiveAnalyzer(chosenAnalyzer);
+            context.setActionIds(actionIds);
+            context.setActionTexts(actionTexts);
+            context.setCardIds(cardIds);
+            var action =
+                    new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                            .CombinedEvaluator()
+                            .evaluateDecision(context);
+            return new EvaluatedCandidate(
+                    action.getActionId(),
+                    action.getScore(),
+                    action.isHardVetoed(),
+                    action.getVetoReason(),
+                    action.getReasoningString());
+        }
+        throw new IllegalArgumentException(
+                "Unsupported Shield analyzer adapter");
+    }
+
+    private static List<EvaluatedCandidate> deployActionAdapter(
+            ObjectiveAnalyzer analyzer,
+            VirtualTableScenario scn,
+            PhysicalCard source,
+            List<String> actionIds,
+            List<String> actionTexts) {
+        List<String> cardIds = actionIds.stream()
+                .map(actionId ->
+                        String.valueOf(source.getCardId()))
+                .toList();
+        List<String> blueprintIds = actionIds.stream()
+                .map(actionId ->
+                        source.getBlueprintId(true))
+                .toList();
+        List<String> titles = actionIds.stream()
+                .map(actionId -> source.getTitle())
+                .toList();
+        if (analyzer instanceof
+                com.gempukku.swccgo.ai.models.rando.strategy
+                        .ObjectiveAnalyzer randoAnalyzer) {
+            var context =
+                    new com.gempukku.swccgo.ai.models.rando.evaluators
+                            .DecisionContext(
+                                scn.gameState(),
+                                VirtualTableScenario.DS,
+                                "CARD_ACTION_CHOICE",
+                                "Choose Deploy action or Pass",
+                                "shield-deploy-action",
+                                Phase.DEPLOY);
+            context.setGame(scn.game());
+            context.setSide(Side.DARK);
+            context.setObjectiveAnalyzer(randoAnalyzer);
+            context.setActionIds(actionIds);
+            context.setActionTexts(actionTexts);
+            context.setCardIds(cardIds);
+            context.setBlueprints(blueprintIds);
+            context.setTestingTexts(titles);
+            return new com.gempukku.swccgo.ai.models.rando.evaluators
+                    .DeployEvaluator()
+                    .evaluate(context).stream()
+                    .map(action -> new EvaluatedCandidate(
+                            action.getActionId(),
+                            action.getScore(),
+                            action.isHardVetoed(),
+                            action.getVetoReason(),
+                            action.getReasoningString()))
+                    .toList();
+        }
+        if (analyzer instanceof
+                com.gempukku.swccgo.ai.models.chosenone.strategy
+                        .ObjectiveAnalyzer chosenAnalyzer) {
+            var context =
+                    new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                            .DecisionContext(
+                                scn.gameState(),
+                                VirtualTableScenario.DS,
+                                "CARD_ACTION_CHOICE",
+                                "Choose Deploy action or Pass",
+                                "shield-deploy-action",
+                                Phase.DEPLOY);
+            context.setGame(scn.game());
+            context.setSide(Side.DARK);
+            context.setObjectiveAnalyzer(chosenAnalyzer);
+            context.setActionIds(actionIds);
+            context.setActionTexts(actionTexts);
+            context.setCardIds(cardIds);
+            context.setBlueprints(blueprintIds);
+            context.setTestingTexts(titles);
+            return new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                    .DeployEvaluator()
                     .evaluate(context).stream()
                     .map(action -> new EvaluatedCandidate(
                             action.getActionId(),
@@ -3023,6 +3619,17 @@ public class ShieldTwinObjectiveEngineContractTest {
             ObjectiveAnalyzer analyzer,
             VirtualTableScenario scn,
             PhysicalCard... candidates) {
+        return forceLossAdapter(
+                analyzer, scn,
+                "Choose Force to lose",
+                candidates);
+    }
+
+    private static List<EvaluatedCandidate> forceLossAdapter(
+            ObjectiveAnalyzer analyzer,
+            VirtualTableScenario scn,
+            String decisionText,
+            PhysicalCard... candidates) {
         List<String> cardIds = new ArrayList<>();
         List<Boolean> selectable = new ArrayList<>();
         for (PhysicalCard candidate : candidates) {
@@ -3039,7 +3646,7 @@ public class ShieldTwinObjectiveEngineContractTest {
                                     scn.gameState(),
                                     VirtualTableScenario.DS,
                                     "CARD_SELECTION",
-                                    "Choose Force to lose",
+                                    decisionText,
                                     "shield-force-loss",
                                     Phase.CONTROL);
             context.setGame(scn.game());
@@ -3067,7 +3674,7 @@ public class ShieldTwinObjectiveEngineContractTest {
                                     scn.gameState(),
                                     VirtualTableScenario.DS,
                                     "CARD_SELECTION",
-                                    "Choose Force to lose",
+                                    decisionText,
                                     "shield-force-loss",
                                     Phase.CONTROL);
             context.setGame(scn.game());

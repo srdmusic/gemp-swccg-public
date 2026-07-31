@@ -34,6 +34,25 @@ public final class DeployActionTextPolicy {
     private DeployActionTextPolicy() {
     }
 
+    public static PolicyResult scoreShieldBlizzardFourWarriorDeploy(
+            String actionId, boolean exactExecutableAction) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!exactExecutableAction) {
+            return result(operation(
+                    actionId,
+                    "HOTH.SHIELD.BLIZZARD4_FREE_WARRIOR_NO_TARGET",
+                    TraceOutputKind.VETO,
+                    -9999.0f,
+                    "HOTH SHIELD: no legal Imperial warrior in Reserve, do not enter the cancel path"));
+        }
+        return result(operation(
+                actionId,
+                "HOTH.SHIELD.BLIZZARD4_FREE_WARRIOR",
+                TraceOutputKind.ORDERING,
+                800.0f,
+                "HOTH SHIELD: take Blizzard 4's free legal Imperial warrior"));
+    }
+
     public static Evaluation evaluateAmsd(DeployActionTextFacts.AmsdFacts facts) {
         Objects.requireNonNull(facts, "facts");
 

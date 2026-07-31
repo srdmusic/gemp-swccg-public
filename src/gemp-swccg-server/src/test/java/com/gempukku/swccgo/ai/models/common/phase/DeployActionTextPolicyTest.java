@@ -294,6 +294,24 @@ public class DeployActionTextPolicyTest {
                 DeployActionTextPolicy.scoreLegacyFallbackMatchingPilot(40));
     }
 
+    @Test
+    public void blizzardFourFreeWarriorHasExactObjectivePriority() {
+        assertOperation(
+                DeployActionTextPolicy
+                    .scoreShieldBlizzardFourWarriorDeploy(
+                        "warrior", true),
+                "HOTH.SHIELD.BLIZZARD4_FREE_WARRIOR",
+                800.0f,
+                "HOTH SHIELD: take Blizzard 4's free legal Imperial warrior");
+        assertOperation(
+                DeployActionTextPolicy
+                    .scoreShieldBlizzardFourWarriorDeploy(
+                        "warrior", false),
+                "HOTH.SHIELD.BLIZZARD4_FREE_WARRIOR_NO_TARGET",
+                -9999.0f,
+                "HOTH SHIELD: no legal Imperial warrior in Reserve, do not enter the cancel path");
+    }
+
     private static DeployActionTextFacts.AmsdFacts amsd(
             boolean bespin,
             boolean alreadyFailed,

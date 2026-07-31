@@ -596,7 +596,32 @@ public class DeployEvaluator extends ActionEvaluator {
                 continue;
             }
 
-            boolean blockedResponse = v159DeployBlocked != null
+            String sourceCardId =
+                    ctxCardIds != null && i < ctxCardIds.size()
+                        ? ctxCardIds.get(i) : null;
+            PhysicalCard deployActionSource = null;
+            try {
+                if (gameState != null && sourceCardId != null) {
+                    deployActionSource = gameState.findCardById(
+                            Integer.parseInt(sourceCardId));
+                }
+            } catch (NumberFormatException ignored) {
+                // Unresolved sources do not receive the narrow stale-id release.
+            }
+            var deployObjectiveAnalyzer =
+                    context.getObjectiveAnalyzer();
+            boolean exactShieldCannonDeploy =
+                    deployObjectiveAnalyzer != null
+                    && deployObjectiveAnalyzer
+                        .isShieldMainGeneratorPriorityCannonDeployAction(
+                            game, playerId, deployActionSource, actionText);
+            boolean exactShieldFreeWarrior =
+                    deployObjectiveAnalyzer != null
+                    && deployObjectiveAnalyzer
+                        .isShieldBlizzardFourWarriorDeployActionSource(
+                            game, playerId, deployActionSource, actionText);
+            boolean blockedResponse = !exactShieldCannonDeploy
+                    && v159DeployBlocked != null
                     && !v159DeployBlocked.isEmpty()
                     && (v159DeployBlocked.contains(actionId)
                     || v159DeployBlocked.contains(actionText));
@@ -626,12 +651,16 @@ public class DeployEvaluator extends ActionEvaluator {
                 actions.add(action);
                 continue;
             }
+            if (exactShieldFreeWarrior) {
+                // The action deploys a warrior for free. Blizzard 4 is only
+                // the source, so none of its own deploy or maintenance facts
+                // apply here. ActionTextPolicy owns the positive priority.
+                actions.add(action);
+                continue;
+            }
 
             // V209 PULL deploy-side guards. The shared policy keeps this evaluator's
             // historical additive veto layer separate from ActionText's parent scorer.
-            String sourceCardId =
-                    ctxCardIds != null && i < ctxCardIds.size()
-                        ? ctxCardIds.get(i) : null;
             boolean firstOrderReignsObjectiveDownload = false;
             if (sourceCardId != null && gameState != null
                     && context.getObjectiveAnalyzer() != null) {
@@ -1634,6 +1663,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                     .getRequiredCardDeployEnablerForceReserve(
                                         game, playerId, card)
                             : 0;
+                    int shieldRouteMoveReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getShieldMainGeneratorRouteMoveForceReserve(
+                                    game, playerId)
+                            : 0;
                     DeployPlanPolicy.Evaluation planEvaluation = DeployPlanPolicy.evaluate(
                         new DeployPlanPolicy.Facts(
                             actionId, plan != null,
@@ -1787,6 +1822,16 @@ public class DeployEvaluator extends ActionEvaluator {
                                 < firstOrderReignsRouteReserve) {
                         action.hardVeto(
                             "OBJECTIVE.FIRST_ORDER_REIGNS.RESERVE_7: preserve Force for the Tracked Fleet chase ship, crew, and movement");
+                    }
+                    if (cost > 0
+                            && "deploy".equals(actionLower.trim())
+                            && shieldRouteMoveReserve > 0
+                            && availableForce - cost
+                                < shieldRouteMoveReserve) {
+                        action.hardVeto(
+                            "HOTH.SHIELD.MOVE_FORCE_RESERVE: preserve the selected walker's exact next forward landspeed payment");
+                        actions.add(action);
+                        continue;
                     }
 
                     boolean obligationMaintenance = false;

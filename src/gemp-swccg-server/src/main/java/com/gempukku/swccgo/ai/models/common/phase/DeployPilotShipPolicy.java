@@ -171,17 +171,18 @@ public final class DeployPilotShipPolicy {
             LowAbilityPilotBoardingFacts facts) {
         Objects.requireNonNull(facts, "facts");
         if (!facts.pilot() || facts.ability() == null
-                || facts.ability() >= 5.0f || !facts.assetDestinationOffered()) {
+                || facts.ability() >= 5.0f
+                || !facts.openPilotDestinationOffered()) {
             return new PolicyResult("DEPLOY_LOW_ABILITY_PILOT_BOARDING_POLICY", List.of());
         }
-        if (facts.destinationIsAsset()) {
+        if (facts.destinationHasOpenPilotSlot()) {
             return oneAttach(facts.actionId(), "V30-low-ability-pilot-boarding",
                     TraceOutputKind.ORDERING, 3000.0f,
-                    "V30 PILOT PROTECTION: ability under 5 boards an offered vehicle or starship");
+                    "V30 PILOT PROTECTION: ability under 5 fills an offered open pilot slot");
         }
         return oneAttach(facts.actionId(), "V30-low-ability-pilot-boarding",
                 TraceOutputKind.VETO, -5000.0f,
-                "V30 PILOT PROTECTION: ability under 5 must board an offered vehicle or starship");
+                "V30 PILOT PROTECTION: ability under 5 must fill an offered open pilot slot");
     }
 
     public static PolicyResult evaluateAssetTail(AssetTailFacts facts) {
@@ -482,7 +483,8 @@ public final class DeployPilotShipPolicy {
 
     public record LowAbilityPilotBoardingFacts(
             String actionId, boolean pilot, Float ability,
-            boolean assetDestinationOffered, boolean destinationIsAsset) {
+            boolean openPilotDestinationOffered,
+            boolean destinationHasOpenPilotSlot) {
         public LowAbilityPilotBoardingFacts {
             Objects.requireNonNull(actionId, "actionId");
         }
