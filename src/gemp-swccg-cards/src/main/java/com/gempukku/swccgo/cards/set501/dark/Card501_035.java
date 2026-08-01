@@ -17,11 +17,10 @@ public class Card501_035 extends AbstractUniqueStarshipSite {
     public Card501_035() {
         super(Side.DARK, "Invisible Hand: Observation Platform", Persona.INVISIBLE_HAND, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("If you just took a card into hand with A Valuable Hostage, retrieve 1 Force.");
-        setLocationLightSideGameText("If you occupy, cancel Observation Platform text.");
+        setLocationLightSideGameText("If you occupy, opponent's Observation Platform game text is canceled.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.STARSHIP_SITE, Icon.SCOMP_LINK, Icon.EPISODE_I, Icon.VIRTUAL_SET_27);
         setTestingText("Invisible Hand: Observation Platform");
-        hideFromDeckBuilder();
     }
 }
