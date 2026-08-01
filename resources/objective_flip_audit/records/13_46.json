@@ -53,7 +53,7 @@
  "setupAndPullRoutes": [
   "Setup (front, required): deploy Theed Palace Generator Core from Reserve Deck. Card13_046.java:57-63",
   "Setup (front, required): deploy Theed Palace Generator from Reserve Deck. Card13_046.java:64-70",
-  "Setup (front, required): deploy Inner Strength (Effect) from Reserve Deck. Card13_046.java:71-77",
+  "Setup (front, required): deploy Inner Strength (Epic Event) from Reserve Deck. Card13_046.java:71-77",
   "No download/tutor actions on either side after setup."
  ],
  "otherObligations": [
@@ -66,14 +66,63 @@
  "seedMismatches": [],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
-  "profileGaps": [
-   "flipGateSite is null; true gate is interior Naboo battleground sites (Filters.and(Filters.interior_Naboo_site, Filters.battleground_site))",
-   "keyCharacterFilter is null; flip actor is OPPONENT'S Dark Jedi (Filters.Dark_Jedi) - opponent-driven flip has no representation",
-   "all objectiveNamedLocations entries have null labels and empty titleFragments/blueprintIds (filter strings only)",
-   "requiredCardsOnTable empty; setup requires Inner Strength on table",
-   "weights empty"
-  ]
+  "loaderEnabled": true,
+  "startingLocations": [
+   "13_32 Naboo: Theed Palace Generator Core",
+   "13_31 or 220_8 Naboo: Theed Palace Generator"
+  ],
+  "startingEffectsBucket": "13_24 Inner Strength. Despite the historical bucket name, source defines Inner Strength as an Epic Event, not an Effect.",
+  "keyCharacterFilter": "Jedi",
+  "frontStructuredRules": [
+   "preFlip/flip: opponent Dark_Jedi presentAt interior_Naboo_battleground_site, count >= 1, INCLUDE_EXCLUDED_FROM_BATTLE",
+   "preFlip/payoff during owner's CONTROL phase: owner's Jedi presentAt an interior Theed Palace site containing a source-legal opponent character targetable TO_BE_LOST"
+  ],
+  "backStructuredRules": [
+   "postFlip/flipBack: opponent Dark_Jedi presentAt interior_Naboo_battleground_site, count == 0, INCLUDE_EXCLUDED_FROM_BATTLE",
+   "postFlip/payoff during owner's MOVE phase: owner's targetable Jedi presentAt any location containing an ordinarily active opponent Dark Jedi targetable by the objective"
+  ],
+  "legacyGateFields": "flipGateSite remains null because the exact opponent-driven presentAt rules supersede the older owner-actor/single-site proxy.",
+  "profileGaps": []
  },
- "proofGate": "SOURCE_VERIFIED"
+ "missingStateCalculation": [
+  "The front flip-progress rule is deliberately opponent-driven. It reports the source condition but never masquerades as a route that the owner can complete by deploying or moving a Jedi.",
+  "The front payoff is executable only during the owner's control phase at an interior Theed Palace site where the exact target survives both current game-text narrowing modifications and TargetingReason.TO_BE_LOST.",
+  "The back payoff is executable only during the owner's move phase. It may occur at any location, not merely the interior Naboo battleground keeping the objective flipped, and both duelists must be legal objective targets."
+ ],
+ "flipPreservation": [
+  "A typed Jedi deploy parent beats generic deployment and Pass when the candidate has a direct legal deploy to a front target-loss pairing or a back lightsaber-combat pairing. A stranded active Jedi no longer suppresses a useful hand copy; the exception closes once an active Jedi has an executable pairing.",
+  "Destination scoring sends the Jedi to the exact legal opponent location. Movement starts a safe route, rewards the exact destination, and holds an already executable pairing; Formation Safety's doomed-solo veto remains dominant.",
+  "Standalone and combined battle Force-loss selection retain exactly the first typed Jedi in hand while no active Jedi is on table. Once a typed Jedi is active, ordinary duplicate and loss priorities resume.",
+  "The exact front Target character action and back Initiate lightsaber combat action beat Pass and ordinary same-phase alternatives only when their source objective, face, and action text all match."
+ ],
+ "runtimeOwners": [
+  "ObjectiveAnalyzer owns family identity, exact setup hydration, opponent-driven flip state, phase-windowed payoff state, source-modified target legality, deploy feasibility, stranded-copy recovery, and Force-loss retention facts.",
+  "NabooDuelObjectivePolicy owns the bounded exact-action scores and front deploy-destination score. MoveDestinationPolicy owns safe start, exact destination, and established-pair retention contributions.",
+  "Mirrored Rando and Chosen One ActionTextEvaluator, CardSelectionEvaluator, DeployEvaluator, and MoveEvaluator adapters consume the same shared facts and policies."
+ ],
+ "contradictions": [
+  "The owner cannot force the objective to flip by staging a Jedi. Only an opponent Dark Jedi at the source-defined gate causes the front flip.",
+  "The front target-loss site is any interior Theed Palace site with a legal opponent character. It is not limited to the specific interior Naboo battleground where an opponent Dark Jedi caused the flip.",
+  "The back lightsaber combat may occur at any location. Restricting it to an interior Naboo battleground would silently discard legal source actions.",
+  "13_24 Inner Strength is an Epic Event. Its storage in startingEffects is a legacy data-bucket convention, not a card-type claim."
+ ],
+ "testEvidence": {
+  "positiveAndNegative": [
+   "NabooDuelObjectiveEngineContractTest uses unchanged Card13_046/Card13_046_BACK and engine code to prove exact setup, the opponent-Dark-Jedi front flip and near misses, excluded-opponent inclusion, back hold, flip-back with retrieval of 1 Force, and the back's drain/battle prohibition.",
+   "NabooDuelObjectiveBehaviorTest proves profile hydration, exact actor and targetability boundaries, owner phase windows, any-location back payoff, and established-pair retention."
+  ],
+  "candidateChoice": [
+   "NabooDuelObjectiveCombinedEvaluatorDecisionTest offers the exact front and back objective actions against wrong-source actions, Pass, Force drain, and ordinary movement, and proves the exact winners through both bot facades.",
+   "NabooDuelObjectiveRouteDecisionTest proves deploy-parent, deploy-destination, move-parent, move-destination, hold, stranded-copy, Force-loss, and doomed-solo boundaries for both mirrored objectives."
+  ],
+  "parity": "Rando and Chosen One source parity and production-evaluator winners are identical across all four touched adapters.",
+  "verification": "Five Naboo suites passed 34/0/0/0. The final impacted gate passed 289/0/0/0 across 27 suites, including shared deploy, move, Force-loss, setup, objective, Senate, First Order, Hoth, and both-bot parity coverage. JSON validation and diff checks passed.",
+  "packaged": "Isolated package succeeded. All 81 changed/common class-resource entries byte-match target/classes, the server jar, and web.jar. Server jar SHA-256 is 4f6ed06cb78de2192eb5b1d12f2b31110847cb6c1544ecc8fff2ea8d5deb6a1c; candidate, live-host, and running-container web.jar SHA-256 is 721ca2b77e3deb36c86adf1894bf5d3be784bd62cb2082bd8662305170b773a6; live playbook SHA-256 is d0f68fc67f0e562e821131b6455ec742ab5c85a94855499bdc4705504f83dfcd.",
+  "replay": "No live replay or rule-firing claim. Deterministic unchanged-engine tests provide FLIP_OBSERVED; package and fresh-JVM load are separately verified."
+ },
+ "knownLimits": [
+  "A live Rando-versus-Chosen One replay remains the final branch-firing observation layer.",
+  "The generated workbook and Rulebook are research views and are not used as behavioral proof for the custom analyzer and phase-policy paths."
+ ],
+ "proofGate": "FLIP_OBSERVED"
 }

@@ -9420,3 +9420,73 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Live branch-firing and replay proof remain separate pending gates. Nothing
     was pushed. Revert 4942781ab to remove this family seal; prior objective
     batches remain independent.
+
+  ==== Reflections III Naboo duel objective family behavior seal (2026-07-31) ====
+
+    Light 13_46/13_46_BACK flips when an opponent Dark Jedi is present at an
+    interior Naboo battleground. Dark 13_73/13_73_BACK mirrors that law for
+    an opponent Jedi. Both include actors excluded from battle. Each back
+    flips to front and retrieves 1 Force when no matching opponent actor
+    remains at any gate. These are opponent-driven flips; the owner's Jedi or
+    Dark Jedi can prepare the payoff but cannot create false flip progress.
+
+    The loader-enabled profiles carry exact Generator Core and Generator
+    setup IDs plus Inner Strength 13_24 for Light and Deep Hatred 13_65 for
+    Dark. Both side-of-table cards are Epic Events stored in the historical
+    startingEffects compatibility bucket. The runtime field name was retained
+    while the records now state the correct card type.
+
+    On each front, the typed duelist is deployed or moved to an interior Theed
+    Palace site with an opponent character that the exact objective may target
+    TO_BE_LOST during the owner's control phase. Both current game-text target
+    restrictions are honored. On each back, a targetable typed duelist pursues
+    a targetable, ordinarily active opposing duelist at any location during
+    the owner's move phase. The owner actor must also be a legal objective
+    target. Exact source-and-face Target character and Initiate lightsaber
+    combat actions receive +400 and +300.
+
+    Exact front deploy destinations receive +1200. Safe move start and exact
+    destination contributions are +600 and +1200; abandoning an established
+    pairing is -1600. Existing V67ak +800 is reopened only for a stranded
+    active-duelist case where the hand copy can deploy directly to a legal
+    pairing, then closes once an executable active pairing exists. Standalone
+    and combined-battle Force loss retain exactly the first typed hand duelist
+    at -700 while no typed duelist is active. Hard Formation Safety remains
+    dominant. No numeric V-tag was added; semantic OBJECTIVE.NABOO_DUEL,
+    DEPLOY.OBJECTIVE.NABOO_DUEL, and MOVE.OBJECTIVE.NABOO_DUEL rule IDs own
+    the new paths.
+
+    Red-first probes found two front-route failures, both stranded-copy
+    methods across eight mirrored cases, and three profile defects involving
+    own targetability and phase windows. All were repaired before sealing.
+    The five Naboo suites passed 34/0/0/0. The final impacted gate passed
+    289/0/0/0 across 27 suites, covering shared deploy, move, Force loss,
+    setup, goldens, Invasion, Senate, First Order, Hoth, and complete bot
+    parity. DeployPhaseSourceParityTest also passed; JSON, diff, and two
+    independent final reviews were clean. Workbook and generated Rulebook
+    views were not used as behavioral proof.
+
+    Local code commit 1cfeedb39 packaged in the isolated worktree. All 81
+    changed/common class-resource entries byte-match target/classes, server
+    jar, and web.jar. Server jar SHA-256 is
+    4f6ed06cb78de2192eb5b1d12f2b31110847cb6c1544ecc8fff2ea8d5deb6a1c;
+    candidate, live-host, and running-container web.jar SHA-256 is
+    721ca2b77e3deb36c86adf1894bf5d3be784bd62cb2082bd8662305170b773a6;
+    live playbook SHA-256 is
+    d0f68fc67f0e562e821131b6455ec742ab5c85a94855499bdc4705504f83dfcd.
+
+    A finished table blocked the first strict gate, so deployment waited until
+    it cleared. The authenticated frozen hall then contained zero tables. The
+    prior Senate jar is preserved as web.jar.pre-naboo-duel-1cfeedb39. The
+    fresh app started at 2026-07-31T23:45:09.947942177Z with restart count
+    zero; PID 1 runs the exact jar. HTTP and all five switch posts returned
+    200, startup completed without a material exception, and the hall stayed
+    empty. Unchanged-engine tests provide FLIP_OBSERVED; a live bot replay is
+    still separate proof.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen
+    One adapters, approved objective data, AI tests, and approved history
+    records. No engine, card Java, client, deck, database, or workbook source
+    changed. Nothing was pushed. Restore web.jar.pre-naboo-duel-1cfeedb39 and
+    revert 1cfeedb39 to remove only this family seal; prior batches remain
+    independent.
