@@ -15,6 +15,8 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextOnSideOfLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 
 /**
  * Set: Playtesting
@@ -31,6 +33,13 @@ public class Card501_035 extends AbstractUniqueStarshipSite {
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.STARSHIP_SITE, Icon.SCOMP_LINK, Icon.EPISODE_I, Icon.VIRTUAL_SET_27);
         setTestingText("Invisible Hand: Observation Platform");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ModifyGameTextModifier(self, Filters.A_Valuable_Hostage, ModifyGameTextType.A_VALUABLE_HOSTAGE__RETRIEVE_FORCE_AFTER_TAKING_CARD));
+        return modifiers;
     }
 
     @Override
