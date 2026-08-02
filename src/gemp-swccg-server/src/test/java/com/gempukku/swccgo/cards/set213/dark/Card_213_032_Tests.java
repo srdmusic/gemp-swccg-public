@@ -189,7 +189,7 @@ public class Card_213_032_Tests {
 
 	@Test
 	public void ShadowCollectiveCanDownloadBlasterToUndercoverSpy() {
-		//demonstrates: https://github.com/PlayersCommittee/gemp-swccg-public/issues/971
+		//demonstrates fixed: https://github.com/PlayersCommittee/gemp-swccg-public/issues/971
 		//test1: can choose a non-unique blaster
 		//test2: can choose an eligible undercover spy
 		//test3: blaster is deployed on undercover spy
