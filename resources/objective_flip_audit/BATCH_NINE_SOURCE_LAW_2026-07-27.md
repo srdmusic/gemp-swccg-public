@@ -60,15 +60,17 @@ Lando = persona LANDO, Lobot = persona LOBOT; OnCloudCityCondition spots any mat
 Cloud City including permanent-aboard, no ownership restriction.
 
 ## Discrepancies vs takeover §9 P3 claims
-1. QMC Lando/Lobot leg reduces (see NUANCE above).
+1. QMC's Lando/Lobot route still requires one separately controlled Cloud City site because
+   Bespin: Cloud City is a sector, not a site (see NUANCE above).
 2. CITC has NO blown-away hard-loss on either side; the takeover's family-wide implication is wrong.
 3. CITC front setup optionally deploys Weather Vane (omitted from takeover summary).
 4. CITC captive-counting: occupy-Bespin and opponent-zero legs use INCLUDE_CAPTIVE_AND_EXCLUDED;
    the two-site control leg uses only INCLUDE_EXCLUDED_FROM_BATTLE.
 
 ## Runtime state
-Profiles exist and are loader-enabled for both (Objective_Playbook_Facts_2026-07-08.json +
-Codex WIP file; inventoryRows 12 and 29). Audit records/dossiers exist, proofGate=SOURCE_VERIFIED,
-gap_matrix engineClass=EXISTING_ENGINE_FIT with gaps: 109_4 "three-leg law + Lando/Lobot
-count-reduction alternative unrepresented"; 301_2 "three-leg law, opponent-zero constraint,
-strict back comparator unencoded".
+Profiles exist and are loader-enabled for both (Objective_Playbook_Facts_2026-07-08.json plus
+the runtime objective_playbooks.json; inventoryRows 12 and 29). The QMC runtime profile now
+represents all three front-side legs, including the independent one-site floor and any-owner
+Lando/Lobot-at-a-site route, plus both back-side thresholds. CITC's three front-side legs and
+strict back-side comparator are also encoded. Audit records/dossiers remain source evidence;
+decision tests, native trigger tests, and live play remain the behavioral proof.

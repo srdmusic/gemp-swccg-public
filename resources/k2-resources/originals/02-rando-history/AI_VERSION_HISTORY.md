@@ -8801,22 +8801,27 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     95/0/0/0; full reactor 2771/0/0/26 BUILD SUCCESS. Revert the single batch commit; the consolidated
     lineage stays independent.
 
-  ==== Bespin control family Batch Nine (2026-07-27): QMC 109_4 + CITC 301_2 ====
+  ==== Bespin control family Batch Nine (2026-07-27, amended 2026-08-03): QMC 109_4 + CITC 301_2 ====
     Both loader-enabled profiles gain flipLocationRules encoding the exact card law (source
     citations in BATCH_NINE_SOURCE_LAW_2026-07-27.md; Bespin: Cloud City verified as a SECTOR,
     refuting an earlier site claim, so the Lando/Lobot alternative's controlled-site leg is
-    encoded as controlWith — a recorded tightening the unchanged engine does not share). QMC:
-    sector control + opponent-zero-Bespin constraint + anyOf(two sites, Lando/Lobot site) and
+    encoded separately from the actor shortcut). QMC: sector control + opponent-zero-Bespin
+    constraint + mandatory one-site floor + anyOf(two sites, any owner's Lando/Lobot at a site) and
     anyOf flip-back (opponent Bespin system, three of the site/cloud-sector pool). CITC: allOf
-    (two battleground sites + opponent-zero constraint, Bespin occupation) and a strict '>'
-    relative-count flip-back. Registry adds four fail-closed keys (Bespin_location,
+    (two battleground sites + opponent-zero constraint, Bespin occupation) using the exact
+    captive-inclusive SpotOverride, and a strict '>' relative-count flip-back. Registry adds
+    four fail-closed keys (Bespin_location,
     Bespin_Cloud_City, Cloud_City_site_or_Bespin_cloud_sector, Lando_or_Lobot). The sealed
-    generic consumers (deploy +600/+1000, reserve pull, move gate holds, battle +80) act on
-    the rules with their existing magnitudes; no new score minted, no new boundary math.
-    Nine-test native engine contract green including near misses, the Lando alternative, and
-    stability at equal counts; hydrated rules track the engine state-for-state. Full reactor
-    2780/0/0/26. Codex's pre-reboot Batch Nine WIP was destroyed uncommitted by the machine
-    reboot; this batch was built fresh from source. Revert the single Batch Nine commit.
+    generic consumers now carry plain control/occupy progress through objective-location pull,
+    parent deploy +600, move destination +1000, battle targeting, movement hold, forfeit, and
+    Force-loss retention. Live ability, undercover state, permanent pilots, ordinary pilots,
+    and host/pilot dependency are distinguished. Objective-native location actions are preferred
+    only for QMC/CITC while a typed route remains; unmodeled objectives are unaffected. TDIGWATT's
+    Cloud City ordering is gated to TDIGWATT pre-flip. Unknown SpotOverride values fail closed.
+    Expanded 22-test native/profile contract plus 11 deploy-script tests green, including captive
+    spotting, any-owner/permanent-aboard Lando, ability-zero and undercover negatives, and the
+    sole ordinary-pilot counterfactual. Final bounded regression and sealed-package evidence are
+    recorded with the amendment commit. Revert the single amended Batch Nine commit.
 
   ==== Massassi Base Operations Batch Ten (2026-07-27): 111_4 counted control law ====
     One flipLocationRule: control self Yavin_4_site >= 3 with opponentConstraint control < 3

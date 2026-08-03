@@ -75,10 +75,10 @@
   "exists": true,
   "loaderEnabled": true,
   "profileGaps": [
-   "flipGateSite is null; gates are Cloud City battleground sites + Bespin system (both present in objectiveNamedLocations but not designated as flip gates)",
-   "opponent-zero constraint (opponent controls no Cloud City site) and back-side relative-count law have no profile representation",
-   "keyCharacterFilter null (flip genuinely needs no actor - acceptable, but nothing marks front download as front-only/lost-after-flip)",
-   "weights empty"
+   "Legacy flipGateSite remains null by design: active flipLocationRules encode both the two-site control count and Bespin occupation.",
+   "Resolved in objective_playbooks.json: the opponent-zero front constraint and strict greater-than back-side comparison are encoded.",
+   "Legacy keyCharacterFilter remains null by design because the source law accepts any legal presence source; shared plain-occupy behavior supplies the missing deploy, move, and retention facts.",
+   "No profile-specific scalar weights are required; exact shared objective bands own the behavior."
   ]
  },
  "proofGate": "SOURCE_VERIFIED"

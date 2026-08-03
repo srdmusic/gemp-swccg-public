@@ -2002,6 +2002,29 @@
           ]
         },
         {
+          "id": "qmc-front-mandatory-cloud-city-site",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "control",
+              "controller": "self",
+              "locationFilterKey": "Cloud_City_site",
+              "locationFragments": [
+                "cloud city"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "flipProgress",
+              "sourceText": "you control at least one Cloud City site even when using the Lando or Lobot shortcut (Card109_004.java L127-L129)"
+            }
+          ]
+        },
+        {
           "id": "qmc-front-site-count-or-lando-lobot",
           "phase": "preFlip",
           "purpose": "flip",
@@ -2023,8 +2046,8 @@
               "sourceText": "you control two Cloud City sites (L127)"
             },
             {
-              "relation": "controlWith",
-              "controller": "self",
+              "relation": "at",
+              "controller": "any",
               "locationFilterKey": "Cloud_City_site",
               "locationFragments": [
                 "cloud city"
@@ -2035,8 +2058,8 @@
                 "value": 1
               },
               "includeExcludedFromBattle": true,
-              "scoreRole": "flipProgress",
-              "sourceText": "your Lando or Lobot at a Cloud City site you control (L128-L129). Deliberate tightening: card law allows Lando/Lobot anywhere on Cloud City (including the Bespin: Cloud City SECTOR, which is NOT a Cloud_City_site) while any one site is controlled; the profile pursues the actionable co-located form. The unchanged card Java still flips on the looser law."
+              "scoreRole": "actorToLocation",
+              "sourceText": "any Lando or Lobot is at any Cloud City site, while the separate mandatory rule requires you to control at least one Cloud City site (Card109_004.java L128-L129)"
             }
           ]
         },
@@ -4227,13 +4250,14 @@
                 "relation": "control",
                 "locationFilterKey": "Cloud_City_site",
                 "includeExcludedFromBattle": true,
+                "spotOverride": "INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE",
                 "count": {
                   "comparator": "==",
                   "value": 0
                 }
               },
               "scoreRole": "flipProgress",
-              "sourceText": "you control two Cloud City battleground sites while opponent controls no Cloud City site (Card301_002.java L103, L105; card law counts captives on the opponent leg, unexpressed here)"
+              "sourceText": "you control two Cloud City battleground sites while opponent controls no Cloud City site, including captives on the opponent leg (Card301_002.java L103, L105)"
             },
             {
               "relation": "occupy",
@@ -4247,8 +4271,9 @@
                 "value": 1
               },
               "includeExcludedFromBattle": true,
+              "spotOverride": "INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE",
               "scoreRole": "flipProgress",
-              "sourceText": "you occupy Bespin system (L104; card law counts captives, unexpressed here)"
+              "sourceText": "you occupy Bespin system, including a captive (Card301_002.java L104)"
             }
           ]
         },

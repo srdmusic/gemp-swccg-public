@@ -30,13 +30,17 @@ public class MoveObjectiveGateHoldSourceParityTest {
         assertEquals(1, countOccurrences(
                 chosen, ".evaluatePostFlipBlocker("));
         assertTrue(rando.contains(
-                "isPreFlipPlainControlRequirementLocation("));
+                "isPreFlipPlainPresenceRequirementLocation("));
         assertTrue(chosen.contains(
-                "isPreFlipPlainControlRequirementLocation("));
+                "isPreFlipPlainPresenceRequirementLocation("));
         assertTrue(rando.contains(
-                "isSoleControlSourceAtRequiredLocation("));
+                "isPreFlipPlainPresenceRequirementSatisfiedAt("));
         assertTrue(chosen.contains(
-                "isSoleControlSourceAtRequiredLocation("));
+                "isPreFlipPlainPresenceRequirementSatisfiedAt("));
+        assertTrue(rando.contains(
+                "isSolePresenceSourceAtRequiredLocation("));
+        assertTrue(chosen.contains(
+                "isSolePresenceSourceAtRequiredLocation("));
         assertTrue(rando.contains("wouldDepartureTriggerFlipBack("));
         assertTrue(chosen.contains("wouldDepartureTriggerFlipBack("));
         assertTrue(rando.contains("ladderVetoHard = true;"));

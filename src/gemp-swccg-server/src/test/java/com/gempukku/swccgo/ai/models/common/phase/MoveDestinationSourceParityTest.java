@@ -217,6 +217,12 @@ public class MoveDestinationSourceParityTest {
                 destination, ".advancesPreFlipActorAtRuntimeLocation("));
         assertEquals(1, countOccurrences(
                 move,
+                ".advancesPreFlipPlainPresenceAtRequiredLocation("));
+        assertEquals(1, countOccurrences(
+                destination,
+                ".advancesPreFlipPlainPresenceAtRequiredLocation("));
+        assertEquals(1, countOccurrences(
+                move,
                 ".objectiveActorRouteStart("));
         assertEquals(2, countOccurrences(
                 move,

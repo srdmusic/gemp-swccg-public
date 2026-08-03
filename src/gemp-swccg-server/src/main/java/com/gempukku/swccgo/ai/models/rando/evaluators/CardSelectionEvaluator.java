@@ -823,7 +823,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     }
 
     private void applyBlueprintPullSelectionPolicy(
-            EvaluatedAction action, String blueprintId, String cardTitle,
+            DecisionContext context, EvaluatedAction action,
+            String blueprintId, String cardTitle,
             String decisionLower, DeploymentPlan plan) {
         String titleLower = cardTitle != null
                 ? cardTitle.toLowerCase(Locale.ROOT) : "";
@@ -834,7 +835,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 || decisionLower.contains("interior")
                 || decisionLower.contains("cloud city")
                 || decisionLower.contains("battleground"))) {
-            boolean objectivePick = decisionLower.contains("choose")
+            boolean objectivePick = context != null
+                    && context.getObjectiveAnalyzer() != null
+                    && context.getObjectiveAnalyzer().isTdigwattPreFlip()
+                    && decisionLower.contains("choose")
                     && decisionLower.contains("site")
                     && decisionLower.contains("deploy")
                     && !decisionLower.contains("slip");
@@ -7360,10 +7364,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 objectiveActorLocationDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
-                                    && routeAnalyzer
+                                    && (routeAnalyzer
                                         .advancesPreFlipActorAtRuntimeLocation(
                                             game, playerId, fsMover,
-                                            location);
+                                            location)
+                                        || routeAnalyzer
+                                            .advancesPreFlipPlainPresenceAtRequiredLocation(
+                                                game, playerId, fsMover,
+                                                location));
                                 objectiveRequiredCardEnablerDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -10266,7 +10274,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // Shared PULL child policy owns route-specific Cloud City ordering
             // and reserve-deck deployment-plan scoring.
             applyBlueprintPullSelectionPolicy(
-                    action, blueprintId, cardTitle, textLower, plan);
+                    context, action, blueprintId, cardTitle,
+                    textLower, plan);
             applyCountedObjectivePullPolicy(
                     context, action, candidateCardId,
                     blueprintId, false);

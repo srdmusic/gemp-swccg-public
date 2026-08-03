@@ -1,7 +1,9 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
@@ -223,6 +225,96 @@ public class DeployPhaseScriptCharacterizationTest {
                 ordinary.stepBucketLabels.toString());
     }
 
+    @Test
+    public void objectiveLocationPullRunsFirstUntilItsTypedRouteIsExhausted() {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard objective = mock(PhysicalCard.class);
+        SwccgCardBlueprint blueprint = mock(SwccgCardBlueprint.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+
+        when(objective.getBlueprint()).thenReturn(blueprint);
+        when(gameState.findCardById(109)).thenReturn(objective);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(gameState.getSide("p")).thenReturn(Side.LIGHT);
+        when(analyzer.getStrategyCharacterTokens(game, "p"))
+                .thenReturn(Collections.emptySet());
+        when(analyzer.isFlipped()).thenReturn(false);
+        when(analyzer.usesBespinObjectiveLocationPullSequence())
+                .thenReturn(true);
+        when(analyzer.isCurrentObjectiveSourceCard(objective))
+                .thenReturn(true);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId", new String[] {"qmc-pull", "body"});
+        parameters.put("actionText", new String[] {
+                "Deploy a site or cloud sector to Bespin from Reserve Deck",
+                "Deploy a character"
+        });
+        parameters.put("cardId", new String[] {"109", null});
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+
+        TestDeployPhaseScript script = new TestDeployPhaseScript();
+        when(analyzer.hasMissingPreFlipRequiredLocationInReserve(
+                game, "p")).thenReturn(true);
+        DeployPhaseScript.Result routeOpen = script.selectAllowedActions(
+                decision, gameState, game, "p", analyzer);
+        assertEquals("[LOCATIONS, OTHER_CHARACTERS]",
+                routeOpen.stepBucketLabels.toString());
+        assertEquals("[[qmc-pull], [body]]",
+                routeOpen.stepBuckets.toString());
+
+        when(analyzer.hasMissingPreFlipRequiredLocationInReserve(
+                game, "p")).thenReturn(false);
+        DeployPhaseScript.Result routeExhausted = script.selectAllowedActions(
+                decision, gameState, game, "p", analyzer);
+        assertEquals("[OTHER_CHARACTERS]",
+                routeExhausted.stepBucketLabels.toString());
+        assertEquals("[[body]]", routeExhausted.stepBuckets.toString());
+    }
+
+    @Test
+    public void unmodeledObjectiveNeverLosesItsNativeLocationAction() {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard objective = mock(PhysicalCard.class);
+        SwccgCardBlueprint blueprint = mock(SwccgCardBlueprint.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+
+        when(objective.getBlueprint()).thenReturn(blueprint);
+        when(gameState.findCardById(209)).thenReturn(objective);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(gameState.getSide("p")).thenReturn(Side.LIGHT);
+        when(analyzer.getStrategyCharacterTokens(game, "p"))
+                .thenReturn(Collections.emptySet());
+        when(analyzer.isFlipped()).thenReturn(false);
+        when(analyzer.isCurrentObjectiveSourceCard(objective))
+                .thenReturn(true);
+        when(analyzer.usesBespinObjectiveLocationPullSequence())
+                .thenReturn(false);
+        when(analyzer.hasMissingPreFlipRequiredLocationInReserve(
+                game, "p")).thenReturn(false);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId", new String[] {"native-location", "body"});
+        parameters.put("actionText", new String[] {
+                "Deploy a location from Reserve Deck",
+                "Deploy a character"
+        });
+        parameters.put("cardId", new String[] {"209", null});
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+
+        DeployPhaseScript.Result result = new TestDeployPhaseScript()
+                .selectAllowedActions(
+                        decision, gameState, game, "p", analyzer);
+        assertEquals("[LOCATIONS, OTHER_CHARACTERS]",
+                result.stepBucketLabels.toString());
+        assertEquals("[[native-location], [body]]",
+                result.stepBuckets.toString());
+    }
+
     @SuppressWarnings("unchecked")
     private static Set<Object> resolveSteps(Object script, String text) throws Exception {
         Method method = findMethod(script.getClass(),
@@ -254,5 +346,24 @@ public class DeployPhaseScriptCharacterizationTest {
             }
         }
         throw new NoSuchMethodException(name);
+    }
+
+    private static final class TestDeployPhaseScript extends DeployPhaseScript {
+        private TestDeployPhaseScript() {
+            super(org.apache.logging.log4j.LogManager.getLogger(
+                    TestDeployPhaseScript.class));
+        }
+
+        @Override
+        protected String sourceCardFullGameText(
+                SwccgCardBlueprint blueprint, Side side) {
+            return "May deploy a site or cloud sector to Bespin from Reserve Deck.";
+        }
+
+        @Override
+        protected java.util.List<String> parseSourceCardPullTargets(
+                String gameText) {
+            return java.util.List.of("a site or cloud sector");
+        }
     }
 }

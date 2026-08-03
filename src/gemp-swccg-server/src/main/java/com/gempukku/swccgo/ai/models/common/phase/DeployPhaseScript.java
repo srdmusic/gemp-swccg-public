@@ -249,6 +249,16 @@ public abstract class DeployPhaseScript {
         PhysicalCard sourceCard =
                 findCardByIdSafe(
                     gameState, cardIdStr);
+        boolean exhaustedPreFlipObjectiveLocationPull =
+                objectiveAnalyzer != null
+                && !objectiveAnalyzer.isFlipped()
+                && objectiveAnalyzer
+                    .usesBespinObjectiveLocationPullSequence()
+                && objectiveAnalyzer.isCurrentObjectiveSourceCard(
+                    sourceCard)
+                && !objectiveAnalyzer
+                    .hasMissingPreFlipRequiredLocationInReserve(
+                        game, playerId);
         if (objectiveAnalyzer != null
                 && objectiveAnalyzer
                     .isFirstOrderReignsNavyRouteAction(
@@ -320,7 +330,11 @@ public abstract class DeployPhaseScript {
                 Step s = stepForCard(
                         bpCard, keyCharTokens,
                         objectiveAnalyzer, game, playerId);
-                if (s != null) steps.add(s);
+                if (s != null
+                        && !(s == Step.LOCATIONS
+                            && exhaustedPreFlipObjectiveLocationPull)) {
+                    steps.add(s);
+                }
             }
         }
 
@@ -357,6 +371,10 @@ public abstract class DeployPhaseScript {
                             if (s == Step.LOCATIONS && namedLocationInHand(gameState, playerId, t)) {
                                 continue;
                             }
+                            if (s == Step.LOCATIONS
+                                    && exhaustedPreFlipObjectiveLocationPull) {
+                                continue;
+                            }
                             steps.add(s);
                         }
                     } catch (Exception ignored) { }
@@ -367,7 +385,11 @@ public abstract class DeployPhaseScript {
         // === E) Action text keyword fallback ===
         if (steps.isEmpty()) {
             Step kw = classifyByKeywords(txt);
-            if (kw != null) steps.add(kw);
+            if (kw != null
+                    && !(kw == Step.LOCATIONS
+                        && exhaustedPreFlipObjectiveLocationPull)) {
+                steps.add(kw);
+            }
         }
 
         return steps;

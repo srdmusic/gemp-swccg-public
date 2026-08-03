@@ -716,6 +716,10 @@ public class MoveEvaluator extends ActionEvaluator {
                             boolean actorLocationHop = routeAnalyzer
                                     .advancesPreFlipActorAtRuntimeLocation(
                                             game, playerId, cardToMove,
+                                            routeDestination)
+                                    || routeAnalyzer
+                                        .advancesPreFlipPlainPresenceAtRequiredLocation(
+                                            game, playerId, cardToMove,
                                             routeDestination);
                             boolean blockerChaseHop = routeAnalyzer
                                     .qualifiesPreFlipRuntimeActorAtLocation(
@@ -1285,17 +1289,16 @@ public class MoveEvaluator extends ActionEvaluator {
                                 gateAnalyzer != null
                                 && gateAnalyzer.isAnalyzed()
                                 && !gateAnalyzer.isFlipped()
-                                && gateAnalyzer.isPreFlipPlainControlRequirementLocation(
+                                && gateAnalyzer.isPreFlipPlainPresenceRequirementLocation(
                                     game, playerId, currentLocation);
                         boolean controlsRequiredLocation =
                                 activeRequiredControl
-                                && game.getModifiersQuerying().controlsLocation(
-                                    gameState, currentLocation, playerId,
-                                    com.gempukku.swccgo.common.SpotOverride
-                                        .INCLUDE_EXCLUDED_FROM_BATTLE);
+                                && gateAnalyzer
+                                    .isPreFlipPlainPresenceRequirementSatisfiedAt(
+                                        game, playerId, currentLocation);
                         boolean soleControlSource =
                                 controlsRequiredLocation
-                                && gateAnalyzer.isSoleControlSourceAtRequiredLocation(
+                                && gateAnalyzer.isSolePresenceSourceAtRequiredLocation(
                                     game, playerId, cardToMove, currentLocation);
                         MoveObjectiveGateHoldPolicy.Evaluation controlHold =
                                 MoveObjectiveGateHoldPolicy.evaluateRequiredControl(

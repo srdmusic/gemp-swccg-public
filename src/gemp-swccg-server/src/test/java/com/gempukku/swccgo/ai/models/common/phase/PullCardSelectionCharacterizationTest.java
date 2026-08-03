@@ -320,17 +320,27 @@ public class PullCardSelectionCharacterizationTest {
 
     @Test
     public void reserveBlueprintObjectiveOrderPreservesExactAdapterScores() {
+        var randoObjective = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.isAnalyzed()).thenReturn(true);
+        when(randoObjective.isTdigwattPreFlip()).thenReturn(true);
         var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
                 null, PLAYER, "ARBITRARY_CARDS",
                 "Choose Cloud City battleground site to deploy",
                 "blueprint-rando", Phase.DEPLOY);
         configureReserve(randoContext);
+        randoContext.setObjectiveAnalyzer(randoObjective);
 
+        var chosenObjective = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.isAnalyzed()).thenReturn(true);
+        when(chosenObjective.isTdigwattPreFlip()).thenReturn(true);
         var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
                 null, PLAYER, "ARBITRARY_CARDS",
                 "Choose Cloud City battleground site to deploy",
                 "blueprint-chosen", Phase.DEPLOY);
         configureReserve(chosenContext);
+        chosenContext.setObjectiveAnalyzer(chosenObjective);
 
         var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
                 .evaluate(randoContext);
@@ -341,6 +351,74 @@ public class PullCardSelectionCharacterizationTest {
                 rando.stream().map(action -> action.getActionId()).toList());
         assertScores(rando.get(0).getScore(), rando.get(1).getScore(),
                 550.0f, -350.0f);
+        assertMirrored(rando, chosen);
+    }
+
+    @Test
+    public void qmcSetupSitesDoNotInheritTdigwattOrdering() {
+        GameState gameState = gameState(2);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard carbonite = card(
+                "Cloud City: Carbonite Chamber", 0.0f,
+                CardCategory.LOCATION);
+        PhysicalCard walkway = card(
+                "Cloud City: Upper Walkway", 0.0f,
+                CardCategory.LOCATION);
+        when(carbonite.getBlueprintId(true)).thenReturn("5_78");
+        when(walkway.getBlueprintId(true)).thenReturn("7_273");
+        when(game.getGameState()).thenReturn(gameState);
+        when(gameState.getCardPile(PLAYER, Zone.RESERVE_DECK))
+                .thenReturn(List.of(carbonite, walkway));
+        when(gameState.getHand(PLAYER)).thenReturn(List.of());
+
+        var randoObjective = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);
+        when(randoObjective.isAnalyzed()).thenReturn(true);
+        when(randoObjective.isTdigwattPreFlip()).thenReturn(false);
+        when(randoObjective.classifyPreFlipProgressCandidate(
+                game, PLAYER, carbonite)).thenReturn(REQUIRED_LOCATION);
+        when(randoObjective.classifyPreFlipProgressCandidate(
+                game, PLAYER, walkway)).thenReturn(REQUIRED_LOCATION);
+        var chosenObjective = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.class);
+        when(chosenObjective.isAnalyzed()).thenReturn(true);
+        when(chosenObjective.isTdigwattPreFlip()).thenReturn(false);
+        when(chosenObjective.classifyPreFlipProgressCandidate(
+                game, PLAYER, carbonite)).thenReturn(REQUIRED_LOCATION);
+        when(chosenObjective.classifyPreFlipProgressCandidate(
+                game, PLAYER, walkway)).thenReturn(REQUIRED_LOCATION);
+
+        var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                gameState, PLAYER, "ARBITRARY_CARDS",
+                "Choose Cloud City battleground site to deploy",
+                "qmc-setup-rando", Phase.DEPLOY);
+        randoContext.setGame(game);
+        randoContext.setBlueprints(List.of("5_78", "7_273"));
+        randoContext.setSelectable(List.of(true, true));
+        randoContext.setTestingTexts(List.of(
+                "Cloud City: Carbonite Chamber",
+                "Cloud City: Upper Walkway"));
+        randoContext.setObjectiveAnalyzer(randoObjective);
+
+        var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                gameState, PLAYER, "ARBITRARY_CARDS",
+                "Choose Cloud City battleground site to deploy",
+                "qmc-setup-chosen", Phase.DEPLOY);
+        chosenContext.setGame(game);
+        chosenContext.setBlueprints(List.of("5_78", "7_273"));
+        chosenContext.setSelectable(List.of(true, true));
+        chosenContext.setTestingTexts(List.of(
+                "Cloud City: Carbonite Chamber",
+                "Cloud City: Upper Walkway"));
+        chosenContext.setObjectiveAnalyzer(chosenObjective);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertScores(rando.get(0).getScore(), rando.get(1).getScore(),
+                350.0f, 350.0f);
         assertMirrored(rando, chosen);
     }
 
