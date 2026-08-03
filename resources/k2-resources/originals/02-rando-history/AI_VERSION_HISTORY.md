@@ -9536,3 +9536,56 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Scope is shared AI strategy, AI tests, and these approved records only.
     No engine, card Java, client, deck library, database, or workbook source
     changed. Revert the matching local commit to remove only this repair.
+
+  ==== Massassi Base Operations and Imperial Entanglements behavior seal (2026-08-03) ====
+
+    MBO 111_4 flips on three controlled Yavin 4 sites while the opponent
+    controls fewer than three. Its back is permanent, and only its front is
+    lost when Yavin 4 is blown away. IE 201_39 uses the parallel three-site
+    Tatooine front law and flips back only when the opponent controls strictly
+    more Tatooine sites. Card source owns those facts. The Excel tracker and
+    public strategy primers supplied sequencing research only.
+
+    Both bots now execute a continuous two-turn front route. They preserve the
+    next site and final body during real Force loss, use the native objective
+    download before unrelated deploys, battle for the first gate site, leave
+    an anchor, move one actor to the new site, pull the last site next turn,
+    and deploy the final body there. The unchanged card triggers perform both
+    flips. MBO's final pull is tested with only two Reserve cards.
+
+    The old low-ability ground penalty made the final body lose to reinforcement
+    or a ship. Only an MBO or IE destination that completes the three-site gate
+    receives DEPLOY.OBJECTIVE.THREE_SITE_COMPLETION +8000. The edge is
+    8000 + 600 - 5000 > 3100, while hard vetoes remain absolute.
+
+    One In A Million now assembles its executable package in order: Rebel Tech,
+    Death Star system, Attack Run, and Proton Torpedoes. Tech prefers War Room
+    for its Attack Run modifier, but its printed Trench tutor works from a legal
+    controlled-site fallback. Classic and Enhanced Torpedoes use X-wing,
+    Y-wing, or B-wing carriers; the Naboo printing uses an N-1. The carrier is
+    piloted and within one move of Death Star. The target and exact modified
+    cost are tied to that carrier. One Force waits; two Force funds classic
+    Torpedoes plus movement. The real epic event enters the Trench, resolves
+    cover, draws distinct destinies, pulls up, and blows Death Star away. The
+    selected Special Edition Death Star fixture creates eight Force loss.
+
+    IE's back uses its free battleground-site route while its controlled-site
+    count is no more than one ahead of the opponent. Exact parent and child
+    bonuses are +1800 and +300. Safely-ahead and exhausted states are neutral.
+    Both objective route exceptions require the actual physical objective,
+    exact action, correct face, and a legal Reserve candidate. Wrong actions,
+    unrelated sources, and same-blueprint clones receive no bypass.
+
+    Public Rando and Chosen One facades prove the MBO torpedo parent to exact
+    X-wing child and hyperspace parent to exact Death Star child. Focused family
+    and sequencing gate 72/0/0/0; related shared-policy gate 112/0/0/0; six
+    impacted source-parity suites 48/0/0/0. Both continuous chains passed three
+    repeated runs. JSON, normalized bot comparison, and diff checks passed.
+    DeployActionTextSourceParityTest still reports a pre-existing Senate direct
+    reasoning mutation already present at HEAD; this batch did not touch it.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    evaluators, approved objective data, AI tests, and approved audit/history
+    records. No engine, card Java, client, deck library, database, or workbook
+    changed. Deterministic unchanged-engine tests provide FLIP_OBSERVED. Live
+    replay proof remains separate. Nothing was pushed.

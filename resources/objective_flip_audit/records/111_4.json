@@ -59,12 +59,25 @@
  "profile": {
   "exists": true,
   "loaderEnabled": true,
-  "profileGaps": [
-   "flipGateSite is null; the flip gate is the location CLASS Filters.Yavin_4_site with count 3 plus an opponent-fewer-than-3 constraint - the count and the opponent constraint are not representable/represented anywhere in the profile.",
-   "objectiveNamedLocations entries carry null labels and empty titleFragments (filter strings only); one entry has blueprintIds [2_143, 7_117, 216_7] (Death Star system) with no label or filter.",
-   "pullableCards is empty; front Yavin-4-site download (the flip engine) and back upload package (Rebel Tech / Death Star system / Attack Run / Proton Torpedoes) are unrepresented.",
-   "No representation that the front cannot Force drain at Yavin 4 sites/sectors (changes what 'control' is worth) nor that the out-of-play hazard (Yavin 4 blown away) exists on the front only."
-  ]
+  "frontStructuredRule": "preFlip/flip allOf: self controls >=3 Yavin_4_site and opponent controls <3 Yavin_4_site",
+  "backStructuredRule": null,
+  "permanentBack": true,
+  "hardLossRule": "preFlip Yavin_4_system blownAwayLastStep places the objective out of play",
+  "locationFragments": ["yavin 4:"],
+  "profileGaps": []
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "frontRoute": "Both bots preserve Massassi War Room through real Force loss, use the exact native site action, battle for the starting gate site, leave an anchor, move one route actor, pull the final site on turn two at the two-card V60 boundary, deploy the final body there, and observe the unchanged objective flip.",
+  "backRoute": "Both bots upload and deploy Rebel Tech, Death Star system, Attack Run, and Proton Torpedoes in executable prerequisite order. Rebel Tech prefers War Room for the Attack Run modifier but can fetch Death Star: Trench from any legal site. Classic, Enhanced, and Naboo Proton Torpedoes use their source-defined carrier classes. Exact card-modified deployment and hyperspace costs are reserved.",
+  "publicBotChain": "RandoCalAi and TheChosenOneAi retain the real torpedo deploy parent into the exact X-wing target child and the hyperspace parent into the exact Death Star destination child.",
+  "payoff": "The unchanged Attack Run epic event moves the armed carrier into the Trench, resolves cover, draws two distinct destinies, pulls the carrier up, and blows Death Star away. The selected Special Edition Death Star fixture produces eight Force loss.",
+  "parity": "Rando and Chosen One return identical scores, reasoning, and winners across the audited decisions.",
+  "verification": "Focused MBO/IE and shared deploy, pull, Force-loss, battle-forfeit, and analyzer regression gates pass. JSON validation and diff checks pass.",
+  "replay": "No live replay claim. Deterministic unchanged-engine tests provide FLIP_OBSERVED."
+ },
+ "knownLimits": [
+  "Optional cover-card and every possible Attack Run bonus are outside this seal.",
+  "Live server branch firing and replay observation remain separate proof gates."
+ ],
+ "proofGate": "FLIP_OBSERVED"
 }

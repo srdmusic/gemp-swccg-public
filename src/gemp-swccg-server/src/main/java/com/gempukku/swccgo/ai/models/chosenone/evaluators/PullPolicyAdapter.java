@@ -223,6 +223,12 @@ final class PullPolicyAdapter {
                         && objective
                             .hasFirstOrderReignsRouteProgressCandidateInReserve(
                                 game, playerId);
+                boolean imperialEntanglementsBackSiteRoute = objective
+                        .isImperialEntanglementsBackSiteRouteAction(
+                                game, playerId, source, actionText);
+                boolean massassiFrontSiteRoute = objective
+                        .isMassassiFrontSiteRouteAction(
+                                game, playerId, source, actionText);
                 boolean bringHimBeforeMeEmperorRoute =
                         CaptureObjectiveFacts.objectiveKind(objective)
                             == CaptureObjectivePolicy.ObjectiveKind.BHBM
@@ -235,7 +241,10 @@ final class PullPolicyAdapter {
                             .canAffordBhbmEmperorDownload(
                                 game, playerId,
                                 objective, source);
-                return firstOrderRoute || bringHimBeforeMeEmperorRoute;
+                return firstOrderRoute
+                        || massassiFrontSiteRoute
+                        || imperialEntanglementsBackSiteRoute
+                        || bringHimBeforeMeEmperorRoute;
             }
         };
     }

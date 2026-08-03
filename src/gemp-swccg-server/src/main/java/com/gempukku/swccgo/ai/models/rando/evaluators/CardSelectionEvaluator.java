@@ -894,6 +894,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
         PhysicalCard candidate = findPullCandidate(
                 context, cardId, blueprintId);
+        PhysicalCard nativeLocationSource =
+                readExactCountedLocationPullSource(context);
+        PhysicalCard nativeLocationCandidate =
+                nativeLocationSource != null
+                    ? findExactReservePullCandidate(
+                        context, cardId, blueprintId)
+                    : null;
+        PhysicalCard massassiPackageSource =
+                readExactMassassiPackagePullSource(context);
+        PhysicalCard massassiPackageCandidate =
+                massassiPackageSource != null
+                    ? findExactReservePullCandidate(
+                        context, cardId, blueprintId)
+                    : null;
         com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer
                 .ObjectiveProgressCandidateRole role =
                 context.getObjectiveAnalyzer()
@@ -907,6 +921,44 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         .isActiveFlipGateLocationTitle(
                                 candidate.getTitle());
         applyPullSelectionPolicy(action,
+                PullSelectionCandidatePolicy.scoreMassassiWarRoom(
+                        action.getActionId(),
+                        nativeLocationCandidate != null
+                        && context.getObjectiveAnalyzer()
+                            .isPreferredMassassiWarRoomPullCandidate(
+                                context.getGame(),
+                                context.getPlayerId(),
+                                nativeLocationCandidate)));
+        applyPullSelectionPolicy(action,
+                PullSelectionCandidatePolicy
+                    .scoreImperialEntanglementsBackSite(
+                        action.getActionId(),
+                        nativeLocationCandidate != null
+                        && context.getObjectiveAnalyzer()
+                            .isImperialEntanglementsBackSiteExpansionCandidate(
+                                context.getGame(),
+                                context.getPlayerId(),
+                                nativeLocationCandidate)));
+        applyPullSelectionPolicy(action,
+                PullSelectionCandidatePolicy
+                    .scoreMassassiAttackRunPackage(
+                        action.getActionId(),
+                        massassiPackageCandidate != null
+                        ? context.getObjectiveAnalyzer()
+                            .getMassassiAttackRunPackagePullPriority(
+                                context.getGame(),
+                                context.getPlayerId(),
+                                massassiPackageCandidate)
+                        : 0));
+        boolean nativeCountedLocation =
+                nativeLocationSource == null
+                || nativeLocationCandidate != null
+                    && context.getObjectiveAnalyzer()
+                        .isNativeObjectiveLocationRouteCandidate(
+                            context.getGame(),
+                            context.getPlayerId(),
+                            nativeLocationCandidate);
+        applyPullSelectionPolicy(action,
                 PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
                         action.getActionId(),
                         role == com.gempukku.swccgo.ai.models.common.strategy
@@ -917,7 +969,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 .ObjectiveAnalyzer
                                 .ObjectiveProgressCandidateRole
                                 .REQUIRED_LOCATION
-                                && !dedicatedFlipGateLocation));
+                                && !dedicatedFlipGateLocation
+                                && nativeCountedLocation));
         applyPullSelectionPolicy(action,
                 PullSelectionCandidatePolicy.scoreRequiredOnTableCard(
                         action.getActionId(),
@@ -942,6 +995,91 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             .ObjectiveAnalyzer
                             .ObjectiveProgressCandidateRole
                             .REQUIRED_CARD_DEPLOY_ENABLER_LOCATION));
+    }
+
+    private PhysicalCard readExactCountedLocationPullSource(
+            DecisionContext context) {
+        if (context == null || context.getGame() == null
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !"ARBITRARY_CARDS".equals(context.getDecisionType())
+                || context.getDecisionText() == null
+                || !"choose card to deploy from reserve deck"
+                    .equalsIgnoreCase(context.getDecisionText().trim())
+                || context.getMin() != 1 || context.getMax() != 1) {
+            return null;
+        }
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            GameTextActionId actionId = liveAction != null
+                    ? liveAction.getGameTextActionId() : null;
+            String actionText = liveAction != null
+                    ? liveAction.getText() : null;
+            var objective = context.getObjectiveAnalyzer();
+            if (source == null
+                    || !objective.isCurrentObjectiveSourceCard(source)
+                    || !objective.usesObjectiveLocationPullSequence()) {
+                return null;
+            }
+            boolean exactMassassi = objective
+                    .isMassassiBaseOperationsFamily()
+                    && actionId == GameTextActionId
+                        .MASSASSI_BASE_OPERATIONS__DOWNLOAD_YAVIN_4_SITE
+                    && "Deploy Yavin 4 site from Reserve Deck"
+                        .equals(actionText);
+            boolean exactEntanglements = objective
+                    .isImperialEntanglementsFamily()
+                    && actionId == GameTextActionId
+                        .IMPERIAL_ENTANGLEMENTS__DOWNLOAD_TATOOINE_BATTLEGROUND_SITE
+                    && "Deploy Tatooine battleground site from Reserve Deck"
+                        .equals(actionText);
+            return exactMassassi || exactEntanglements ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private PhysicalCard readExactMassassiPackagePullSource(
+            DecisionContext context) {
+        if (context == null || context.getGame() == null
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !"ARBITRARY_CARDS".equals(context.getDecisionType())
+                || context.getDecisionText() == null
+                || !"choose card to take into hand".equalsIgnoreCase(
+                    context.getDecisionText().trim())
+                || context.getMin() != 1 || context.getMax() != 1) {
+            return null;
+        }
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            String actionText = liveAction != null
+                    ? liveAction.getText() : null;
+            var objective = context.getObjectiveAnalyzer();
+            return source != null
+                    && objective.isCurrentObjectiveSourceCard(source)
+                    && liveAction.getGameTextActionId()
+                        == GameTextActionId
+                            .ONE_IN_A_MILLION__UPLOAD_CARD
+                    && "Take card into hand from Reserve Deck"
+                        .equals(actionText)
+                    && objective.isMassassiAttackRunPackageUploadAction(
+                        context.getGame(), context.getPlayerId(),
+                        source, actionText)
+                    ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     /**
@@ -1804,6 +1942,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         countedProgress));
                             applyDeploySitingPolicy(action,
                                 DeployObjectiveSitingPolicy
+                                    .scoreThreeSiteObjectiveCompletion(
+                                        action.getActionId(),
+                                        (objectiveProgressAnalyzer
+                                            .isMassassiBaseOperationsFamily()
+                                                || objectiveProgressAnalyzer
+                                                    .isImperialEntanglementsFamily())
+                                            && objectiveProgressAnalyzer
+                                                .wouldCompletePreFlipRequirementAt(
+                                                    game, playerId,
+                                                    objectiveProgressDeployingCard,
+                                                    location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
                                     .scoreActorRuntimeLocation(
                                         action.getActionId(),
                                         actorLocationProgress));
@@ -1872,6 +2023,33 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         action.getActionId(),
                                         objectiveProgressAnalyzer
                                             .advancesFirstOrderReignsRouteCrewAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreMassassiRebelTechPackage(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .advancesMassassiRebelTechPackageAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreMassassiAttackRunCarrier(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .advancesMassassiAttackRunCarrierAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreMassassiAttackRunTorpedoesTarget(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .isMassassiAttackRunTorpedoesAttachmentTarget(
                                                 game, playerId,
                                                 objectiveProgressDeployingCard,
                                                 location)));
@@ -5113,12 +5291,42 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         context.getGame(),
                         context.getPlayerId(),
                         physicalCard);
+        boolean preferredMassassiPackageCard =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isPreferredMassassiAttackRunPackageForceLossCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
+        boolean preferredCountedObjectiveLocation =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isPreferredCountedObjectiveLocationForceLossCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
+        boolean preferredCountedObjectivePresence =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isPreferredCountedObjectivePresenceForceLossCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
         if (route == ForceLossPolicy.Route.STANDALONE) {
             myLord = objectiveAnalyzer.getObjectiveTitle() != null
                     && objectiveAnalyzer.isMyLord();
             required = preferredRequiredCard
                     || preferredShieldRoutePackageCard
                     || preferredFirstOrderReignsRouteCard
+                    || preferredMassassiPackageCard
+                    || preferredCountedObjectiveLocation
+                    || preferredCountedObjectivePresence
                     || candidate.fromHand() && requiredActor;
             pullable = candidate.fromHand() && title != null && !required
                     && !requiredOnTableCard
@@ -5131,6 +5339,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             required = preferredRequiredCard
                     || preferredShieldRoutePackageCard
                     || preferredFirstOrderReignsRouteCard
+                    || preferredMassassiPackageCard
+                    || preferredCountedObjectiveLocation
+                    || preferredCountedObjectivePresence
                     || requiredActor;
             pullable = title != null && !required
                     && !requiredOnTableCard

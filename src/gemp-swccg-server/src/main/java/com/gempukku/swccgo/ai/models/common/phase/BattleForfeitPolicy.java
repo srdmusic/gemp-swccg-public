@@ -150,6 +150,11 @@ public final class BattleForfeitPolicy {
                         "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD";
                 reason = "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD: preserve the sole control source until the mandatory objective trigger resolves";
                 break;
+            case MASSASSI_ATTACK_RUN_ENABLER:
+                ruleId =
+                        "BATTLE.OBJECTIVE.MASSASSI_ATTACK_RUN_HOLD";
+                reason = "BATTLE.OBJECTIVE.MASSASSI_ATTACK_RUN_HOLD: preserve the sole executable Attack Run enabler while another legal loss exists";
+                break;
             default:
                 return result(operations);
         }

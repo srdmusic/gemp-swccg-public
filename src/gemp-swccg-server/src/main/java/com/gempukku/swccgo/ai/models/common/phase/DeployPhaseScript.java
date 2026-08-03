@@ -249,15 +249,14 @@ public abstract class DeployPhaseScript {
         PhysicalCard sourceCard =
                 findCardByIdSafe(
                     gameState, cardIdStr);
-        boolean exhaustedPreFlipObjectiveLocationPull =
+        boolean exhaustedObjectiveLocationPull =
                 objectiveAnalyzer != null
-                && !objectiveAnalyzer.isFlipped()
                 && objectiveAnalyzer
-                    .usesBespinObjectiveLocationPullSequence()
+                    .usesObjectiveLocationPullSequence()
                 && objectiveAnalyzer.isCurrentObjectiveSourceCard(
                     sourceCard)
                 && !objectiveAnalyzer
-                    .hasMissingPreFlipRequiredLocationInReserve(
+                    .hasObjectiveLocationRouteCandidateInReserve(
                         game, playerId);
         if (objectiveAnalyzer != null
                 && objectiveAnalyzer
@@ -265,6 +264,14 @@ public abstract class DeployPhaseScript {
                         game, playerId,
                         sourceCard, actionText)) {
             steps.add(Step.LOCATIONS);
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isMassassiAttackRunPackageUploadAction(
+                        game, playerId,
+                        sourceCard, actionText)) {
+            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
             return steps;
         }
 
@@ -332,7 +339,7 @@ public abstract class DeployPhaseScript {
                         objectiveAnalyzer, game, playerId);
                 if (s != null
                         && !(s == Step.LOCATIONS
-                            && exhaustedPreFlipObjectiveLocationPull)) {
+                            && exhaustedObjectiveLocationPull)) {
                     steps.add(s);
                 }
             }
@@ -372,7 +379,7 @@ public abstract class DeployPhaseScript {
                                 continue;
                             }
                             if (s == Step.LOCATIONS
-                                    && exhaustedPreFlipObjectiveLocationPull) {
+                                    && exhaustedObjectiveLocationPull) {
                                 continue;
                             }
                             steps.add(s);
@@ -387,7 +394,7 @@ public abstract class DeployPhaseScript {
             Step kw = classifyByKeywords(txt);
             if (kw != null
                     && !(kw == Step.LOCATIONS
-                        && exhaustedPreFlipObjectiveLocationPull)) {
+                        && exhaustedObjectiveLocationPull)) {
                 steps.add(kw);
             }
         }
@@ -403,6 +410,15 @@ public abstract class DeployPhaseScript {
         if (card == null || card.getBlueprint() == null) return null;
         CardCategory cat = card.getBlueprint().getCardCategory();
         if (cat == null) return null;
+        if (objectiveAnalyzer != null
+                && (objectiveAnalyzer
+                    .isMassassiAttackRunPackageDeployCandidate(
+                        game, playerId, card)
+                    || objectiveAnalyzer
+                    .isMassassiAttackRunCarrierDeployCandidate(
+                        game, playerId, card))) {
+            return Step.OBJECTIVE_ROUTE_ASSETS;
+        }
         if (cat == CardCategory.WEAPON
                 && objectiveAnalyzer != null
                 && objectiveAnalyzer

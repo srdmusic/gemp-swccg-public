@@ -1654,6 +1654,20 @@ public class DeployEvaluator extends ActionEvaluator {
                         captureMoveForceReserve > 0
                             && !reservePull
                             && exactCaptureDeployPayment == null;
+                    int massassiPackageReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getMassassiAttackRunPackageForceReserve(
+                                    game, playerId, card)
+                            : 0;
+                    int massassiMoveReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getMassassiAttackRunCarrierMoveForceReserve(
+                                    game, playerId)
+                            : 0;
+                    int massassiRouteReserve =
+                        massassiPackageReserve + massassiMoveReserve;
                     int objectiveRequiredCardReserve =
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
@@ -1661,6 +1675,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                     game, playerId, card)
                                 + context.getObjectiveAnalyzer()
                                     .getRequiredCardDeployEnablerForceReserve(
+                                        game, playerId, card)
+                                + context.getObjectiveAnalyzer()
+                                    .getCountedObjectivePresenceForceReserve(
                                         game, playerId, card)
                             : 0;
                     int shieldRouteMoveReserve =
@@ -1745,7 +1762,15 @@ public class DeployEvaluator extends ActionEvaluator {
                     } catch (UnsupportedOperationException e) {
                         // Card type doesn't support deployCost (e.g., Interrupt)
                     }
-                    futureObligationDeployCost = cost;
+                    int exactMassassiDeployPayment =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getMassassiAttackRunPackageDeployForcePayment(
+                                    game, playerId, card)
+                            : 0;
+                    int massassiDeployPayment = Math.max(
+                            cost, exactMassassiDeployPayment);
+                    futureObligationDeployCost = massassiDeployPayment;
                     if (exactCaptureDeployPayment != null) {
                         futureObligationDeployCost =
                             Math.max(
@@ -1800,11 +1825,13 @@ public class DeployEvaluator extends ActionEvaluator {
                         // Card type doesn't support destiny
                     }
 
-                    action.setDeployCost(cost);
+                    action.setDeployCost(massassiDeployPayment);
 
                     // === AFFORDABILITY CHECK ===
                     DeployBudgetPolicy.Evaluation affordability =
-                        DeployBudgetPolicy.affordability(actionId, cost, availableForce);
+                        DeployBudgetPolicy.affordability(
+                            actionId, massassiDeployPayment,
+                            availableForce);
                     PolicyContributionLedger affordabilityLedger = new PolicyContributionLedger(
                         (decisionId == null || decisionId.isBlank()
                             ? "deploy-affordability"
@@ -1813,6 +1840,16 @@ public class DeployEvaluator extends ActionEvaluator {
                     PolicyOperationAdapter.apply(action, affordabilityLedger);
                     if (affordability.adapterStep()
                             == DeployBudgetPolicy.AdapterStep.CONTINUE_ACTION) {
+                        actions.add(action);
+                        continue;
+                    }
+                    if (massassiDeployPayment > 0
+                            && "deploy".equals(actionLower.trim())
+                            && massassiRouteReserve > 0
+                            && availableForce - massassiDeployPayment
+                                < massassiRouteReserve) {
+                        action.hardVeto(
+                            "OBJECTIVE.MASSASSI.ATTACK_RUN_FORCE_RESERVE: preserve exact Force for the remaining Attack Run package and carrier movement");
                         actions.add(action);
                         continue;
                     }
@@ -3422,7 +3459,19 @@ public class DeployEvaluator extends ActionEvaluator {
                     // Else +300 — an unarmed wielder exists. No characters at all → V67ao order
                     // gate elsewhere handles it.
                     // ============================================================
-                    if (category == CardCategory.WEAPON && gameState != null) {
+                    boolean exactMassassiTorpedoesDeploy =
+                        category == CardCategory.WEAPON
+                            && context.getObjectiveAnalyzer() != null
+                            && context.getObjectiveAnalyzer()
+                                .isMassassiAttackRunPackageDeployCandidate(
+                                    game, playerId, card)
+                            && com.gempukku.swccgo.filters.Filters
+                                .Proton_Torpedoes.accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(), card);
+                    if (category == CardCategory.WEAPON
+                            && gameState != null
+                            && !exactMassassiTorpedoesDeploy) {
                         try {
                             String wepPlayerId = context.getPlayerId();
                             String v158Criteria = null;

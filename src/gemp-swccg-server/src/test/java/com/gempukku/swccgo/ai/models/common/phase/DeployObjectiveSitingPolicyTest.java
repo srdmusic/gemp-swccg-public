@@ -149,6 +149,24 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
+    public void threeSiteCompletionDominatesLegacyReinforcementWithoutChangingProgress() {
+        PolicyOperation completion = DeployObjectiveSitingPolicy
+                .scoreThreeSiteObjectiveCompletion("a", true)
+                .operations().get(0);
+        PolicyResult neutral = DeployObjectiveSitingPolicy
+                .scoreThreeSiteObjectiveCompletion("a", false);
+        float progress = DeployObjectiveSitingPolicy
+                .scoreCountedObjectiveProgress("a", true)
+                .operations().get(0).delta();
+
+        assertOperation(completion,
+                "DEPLOY.OBJECTIVE.THREE_SITE_COMPLETION", 8000.0f);
+        assertTrue("The exact final flip must dominate the legacy +3000 pilot-slot route even after its -5000 ground penalty",
+                completion.delta() + progress - 5000.0f > 3100.0f);
+        assertTrue(neutral.operations().isEmpty());
+    }
+
+    @Test
     public void typedActorStagingDominatesCountedProgressButNotDirectGate() {
         PolicyOperation staging =
                 DeployObjectiveSitingPolicy.scoreActorRouteStaging(

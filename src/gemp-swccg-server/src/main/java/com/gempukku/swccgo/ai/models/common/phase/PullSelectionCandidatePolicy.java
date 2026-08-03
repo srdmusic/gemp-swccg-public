@@ -66,6 +66,42 @@ public final class PullSelectionCandidatePolicy {
         return empty();
     }
 
+    public static PolicyResult scoreMassassiWarRoom(
+            String actionId, boolean preferredWarRoom) {
+        Objects.requireNonNull(actionId, "actionId");
+        return preferredWarRoom
+                ? one(actionId,
+                    "PULL.OBJECTIVE.MASSASSI_WAR_ROOM",
+                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceOutputKind.BANDED, 350.0f,
+                    "MASSASSI: pull the War Room so Rebel Tech adds to Attack Run while tutoring the Trench")
+                : empty();
+    }
+
+    public static PolicyResult scoreImperialEntanglementsBackSite(
+            String actionId, boolean expandsAtRiskBack) {
+        Objects.requireNonNull(actionId, "actionId");
+        return expandsAtRiskBack
+                ? one(actionId,
+                    "PULL.OBJECTIVE.IMPERIAL_ENTANGLEMENTS_BACK_SITE",
+                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceOutputKind.BANDED, 300.0f,
+                    "IMPERIAL ENTANGLEMENTS BACK: expand the Tatooine control route while the relative count is at risk")
+                : empty();
+    }
+
+    public static PolicyResult scoreMassassiAttackRunPackage(
+            String actionId, int prerequisitePriority) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (prerequisitePriority <= 0) return empty();
+        return one(actionId,
+                "PULL.OBJECTIVE.MASSASSI_ATTACK_RUN_PACKAGE",
+                TraceDomainId.DECK_PLAYBOOK,
+                TraceOutputKind.BANDED,
+                prerequisitePriority * 200.0f,
+                "MASSASSI: select the next missing executable Attack Run prerequisite");
+    }
+
     public static PolicyResult scoreRequiredOnTableCard(
             String actionId, boolean requiredOnTableCard) {
         return scoreRequiredOnTableCard(

@@ -102,6 +102,22 @@ public final class DeployObjectiveSitingPolicy {
                         "Deploy here to advance a missing counted-objective location"));
     }
 
+    public static PolicyResult scoreThreeSiteObjectiveCompletion(
+            String actionId, boolean completesThreeSiteObjective) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!completesThreeSiteObjective) {
+            return new PolicyResult(
+                    "DEPLOY_THREE_SITE_OBJECTIVE_COMPLETION_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_THREE_SITE_OBJECTIVE_COMPLETION_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.THREE_SITE_COMPLETION",
+                        TraceOutputKind.BANDED, 8000.0f,
+                        "Complete the final controlled site for the three-site objective before reinforcing elsewhere"));
+    }
+
     public static PolicyResult scoreActorRuntimeLocation(
             String actionId, boolean advancesActorLocation) {
         Objects.requireNonNull(actionId, "actionId");
@@ -273,10 +289,58 @@ public final class DeployObjectiveSitingPolicy {
         return single(
                 "DEPLOY_FIRST_ORDER_ROUTE_CREW_POLICY",
                 add(actionId,
-                        "DEPLOY.OBJECTIVE.FIRST_ORDER_ROUTE_CREW",
-                        TraceOutputKind.BANDED,
-                        1200.0f,
-                        "Board a cheap First Order character on the Tracked Fleet chase ship before committing ground forces"));
+                    "DEPLOY.OBJECTIVE.FIRST_ORDER_ROUTE_CREW",
+                    TraceOutputKind.BANDED,
+                    1200.0f,
+                    "Board a cheap First Order character on the Tracked Fleet chase ship before committing ground forces"));
+    }
+
+    public static PolicyResult scoreMassassiRebelTechPackage(
+            String actionId, boolean deploysToPreferredTutorSite) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!deploysToPreferredTutorSite) {
+            return new PolicyResult(
+                    "DEPLOY_MASSASSI_ATTACK_RUN_PACKAGE_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_MASSASSI_ATTACK_RUN_PACKAGE_POLICY",
+                add(actionId,
+                    "DEPLOY.OBJECTIVE.MASSASSI_REBEL_TECH",
+                    TraceOutputKind.BANDED, 1200.0f,
+                    "Deploy Rebel Tech where its Trench tutor is executable, preferring Massassi War Room for the Attack Run bonus"));
+    }
+
+    public static PolicyResult scoreMassassiAttackRunCarrier(
+            String actionId, boolean deploysWithinAttackRunRange) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!deploysWithinAttackRunRange) {
+            return new PolicyResult(
+                    "DEPLOY_MASSASSI_ATTACK_RUN_CARRIER_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_MASSASSI_ATTACK_RUN_CARRIER_POLICY",
+                add(actionId,
+                    "DEPLOY.OBJECTIVE.MASSASSI_ATTACK_RUN_CARRIER",
+                    TraceOutputKind.BANDED, 1200.0f,
+                    "Deploy the compatible Attack Run starfighter within one move of Death Star"));
+    }
+
+    public static PolicyResult scoreMassassiAttackRunTorpedoesTarget(
+            String actionId, boolean routeReadyCarrier) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!routeReadyCarrier) {
+            return new PolicyResult(
+                    "DEPLOY_MASSASSI_ATTACK_RUN_TORPEDOES_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_MASSASSI_ATTACK_RUN_TORPEDOES_POLICY",
+                add(actionId,
+                    "DEPLOY.OBJECTIVE.MASSASSI_ATTACK_RUN_TORPEDOES",
+                    TraceOutputKind.BANDED, 1200.0f,
+                    "Attach Proton Torpedoes to the piloted Attack Run starfighter on the Death Star route"));
     }
 
     public static PolicyResult scoreFirstOrderReignsNavyRouteAction(

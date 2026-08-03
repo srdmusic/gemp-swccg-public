@@ -2220,7 +2220,7 @@
         "one in a million"
       ],
       "locationFragments": [
-        "yavin 4"
+        "yavin 4:"
       ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
@@ -2296,7 +2296,7 @@
               "controller": "self",
               "locationFilterKey": "Yavin_4_site",
               "locationFragments": [
-                "yavin"
+                "yavin 4:"
               ],
               "count": {
                 "comparator": ">=",
@@ -2316,6 +2316,19 @@
               "sourceText": "you control three Yavin 4 sites while opponent controls fewer than three (Card111_004.java L136-L137). Back side is permanent: no postFlip rule on purpose."
             }
           ]
+        }
+      ],
+      "hardLossLocationRules": [
+        {
+          "id": "mbo-front-yavin-blown-away",
+          "phase": "preFlip",
+          "locationFilterKey": "Yavin_4_system",
+          "defenseLocationFilterKey": "Yavin_4_system",
+          "threatCardFilterKey": "Death_Star_system",
+          "threatRelation": "onTable",
+          "trigger": "blownAwayLastStep",
+          "outcome": "objectiveOutOfPlay",
+          "sourceText": "Front only: if the Yavin 4 system is blown away, place Massassi Base Operations out of play (Card111_004.java L116-L131). The exact Yavin defense route arms only while an opponent Death Star orbits Yavin 4 with an attached superlaser that can fire there; Commence Primary Ignition remains the native engine threat action."
         }
       ]
     },
@@ -6847,7 +6860,7 @@
         "no one to stop us this time"
       ],
       "locationFragments": [
-        "tatooine"
+        "tatooine:"
       ],
       "requiredCardsOnTable": [],
       "pullableCards": [],
@@ -6925,7 +6938,7 @@
               "controller": "self",
               "locationFilterKey": "Tatooine_site",
               "locationFragments": [
-                "tatooine"
+                "tatooine:"
               ],
               "count": {
                 "comparator": ">=",
@@ -6957,7 +6970,7 @@
               "controller": "opponent",
               "locationFilterKey": "Tatooine_site",
               "locationFragments": [
-                "tatooine"
+                "tatooine:"
               ],
               "count": {
                 "comparator": ">",

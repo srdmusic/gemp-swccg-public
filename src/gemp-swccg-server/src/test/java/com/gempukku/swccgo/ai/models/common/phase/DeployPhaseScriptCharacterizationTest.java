@@ -160,6 +160,111 @@ public class DeployPhaseScriptCharacterizationTest {
     }
 
     @Test
+    public void exactMassassiUploadPrecedesBodiesForBothBots() {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard objective = mock(PhysicalCard.class);
+        PhysicalCard impostor = mock(PhysicalCard.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId",
+                new String[] {"mbo-upload", "impostor", "body"});
+        parameters.put("actionText", new String[] {
+                "Take card into hand from Reserve Deck",
+                "Take card into hand from Reserve Deck",
+                "Deploy a character"
+        });
+        parameters.put("cardId", new String[] {"111", "999", null});
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(gameState.findCardById(111)).thenReturn(objective);
+        when(gameState.findCardById(999)).thenReturn(impostor);
+        when(analyzer.getStrategyCharacterTokens(game, "p"))
+                .thenReturn(Collections.emptySet());
+        when(analyzer.isMassassiAttackRunPackageUploadAction(
+                game, "p", objective,
+                "Take card into hand from Reserve Deck"))
+                .thenReturn(true);
+
+        for (DeployPhaseScript script : new DeployPhaseScript[] {
+                new com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript(),
+                new com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript()
+        }) {
+            DeployPhaseScript.Result result = script.selectAllowedActions(
+                    decision, gameState, game, "p", analyzer);
+            assertEquals("[OBJECTIVE_ROUTE_ASSETS, OTHER_CHARACTERS]",
+                    result.stepBucketLabels.toString());
+            assertEquals("[[mbo-upload], [body]]",
+                    result.stepBuckets.toString());
+        }
+    }
+
+    @Test
+    public void exactMassassiPackageDeploysShareTheRouteAssetBucketForBothBots() {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+        PhysicalCard attackRun = mock(PhysicalCard.class);
+        PhysicalCard carrier = mock(PhysicalCard.class);
+        PhysicalCard torpedoes = mock(PhysicalCard.class);
+        PhysicalCard body = mock(PhysicalCard.class);
+        SwccgCardBlueprint attackRunBlueprint = mock(SwccgCardBlueprint.class);
+        SwccgCardBlueprint carrierBlueprint = mock(SwccgCardBlueprint.class);
+        SwccgCardBlueprint torpedoesBlueprint = mock(SwccgCardBlueprint.class);
+        SwccgCardBlueprint bodyBlueprint = mock(SwccgCardBlueprint.class);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId", new String[] {
+                "attack-run", "carrier", "torpedoes", "body"
+        });
+        parameters.put("actionText", new String[] {
+                "Deploy", "Deploy", "Deploy", "Deploy"
+        });
+        parameters.put("cardId", new String[] {"201", "202", "203", "204"});
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(gameState.findCardById(201)).thenReturn(attackRun);
+        when(gameState.findCardById(202)).thenReturn(carrier);
+        when(gameState.findCardById(203)).thenReturn(torpedoes);
+        when(gameState.findCardById(204)).thenReturn(body);
+        when(attackRun.getBlueprint()).thenReturn(attackRunBlueprint);
+        when(carrier.getBlueprint()).thenReturn(carrierBlueprint);
+        when(torpedoes.getBlueprint()).thenReturn(torpedoesBlueprint);
+        when(body.getBlueprint()).thenReturn(bodyBlueprint);
+        when(attackRunBlueprint.getCardCategory()).thenReturn(
+                com.gempukku.swccgo.common.CardCategory.EPIC_EVENT);
+        when(carrierBlueprint.getCardCategory()).thenReturn(
+                com.gempukku.swccgo.common.CardCategory.STARSHIP);
+        when(torpedoesBlueprint.getCardCategory()).thenReturn(
+                com.gempukku.swccgo.common.CardCategory.WEAPON);
+        when(bodyBlueprint.getCardCategory()).thenReturn(
+                com.gempukku.swccgo.common.CardCategory.CHARACTER);
+        when(analyzer.getStrategyCharacterTokens(game, "p"))
+                .thenReturn(Collections.emptySet());
+        when(analyzer.isMassassiAttackRunPackageDeployCandidate(
+                game, "p", attackRun)).thenReturn(true);
+        when(analyzer.isMassassiAttackRunCarrierDeployCandidate(
+                game, "p", carrier)).thenReturn(true);
+        when(analyzer.isMassassiAttackRunPackageDeployCandidate(
+                game, "p", torpedoes)).thenReturn(true);
+
+        for (DeployPhaseScript script : new DeployPhaseScript[] {
+                new com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript(),
+                new com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript()
+        }) {
+            DeployPhaseScript.Result result = script.selectAllowedActions(
+                    decision, gameState, game, "p", analyzer);
+            assertEquals("[OBJECTIVE_ROUTE_ASSETS, OTHER_CHARACTERS]",
+                    result.stepBucketLabels.toString());
+            assertEquals("[[attack-run, carrier, torpedoes], [body]]",
+                    result.stepBuckets.toString());
+        }
+    }
+
+    @Test
     public void exactShieldRouteCannonPrecedesUnrelatedCharactersForBothBots() {
         AwaitingDecision decision = mock(AwaitingDecision.class);
         GameState gameState = mock(GameState.class);
@@ -241,7 +346,7 @@ public class DeployPhaseScriptCharacterizationTest {
         when(analyzer.getStrategyCharacterTokens(game, "p"))
                 .thenReturn(Collections.emptySet());
         when(analyzer.isFlipped()).thenReturn(false);
-        when(analyzer.usesBespinObjectiveLocationPullSequence())
+        when(analyzer.usesObjectiveLocationPullSequence())
                 .thenReturn(true);
         when(analyzer.isCurrentObjectiveSourceCard(objective))
                 .thenReturn(true);
@@ -256,7 +361,7 @@ public class DeployPhaseScriptCharacterizationTest {
         when(decision.getDecisionParameters()).thenReturn(parameters);
 
         TestDeployPhaseScript script = new TestDeployPhaseScript();
-        when(analyzer.hasMissingPreFlipRequiredLocationInReserve(
+        when(analyzer.hasObjectiveLocationRouteCandidateInReserve(
                 game, "p")).thenReturn(true);
         DeployPhaseScript.Result routeOpen = script.selectAllowedActions(
                 decision, gameState, game, "p", analyzer);
@@ -265,7 +370,7 @@ public class DeployPhaseScriptCharacterizationTest {
         assertEquals("[[qmc-pull], [body]]",
                 routeOpen.stepBuckets.toString());
 
-        when(analyzer.hasMissingPreFlipRequiredLocationInReserve(
+        when(analyzer.hasObjectiveLocationRouteCandidateInReserve(
                 game, "p")).thenReturn(false);
         DeployPhaseScript.Result routeExhausted = script.selectAllowedActions(
                 decision, gameState, game, "p", analyzer);
@@ -292,7 +397,7 @@ public class DeployPhaseScriptCharacterizationTest {
         when(analyzer.isFlipped()).thenReturn(false);
         when(analyzer.isCurrentObjectiveSourceCard(objective))
                 .thenReturn(true);
-        when(analyzer.usesBespinObjectiveLocationPullSequence())
+        when(analyzer.usesObjectiveLocationPullSequence())
                 .thenReturn(false);
         when(analyzer.hasMissingPreFlipRequiredLocationInReserve(
                 game, "p")).thenReturn(false);

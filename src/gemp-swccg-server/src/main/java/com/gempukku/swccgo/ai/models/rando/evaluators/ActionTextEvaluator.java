@@ -27,6 +27,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveGateHoldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MassassiObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NabooDuelObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveHardLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
@@ -318,6 +319,41 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             actionId, nabooDuelAction));
                 PolicyOperationAdapter.apply(
                         action, nabooDuelLedger);
+                actions.add(action);
+                continue;
+            }
+
+            if (exactDeployAnalyzer != null
+                    && exactDeployAnalyzer.isMassassiAttackRunAction(
+                        game, context.getPlayerId(),
+                        actionSource, actionText)) {
+                PolicyContributionLedger massassiLedger =
+                        new PolicyContributionLedger(
+                            "massassi-attack-run-" + actionId);
+                massassiLedger.register(
+                        MassassiObjectivePolicy.scoreAttackRun(
+                            actionId));
+                PolicyOperationAdapter.apply(
+                        action, massassiLedger);
+                actions.add(action);
+                continue;
+            }
+
+            if (exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isImperialEntanglementsBackSiteRouteAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText)) {
+                PolicyContributionLedger entanglementsLedger =
+                        new PolicyContributionLedger(
+                            "imperial-entanglements-back-site-"
+                                + actionId);
+                entanglementsLedger.register(
+                        PullActionPolicy
+                            .scoreImperialEntanglementsBackSiteAction(
+                                actionId, true));
+                PolicyOperationAdapter.apply(
+                        action, entanglementsLedger);
                 actions.add(action);
                 continue;
             }

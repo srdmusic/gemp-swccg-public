@@ -8,6 +8,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -237,6 +238,7 @@ public class ObjectiveAnalyzer {
         HARD_LOSS_LOCATION_DEFENDER,
         TERMINAL_OBJECTIVE_ACTOR,
         LAST_PENDING_TRIGGER_CONTROL_SOURCE,
+        MASSASSI_ATTACK_RUN_ENABLER,
         NONE
     }
 
@@ -8635,7 +8637,7 @@ public class ObjectiveAnalyzer {
             for (HardLossLocationRule rule
                     : activeHardLossLocationRules) {
                 com.gempukku.swccgo.filters.Filter locationFilter =
-                        rule == null
+                        !isActiveHardLossLocationRule(rule)
                                 || !"blownAwayLastStep".equals(
                                     rule.trigger)
                                 || !"objectiveOutOfPlay".equals(
@@ -8670,6 +8672,9 @@ public class ObjectiveAnalyzer {
         try {
             for (HardLossLocationRule rule
                     : activeHardLossLocationRules) {
+                if (!isActiveHardLossLocationRule(rule)) {
+                    continue;
+                }
                 com.gempukku.swccgo.filters.Filter defenseFilter =
                         rule == null ? null
                             : resolveLocationFilter(
@@ -8702,10 +8707,22 @@ public class ObjectiveAnalyzer {
                     if (threatLocation == null) {
                         threatLocation = game.getModifiersQuerying()
                                 .getLocationThatCardIsAt(
-                                    game.getGameState(), threat);
+                            game.getGameState(), threat);
+                    }
+                    if (isMassassiBaseOperationsFamily()
+                            && "Death_Star_system".equals(
+                                rule.threatCardFilterKey)) {
+                        if (isMassassiYavinBlowAwayThreat(
+                                game, playerId, location, threat)) {
+                            return true;
+                        }
+                        continue;
                     }
                     if (samePhysicalLocation(
                             threatLocation, location)) {
+                        return true;
+                    }
+                    if ("onTable".equals(rule.threatRelation)) {
                         return true;
                     }
                 }
@@ -8716,6 +8733,52 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return false;
+    }
+
+    private boolean isMassassiYavinBlowAwayThreat(
+            SwccgGame game, String playerId,
+            PhysicalCard yavinSystem, PhysicalCard deathStar) {
+        if (!isMassassiBaseOperationsFamily() || isFlipped
+                || game == null || playerId == null
+                || yavinSystem == null || deathStar == null
+                || playerId.equals(deathStar.getOwner())
+                || !Filters.Yavin_4_system.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    yavinSystem)
+                || !Filters.Death_Star_system.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    deathStar)
+                || !Title.Yavin_4.equals(deathStar.getSystemOrbited())) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return false;
+        com.gempukku.swccgo.filters.Filter potentialSuperlaser =
+                Filters.superlaserThatCanFireAtPlanetSystem(
+                    yavinSystem);
+        for (PhysicalCard card : permanents) {
+            if (card != null && deathStar.getOwner().equals(card.getOwner())
+                    && isActiveForSpot(game, card, true)
+                    && card.getAttachedTo() == deathStar
+                    && potentialSuperlaser.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isActiveHardLossLocationRule(
+            HardLossLocationRule rule) {
+        if (rule == null || rule.phase == null
+                || rule.phase.isBlank()) {
+            return rule != null;
+        }
+        return "preFlip".equals(rule.phase)
+                ? !isFlipped
+                : "postFlip".equals(rule.phase) && isFlipped;
     }
 
     public boolean advancesObjectiveHardLossDefenseAt(
@@ -8824,6 +8887,10 @@ public class ObjectiveAnalyzer {
         if (captureRole
                 != ObjectivePostFlipPayoffRole.NONE) {
             return captureRole;
+        }
+        if (qualifiesMassassiAttackRunCarrierAt(
+                game, playerId, candidate, destination)) {
+            return ObjectivePostFlipPayoffRole.PRIMARY;
         }
         if (!analyzed || !isFlipped || game == null
                 || playerId == null || candidate == null
@@ -9015,6 +9082,15 @@ public class ObjectiveAnalyzer {
         if (captureRole
                 != ObjectivePostFlipPayoffRole.NONE) {
             return captureRole;
+        }
+        if (qualifiesMassassiAttackRunCarrierAt(
+                game, playerId, candidate, destination)) {
+            PhysicalCard origin = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), candidate);
+            if (!samePhysicalLocation(origin, destination)) {
+                return ObjectivePostFlipPayoffRole.PRIMARY;
+            }
         }
         if (!analyzed || !isFlipped || game == null
                 || playerId == null || candidate == null
@@ -9393,14 +9469,42 @@ public class ObjectiveAnalyzer {
     }
 
     /**
-     * True only for the two Bespin fronts whose native location action is an
-     * explicit part of this batch's typed pull sequence. Unmodeled objectives
-     * must retain their stock deploy-phase action ordering.
+     * True only for audited fronts whose native location action advances a
+     * typed counted-location route. Unmodeled objectives retain their stock
+     * deploy-phase action ordering.
      */
-    public boolean usesBespinObjectiveLocationPullSequence() {
-        return analyzed && !isFlipped
-                && ("109_4".equals(objectiveBlueprintId)
-                    || "301_2".equals(objectiveBlueprintId));
+    public boolean usesObjectiveLocationPullSequence() {
+        return analyzed
+                && (!isFlipped
+                    && ("109_4".equals(objectiveBlueprintId)
+                    || "301_2".equals(objectiveBlueprintId)
+                    || "111_4".equals(objectiveBlueprintId)
+                    || "201_39".equals(objectiveBlueprintId))
+                    || isFlipped
+                    && isImperialEntanglementsFamily());
+    }
+
+    public boolean hasObjectiveLocationRouteCandidateInReserve(
+            SwccgGame game, String playerId) {
+        if (!usesObjectiveLocationPullSequence()) return false;
+        if (!isFlipped) {
+            return hasMissingPreFlipRequiredLocationInReserve(
+                    game, playerId);
+        }
+        if (!needsImperialEntanglementsBackSiteExpansion(
+                game, playerId)) {
+            return false;
+        }
+        List<PhysicalCard> reserve = game.getGameState()
+                .getCardPile(playerId, Zone.RESERVE_DECK);
+        if (reserve == null) return false;
+        for (PhysicalCard card : reserve) {
+            if (isNativeObjectiveLocationRouteCandidate(
+                    game, playerId, card)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -9423,7 +9527,9 @@ public class ObjectiveAnalyzer {
                 if (classifyPreFlipProgressCandidate(
                         game, playerId, card)
                         == ObjectiveProgressCandidateRole
-                            .REQUIRED_LOCATION) {
+                            .REQUIRED_LOCATION
+                        && isNativeObjectiveLocationRouteCandidate(
+                            game, playerId, card)) {
                     return true;
                 }
             }
@@ -9433,6 +9539,1621 @@ public class ObjectiveAnalyzer {
         }
         return false;
     }
+
+    public boolean isMassassiBaseOperationsFamily() {
+        return analyzed && ("111_4".equals(objectiveBlueprintId)
+                || "111_4_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isImperialEntanglementsFamily() {
+        return analyzed && ("201_39".equals(objectiveBlueprintId)
+                || "201_39_BACK".equals(objectiveBlueprintId));
+    }
+
+    /**
+     * Separates the broad location law from the exact native download route.
+     * Imperial Entanglements counts every Tatooine site after it reaches the
+     * table, but its action can deploy only a currently legal battleground
+     * site and its permanent restriction forbids Jabba's Palace sites.
+     */
+    public boolean isNativeObjectiveLocationRouteCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if ((!isMassassiBaseOperationsFamily()
+                    && !isImperialEntanglementsFamily())
+                || isFlipped && !isImperialEntanglementsFamily()
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard objectiveCard = findOurObjective(
+                game.getGameState(), playerId);
+        if (objectiveCard == null
+                || !isCurrentObjectiveSourceCard(objectiveCard)) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter printedFilter =
+                isMassassiBaseOperationsFamily()
+                    ? Filters.Yavin_4_site
+                    : Filters.Tatooine_site;
+        com.gempukku.swccgo.filters.Filter specialLocationConditions =
+                isImperialEntanglementsFamily()
+                    ? Filters.battleground : null;
+        return printedFilter.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    candidate)
+                && Filters.deployable(
+                    objectiveCard, specialLocationConditions,
+                    false, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+    }
+
+    public boolean isImperialEntanglementsBackSiteExpansionCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        return isImperialEntanglementsFamily() && isFlipped
+                && needsImperialEntanglementsBackSiteExpansion(
+                    game, playerId)
+                && isNativeObjectiveLocationRouteCandidate(
+                    game, playerId, candidate);
+    }
+
+    public boolean isImperialEntanglementsBackSiteRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isImperialEntanglementsFamily() && isFlipped
+                && game != null && playerId != null
+                && sourceCard != null
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && actionText != null
+                && "deploy tatooine battleground site from reserve deck"
+                    .equals(actionText.trim().toLowerCase(Locale.ROOT))
+                && needsImperialEntanglementsBackSiteExpansion(
+                    game, playerId)
+                && hasObjectiveLocationRouteCandidateInReserve(
+                    game, playerId);
+    }
+
+    public boolean isMassassiFrontSiteRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isMassassiBaseOperationsFamily() && !isFlipped
+                && game != null && playerId != null
+                && sourceCard != null
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && actionText != null
+                && "deploy yavin 4 site from reserve deck"
+                    .equals(actionText.trim().toLowerCase(Locale.ROOT))
+                && hasObjectiveLocationRouteCandidateInReserve(
+                    game, playerId);
+    }
+
+    private boolean isExactCurrentObjectiveSourceCard(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        return game != null && game.getGameState() != null
+                && playerId != null && sourceCard != null
+                && sourceCard == findOurObjective(
+                    game.getGameState(), playerId);
+    }
+
+    private boolean needsImperialEntanglementsBackSiteExpansion(
+            SwccgGame game, String playerId) {
+        if (!isImperialEntanglementsFamily() || !isFlipped
+                || game == null || playerId == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null) {
+            return false;
+        }
+        String opponent = game.getGameState().getOpponent(playerId);
+        if (opponent == null) return false;
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule == null || !"postFlip".equals(rule.phase)
+                    || !"flipBack".equals(rule.purpose)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative
+                    : rule.alternatives) {
+                if (!isSupportedCountedFlipBackAlternative(
+                        alternative)) {
+                    continue;
+                }
+                int selfCount = countAlternativeMatches(
+                        game, playerId, playerId, alternative);
+                int opponentCount = countAlternativeMatches(
+                        game, playerId, opponent, alternative);
+                return selfCount <= opponentCount + 1;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The permanent Massassi back is an assembly line, not a generic card
+     * draw. Rebel Tech must lead so it can fetch the Trench during the next
+     * control phase, followed by Death Star, Attack Run, and Torpedoes.
+     */
+    public int getMassassiAttackRunPackagePullPriority(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        int rank = massassiAttackRunPackageRank(
+                game, playerId, candidate);
+        if (!isMassassiBaseOperationsFamily() || !isFlipped
+                || rank == 0 || game == null || playerId == null
+                || candidate == null
+                || candidate.getZone() != Zone.RESERVE_DECK
+                    && candidate.getZone() != Zone.TOP_OF_RESERVE_DECK
+                || !playerId.equals(candidate.getOwner())
+                || rank != massassiPackagePullFrontierRank(
+                        game, playerId)) {
+            return 0;
+        }
+        return rank;
+    }
+
+    public boolean isPreferredMassassiWarRoomPullCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        return isMassassiBaseOperationsFamily() && !isFlipped
+                && game != null && playerId != null && candidate != null
+                && playerId.equals(candidate.getOwner())
+                && Filters.Massassi_War_Room.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+    }
+
+    public boolean isMassassiAttackRunPackageUploadAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isMassassiBaseOperationsFamily() || !isFlipped
+                || game == null || playerId == null || sourceCard == null
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                || actionText == null) {
+            return false;
+        }
+        String text = actionText.toLowerCase(Locale.ROOT);
+        if (!text.contains("into hand")
+                || !text.contains("reserve deck")) {
+            return false;
+        }
+        List<PhysicalCard> reserve = game.getGameState()
+                .getReserveDeck(playerId);
+        if (reserve == null) return false;
+        for (PhysicalCard card : reserve) {
+            if (getMassassiAttackRunPackagePullPriority(
+                    game, playerId, card) > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isPreferredMassassiAttackRunPackageForceLossCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!isMassassiBaseOperationsFamily() || !isFlipped
+                || game == null || playerId == null || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        boolean trenchOnTable = hasOwnedMassassiCardInPlay(
+                game, playerId, Filters.Death_Star_Trench);
+        PhysicalCard protectedTrench = trenchOnTable
+                ? null : preferredMassassiPackageCardSurvivor(
+                    game, playerId, Filters.Death_Star_Trench);
+        if (candidate == protectedTrench) return true;
+
+        boolean trenchReadyInHand = protectedTrench != null
+                && protectedTrench.getZone() == Zone.HAND;
+        if (!trenchOnTable && !trenchReadyInHand
+                && protectedTrench != null
+                && !hasActiveMassassiRebelTechInPlay(
+                    game, playerId)
+                && candidate == preferredMassassiPackageCardSurvivor(
+                    game, playerId, Filters.Rebel_Tech)) {
+            return true;
+        }
+
+        if (Filters.findFirstFromTopLocationsOnTable(
+                    game, Filters.Death_Star_system) == null
+                && candidate == preferredMassassiPackageRankSurvivor(
+                    game, playerId, 3)) {
+            return true;
+        }
+        if (!hasOwnedMassassiCardInPlay(
+                    game, playerId, Filters.Attack_Run)
+                && candidate == preferredMassassiPackageRankSurvivor(
+                    game, playerId, 2)) {
+            return true;
+        }
+
+        if (!hasOwnedCompatibleMassassiTorpedoesInPlay(
+                game, playerId)) {
+            PhysicalCard protectedTorpedoes =
+                    preferredMassassiPackageRankSurvivor(
+                        game, playerId, 1);
+            if (candidate == protectedTorpedoes) return true;
+            PhysicalCard protectedCarrier =
+                    preferredMassassiAttackRunCarrierSurvivor(
+                        game, playerId, protectedTorpedoes);
+            if (candidate == protectedCarrier) return true;
+        }
+        return false;
+    }
+
+    private PhysicalCard preferredMassassiPackageRankSurvivor(
+            SwccgGame game, String playerId, int rank) {
+        PhysicalCard preferred = null;
+        int preferredZoneRank = Integer.MAX_VALUE;
+        for (PhysicalCard card : objectiveForceLossSurvivors(
+                game.getGameState(), playerId)) {
+            if (card == null || massassiAttackRunPackageRank(
+                    game, playerId, card) != rank) {
+                continue;
+            }
+            int zoneRank = massassiPackageForceLossZoneRank(
+                    card.getZone());
+            if (preferred == null || zoneRank < preferredZoneRank
+                    || zoneRank == preferredZoneRank
+                        && card.getPermanentCardId()
+                            < preferred.getPermanentCardId()) {
+                preferred = card;
+                preferredZoneRank = zoneRank;
+            }
+        }
+        return preferred;
+    }
+
+    private PhysicalCard preferredMassassiPackageCardSurvivor(
+            SwccgGame game, String playerId,
+            com.gempukku.swccgo.filters.Filter filter) {
+        PhysicalCard preferred = null;
+        int preferredZoneRank = Integer.MAX_VALUE;
+        for (PhysicalCard card : objectiveForceLossSurvivors(
+                game.getGameState(), playerId)) {
+            if (card == null || !playerId.equals(card.getOwner())
+                    || !filter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            int zoneRank = massassiPackageForceLossZoneRank(
+                    card.getZone());
+            if (preferred == null || zoneRank < preferredZoneRank
+                    || zoneRank == preferredZoneRank
+                        && card.getPermanentCardId()
+                            < preferred.getPermanentCardId()) {
+                preferred = card;
+                preferredZoneRank = zoneRank;
+            }
+        }
+        return preferred;
+    }
+
+    /**
+     * Funds the cheapest bodies that can occupy the still-missing physical
+     * sites this deploy phase for the two audited three-site objectives.
+     */
+    public int getCountedObjectivePresenceForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if ((!isMassassiBaseOperationsFamily()
+                    && !isImperialEntanglementsFamily())
+                || isFlipped || game == null || playerId == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        int bestReserve = 0;
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)
+                    || isRuleSatisfied(game, playerId, rule)) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (!isPlainSelfPresenceAlternative(alternative)
+                        || alternative.count == null
+                        || alternative.count.value == null) {
+                    continue;
+                }
+                int required = expectedCount(
+                        game, playerId, alternative.count);
+                int qualified = countAlternativeMatches(
+                        game, playerId, playerId, alternative);
+                int bodiesNeeded = Math.max(0, required - qualified);
+                int openDestinations = countOpenCountedObjectiveDestinations(
+                        game, playerId, alternative);
+                boolean candidateAdvances = deployingCandidate != null
+                        && hasLegalPlainPresenceDestinationForAlternative(
+                            game, playerId, deployingCandidate,
+                            alternative);
+                if (candidateAdvances) {
+                    bodiesNeeded--;
+                    openDestinations--;
+                }
+                int fundedBodies = Math.min(
+                        Math.max(0, bodiesNeeded),
+                        Math.max(0, openDestinations));
+                if (fundedBodies == 0) continue;
+
+                List<Integer> costs = new ArrayList<>();
+                for (PhysicalCard card
+                        : game.getGameState().getHand(playerId)) {
+                    if (card == null || card == deployingCandidate) {
+                        continue;
+                    }
+                    Integer cost = cheapestPlainPresenceDeployCost(
+                            game, playerId, card, alternative);
+                    if (cost != null) costs.add(cost);
+                }
+                Collections.sort(costs);
+                int reserve = 0;
+                for (int i = 0;
+                        i < Math.min(fundedBodies, costs.size()); i++) {
+                    reserve += costs.get(i);
+                }
+                bestReserve = Math.max(bestReserve, reserve);
+            }
+        }
+        return bestReserve;
+    }
+
+    /** Protects only the exact number of still-needed downloadable sites. */
+    public boolean isPreferredCountedObjectiveLocationForceLossCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if ((!isMassassiBaseOperationsFamily()
+                    && !isImperialEntanglementsFamily())
+                || isFlipped || game == null || playerId == null
+                || candidate == null || activeFlipLocationRules == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)) continue;
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (!isPlainSelfPresenceAlternative(alternative)
+                        || alternative.count == null
+                        || alternative.count.value == null) {
+                    continue;
+                }
+                com.gempukku.swccgo.filters.Filter locationFilter =
+                        resolveLocationFilter(
+                            alternative.locationFilterKey, playerId);
+                if (locationFilter == null || !locationFilter.accepts(
+                        game.getGameState(), game.getModifiersQuerying(),
+                        candidate)
+                        || !isNativeObjectiveLocationRouteCandidate(
+                            game, playerId, candidate)) {
+                    continue;
+                }
+                int needed = Math.max(0,
+                        expectedCount(game, playerId, alternative.count)
+                        - countMatchingLocations(
+                            game, playerId, alternative));
+                if (needed == 0) continue;
+                List<PhysicalCard> copies = new ArrayList<>();
+                for (PhysicalCard card : objectiveForceLossSurvivors(
+                        game.getGameState(), playerId)) {
+                    if (card != null && locationFilter.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)
+                            && isNativeObjectiveLocationRouteCandidate(
+                                game, playerId, card)) {
+                        copies.add(card);
+                    }
+                }
+                copies.sort(Comparator
+                        .comparingInt((PhysicalCard card) ->
+                            isPreferredMassassiWarRoomPullCandidate(
+                                    game, playerId, card) ? 0 : 1)
+                        .thenComparingInt((PhysicalCard card) ->
+                            countedLocationForceLossZoneRank(card.getZone()))
+                        .thenComparingInt(PhysicalCard::getPermanentCardId));
+                for (int i = 0; i < Math.min(needed, copies.size()); i++) {
+                    if (copies.get(i) == candidate) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Protects exactly the cheapest executable bodies still needed to occupy
+     * the open sites of the audited three-site objectives. A second legal
+     * body is not a duplicate while two distinct sites remain empty.
+     */
+    public boolean isPreferredCountedObjectivePresenceForceLossCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if ((!isMassassiBaseOperationsFamily()
+                    && !isImperialEntanglementsFamily())
+                || isFlipped || game == null || playerId == null
+                || candidate == null || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)) continue;
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (!isPlainSelfPresenceAlternative(alternative)
+                        || alternative.count == null
+                        || alternative.count.value == null) {
+                    continue;
+                }
+                int required = expectedCount(
+                        game, playerId, alternative.count);
+                int qualified = countAlternativeMatches(
+                        game, playerId, playerId, alternative);
+                int needed = Math.min(
+                        Math.max(0, required - qualified),
+                        countOpenCountedObjectiveDestinations(
+                            game, playerId, alternative));
+                if (needed == 0) continue;
+
+                Map<PhysicalCard, Integer> costs = new HashMap<>();
+                for (PhysicalCard card
+                        : game.getGameState().getHand(playerId)) {
+                    if (card == null) continue;
+                    Integer cost = cheapestPlainPresenceDeployCost(
+                            game, playerId, card, alternative);
+                    if (cost != null) costs.put(card, cost);
+                }
+                List<PhysicalCard> candidates =
+                        new ArrayList<>(costs.keySet());
+                candidates.sort(Comparator
+                        .comparingInt((PhysicalCard card) -> costs.get(card))
+                        .thenComparingInt(
+                            PhysicalCard::getPermanentCardId));
+                for (int i = 0;
+                        i < Math.min(needed, candidates.size()); i++) {
+                    if (candidates.get(i) == candidate) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private int countOpenCountedObjectiveDestinations(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative alternative) {
+        int count = 0;
+        String controller = resolveController(
+                game.getGameState(), playerId,
+                alternative.controller);
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)
+                    && !relationSatisfiedAt(
+                        game, playerId, controller, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private Integer cheapestPlainPresenceDeployCost(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            FlipLocationAlternative alternative) {
+        Integer cheapest = null;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!advancesAlternativeAt(
+                        game, playerId, candidate,
+                        location, alternative)
+                    || !Filters.deployableToLocation(
+                        candidate, Filters.sameCardId(location),
+                        false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate)) {
+                continue;
+            }
+            Integer cost = requiredCardDeployCostAt(
+                    game, candidate, location);
+            if (cost != null && (cheapest == null || cost < cheapest)) {
+                cheapest = cost;
+            }
+        }
+        return cheapest;
+    }
+
+    private List<PhysicalCard> objectiveForceLossSurvivors(
+            GameState gameState, String playerId) {
+        List<PhysicalCard> cards = new ArrayList<>();
+        cards.addAll(gameState.getHand(playerId));
+        cards.addAll(gameState.getReserveDeck(playerId));
+        cards.addAll(gameState.getForcePile(playerId));
+        cards.addAll(gameState.getUsedPile(playerId));
+        cards.addAll(gameState.getUnresolvedDestinyDraw(playerId));
+        cards.addAll(gameState.getSabaccHand(playerId));
+        return cards;
+    }
+
+    private int massassiPackageForceLossZoneRank(Zone zone) {
+        if (zone == Zone.HAND) return 0;
+        if (zone == Zone.RESERVE_DECK
+                || zone == Zone.TOP_OF_RESERVE_DECK) return 1;
+        return 2;
+    }
+
+    private int countedLocationForceLossZoneRank(Zone zone) {
+        if (zone == Zone.RESERVE_DECK
+                || zone == Zone.TOP_OF_RESERVE_DECK) return 0;
+        if (zone == Zone.HAND) return 1;
+        return 2;
+    }
+
+    public boolean isMassassiAttackRunPackageDeployCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!isMassassiBaseOperationsFamily() || !isFlipped
+                || game == null || playerId == null || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        if (isMassassiTrenchDeployCandidate(
+                game, playerId, candidate)) {
+            return true;
+        }
+        int rank = massassiAttackRunPackageRank(
+                game, playerId, candidate);
+        if (rank == 1 && !hasOwnedMassassiTorpedoCarrierInPlay(
+                game, playerId, candidate)) {
+            return false;
+        }
+        return rank > 0 && rank == massassiPackageDeployFrontierRank(
+                game, playerId);
+    }
+
+    public boolean isMassassiAttackRunCarrierDeployCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        return isMassassiBaseOperationsFamily() && isFlipped
+                && game != null && playerId != null && candidate != null
+                && playerId.equals(candidate.getOwner())
+                && candidate.getZone() == Zone.HAND
+                && hasOwnedMassassiCardInPlay(
+                    game, playerId, Filters.Attack_Run)
+                && !hasOwnedMassassiAttackRunCarrierInPlay(
+                    game, playerId)
+                && Filters.hasPermanentPilot.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)
+                && isMassassiCarrierForAvailableTorpedoes(
+                    game, playerId, candidate)
+                && findMassassiAttackRunCarrierDeployDestination(
+                    game, playerId, candidate) != null;
+    }
+
+    public boolean isMassassiTrenchDeployCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        return isMassassiBaseOperationsFamily() && isFlipped
+                && game != null && playerId != null && candidate != null
+                && playerId.equals(candidate.getOwner())
+                && candidate.getZone() == Zone.HAND
+                && !hasOwnedMassassiCardInPlay(
+                    game, playerId, Filters.Death_Star_Trench)
+                && Filters.Death_Star_Trench.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    candidate)
+                && Filters.findFirstFromTopLocationsOnTable(
+                    game, Filters.Death_Star_system) != null
+                && Filters.deployable(candidate, null, false, 0.0f)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+    }
+
+    public boolean advancesMassassiRebelTechPackageAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        PhysicalCard preferredDestination =
+                findMassassiRebelTechDeployDestination(
+                    game, playerId, candidate);
+        return isMassassiAttackRunPackageDeployCandidate(
+                    game, playerId, candidate)
+                && destination != null
+                && preferredDestination != null
+                && Filters.Rebel_Tech.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)
+                && samePhysicalLocation(
+                    preferredDestination, destination);
+    }
+
+    public boolean advancesMassassiAttackRunCarrierAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        return isMassassiAttackRunCarrierDeployCandidate(
+                    game, playerId, candidate)
+                && isMassassiAttackRunCarrierDeployDestination(
+                    game, playerId, candidate, destination);
+    }
+
+    public boolean isMassassiAttackRunTorpedoesAttachmentTarget(
+            SwccgGame game, String playerId,
+            PhysicalCard torpedoes, PhysicalCard target) {
+        if (!isMassassiAttackRunPackageDeployCandidate(
+                    game, playerId, torpedoes)
+                || target == null
+                || !playerId.equals(target.getOwner())
+                || target.getZone() == null
+                || !target.getZone().isInPlay()
+                || !Filters.piloted.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), target)
+                || !isMassassiAttackRunCarrierRouteReady(
+                    game, playerId, target)) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter carrier =
+                massassiTorpedoCarrierFilter(torpedoes);
+        return carrier != null
+                && carrier.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), target)
+                && Filters.deployableToTarget(
+                    torpedoes, Filters.sameCardId(target),
+                    false, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), torpedoes);
+    }
+
+    public int getMassassiAttackRunPackageForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!isMassassiBaseOperationsFamily() || !isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        Integer cheapest = null;
+        for (PhysicalCard card : game.getGameState().getHand(playerId)) {
+            if (card == null || card == deployingCandidate
+                    || !isMassassiAttackRunPackageDeployCandidate(
+                        game, playerId, card)
+                        && !isMassassiAttackRunCarrierDeployCandidate(
+                            game, playerId, card)) {
+                continue;
+            }
+            Integer cost = massassiPackageDeployCost(
+                    game, playerId, card);
+            if (cost != null && (cheapest == null || cost < cheapest)) {
+                cheapest = cost;
+            }
+        }
+        return cheapest != null ? Math.max(0, cheapest) : 0;
+    }
+
+    public int getMassassiAttackRunPackageDeployForcePayment(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (candidate == null
+                || !isMassassiAttackRunPackageDeployCandidate(
+                    game, playerId, candidate)
+                && !isMassassiAttackRunCarrierDeployCandidate(
+                    game, playerId, candidate)) {
+            return 0;
+        }
+        Integer cost = massassiPackageDeployCost(
+                game, playerId, candidate);
+        return cost != null ? Math.max(0, cost) : 0;
+    }
+
+    public int getMassassiAttackRunCarrierMoveForceReserve(
+            SwccgGame game, String playerId) {
+        if (!isMassassiBaseOperationsFamily() || !isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !hasOwnedMassassiCardInPlay(
+                    game, playerId, Filters.Attack_Run)) {
+            return 0;
+        }
+        PhysicalCard deathStar = findMassassiDeathStarSystem(game);
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (deathStar == null || permanents == null) return 0;
+
+        int minimum = Integer.MAX_VALUE;
+        for (PhysicalCard carrier : permanents) {
+            PhysicalCard origin = carrier != null
+                    ? game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            game.getGameState(), carrier)
+                    : null;
+            if (carrier == null
+                    || !playerId.equals(carrier.getOwner())
+                    || carrier.getZone() == null
+                    || !carrier.getZone().isInPlay()
+                    || origin == null
+                    || samePhysicalLocation(origin, deathStar)
+                    || !Filters.piloted.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), carrier)
+                    || !isMassassiAttackRunCarrierRouteReady(
+                        game, playerId, carrier)
+                    || !hasAttachedCompatibleMassassiTorpedoes(
+                            game, playerId, carrier)
+                        && !hasHandDeployableCompatibleMassassiTorpedoes(
+                            game, playerId, carrier)) {
+                continue;
+            }
+            try {
+                if (game.getModifiersQuerying().mayNotMove(
+                            game.getGameState(), carrier)
+                        || game.getModifiersQuerying()
+                            .hasPerformedRegularMoveThisTurn(carrier)
+                        || !Filters.canMoveToUsingHyperspeed(
+                            playerId, carrier,
+                            false, true, 0.0f).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), deathStar)) {
+                    continue;
+                }
+                float cost = game.getModifiersQuerying()
+                        .getMoveUsingHyperspeedCost(
+                            game.getGameState(), carrier,
+                            origin, deathStar, false, 0.0f);
+                if (!Float.isNaN(cost) && !Float.isInfinite(cost)) {
+                    minimum = Math.min(
+                            minimum,
+                            (int) Math.ceil(Math.max(0.0f, cost)));
+                }
+            } catch (Exception e) {
+                LOG.debug(
+                        "Massassi carrier move Force reserve unavailable: {}",
+                        e.getMessage());
+            }
+        }
+        return minimum == Integer.MAX_VALUE ? 0 : minimum;
+    }
+
+    private Integer massassiPackageDeployCost(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (isMassassiAttackRunCarrierDeployCandidate(
+                game, playerId, candidate)) {
+            PhysicalCard destination =
+                    findMassassiAttackRunCarrierDeployDestination(
+                        game, playerId, candidate);
+            return destination != null
+                    ? requiredCardDeployCostAt(
+                        game, candidate, destination)
+                    : null;
+        }
+        if (Filters.Rebel_Tech.accepts(
+                game.getGameState(), game.getModifiersQuerying(),
+                candidate)) {
+            PhysicalCard destination =
+                    findMassassiRebelTechDeployDestination(
+                        game, playerId, candidate);
+            if (destination == null) return null;
+            return requiredCardDeployCostAt(
+                    game, candidate, destination);
+        }
+        if (Filters.Death_Star_Trench.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    candidate)
+                || Filters.Death_Star_system.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    candidate)) {
+            return requiredCardDeployCost(game, candidate);
+        }
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard target : permanents) {
+            if (target == null || !playerId.equals(target.getOwner())
+                    || target.getZone() == null
+                    || !target.getZone().isInPlay()) {
+                continue;
+            }
+            boolean exactTarget = Filters.Attack_Run.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    ? Filters.Death_Star_Trench.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), target)
+                    : isMassassiAttackRunTorpedoesAttachmentTarget(
+                        game, playerId, candidate, target);
+            if (!exactTarget || !Filters.deployableToTarget(
+                    candidate, Filters.sameCardId(target),
+                    false, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)) {
+                continue;
+            }
+            return requiredCardDeployCostAt(
+                    game, candidate, target);
+        }
+        return null;
+    }
+
+    private int massassiAttackRunPackageRank(
+            SwccgGame game, String playerId, PhysicalCard card) {
+        if (game == null || card == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || playerId == null
+                || !playerId.equals(card.getOwner())) {
+            return 0;
+        }
+        if (Filters.Rebel_Tech.accepts(
+                game.getGameState(), game.getModifiersQuerying(), card)) {
+            return 4;
+        }
+        if (Filters.Death_Star_system.accepts(
+                game.getGameState(), game.getModifiersQuerying(), card)) {
+            return 3;
+        }
+        if (Filters.Attack_Run.accepts(
+                game.getGameState(), game.getModifiersQuerying(), card)) {
+            return 2;
+        }
+        return Filters.Proton_Torpedoes.accepts(
+                    game.getGameState(), game.getModifiersQuerying(), card)
+                && hasOwnedMassassiTorpedoCarrier(
+                    game, playerId, card)
+                    ? 1 : 0;
+    }
+
+    private int massassiPackagePullFrontierRank(
+            SwccgGame game, String playerId) {
+        List<PhysicalCard> reserve = game.getGameState()
+                .getReserveDeck(playerId);
+        for (int rank = 4; rank >= 1; rank--) {
+            if (isMassassiPackageStageReadyForPull(
+                    game, playerId, rank)) {
+                continue;
+            }
+            for (PhysicalCard card : reserve) {
+                if (massassiAttackRunPackageRank(
+                        game, playerId, card) == rank) {
+                    return rank;
+                }
+            }
+        }
+        return 0;
+    }
+
+    private int massassiPackageDeployFrontierRank(
+            SwccgGame game, String playerId) {
+        for (int rank = 4; rank >= 1; rank--) {
+            if (isMassassiPackageStageComplete(
+                    game, playerId, rank)
+                    || !isMassassiPackageDeployPrerequisiteReady(
+                        game, playerId, rank)) {
+                continue;
+            }
+            for (PhysicalCard card
+                    : game.getGameState().getHand(playerId)) {
+                if (massassiAttackRunPackageRank(
+                        game, playerId, card) == rank) {
+                    return rank;
+                }
+            }
+        }
+        return 0;
+    }
+
+    private boolean isMassassiPackageStageReadyForPull(
+            SwccgGame game, String playerId, int rank) {
+        if (isMassassiPackageStageComplete(game, playerId, rank)) {
+            return true;
+        }
+        for (PhysicalCard card : game.getGameState().getHand(playerId)) {
+            if (massassiAttackRunPackageRank(
+                    game, playerId, card) == rank) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isMassassiPackageStageComplete(
+            SwccgGame game, String playerId, int rank) {
+        if (rank == 4) {
+            return hasOwnedMassassiCardInHandOrPlay(
+                        game, playerId, Filters.Death_Star_Trench)
+                    || hasActiveMassassiRebelTechInPlay(
+                        game, playerId);
+        }
+        if (rank == 3) {
+            return Filters.findFirstFromTopLocationsOnTable(
+                    game, Filters.Death_Star_system) != null;
+        }
+        if (rank == 2) {
+            return hasOwnedMassassiCardInPlay(
+                    game, playerId, Filters.Attack_Run);
+        }
+        return rank == 1 && hasOwnedCompatibleMassassiTorpedoesInPlay(
+                game, playerId);
+    }
+
+    private boolean isMassassiPackageDeployPrerequisiteReady(
+            SwccgGame game, String playerId, int rank) {
+        if (rank == 4) {
+            for (PhysicalCard card
+                    : game.getGameState().getHand(playerId)) {
+                if (card != null
+                        && Filters.Rebel_Tech.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)
+                        && findMassassiRebelTechDeployDestination(
+                            game, playerId, card) != null) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (rank == 3) {
+            return Filters.findFirstFromTopLocationsOnTable(
+                    game, Filters.Death_Star_system) == null;
+        }
+        if (rank == 2) {
+            return hasOwnedMassassiCardInPlay(
+                    game, playerId, Filters.Death_Star_Trench);
+        }
+        return rank == 1
+                && hasOwnedMassassiCardInPlay(
+                    game, playerId, Filters.Attack_Run);
+    }
+
+    private boolean hasOwnedMassassiCardInHandOrPlay(
+            SwccgGame game, String playerId,
+            com.gempukku.swccgo.filters.Filter filter) {
+        for (PhysicalCard card : game.getGameState().getHand(playerId)) {
+            if (filter.accepts(game.getGameState(),
+                    game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return hasOwnedMassassiCardInPlay(
+                game, playerId, filter);
+    }
+
+    private boolean hasOwnedMassassiCardInPlay(
+            SwccgGame game, String playerId,
+            com.gempukku.swccgo.filters.Filter filter) {
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && card.getZone() != null && card.getZone().isInPlay()
+                    && filter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private PhysicalCard findOwnedMassassiWarRoom(
+            SwccgGame game, String playerId) {
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (location != null && location.getZone() != null
+                    && location.getZone().isInPlay()
+                    && playerId.equals(location.getOwner())
+                    && Filters.Massassi_War_Room.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)) {
+                return location;
+            }
+        }
+        return null;
+    }
+
+    private PhysicalCard findMassassiRebelTechDeployDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard rebelTech) {
+        if (game == null || playerId == null || rebelTech == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !playerId.equals(rebelTech.getOwner())
+                || !Filters.Rebel_Tech.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), rebelTech)) {
+            return null;
+        }
+        PhysicalCard warRoom = findOwnedMassassiWarRoom(
+                game, playerId);
+        if (isMassassiRebelTechDeployDestination(
+                game, rebelTech, warRoom)) {
+            return warRoom;
+        }
+
+        PhysicalCard bestControlled = null;
+        Integer bestControlledCost = null;
+        PhysicalCard bestOther = null;
+        Integer bestOtherCost = null;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!isMassassiRebelTechDeployDestination(
+                    game, rebelTech, location)) {
+                continue;
+            }
+            Integer cost = requiredCardDeployCostAt(
+                    game, rebelTech, location);
+            if (cost == null) continue;
+            if (game.getModifiersQuerying().controlsLocation(
+                    game.getGameState(), location, playerId)) {
+                if (bestControlled == null
+                        || cost < bestControlledCost) {
+                    bestControlled = location;
+                    bestControlledCost = cost;
+                }
+            } else if (bestOther == null || cost < bestOtherCost) {
+                bestOther = location;
+                bestOtherCost = cost;
+            }
+        }
+        return bestControlled != null ? bestControlled : bestOther;
+    }
+
+    private boolean isMassassiRebelTechDeployDestination(
+            SwccgGame game, PhysicalCard rebelTech,
+            PhysicalCard destination) {
+        return destination != null
+                && Filters.site.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), destination)
+                && Filters.deployableToLocation(
+                    rebelTech, Filters.sameCardId(destination),
+                    false, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), rebelTech);
+    }
+
+    private boolean hasActiveMassassiRebelTechInPlay(
+            SwccgGame game, String playerId) {
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && card.getZone() != null
+                    && card.getZone().isInPlay()
+                    && isActiveForSpot(game, card, true)
+                    && Filters.Rebel_Tech.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasOwnedMassassiTorpedoCarrier(
+            SwccgGame game, String playerId, PhysicalCard torpedoes) {
+        com.gempukku.swccgo.filters.Filter carrier =
+                massassiTorpedoCarrierFilter(torpedoes);
+        if (carrier == null) return false;
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            Zone zone = card != null ? card.getZone() : null;
+            if (card != null && playerId.equals(card.getOwner())
+                    && zone != null && zone != Zone.LOST_PILE
+                    && zone != Zone.TOP_OF_LOST_PILE
+                    && zone != Zone.OUT_OF_PLAY
+                    && zone != Zone.VOID
+                    && isMassassiCarrierPilotingReady(
+                        game, card)
+                    && carrier.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isMassassiCarrierPilotingReady(
+            SwccgGame game, PhysicalCard carrier) {
+        if (game == null || carrier == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        Zone zone = carrier.getZone();
+        return zone != null && zone.isInPlay()
+                ? Filters.piloted.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), carrier)
+                    && isMassassiAttackRunCarrierRouteReady(
+                        game, carrier.getOwner(), carrier)
+                : Filters.hasPermanentPilot.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), carrier);
+    }
+
+    private boolean hasOwnedMassassiTorpedoCarrierInPlay(
+            SwccgGame game, String playerId, PhysicalCard torpedoes) {
+        com.gempukku.swccgo.filters.Filter carrier =
+                massassiTorpedoCarrierFilter(torpedoes);
+        if (carrier == null) return false;
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && card.getZone() != null && card.getZone().isInPlay()
+                    && Filters.piloted.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)
+                    && isMassassiAttackRunCarrierRouteReady(
+                        game, playerId, card)
+                    && carrier.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasOwnedCompatibleMassassiTorpedoesInPlay(
+            SwccgGame game, String playerId) {
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            PhysicalCard carrier = card != null
+                    ? card.getAttachedTo() : null;
+            if (card != null && playerId.equals(card.getOwner())
+                    && card.getZone() != null && card.getZone().isInPlay()
+                    && Filters.Proton_Torpedoes.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)
+                    && carrier != null
+                    && playerId.equals(carrier.getOwner())
+                    && carrier.getZone() != null
+                    && carrier.getZone().isInPlay()
+                    && Filters.piloted.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), carrier)
+                    && isMassassiAttackRunCarrierRouteReady(
+                        game, playerId, carrier)
+                    && massassiTorpedoCarrierFilter(card) != null
+                    && massassiTorpedoCarrierFilter(card).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), carrier)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private PhysicalCard preferredMassassiAttackRunCarrierSurvivor(
+            SwccgGame game, String playerId,
+            PhysicalCard torpedoes) {
+        com.gempukku.swccgo.filters.Filter carrierFilter =
+                massassiTorpedoCarrierFilter(torpedoes);
+        if (carrierFilter == null
+                || hasOwnedMassassiTorpedoCarrierInPlay(
+                    game, playerId, torpedoes)) {
+            return null;
+        }
+        PhysicalCard preferred = null;
+        int preferredZoneRank = Integer.MAX_VALUE;
+        for (PhysicalCard card : objectiveForceLossSurvivors(
+                game.getGameState(), playerId)) {
+            if (card == null
+                    || !isMassassiCarrierPilotingReady(
+                        game, card)
+                    || !carrierFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            int zoneRank = massassiPackageForceLossZoneRank(
+                    card.getZone());
+            if (preferred == null || zoneRank < preferredZoneRank
+                    || zoneRank == preferredZoneRank
+                        && card.getPermanentCardId()
+                            < preferred.getPermanentCardId()) {
+                preferred = card;
+                preferredZoneRank = zoneRank;
+            }
+        }
+        return preferred;
+    }
+
+    private boolean hasOwnedMassassiAttackRunCarrierInPlay(
+            SwccgGame game, String playerId) {
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && card.getZone() != null && card.getZone().isInPlay()
+                    && Filters.piloted.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)
+                    && isMassassiAttackRunCarrierRouteReady(
+                        game, playerId, card)
+                    && isMassassiCarrierForAvailableTorpedoes(
+                        game, playerId, card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isMassassiCarrierForAvailableTorpedoes(
+            SwccgGame game, String playerId, PhysicalCard carrier) {
+        if (game == null || playerId == null || carrier == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !playerId.equals(carrier.getOwner())) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard torpedoes : permanents) {
+            Zone zone = torpedoes != null ? torpedoes.getZone() : null;
+            com.gempukku.swccgo.filters.Filter carrierFilter =
+                    massassiTorpedoCarrierFilter(torpedoes);
+            if (torpedoes != null
+                    && playerId.equals(torpedoes.getOwner())
+                    && zone != null && zone != Zone.LOST_PILE
+                    && zone != Zone.TOP_OF_LOST_PILE
+                    && zone != Zone.OUT_OF_PLAY && zone != Zone.VOID
+                    && carrierFilter != null
+                    && carrierFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), carrier)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasAttachedCompatibleMassassiTorpedoes(
+            SwccgGame game, String playerId, PhysicalCard carrier) {
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard torpedoes : permanents) {
+            com.gempukku.swccgo.filters.Filter carrierFilter =
+                    massassiTorpedoCarrierFilter(torpedoes);
+            if (torpedoes != null
+                    && playerId.equals(torpedoes.getOwner())
+                    && torpedoes.getZone() != null
+                    && torpedoes.getZone().isInPlay()
+                    && torpedoes.getAttachedTo() == carrier
+                    && carrierFilter != null
+                    && carrierFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), carrier)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasHandDeployableCompatibleMassassiTorpedoes(
+            SwccgGame game, String playerId, PhysicalCard carrier) {
+        for (PhysicalCard torpedoes
+                : game.getGameState().getHand(playerId)) {
+            com.gempukku.swccgo.filters.Filter carrierFilter =
+                    massassiTorpedoCarrierFilter(torpedoes);
+            if (torpedoes != null
+                    && isMassassiAttackRunPackageDeployCandidate(
+                        game, playerId, torpedoes)
+                    && carrierFilter != null
+                    && carrierFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), carrier)
+                    && Filters.deployableToTarget(
+                        torpedoes, Filters.sameCardId(carrier),
+                        false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), torpedoes)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private PhysicalCard findMassassiDeathStarSystem(
+            SwccgGame game) {
+        return game != null
+                ? Filters.findFirstFromTopLocationsOnTable(
+                    game, Filters.Death_Star_system)
+                : null;
+    }
+
+    private PhysicalCard findMassassiAttackRunCarrierDeployDestination(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (game == null || playerId == null || candidate == null) {
+            return null;
+        }
+        PhysicalCard best = null;
+        Integer bestCost = null;
+        for (PhysicalCard destination
+                : game.getGameState().getLocationsInOrder()) {
+            if (!isMassassiAttackRunCarrierDeployDestination(
+                    game, playerId, candidate, destination)) {
+                continue;
+            }
+            Integer cost = requiredCardDeployCostAt(
+                    game, candidate, destination);
+            if (cost != null && (best == null || cost < bestCost)) {
+                best = destination;
+                bestCost = cost;
+            }
+        }
+        return best;
+    }
+
+    private boolean isMassassiAttackRunCarrierDeployDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        PhysicalCard deathStar = findMassassiDeathStarSystem(game);
+        if (game == null || playerId == null || candidate == null
+                || destination == null || deathStar == null
+                || !Filters.system.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), destination)
+                || !Filters.deployableToLocation(
+                    candidate, Filters.sameCardId(destination),
+                    false, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)) {
+            return false;
+        }
+        if (samePhysicalLocation(destination, deathStar)) {
+            return true;
+        }
+        return canMassassiCarrierReachDeathStarFrom(
+                game, candidate, destination, deathStar);
+    }
+
+    private boolean isMassassiAttackRunCarrierRouteReady(
+            SwccgGame game, String playerId,
+            PhysicalCard carrier) {
+        if (game == null || playerId == null || carrier == null
+                || !playerId.equals(carrier.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard deathStar = findMassassiDeathStarSystem(game);
+        PhysicalCard origin = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                    game.getGameState(), carrier);
+        if (deathStar == null || origin == null
+                || !Filters.system.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), origin)) {
+            return false;
+        }
+        return samePhysicalLocation(origin, deathStar)
+                || canMassassiCarrierReachDeathStarFrom(
+                    game, carrier, origin, deathStar);
+    }
+
+    private boolean canMassassiCarrierReachDeathStarFrom(
+            SwccgGame game, PhysicalCard carrier,
+            PhysicalCard origin, PhysicalCard deathStar) {
+        try {
+            return !game.getModifiersQuerying().hasNoHyperdrive(
+                        game.getGameState(), carrier)
+                    && !game.getModifiersQuerying().mayNotMoveUsingHyperspeed(
+                        game.getGameState(), carrier)
+                    && !game.getModifiersQuerying()
+                        .mayNotMoveFromLocationToLocationUsingHyperspeed(
+                            game.getGameState(), carrier,
+                            origin, deathStar, false)
+                    && game.getModifiersQuerying().getHyperspeed(
+                        game.getGameState(), carrier,
+                        origin, deathStar)
+                        >= Math.abs(origin.getParsec()
+                            - deathStar.getParsec());
+        } catch (Exception e) {
+            LOG.debug(
+                    "Massassi carrier staging-range assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean qualifiesMassassiAttackRunCarrierAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        PhysicalCard deathStar = findMassassiDeathStarSystem(game);
+        return isMassassiBaseOperationsFamily() && isFlipped
+                && game != null && playerId != null && candidate != null
+                && destination != null && deathStar != null
+                && playerId.equals(candidate.getOwner())
+                && candidate.getZone() != null
+                && candidate.getZone().isInPlay()
+                && samePhysicalLocation(deathStar, destination)
+                && Filters.piloted.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)
+                && hasOwnedMassassiCardInPlay(
+                    game, playerId, Filters.Attack_Run)
+                && hasAttachedCompatibleMassassiTorpedoes(
+                    game, playerId, candidate);
+    }
+
+    /**
+     * Matches only the real Attack Run epic action after the complete package
+     * is physically ready at Death Star. The legal action text alone is not a
+     * substitute for checking its exact source and lead-starfighter route.
+     */
+    public boolean isMassassiAttackRunAction(
+            SwccgGame game, String playerId,
+            PhysicalCard actionSource, String actionText) {
+        if (!isMassassiBaseOperationsFamily() || !isFlipped
+                || game == null || playerId == null
+                || actionSource == null || actionText == null
+                || !playerId.equals(actionSource.getOwner())
+                || !"2_42".equals(actionSource.getBlueprintId(true))
+                || actionSource.getZone() == null
+                || !actionSource.getZone().isInPlay()
+                || !"attempt to 'blow away' death star".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT))
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !game.getGameState().getAllPermanentCards()
+                    .contains(actionSource)) {
+            return false;
+        }
+        PhysicalCard trench = actionSource.getAttachedTo();
+        if (trench == null || !Filters.Death_Star_Trench.accepts(
+                game.getGameState(), game.getModifiersQuerying(), trench)) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard carrier : permanents) {
+            if (carrier == null) continue;
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), carrier);
+            if (qualifiesMassassiAttackRunCarrierAt(
+                        game, playerId, carrier, location)
+                    && Filters.piloted.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), carrier)
+                    && Filters.canMoveAtStartOfAttackRun(playerId)
+                        .accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), carrier)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private FlipGateFormationRole
+            classifyMassassiAttackRunEnablerIfRemoved(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        if (!isMassassiBaseOperationsFamily() || !isFlipped
+                || game == null || playerId == null || candidate == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return FlipGateFormationRole.NONE;
+        }
+        if (candidate == preferredMassassiRebelTechBattleSurvivor(
+                    game, playerId)
+                || candidate == preferredMassassiArmedCarrierBattleSurvivor(
+                    game, playerId)) {
+            return FlipGateFormationRole.MASSASSI_ATTACK_RUN_ENABLER;
+        }
+        return FlipGateFormationRole.NONE;
+    }
+
+    private PhysicalCard preferredMassassiRebelTechBattleSurvivor(
+            SwccgGame game, String playerId) {
+        if (hasOwnedMassassiCardInHandOrPlay(
+                game, playerId, Filters.Death_Star_Trench)) {
+            return null;
+        }
+        boolean trenchInReserve = false;
+        for (PhysicalCard card
+                : game.getGameState().getReserveDeck(playerId)) {
+            if (card != null && Filters.Death_Star_Trench.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), card)) {
+                trenchInReserve = true;
+                break;
+            }
+        }
+        if (!trenchInReserve) return null;
+
+        PhysicalCard warRoom = findOwnedMassassiWarRoom(game, playerId);
+        PhysicalCard preferred = null;
+        int preferredLocationRank = Integer.MAX_VALUE;
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard card : permanents) {
+            PhysicalCard location = card != null
+                    ? game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            game.getGameState(), card)
+                    : null;
+            if (card != null && playerId.equals(card.getOwner())
+                    && card.getZone() != null
+                    && card.getZone().isInPlay()
+                    && isActiveForSpot(game, card, true)
+                    && Filters.Rebel_Tech.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)
+                    && location != null) {
+                int locationRank = samePhysicalLocation(
+                        location, warRoom) ? 0 : 1;
+                if (preferred == null
+                        || locationRank < preferredLocationRank
+                        || locationRank == preferredLocationRank
+                        && card.getPermanentCardId()
+                            < preferred.getPermanentCardId()) {
+                    preferred = card;
+                    preferredLocationRank = locationRank;
+                }
+            }
+        }
+        return preferred;
+    }
+
+    private PhysicalCard preferredMassassiArmedCarrierBattleSurvivor(
+            SwccgGame game, String playerId) {
+        PhysicalCard deathStar = findMassassiDeathStarSystem(game);
+        if (deathStar == null) return null;
+        PhysicalCard preferred = null;
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard card : permanents) {
+            PhysicalCard location = card != null
+                    ? game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            game.getGameState(), card)
+                    : null;
+            if (card != null
+                    && qualifiesMassassiAttackRunCarrierAt(
+                        game, playerId, card, location)
+                    && (preferred == null
+                        || card.getPermanentCardId()
+                            < preferred.getPermanentCardId())) {
+                preferred = card;
+            }
+        }
+        return preferred;
+    }
+
+    private com.gempukku.swccgo.filters.Filter
+            massassiTorpedoCarrierFilter(PhysicalCard torpedoes) {
+        if (torpedoes == null) return null;
+        if ("1_158".equals(torpedoes.getBlueprintId(true))
+                || "9_88".equals(torpedoes.getBlueprintId(true))) {
+            return Filters.or(
+                    Filters.X_wing, Filters.Y_wing, Filters.B_wing);
+        }
+        return "14_66".equals(torpedoes.getBlueprintId(true))
+                ? Filters.N1_starfighter : null;
+    }
+
     public String getFlipConditionText() { return flipConditionText; }
 
     public boolean isNabooDuelFrontTargetLossAction(
@@ -9831,6 +11552,12 @@ public class ObjectiveAnalyzer {
                     game, playerId, candidate)) {
             return FlipGateFormationRole
                     .REQUIRED_CARD_RETENTION_DEFENDER;
+        }
+        FlipGateFormationRole massassiEnablerRole =
+                classifyMassassiAttackRunEnablerIfRemoved(
+                    game, playerId, candidate);
+        if (massassiEnablerRole != FlipGateFormationRole.NONE) {
+            return massassiEnablerRole;
         }
 
         if (isFlipped) {
@@ -11369,9 +13096,11 @@ public class ObjectiveAnalyzer {
     }
     static final class HardLossLocationRule {
         String id;
+        String phase;
         String locationFilterKey;
         String defenseLocationFilterKey;
         String threatCardFilterKey;
+        String threatRelation;
         String trigger;
         String outcome;
         String sourceText;
@@ -11694,6 +13423,8 @@ public class ObjectiveAnalyzer {
             // The Death Star's killer is the LIGHT Attack Run epic event.
             case "Attack_Run":
                 return com.gempukku.swccgo.filters.Filters.Attack_Run;
+            case "Death_Star_system":
+                return com.gempukku.swccgo.filters.Filters.Death_Star_system;
             // Extension batch (2026-07-29): 501_19's conquest currency. A
             // face-up-blueprint icon read: flipping Utapau/Christophsis to
             // their Separatist backs (drain or battle win at a related
@@ -11850,6 +13581,7 @@ public class ObjectiveAnalyzer {
             case "Jakku_battleground_site":      return com.gempukku.swccgo.filters.Filters.Jakku_battleground_site;
             case "battleground":                 return com.gempukku.swccgo.filters.Filters.battleground;
             case "Yavin_4_location":             return com.gempukku.swccgo.filters.Filters.Yavin_4_location;
+            case "Yavin_4_system":               return com.gempukku.swccgo.filters.Filters.Yavin_4_system;
             // Batch Ten (2026-07-27): Massassi Base Operations counted law.
             case "Yavin_4_site":                 return com.gempukku.swccgo.filters.Filters.Yavin_4_site;
             case "Hoth_location":                return com.gempukku.swccgo.filters.Filters.Hoth_location;
@@ -12280,6 +14012,16 @@ public class ObjectiveAnalyzer {
                     break;
                 }
             }
+        }
+        if (isMassassiAttackRunPackageDeployCandidate(
+                    game, playerId, card)
+                || isMassassiAttackRunCarrierDeployCandidate(
+                    game, playerId, card)) {
+            notes.add(new ScoreNote(
+                    800.0f,
+                    "OBJECTIVE MASSASSI ATTACK RUN PACKAGE: deploy '"
+                            + card.getTitle()
+                            + "' before unrelated cards"));
         }
         if (analyzed && !isFlipped && isCharacter
                 && hasFlipGateActorRequirement()) {

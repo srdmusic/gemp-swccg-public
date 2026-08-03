@@ -13,6 +13,7 @@
   "expression": {
    "op": "allOf",
    "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039.java:130"},
     {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039.java:131"},
     {"req": "controls >=3 locations", "filter": "Filters.Tatooine_site", "gameConditions": "GameConditions.controls(game, playerId, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Tatooine_site)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039.java:132"},
     {"op": "not", "children": [
@@ -30,6 +31,7 @@
   "expression": {
    "op": "allOf",
    "children": [
+    {"req": "table changed", "filter": "-", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039_BACK.java:142"},
     {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039_BACK.java:143"},
     {"req": "count-comparison: opponent-controlled > player-controlled", "filter": "Filters.and(Filters.Tatooine_site, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)) vs Filters.and(Filters.Tatooine_site, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))", "gameConditions": "Filters.countTopLocationsOnTable(game, Filters.and(Filters.Tatooine_site, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))) > Filters.countTopLocationsOnTable(game, Filters.and(Filters.Tatooine_site, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set201/dark/Card201_039_BACK.java:144-145"}
    ]
@@ -73,13 +75,24 @@
  "profile": {
   "exists": true,
   "loaderEnabled": true,
-  "profileGaps": [
-   "flipGateSite is null; gate is Tatooine sites generally (Filters.Tatooine_site) - present only inside objectiveNamedLocations as 'Tatooine battleground site' (flip law counts ALL Tatooine sites, battleground or not)",
-   "opponent constraint (opponent controls < 3 to flip; opponent-more-than-you flips back) has no profile representation",
-   "requiredCardsOnTable empty; Devastator is a required setup deploy",
-   "keyCharacterFilter null (correct that flip needs no actor, but deploy-ban Imperial-only constraint is also unrepresented)",
-   "weights empty"
-  ]
+  "frontStructuredRule": "preFlip/flip allOf: self controls >=3 Tatooine_site and opponent controls <3 Tatooine_site",
+  "backStructuredRule": "postFlip/flipBack allOf: opponent-controlled Tatooine_site count > self-controlled count",
+  "nativeRoute": "Exact objective action deploys only a currently legal Tatooine battleground site and excludes Jabba's Palace sites.",
+  "locationFragments": ["tatooine:"],
+  "profileGaps": []
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "frontRoute": "Both bots preserve the next route site and final body through real Force loss, use the exact native site download, battle for the starting gate site, leave an anchor, move a route actor, pull the remaining site on turn two, deploy the final body there, and observe the unchanged objective flip.",
+  "completionBoundary": "The final third-site deployment receives a narrow +8000 completion score that defeats the legacy low-ability ground penalty and ordinary ship alternative only when the exact destination completes this three-site gate. Hard vetoes remain dominant.",
+  "backRoute": "At self count <= opponent count + 1, both bots use the free back-side Tatooine battleground route before the strict relative count slips. The exact parent gets +1800 and the legal child gets +300.",
+  "sourceBoundary": "The route may bypass the two-card V60 reserve-risk veto only from the actual physical objective with the exact action and a legal candidate. Wrong action, wrong source, same-blueprint counterfeit, safely-ahead state, and exhausted route receive no exception.",
+  "parity": "Rando and Chosen One return identical scores, reasoning, and winners across the audited decisions.",
+  "verification": "Focused MBO/IE and shared deploy, pull, Force-loss, battle-forfeit, and analyzer regression gates pass. JSON validation and diff checks pass.",
+  "replay": "No live replay claim. Deterministic unchanged-engine tests provide FLIP_OBSERVED."
+ },
+ "knownLimits": [
+  "Back-side top-X selection and draw-phase trooper retrieval are outside this flip and retention seal.",
+  "Live server branch firing and replay observation remain separate proof gates."
+ ],
+ "proofGate": "FLIP_OBSERVED"
 }

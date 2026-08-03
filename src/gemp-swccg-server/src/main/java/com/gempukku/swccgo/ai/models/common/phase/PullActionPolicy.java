@@ -143,6 +143,21 @@ public final class PullActionPolicy {
         return new PolicyResult(PRODUCER, operations);
     }
 
+    public static PolicyResult scoreImperialEntanglementsBackSiteAction(
+            String actionId, boolean atRiskRouteReady) {
+        Objects.requireNonNull(actionId, "actionId");
+        return new PolicyResult(
+                PRODUCER,
+                atRiskRouteReady
+                    ? List.of(add(
+                        actionId,
+                        "OBJECTIVE.IMPERIAL_ENTANGLEMENTS.BACK_SITE_ROUTE",
+                        TraceOutputKind.ORDERING,
+                        1800.0f,
+                        "IMPERIAL ENTANGLEMENTS BACK: use the free Tatooine battleground route before the relative count slips"))
+                    : List.of());
+    }
+
     public static Evaluation evaluateParent(PullActionFacts.Parent facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>();
