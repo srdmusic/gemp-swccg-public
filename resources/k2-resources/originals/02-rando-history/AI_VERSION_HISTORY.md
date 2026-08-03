@@ -8820,8 +8820,13 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Cloud City ordering is gated to TDIGWATT pre-flip. Unknown SpotOverride values fail closed.
     Expanded 22-test native/profile contract plus 11 deploy-script tests green, including captive
     spotting, any-owner/permanent-aboard Lando, ability-zero and undercover negatives, and the
-    sole ordinary-pilot counterfactual. Final bounded regression and sealed-package evidence are
-    recorded with the amendment commit. Revert the single amended Batch Nine commit.
+    sole ordinary-pilot counterfactual. Bounded cross-objective gate 389/0/0/0; independent PASS.
+    Local commit 0ebcd0e40 packaged and deployed after a zero-table freeze. Candidate, host, and
+    container web.jar SHA-256 b3eb23dbd7648d38775e160f3c22fcc3acca219f23fae0d8f233be9adcd91081;
+    embedded playbook SHA-256 7e30d8aa74b0017138952b498af31cebf3104840de6c985245f6297ebac1c7b1.
+    Prior jar preserved as web.jar.pre-bespin-0ebcd0e40. Fresh app start
+    2026-08-03T19:37:02.392188543Z, restart count zero, HTTP and all five switch posts 200,
+    startup clean, reopened hall empty. Nothing pushed. Revert the single amended Batch Nine commit.
 
   ==== Massassi Base Operations Batch Ten (2026-07-27): 111_4 counted control law ====
     One flipLocationRule: control self Yavin_4_site >= 3 with opponentConstraint control < 3
