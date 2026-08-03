@@ -2095,8 +2095,15 @@ public class ShieldTwinObjectiveEngineContractTest {
             var spare = scn.GetDSCard("blizzard2Duplicate");
             var cannon = scn.GetDSCard("cannon");
             var support = scn.GetDSCard("pilot");
+            var secondCannon = scn.GetDSCard("cannon2");
+            var classicCannon = scn.GetDSCard("classicCannon");
 
             scn.StartGame();
+            // This case proves the quiet-marker hold for a genuine spare.
+            // With another accessible Cannon, the staged walker is the live
+            // route host and must be released by the next test instead.
+            scn.MoveOutOfPlay(secondCannon);
+            scn.MoveOutOfPlay(classicCannon);
             scn.MoveCardsToLocation(northRidge, carrier);
             scn.AttachCardsTo(carrier, cannon);
             scn.MoveCardsToLocation(icePlains, spare);
@@ -2112,6 +2119,41 @@ public class ShieldTwinObjectiveEngineContractTest {
             for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
                 assertTrue(analyzer.shouldHoldSecondaryShieldMarkerWalker(
                         scn.game(), VirtualTableScenario.DS, spare));
+            }
+        }
+    }
+
+    @Test
+    public void selectedPreparedWalkerIsNeverFrozenAsTheSecondaryHold() {
+        for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
+            VirtualTableScenario scn = scenario(objectiveBlueprintId, true);
+            var icePlains = scn.GetDSCard("icePlains");
+            var northRidge = scn.GetDSCard("northRidge");
+            var thirdMarker = scn.GetDSCard("thirdMarker");
+            var target = scn.GetDSCard("target");
+            var completedHost = scn.GetDSCard("blizzard2");
+            var preparedHost = scn.GetDSCard("blizzard2Duplicate");
+            var attachedCannon = scn.GetDSCard("cannon");
+            var accessibleCannon = scn.GetDSCard("cannon2");
+            var support = scn.GetDSCard("pilot");
+
+            scn.StartGame();
+            scn.MoveLocationToTable(thirdMarker);
+            scn.MoveCardsToLocation(icePlains, completedHost);
+            scn.AttachCardsTo(completedHost, attachedCannon);
+            scn.MoveCardsToLocation(northRidge, preparedHost, support);
+            scn.AttachCardsTo(northRidge, target);
+
+            assertInZone(Zone.RESERVE_DECK, accessibleCannon);
+            for (ObjectiveAnalyzer analyzer : analyzers(scn)) {
+                assertTrue("The staged walker is the selected live route host",
+                        analyzer.advancesShieldMainGeneratorRoute(
+                                scn.game(), VirtualTableScenario.DS,
+                                preparedHost, thirdMarker));
+                assertFalse("The live route host must not be frozen as a spare",
+                        analyzer.shouldHoldSecondaryShieldMarkerWalker(
+                                scn.game(), VirtualTableScenario.DS,
+                                preparedHost));
             }
         }
     }

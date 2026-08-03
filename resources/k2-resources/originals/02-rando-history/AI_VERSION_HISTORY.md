@@ -9490,3 +9490,29 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     changed. Nothing was pushed. Restore web.jar.pre-naboo-duel-1cfeedb39 and
     revert 1cfeedb39 to remove only this family seal; prior batches remain
     independent.
+
+  ==== Hoth selected-route walker release repair (2026-08-03) ====
+
+    The secondary-marker hold could freeze the exact prepared AT-AT selected
+    to carry an accessible Cannon toward Main Power Generators whenever a
+    different complete Cannon host existed elsewhere. That walker was not a
+    spare. It was the live route package, so the hard move veto could stall
+    the objective permanently.
+
+    shouldHoldSecondaryShieldMarkerWalker now rejects the selected prepared
+    route host before considering the quiet-marker spare hold. A genuine
+    supported spare still holds, and the existing unsupported or contested
+    release boundaries are unchanged. The owner is shared AI strategy, so
+    Rando and Chosen One receive the identical repair.
+
+    The red-first test covers both 222_14 and 222_30. It proves the staged
+    walker has a legal advancing hop while another complete Cannon host is
+    elsewhere, then requires the spare hold to release it. The genuine-spare
+    case removes all other accessible Cannons so it cannot accidentally
+    select that walker as the active route package. The focused gate passed
+    66/0/0/0 across the Shield contract, Hoth replay regression, move-hold
+    policy, and both-bot source parity.
+
+    Scope is shared AI strategy, AI tests, and these approved records only.
+    No engine, card Java, client, deck library, database, or workbook source
+    changed. Revert the matching local commit to remove only this repair.

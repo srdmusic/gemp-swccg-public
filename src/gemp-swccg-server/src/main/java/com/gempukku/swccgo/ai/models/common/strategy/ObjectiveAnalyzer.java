@@ -13579,6 +13579,8 @@ public class ObjectiveAnalyzer {
             PhysicalCard origin = game.getModifiersQuerying()
                     .getLocationThatCardIsAt(gameState, mover);
             if (origin == null
+                    || isSelectedPreparedShieldRouteHost(
+                        game, playerId, mover, origin)
                     || game.getModifiersQuerying()
                         .getMarkerNumber(gameState, origin) == null
                     || !game.getModifiersQuerying()
