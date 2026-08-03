@@ -88,6 +88,7 @@
   "sourceBoundary": "The route may bypass the two-card V60 reserve-risk veto only from the actual physical objective with the exact action and a legal candidate. Wrong action, wrong source, same-blueprint counterfeit, safely-ahead state, and exhausted route receive no exception.",
   "parity": "Rando and Chosen One return identical scores, reasoning, and winners across the audited decisions.",
   "verification": "Focused MBO/IE and shared deploy, pull, Force-loss, battle-forfeit, and analyzer regression gates pass. JSON validation and diff checks pass.",
+  "deployment": "Local behavior commit bd41a399b is live in host/container-matching web.jar SHA-256 3ea3c6542438a4d2f4617bbb7a58a4af876f103d75029efbf7986e9dff6cb3ba after a zero-table freeze and fresh JVM start. The prior jar is preserved as web.jar.pre-mbo-ie-bd41a399b.",
   "replay": "No live replay claim. Deterministic unchanged-engine tests provide FLIP_OBSERVED."
  },
  "knownLimits": [

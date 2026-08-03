@@ -9584,6 +9584,21 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     DeployActionTextSourceParityTest still reports a pre-existing Senate direct
     reasoning mutation already present at HEAD; this batch did not touch it.
 
+    Local behavior commit bd41a399b packaged from the isolated worktree. All
+    128 class files from the 15 changed production sources byte-match target
+    classes, the server jar, and web.jar. Server jar SHA-256 is
+    7097364d8dce7b3e1db07f22882b420ebe70b921764cb6dc123ad87739c155c0;
+    live web.jar SHA-256 is
+    3ea3c6542438a4d2f4617bbb7a58a4af876f103d75029efbf7986e9dff6cb3ba;
+    embedded playbook SHA-256 is
+    196a96fc5558396db742acb9faf69580946fc1891f0f8827aeb7aa163de5f4d0.
+    The prior jar is preserved as web.jar.pre-mbo-ie-bd41a399b. Table creation
+    was frozen and the authenticated hall contained zero tables before the
+    replacement. The fresh app started at 2026-08-03T23:37:13.994236713Z,
+    six seconds after jar mtime, with restart count zero. Health, login, all
+    five gameplay settings, and the reopened empty hall returned 200. Startup
+    completed without a material exception.
+
     Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
     evaluators, approved objective data, AI tests, and approved audit/history
     records. No engine, card Java, client, deck library, database, or workbook
