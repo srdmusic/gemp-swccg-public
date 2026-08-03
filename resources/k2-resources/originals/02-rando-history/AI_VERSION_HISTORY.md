@@ -9513,6 +9513,16 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     66/0/0/0 across the Shield contract, Hoth replay regression, move-hold
     policy, and both-bot source parity.
 
+    Local behavior commit ea94ddbc6 packaged from the isolated worktree.
+    Candidate, live-host, and running-container web.jar SHA-256 is
+    59326d6357180836232933190809d051a56ac98c19f7925a1db29e562a4a827a;
+    the prior jar is preserved as web.jar.pre-hoth-route-ea94ddbc6. Table
+    creation was frozen and the authenticated hall contained zero tables.
+    The fresh app started at 2026-08-03T18:29:24.572247013Z with restart count
+    zero. Health, login, all five gameplay-switch posts, and the hall returned
+    200; startup completed without a material exception; the reopened hall
+    remained empty.
+
     Scope is shared AI strategy, AI tests, and these approved records only.
     No engine, card Java, client, deck library, database, or workbook source
     changed. Revert the matching local commit to remove only this repair.
