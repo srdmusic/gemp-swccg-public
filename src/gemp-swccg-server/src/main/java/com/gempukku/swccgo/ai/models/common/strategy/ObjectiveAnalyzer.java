@@ -246,6 +246,7 @@ public class ObjectiveAnalyzer {
     public enum ObjectiveProgressCandidateRole {
         REQUIRED_LOCATION,
         REQUIRED_ACTOR,
+        REQUIRED_COMPANION,
         REQUIRED_ON_TABLE_CARD,
         REQUIRED_CARD_DEPLOY_ENABLER_LOCATION,
         REQUIRED_CARD_DEPLOY_ENABLER_ACTOR,
@@ -258,6 +259,9 @@ public class ObjectiveAnalyzer {
         SECONDARY,
         NONE
     }
+
+    private record CountedOperativeFormationNeed(
+            int actors, int companions) { }
 
     /** Current counterfactual risk for one counted post-flip location rule. */
     public record PostFlipLocationRisk(
@@ -506,6 +510,263 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
+    /**
+     * The Special Edition operative twins need three separate formations.
+     * A matching operative is required at each site, but the operative rule
+     * removes that operative's ability from control of its matching planet.
+     * Each counted site therefore also needs another legal presence source;
+     * the proactive hand planner prefers a non-operative character for that
+     * second half of the formation.
+     */
+    public boolean hasCountedOperativeFormationRule() {
+        return findCountedOperativeFormationAlternative() != null;
+    }
+
+    private static boolean isCountedOperativeFormationAlternative(
+            FlipLocationAlternative alternative) {
+        if (alternative == null
+                || !"controlWith".equals(alternative.relation)
+                || !"self".equals(alternative.controller)
+                || alternative.count == null
+                || alternative.count.value == null
+                || alternative.count.value <= 1
+                || alternative.locationFilterKey == null) {
+            return false;
+        }
+        return "matchingOperativeToSubjugatedPlanet".equals(
+                    alternative.actorFilterKey)
+                || "matchingOperativeToRenegadePlanet".equals(
+                    alternative.actorFilterKey);
+    }
+
+    private FlipLocationAlternative
+            findCountedOperativeFormationAlternative() {
+        if (isFlipped) return null;
+        return findCountedOperativeSourceAlternative();
+    }
+
+    private FlipLocationAlternative
+            findCountedOperativeSourceAlternative() {
+        if (!analyzed || activeFlipLocationRules == null) {
+            return null;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)) continue;
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (isCountedOperativeFormationAlternative(alternative)) {
+                    return alternative;
+                }
+            }
+        }
+        return null;
+    }
+
+    public boolean isCountedOperativeFormationLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        FlipLocationAlternative alternative =
+                findCountedOperativeFormationAlternative();
+        return alternative != null && game != null && playerId != null
+                && location != null && game.getGameState() != null
+                && game.getModifiersQuerying() != null
+                && locationMatchesAlternative(
+                    game.getGameState(), game, playerId,
+                    location, alternative);
+    }
+
+    public boolean matchesCountedOperativeFormationActor(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        FlipLocationAlternative alternative =
+                findCountedOperativeFormationAlternative();
+        return matchesCountedOperativeActor(
+                game, playerId, candidate, alternative);
+    }
+
+    private boolean matchesCountedOperativeActor(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            FlipLocationAlternative alternative) {
+        if (alternative == null || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(alternative.actorFilterKey);
+            return actorFilter != null && actorFilter.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    candidate);
+        } catch (Exception e) {
+            LOG.debug("Counted operative actor assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean isCountedOperativeFormationCompanion(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!hasCountedOperativeFormationRule() || game == null
+                || playerId == null || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || candidate.isUndercover()
+                || candidate.getBlueprint() == null
+                || candidate.getBlueprint().getCardCategory()
+                    != CardCategory.CHARACTER
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            return !Filters.operative.accepts(
+                        game.getGameState(), game.getModifiersQuerying(),
+                        candidate)
+                    && candidateProvidesPresence(game, candidate);
+        } catch (Exception e) {
+            LOG.debug("Counted operative companion assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean isCountedOperativeBoardControlCompanion(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!hasCountedOperativeFormationRule() || game == null
+                || playerId == null || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || candidate.isUndercover()
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            return !Filters.operativeOnMatchingPlanet.accepts(
+                        game.getGameState(), game.getModifiersQuerying(),
+                        candidate)
+                    && candidateProvidesCountedOperativeControlPresence(
+                        game, playerId, candidate);
+        } catch (Exception e) {
+            LOG.debug("Counted operative board companion assessment failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean hasCountedOperativeActorAtLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        return hasCountedOperativeFormationPieceAtLocation(
+                game, playerId, location, null, true);
+    }
+
+    public boolean hasCountedOperativeCompanionAtLocation(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        return hasCountedOperativeFormationPieceAtLocation(
+                game, playerId, location, null, false);
+    }
+
+    public boolean isCountedOperativeFormationCompleteAt(
+            SwccgGame game, String playerId, PhysicalCard location) {
+        FlipLocationAlternative alternative =
+                findCountedOperativeFormationAlternative();
+        return alternative != null
+                && isCountedOperativeFormationLocation(
+                    game, playerId, location)
+                && relationSatisfiedAt(
+                    game, playerId, playerId, location,
+                    alternative.relation,
+                    alternative.actorFilterKey,
+                    alternative.includeExcludedFromBattle,
+                    alternative.spotOverride);
+    }
+
+    /**
+     * Projects the ability that can qualify this operative formation for a
+     * battle destiny. The engine excludes a matching operative's ability at
+     * its planet, including when that operative is the prospective deploy.
+     */
+    public float getCountedOperativeProjectedBattleDestinyAbility(
+            SwccgGame game, String playerId, PhysicalCard location,
+            Collection<PhysicalCard> prospectiveCards) {
+        if (!hasCountedOperativeFormationRule() || game == null
+                || playerId == null || location == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0.0f;
+        }
+        try {
+            float ability = game.getModifiersQuerying()
+                    .getTotalAbilityAtLocation(
+                        game.getGameState(), playerId, location,
+                        false, true, false, null,
+                        false, false, null);
+            if (prospectiveCards == null) return ability;
+            for (PhysicalCard card : prospectiveCards) {
+                if (card == null
+                        || matchesCountedOperativeFormationActor(
+                            game, playerId, card)
+                        || card.getBlueprint() == null
+                        || !card.getBlueprint().hasAbilityAttribute()) {
+                    continue;
+                }
+                Float cardAbility = card.getBlueprint().getAbility();
+                if (cardAbility != null) ability += cardAbility;
+            }
+            return ability;
+        } catch (Exception e) {
+            LOG.debug("Counted operative battle-destiny projection failed: {}",
+                    e.getMessage());
+            return 0.0f;
+        }
+    }
+
+    public int getCountedOperativeFormationsStillNeeded(
+            SwccgGame game, String playerId) {
+        FlipLocationAlternative alternative =
+                findCountedOperativeFormationAlternative();
+        if (alternative == null || game == null || playerId == null) {
+            return 0;
+        }
+        return Math.max(0,
+                expectedCount(game, playerId, alternative.count)
+                - countAlternativeMatches(
+                    game, playerId, playerId, alternative));
+    }
+
+    private boolean hasCountedOperativeFormationPieceAtLocation(
+            SwccgGame game, String playerId, PhysicalCard location,
+            PhysicalCard excluded, boolean actor) {
+        if (!isCountedOperativeFormationLocation(
+                    game, playerId, location)) {
+            return false;
+        }
+        try {
+            Collection<PhysicalCard> permanents =
+                    game.getGameState().getAllPermanentCards();
+            if (permanents == null) return false;
+            for (PhysicalCard card : permanents) {
+                if (card == null || card == excluded
+                        || !playerId.equals(card.getOwner())
+                        || !isActiveForSpot(game, card, true)) {
+                    continue;
+                }
+                PhysicalCard cardLocation = presenceContributionLocation(
+                        game, card);
+                if (!samePhysicalLocation(cardLocation, location)) continue;
+                if (actor
+                        ? matchesCountedOperativeFormationActor(
+                            game, playerId, card)
+                        : isCountedOperativeBoardControlCompanion(
+                            game, playerId, card)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Counted operative formation board assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
     /** True when the active front has an actor-at-runtime-location flip leg. */
     public boolean hasPreFlipRuntimeActorRule() {
         if (!analyzed || isFlipped || activeFlipLocationRules == null) {
@@ -563,6 +824,13 @@ public class ObjectiveAnalyzer {
             if (firstOrderRole
                     != ObjectiveProgressCandidateRole.NONE) {
                 return firstOrderRole;
+            }
+            ObjectiveProgressCandidateRole operativeFormationRole =
+                    classifyCountedOperativeFormationCandidate(
+                            game, playerId, candidate);
+            if (operativeFormationRole
+                    != ObjectiveProgressCandidateRole.NONE) {
+                return operativeFormationRole;
             }
             for (FlipLocationRule rule : activeFlipLocationRules) {
                 if (!isActivePreFlipRule(rule) || isRuleSatisfied(
@@ -675,6 +943,150 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return ObjectiveProgressCandidateRole.NONE;
+    }
+
+    private ObjectiveProgressCandidateRole
+            classifyCountedOperativeFormationCandidate(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        FlipLocationAlternative alternative =
+                findCountedOperativeFormationAlternative();
+        if (alternative == null || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return ObjectiveProgressCandidateRole.NONE;
+        }
+        boolean actor = matchesCountedOperativeFormationActor(
+                game, playerId, candidate);
+        boolean companion = !actor
+                && isCountedOperativeFormationCompanion(
+                    game, playerId, candidate);
+        if (!actor && !companion) {
+            return ObjectiveProgressCandidateRole.NONE;
+        }
+        CountedOperativeFormationNeed need =
+                countedOperativeFormationNeed(
+                        game, playerId, alternative);
+        int needed = actor ? need.actors() : need.companions();
+        if (needed <= 0) return ObjectiveProgressCandidateRole.NONE;
+
+        List<PhysicalCard> candidates = new ArrayList<>();
+        for (PhysicalCard card : objectiveForceLossSurvivors(
+                game.getGameState(), playerId)) {
+            if (card == null || !playerId.equals(card.getOwner())) continue;
+            boolean matches = actor
+                    ? matchesCountedOperativeFormationActor(
+                        game, playerId, card)
+                    : isCountedOperativeFormationCompanion(
+                        game, playerId, card);
+            if (matches) candidates.add(card);
+        }
+        candidates.sort(Comparator
+                .comparingInt((PhysicalCard card) ->
+                    countedOperativeComponentZoneRank(card.getZone()))
+                .thenComparingInt(
+                    ObjectiveAnalyzer::printedDeployCost)
+                .thenComparingInt(
+                    PhysicalCard::getPermanentCardId));
+        for (int i = 0; i < Math.min(needed, candidates.size()); i++) {
+            if (candidates.get(i) == candidate) {
+                return actor
+                        ? ObjectiveProgressCandidateRole.REQUIRED_ACTOR
+                        : ObjectiveProgressCandidateRole
+                            .REQUIRED_COMPANION;
+            }
+        }
+        return ObjectiveProgressCandidateRole.NONE;
+    }
+
+    private CountedOperativeFormationNeed countedOperativeFormationNeed(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative alternative) {
+        return countedOperativeFormationNeed(
+                game, playerId, alternative, true);
+    }
+
+    private CountedOperativeFormationNeed countedOperativeFormationNeed(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative alternative,
+            boolean includeFutureSites) {
+        int required = expectedCount(game, playerId, alternative.count);
+        int qualified = countAlternativeMatches(
+                game, playerId, playerId, alternative);
+        int sitesNeeded = Math.max(0, required - qualified);
+        if (sitesNeeded == 0) {
+            return new CountedOperativeFormationNeed(0, 0);
+        }
+
+        List<PhysicalCard> incomplete = new ArrayList<>();
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)
+                    || relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride)) {
+                continue;
+            }
+            incomplete.add(location);
+        }
+        incomplete.sort(Comparator
+                .comparingInt((PhysicalCard location) -> {
+                    int missing = 0;
+                    if (!hasCountedOperativeActorAtLocation(
+                            game, playerId, location)) missing++;
+                    if (!hasCountedOperativeCompanionAtLocation(
+                            game, playerId, location)) missing++;
+                    return missing;
+                })
+                .thenComparingInt(PhysicalCard::getPermanentCardId));
+
+        int actors = 0;
+        int companions = 0;
+        int selectedSites = 0;
+        for (PhysicalCard location : incomplete) {
+            if (selectedSites >= sitesNeeded) break;
+            boolean actorPresent = hasCountedOperativeActorAtLocation(
+                    game, playerId, location);
+            boolean companionPresent =
+                    hasCountedOperativeCompanionAtLocation(
+                        game, playerId, location);
+            if (actorPresent && companionPresent) {
+                continue;
+            }
+            if (!actorPresent) actors++;
+            if (!companionPresent) companions++;
+            selectedSites++;
+        }
+        int futureSites = includeFutureSites
+                ? Math.max(0, sitesNeeded - selectedSites) : 0;
+        return new CountedOperativeFormationNeed(
+                actors + futureSites,
+                companions + futureSites);
+    }
+
+    private static int countedOperativeComponentZoneRank(Zone zone) {
+        if (zone == Zone.HAND) return 0;
+        if (zone == Zone.RESERVE_DECK
+                || zone == Zone.TOP_OF_RESERVE_DECK) return 1;
+        return 2;
+    }
+
+    private static int printedDeployCost(PhysicalCard card) {
+        if (card == null || card.getBlueprint() == null) {
+            return Integer.MAX_VALUE;
+        }
+        try {
+            Float cost = card.getBlueprint().getDeployCost();
+            return cost != null
+                    ? Math.max(0, (int) Math.ceil(cost))
+                    : Integer.MAX_VALUE;
+        } catch (Exception e) {
+            return Integer.MAX_VALUE;
+        }
     }
 
     private boolean hasOtherHandPlainPresenceCandidate(
@@ -3070,6 +3482,14 @@ public class ObjectiveAnalyzer {
                                 alternative.includeExcludedFromBattle)) {
                     continue;
                 }
+                if (isCountedOperativeFormationAlternative(alternative)) {
+                    if (candidateWouldCreateCountedOperativeFormationAt(
+                            game, playerId, candidate, location,
+                            alternative, controller)) {
+                        return true;
+                    }
+                    continue;
+                }
                 com.gempukku.swccgo.filters.Filter actorFilter =
                         resolveFilter(alternative.actorFilterKey);
                 if (actorFilter != null && actorFilter.accepts(
@@ -3364,7 +3784,9 @@ public class ObjectiveAnalyzer {
                 && (isActorAtRelation(alternative)
                     || "controlWith".equals(
                         alternative.relation))
-                && "actorToLocation".equals(alternative.scoreRole)
+                && ("actorToLocation".equals(alternative.scoreRole)
+                    || isCountedOperativeFormationAlternative(
+                        alternative))
                 && alternative.actorFilterKey != null
                 && alternative.locationFilterKey != null
                 && alternative.count != null
@@ -3709,6 +4131,9 @@ public class ObjectiveAnalyzer {
                             alternative.includeExcludedFromBattle)
                             ? SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE
                             : null;
+            if (isSelfOccupyCountedFlipBackAlternative(alternative)) {
+                return risk.criticalIfSelfControlLost();
+            }
             boolean opponentOccupies =
                     game.getModifiersQuerying().occupiesLocation(
                             gameState, location, opponent, overrides);
@@ -4086,6 +4511,30 @@ public class ObjectiveAnalyzer {
                 alternative.includeExcludedFromBattle,
                 alternative.spotOverride);
 
+        if (isCountedOperativeObjectiveFamily()
+                && isSelfOccupyCountedFlipBackAlternative(alternative)) {
+            int required = expectedCount(
+                    game, playerId, alternative.count);
+            String comparator = alternative.count.comparator;
+            boolean flipBackNow = compareCounts(
+                    selfCount, required, comparator);
+            boolean selfLossTriggers = selfQualifiesHere
+                    && compareCounts(
+                        Math.max(0, selfCount - 1),
+                        required, comparator);
+            int adverseSteps = 0;
+            while (adverseSteps < 100
+                    && !compareCounts(
+                        Math.max(0, selfCount - adverseSteps),
+                        required, comparator)) {
+                adverseSteps++;
+            }
+            return new PostFlipLocationRisk(
+                    true, inScope, flipBackNow, false,
+                    selfLossTriggers, false,
+                    selfCount, 0, adverseSteps);
+        }
+
         if ("stayFlipped".equals(rule.purpose)) {
             int required = expectedCount(
                     game, playerId, alternative.count);
@@ -4151,7 +4600,7 @@ public class ObjectiveAnalyzer {
                     || "stayFlipped".equals(rule.purpose));
     }
 
-    private static boolean isSupportedPostFlipAlternative(
+    private boolean isSupportedPostFlipAlternative(
             FlipLocationRule rule,
             FlipLocationAlternative alternative) {
         if (rule == null || alternative == null) return false;
@@ -4182,18 +4631,31 @@ public class ObjectiveAnalyzer {
                 count.comparator);
     }
 
-    private static boolean isSupportedCountedFlipBackAlternative(
+    private boolean isSupportedCountedFlipBackAlternative(
             FlipLocationAlternative alternative) {
-        if (alternative == null
-                || !"control".equals(alternative.relation)
-                || !"opponent".equals(alternative.controller)
-                || alternative.locationFilterKey == null
+        if (alternative == null || alternative.locationFilterKey == null
                 || alternative.count == null) {
             return false;
         }
-        return alternative.count.value != null
-                || "self".equals(
-                        alternative.count.referenceController);
+        boolean opponentControl = "control".equals(alternative.relation)
+                && "opponent".equals(alternative.controller)
+                && (alternative.count.value != null
+                    || "self".equals(
+                        alternative.count.referenceController));
+        return opponentControl
+                || isCountedOperativeObjectiveFamily()
+                    && isSelfOccupyCountedFlipBackAlternative(alternative);
+    }
+
+    private static boolean isSelfOccupyCountedFlipBackAlternative(
+            FlipLocationAlternative alternative) {
+        return alternative != null
+                && "occupy".equals(alternative.relation)
+                && "self".equals(alternative.controller)
+                && alternative.count != null
+                && alternative.count.value != null
+                && ("<".equals(alternative.count.comparator)
+                    || "<=".equals(alternative.count.comparator));
     }
 
     private FlipLocationAlternative findSupportedPostFlipAlternative(
@@ -6444,6 +6906,11 @@ public class ObjectiveAnalyzer {
                     && !"any".equals(alternative.controller))) {
             return false;
         }
+        if (isCountedOperativeFormationAlternative(alternative)) {
+            return candidateWouldCompleteCountedOperativeFormationAt(
+                    game, playerId, candidate, location,
+                    alternative, controller);
+        }
         com.gempukku.swccgo.filters.Filter actorFilter =
                 resolveFilter(alternative.actorFilterKey);
         if (alternative.actorFilterKey != null) {
@@ -6501,6 +6968,90 @@ public class ObjectiveAnalyzer {
         return "occupy".equals(alternative.relation);
     }
 
+    private boolean candidateWouldCompleteCountedOperativeFormationAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard location,
+            FlipLocationAlternative alternative, String controller) {
+        if (!candidateWouldCreateCountedOperativeFormationAt(
+                    game, playerId, candidate, location,
+                    alternative, controller)) {
+            return false;
+        }
+        return !wouldMoveBreakCountedOperativeFormationAtOrigin(
+                game, playerId, candidate, location);
+    }
+
+    private boolean candidateWouldCreateCountedOperativeFormationAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard location,
+            FlipLocationAlternative alternative, String controller) {
+        if (controller == null || !controller.equals(playerId)
+                || relationSatisfiedAt(
+                    game, playerId, controller, location,
+                    alternative.relation,
+                    alternative.actorFilterKey,
+                    alternative.includeExcludedFromBattle,
+                    alternative.spotOverride)) {
+            return false;
+        }
+        Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
+                resolveSpotOverride(
+                    alternative.includeExcludedFromBattle,
+                    alternative.spotOverride);
+        String opponent = game.getGameState().getOpponent(controller);
+        if (opponent != null
+                && game.getModifiersQuerying().occupiesLocation(
+                    game.getGameState(), location,
+                    opponent, overrides)) {
+            return false;
+        }
+
+        boolean actor = matchesCountedOperativeFormationActor(
+                game, playerId, candidate);
+        if (actor) {
+            return !hasCountedOperativeActorAtLocation(
+                        game, playerId, location)
+                    && hasCountedOperativeCompanionAtLocation(
+                        game, playerId, location);
+        }
+        boolean companion = candidate.getZone() != null
+                && candidate.getZone().isInPlay()
+                    ? isCountedOperativeBoardControlCompanion(
+                        game, playerId, candidate)
+                    : isCountedOperativeFormationCompanion(
+                        game, playerId, candidate);
+        return companion
+                && !hasCountedOperativeCompanionAtLocation(
+                    game, playerId, location)
+                && hasCountedOperativeActorAtLocation(
+                    game, playerId, location);
+    }
+
+    private boolean wouldMoveBreakCountedOperativeFormationAtOrigin(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        if (candidate.getZone() == null
+                || !candidate.getZone().isInPlay()) {
+            return false;
+        }
+        PhysicalCard origin = presenceContributionLocation(
+                game, candidate);
+        if (origin == null || samePhysicalLocation(origin, destination)
+                || !isCountedOperativeFormationCompleteAt(
+                    game, playerId, origin)) {
+            return false;
+        }
+        boolean actor = matchesCountedOperativeFormationActor(
+                game, playerId, candidate);
+        return actor
+                ? !hasCountedOperativeFormationPieceAtLocation(
+                    game, playerId, origin, candidate, true)
+                : isCountedOperativeBoardControlCompanion(
+                    game, playerId, candidate)
+                    && !hasCountedOperativeFormationPieceAtLocation(
+                        game, playerId, origin, candidate, false);
+    }
+
     private static boolean isPlainSelfPresenceAlternative(
             FlipLocationAlternative alternative) {
         return alternative != null
@@ -6546,6 +7097,39 @@ public class ObjectiveAnalyzer {
                         false, false) >= 1.0f;
         }
         return providesPresence;
+    }
+
+    /**
+     * Mirrors the control query's operative exclusion for a carrier. A
+     * vehicle's permanent pilot may supply ability, but an attached matching
+     * operative cannot turn that same excluded ability into a second control
+     * source merely by occupying a pilot slot.
+     */
+    private boolean candidateProvidesCountedOperativeControlPresence(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!candidateProvidesPresence(game, candidate)) return false;
+        if (Filters.or(
+                Filters.hasAbilityOrHasPermanentPilotWithAbility,
+                com.gempukku.swccgo.common.Icon.PRESENCE).accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)) {
+            return true;
+        }
+        for (PhysicalCard pilot : game.getGameState()
+                .getPilotCardsAboard(
+                    game.getModifiersQuerying(), candidate, true)) {
+            if (pilot != null
+                    && playerId.equals(pilot.getOwner())
+                    && isActiveForSpot(game, pilot, true)
+                    && !Filters.operativeOnMatchingPlanet.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), pilot)
+                    && candidateProvidesPresence(game, pilot)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean candidateProvidesPresenceOutsideRemovedGroup(
@@ -6973,6 +7557,18 @@ public class ObjectiveAnalyzer {
     // no rules (activeFlipLocationRules/activeActorLocationRules null → same result as the title overload).
     public boolean isObjectiveRelevantLocation(PhysicalCard loc, SwccgGame game, String playerId) {
         if (!analyzed || loc == null) return false;
+        // Local Uprising / Imperial Occupation choose their planet at runtime,
+        // so title-only relevance cannot identify their three operative sites.
+        // Preserve the general runtime-actor guard below, but recognize the
+        // exact typed counted-operative geography first. This lets the normal
+        // objective-site exemptions evaluate a funded operative-plus-companion
+        // plan as objective work instead of a generic unsupported solo deploy.
+        if (hasCountedOperativeFormationRule()
+                && game != null && playerId != null
+                && isCountedOperativeFormationLocation(
+                    game, playerId, loc)) {
+            return true;
+        }
         if (hasPreFlipRuntimeActorRule()) return false;
         if (loc.getTitle() != null && isObjectiveRelevantLocation(loc.getTitle())) return true;
         if (game == null) return false;
@@ -9479,14 +10075,46 @@ public class ObjectiveAnalyzer {
                     && ("109_4".equals(objectiveBlueprintId)
                     || "301_2".equals(objectiveBlueprintId)
                     || "111_4".equals(objectiveBlueprintId)
-                    || "201_39".equals(objectiveBlueprintId))
+                    || "201_39".equals(objectiveBlueprintId)
+                    || "7_137".equals(objectiveBlueprintId)
+                    || "7_298".equals(objectiveBlueprintId))
                     || isFlipped
-                    && isImperialEntanglementsFamily());
+                    && (isImperialEntanglementsFamily()
+                        || isCountedOperativeObjectiveFamily()));
     }
 
     public boolean hasObjectiveLocationRouteCandidateInReserve(
             SwccgGame game, String playerId) {
+        PhysicalCard objectiveCard = game != null
+                && game.getGameState() != null
+                ? findOurObjective(game.getGameState(), playerId)
+                : null;
+        return hasObjectiveLocationRouteCandidateInReserve(
+                game, playerId, objectiveCard);
+    }
+
+    public boolean hasObjectiveLocationRouteCandidateInReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
         if (!usesObjectiveLocationPullSequence()) return false;
+        if (isCountedOperativeObjectiveFamily()) {
+            int routeSiteTarget = getCountedOperativeRouteSiteTarget();
+            if (routeSiteTarget <= 0) return false;
+            if (countCountedOperativeUsableRouteSites(
+                    game, playerId) >= routeSiteTarget) {
+                return false;
+            }
+            List<PhysicalCard> reserve = game.getGameState()
+                    .getCardPile(playerId, Zone.RESERVE_DECK);
+            if (reserve == null) return false;
+            for (PhysicalCard card : reserve) {
+                if (isNativeObjectiveLocationRouteCandidate(
+                        game, playerId, sourceCard, card)) {
+                    return true;
+                }
+            }
+            return false;
+        }
         if (!isFlipped) {
             return hasMissingPreFlipRequiredLocationInReserve(
                     game, playerId);
@@ -9520,6 +10148,12 @@ public class ObjectiveAnalyzer {
             return false;
         }
         try {
+            if (isCountedOperativeObjectiveFamily()) {
+                return hasObjectiveLocationRouteCandidateInReserve(
+                        game, playerId,
+                        findOurObjective(
+                            game.getGameState(), playerId));
+            }
             List<PhysicalCard> reserve = game.getGameState()
                     .getCardPile(playerId, Zone.RESERVE_DECK);
             if (reserve == null) return false;
@@ -9550,6 +10184,184 @@ public class ObjectiveAnalyzer {
                 || "201_39_BACK".equals(objectiveBlueprintId));
     }
 
+    public boolean isCountedOperativeObjectiveFamily() {
+        return analyzed && ("7_137".equals(objectiveBlueprintId)
+                || "7_137_BACK".equals(objectiveBlueprintId)
+                || "7_298".equals(objectiveBlueprintId)
+                || "7_298_BACK".equals(objectiveBlueprintId));
+    }
+
+    /**
+     * Preserves the ordinary one-Force battle payment when a selected-planet
+     * battleground contains an exposed friendly force that already has a
+     * strict power edge over an opposing card. This remains useful on either
+     * objective face, because the flip may occur as soon as the final pair
+     * lands while the contested battle is still pending.
+     */
+    public int getCountedOperativeBattleForceReserve(
+            SwccgGame game, String playerId) {
+        if (!isCountedOperativeObjectiveFamily() || game == null
+                || playerId == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        String opponent = game.getGameState().getOpponent(playerId);
+        if (opponent == null) return 0;
+        for (PhysicalCard location :
+                game.getGameState().getTopLocations()) {
+            if (!isCountedOperativeChosenPlanetSite(
+                    game, location, true)) {
+                continue;
+            }
+            boolean ours = false;
+            boolean theirs = false;
+            for (PhysicalCard card :
+                    game.getGameState().getCardsAtLocation(location)) {
+                if (card == null) continue;
+                if (playerId.equals(card.getOwner())
+                        && !card.isUndercover()) {
+                    ours = true;
+                } else if (opponent.equals(card.getOwner())) {
+                    theirs = true;
+                }
+            }
+            if (!ours || !theirs) continue;
+            float ourPower = game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(
+                        game.getGameState(), location,
+                        playerId, false, false);
+            float theirPower = game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(
+                        game.getGameState(), location,
+                        opponent, false, false);
+            if (ourPower > theirPower) return 1;
+        }
+        return 0;
+    }
+
+    private boolean isCountedOperativeChosenPlanetSite(
+            SwccgGame game, PhysicalCard location,
+            boolean requireBattleground) {
+        if (!isCountedOperativeObjectiveFamily() || game == null
+                || location == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !Filters.site.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), location)) {
+            return false;
+        }
+        String chosenPlanet = "7_137".equals(objectiveBlueprintId)
+                || "7_137_BACK".equals(objectiveBlueprintId)
+                    ? game.getGameState().getSubjugatedPlanet()
+                    : game.getGameState().getRenegadePlanet();
+        return chosenPlanet != null
+                && chosenPlanet.equals(location.getPartOfSystem())
+                && (!requireBattleground
+                    || Filters.battleground.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location));
+    }
+
+    public boolean isCountedOperativeSetupSystemChoiceOpen(
+            SwccgGame game) {
+        if (!isCountedOperativeObjectiveFamily() || isFlipped
+                || game == null || game.getGameState() == null) {
+            return false;
+        }
+        return "7_137".equals(objectiveBlueprintId)
+                ? game.getGameState().getSubjugatedPlanet() == null
+                : "7_298".equals(objectiveBlueprintId)
+                    && game.getGameState().getRenegadePlanet() == null;
+    }
+
+    /**
+     * Projects an objective's initial generic-site choice at the already
+     * chosen operative planet. Arbitrary-card setup decisions expose blueprint
+     * ids rather than stable physical ids, so resolve the offered printing
+     * against Reserve Deck and apply the same source-defined deploy law and
+     * battleground test used by the later native site pull.
+     */
+    public boolean isCountedOperativeSetupSiteRouteCandidate(
+            SwccgGame game, String playerId,
+            String blueprintId) {
+        if (!isCountedOperativeObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || blueprintId == null || blueprintId.isBlank()
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard objectiveCard = findOurObjective(
+                game.getGameState(), playerId);
+        List<PhysicalCard> reserve = game.getGameState()
+                .getReserveDeck(playerId);
+        if (objectiveCard == null || reserve == null) return false;
+        for (PhysicalCard candidate : reserve) {
+            if (candidate != null
+                    && blueprintId.equals(
+                            candidate.getBlueprintId(true))) {
+                String chosenPlanet = "7_137".equals(objectiveBlueprintId)
+                        ? game.getGameState().getSubjugatedPlanet()
+                        : game.getGameState().getRenegadePlanet();
+                if (chosenPlanet != null
+                        && Filters.generic.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate)
+                        && Filters.site.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate)
+                        && Filters.deployableToSystem(
+                            objectiveCard, chosenPlanet,
+                            Filters.battleground, true, 0.0f).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), candidate)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public int countMatchingOperativesAvailableForSetupSystem(
+            SwccgGame game, String playerId,
+            SwccgCardBlueprint systemBlueprint) {
+        if (!isCountedOperativeSetupSystemChoiceOpen(game)
+                || playerId == null || systemBlueprint == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        String systemName;
+        try {
+            systemName = systemBlueprint.getSystemName();
+        } catch (Exception e) {
+            return 0;
+        }
+        if (systemName == null) return 0;
+
+        List<PhysicalCard> candidates = new ArrayList<>();
+        candidates.addAll(game.getGameState().getReserveDeck(playerId));
+        candidates.addAll(game.getGameState().getHand(playerId));
+        int count = 0;
+        for (PhysicalCard card : candidates) {
+            if (card == null || !playerId.equals(card.getOwner())
+                    || card.getBlueprint() == null) {
+                continue;
+            }
+            try {
+                if (Filters.operative.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)
+                        && systemName.equals(
+                            card.getBlueprint().getMatchingSystem())) {
+                    count++;
+                }
+            } catch (Exception ignored) {
+                // Non-operative blueprints do not expose matchingSystem.
+            }
+        }
+        return count;
+    }
+
     /**
      * Separates the broad location law from the exact native download route.
      * Imperial Entanglements counts every Tatooine site after it reaches the
@@ -9558,9 +10370,22 @@ public class ObjectiveAnalyzer {
      */
     public boolean isNativeObjectiveLocationRouteCandidate(
             SwccgGame game, String playerId, PhysicalCard candidate) {
+        PhysicalCard objectiveCard = game != null
+                && game.getGameState() != null
+                ? findOurObjective(game.getGameState(), playerId)
+                : null;
+        return isNativeObjectiveLocationRouteCandidate(
+                game, playerId, objectiveCard, candidate);
+    }
+
+    public boolean isNativeObjectiveLocationRouteCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
         if ((!isMassassiBaseOperationsFamily()
-                    && !isImperialEntanglementsFamily())
+                    && !isImperialEntanglementsFamily()
+                    && !isCountedOperativeObjectiveFamily())
                 || isFlipped && !isImperialEntanglementsFamily()
+                    && !isCountedOperativeObjectiveFamily()
                 || game == null || playerId == null
                 || candidate == null
                 || !playerId.equals(candidate.getOwner())
@@ -9573,6 +10398,48 @@ public class ObjectiveAnalyzer {
         if (objectiveCard == null
                 || !isCurrentObjectiveSourceCard(objectiveCard)) {
             return false;
+        }
+        if (isCountedOperativeObjectiveFamily()) {
+            int routeSiteTarget = getCountedOperativeRouteSiteTarget();
+            if (sourceCard == null
+                    || routeSiteTarget <= 0
+                    || countCountedOperativeUsableRouteSites(
+                        game, playerId) >= routeSiteTarget
+                    || !isCountedOperativeSiteRouteSource(
+                        game, playerId, sourceCard)
+                    || !Filters.site.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate)) {
+                return false;
+            }
+            boolean objectiveSource =
+                    isCurrentObjectiveSourceCard(sourceCard);
+            String chosenPlanet = "7_137".equals(objectiveBlueprintId)
+                    || "7_137_BACK".equals(objectiveBlueprintId)
+                    ? game.getGameState().getSubjugatedPlanet()
+                    : game.getGameState().getRenegadePlanet();
+            boolean routeSite = objectiveSource
+                    ? Filters.generic.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    : chosenPlanet != null
+                        && (Filters.generic.accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), candidate)
+                            || chosenPlanet.equals(
+                                candidate.getPartOfSystem()));
+            // Generic sites acquire their planet relation only while the
+            // engine projects a placement. Check both legality and the
+            // battleground flip condition at that exact chosen planet.
+            // An unprojected Jungle appears to be a battleground in Reserve,
+            // but it is barred from Tatooine and becomes a non-battleground
+            // on Dagobah, so neither route advances this objective.
+            return routeSite && chosenPlanet != null
+                    && Filters.deployableToSystem(
+                        sourceCard, chosenPlanet,
+                        Filters.battleground, false, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
         }
         com.gempukku.swccgo.filters.Filter printedFilter =
                 isMassassiBaseOperationsFamily()
@@ -9589,6 +10456,106 @@ public class ObjectiveAnalyzer {
                     false, 0.0f).accepts(
                         game.getGameState(),
                         game.getModifiersQuerying(), candidate);
+    }
+
+    public boolean isCountedOperativeSiteRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isCountedOperativeObjectiveFamily()
+                && actionText != null
+                && "deploy site from reserve deck".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT))
+                && isCountedOperativeSiteRouteSource(
+                    game, playerId, sourceCard)
+                && hasObjectiveLocationRouteCandidateInReserve(
+                    game, playerId, sourceCard);
+    }
+
+    /**
+     * True when the native operative-objective site action is still offered by
+     * the engine after its three-site route is complete, or when no legal
+     * battleground candidate remains. The deploy script omits this action from
+     * its location bucket; callers must also hard-block it so the generic
+     * non-bucket epilogue cannot resurrect the strategically exhausted pull.
+     */
+    public boolean isExhaustedCountedOperativeSiteRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isCountedOperativeObjectiveFamily()
+                && actionText != null
+                && "deploy site from reserve deck".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT))
+                && isCountedOperativeSiteRouteSource(
+                    game, playerId, sourceCard)
+                && !hasObjectiveLocationRouteCandidateInReserve(
+                    game, playerId, sourceCard);
+    }
+
+    public boolean isCountedOperativeSiteRouteSource(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        if (!isCountedOperativeObjectiveFamily()
+                || game == null || playerId == null
+                || sourceCard == null
+                || !playerId.equals(sourceCard.getOwner())) {
+            return false;
+        }
+        if (isCurrentObjectiveSourceCard(sourceCard)) return !isFlipped;
+        if (!matchesCountedOperativeActor(
+                    game, playerId, sourceCard,
+                    findCountedOperativeSourceAlternative())) {
+            return false;
+        }
+        PhysicalCard sourceLocation = presenceContributionLocation(
+                game, sourceCard);
+        return isCountedOperativeChosenPlanetSite(
+                game, sourceLocation, false);
+    }
+
+    private int getCountedOperativeRouteSiteTarget() {
+        FlipLocationAlternative alternative =
+                findCountedOperativeSourceAlternative();
+        return alternative != null && alternative.count != null
+                && alternative.count.value != null
+                ? alternative.count.value : 0;
+    }
+
+    private int countCountedOperativeUsableRouteSites(
+            SwccgGame game, String playerId) {
+        FlipLocationAlternative alternative =
+                findCountedOperativeSourceAlternative();
+        if (alternative == null || game == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return 0;
+        String opponent = game.getGameState().getOpponent(playerId);
+        Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
+                resolveSpotOverride(
+                    alternative.includeExcludedFromBattle,
+                    alternative.spotOverride);
+        int usable = 0;
+        for (PhysicalCard location : locations) {
+            if (!isCountedOperativeChosenPlanetSite(
+                    game, location, true)) {
+                continue;
+            }
+            boolean complete = relationSatisfiedAt(
+                    game, playerId, playerId, location,
+                    alternative.relation,
+                    alternative.actorFilterKey,
+                    alternative.includeExcludedFromBattle,
+                    alternative.spotOverride);
+            boolean contested = opponent != null
+                    && game.getModifiersQuerying().occupiesLocation(
+                        game.getGameState(), location,
+                        opponent, overrides);
+            if (complete || !contested) usable++;
+        }
+        return usable;
     }
 
     public boolean isImperialEntanglementsBackSiteExpansionCandidate(
@@ -9840,12 +10807,18 @@ public class ObjectiveAnalyzer {
     public int getCountedObjectivePresenceForceReserve(
             SwccgGame game, String playerId,
             PhysicalCard deployingCandidate) {
-        if ((!isMassassiBaseOperationsFamily()
-                    && !isImperialEntanglementsFamily())
-                || isFlipped || game == null || playerId == null
+        if (isFlipped || game == null || playerId == null
                 || activeFlipLocationRules == null
                 || game.getGameState() == null
                 || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        if (hasCountedOperativeFormationRule()) {
+            return getCountedOperativeFormationForceReserve(
+                    game, playerId, deployingCandidate);
+        }
+        if (!isMassassiBaseOperationsFamily()
+                && !isImperialEntanglementsFamily()) {
             return 0;
         }
         int bestReserve = 0;
@@ -9900,6 +10873,178 @@ public class ObjectiveAnalyzer {
             }
         }
         return bestReserve;
+    }
+
+    /**
+     * Preserve the cheapest exact landspeed payment that creates a new
+     * operative formation without breaking one at the origin. A hand card
+     * that can legally complete that same formation by deployment may spend
+     * the Force instead, because it replaces the move rather than distracting
+     * from it.
+     */
+    public int getCountedOperativeFormationMoveForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!hasCountedOperativeFormationRule() || game == null
+                || playerId == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        if (deployingCandidate != null
+                && deployingCandidate.getZone() == Zone.HAND
+                && hasLegalPreFlipActorLocationDestination(
+                    game, playerId, deployingCandidate)) {
+            return 0;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (permanents == null || locations == null) return 0;
+
+        int cheapest = Integer.MAX_VALUE;
+        try {
+            for (PhysicalCard mover : permanents) {
+                if (mover == null || !playerId.equals(mover.getOwner())
+                        || mover.getZone() == null
+                        || !mover.getZone().isInPlay()
+                        || !isActiveForSpot(game, mover, true)) {
+                    continue;
+                }
+                PhysicalCard origin = presenceContributionLocation(
+                        game, mover);
+                if (origin == null) continue;
+                for (PhysicalCard destination : locations) {
+                    if (!advancesPreFlipActorAtRuntimeLocation(
+                                game, playerId, mover, destination)
+                            || !isSafePreFlipRuntimeActorLandspeedDestination(
+                                game, playerId, mover, destination)) {
+                        continue;
+                    }
+                    float exact = game.getModifiersQuerying()
+                            .getMoveUsingLandspeedCost(
+                                game.getGameState(), mover,
+                                origin, destination, false, 0.0f);
+                    cheapest = Math.min(cheapest,
+                            Math.max(0, (int) Math.ceil(exact)));
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Counted operative move Force reserve failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
+    private int getCountedOperativeFormationForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        FlipLocationAlternative alternative =
+                findCountedOperativeFormationAlternative();
+        if (alternative == null) return 0;
+        CountedOperativeFormationNeed need =
+                countedOperativeFormationNeed(
+                        game, playerId, alternative, false);
+        int actorsNeeded = need.actors();
+        int companionsNeeded = need.companions();
+        if (deployingCandidate != null
+                && cheapestCountedOperativeComponentDeployCost(
+                    game, playerId, deployingCandidate,
+                    alternative, true) != null) {
+            actorsNeeded = Math.max(0, actorsNeeded - 1);
+        } else if (deployingCandidate != null
+                && cheapestCountedOperativeComponentDeployCost(
+                    game, playerId, deployingCandidate,
+                    alternative, false) != null) {
+            companionsNeeded = Math.max(0, companionsNeeded - 1);
+        }
+
+        List<Integer> actorCosts = new ArrayList<>();
+        List<Integer> companionCosts = new ArrayList<>();
+        for (PhysicalCard card : game.getGameState().getHand(playerId)) {
+            if (card == null || card == deployingCandidate) continue;
+            Integer actorCost =
+                    cheapestCountedOperativeComponentDeployCost(
+                        game, playerId, card,
+                        alternative, true);
+            if (actorCost != null) {
+                actorCosts.add(actorCost);
+                continue;
+            }
+            Integer companionCost =
+                    cheapestCountedOperativeComponentDeployCost(
+                        game, playerId, card,
+                        alternative, false);
+            if (companionCost != null) {
+                companionCosts.add(companionCost);
+            }
+        }
+        Collections.sort(actorCosts);
+        Collections.sort(companionCosts);
+        int reserve = 0;
+        for (int i = 0;
+                i < Math.min(actorsNeeded, actorCosts.size()); i++) {
+            reserve += actorCosts.get(i);
+        }
+        for (int i = 0;
+                i < Math.min(companionsNeeded,
+                    companionCosts.size()); i++) {
+            reserve += companionCosts.get(i);
+        }
+        return reserve;
+    }
+
+    private Integer cheapestCountedOperativeComponentDeployCost(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            FlipLocationAlternative alternative, boolean actor) {
+        boolean componentMatches = actor
+                ? matchesCountedOperativeFormationActor(
+                    game, playerId, candidate)
+                : isCountedOperativeFormationCompanion(
+                    game, playerId, candidate);
+        if (!componentMatches || candidate.getZone() != Zone.HAND) {
+            return null;
+        }
+        Integer cheapest = null;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)
+                    || relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride)
+                    || actor
+                        && hasCountedOperativeActorAtLocation(
+                            game, playerId, location)
+                    || !actor
+                        && hasCountedOperativeCompanionAtLocation(
+                            game, playerId, location)) {
+                continue;
+            }
+            try {
+                if (!Filters.deployableToLocation(
+                        candidate, Filters.sameCardId(location),
+                        false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate)) {
+                    continue;
+                }
+            } catch (Exception e) {
+                continue;
+            }
+            Integer cost = requiredCardDeployCostAt(
+                    game, candidate, location);
+            if (cost != null
+                    && (cheapest == null || cost < cheapest)) {
+                cheapest = cost;
+            }
+        }
+        return cheapest;
     }
 
     /** Protects only the exact number of still-needed downloadable sites. */
@@ -12066,6 +13211,26 @@ public class ObjectiveAnalyzer {
                             && actorFilter.accepts(
                                     gameState,
                                     game.getModifiersQuerying(), candidate);
+                    if (isCountedOperativeFormationAlternative(
+                            alternative)) {
+                        if (candidateIsActor
+                                && !hasCountedOperativeFormationPieceAtLocation(
+                                    game, playerId, location,
+                                    candidate, true)) {
+                            return FlipGateFormationRole
+                                    .LAST_REQUIRED_ACTOR;
+                        }
+                        if (!candidateIsActor
+                                && isCountedOperativeBoardControlCompanion(
+                                    game, playerId, candidate)
+                                && isSoleCountedOperativeControlCompanionGroupAt(
+                                    game, playerId, candidate,
+                                    location, alternative)) {
+                            return FlipGateFormationRole
+                                    .LAST_REQUIRED_BUDDY;
+                        }
+                        continue;
+                    }
                     if (candidateIsActor
                             && ("onTable".equals(alternative.relation)
                                 || !hasOtherMatchingActorAtLocation(
@@ -12103,6 +13268,44 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return FlipGateFormationRole.NONE;
+    }
+
+    private boolean isSoleCountedOperativeControlCompanionGroupAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard location,
+            FlipLocationAlternative alternative) {
+        if (!isCountedOperativeBoardControlCompanion(
+                    game, playerId, candidate)
+                || !isActiveForSpot(
+                    game, candidate,
+                    alternative.includeExcludedFromBattle)) {
+            return false;
+        }
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (belongsToRemovedGroup(card, candidate, null)
+                    || card == null
+                    || !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(
+                        game, card,
+                        alternative.includeExcludedFromBattle)
+                    || matchesCountedOperativeFormationActor(
+                        game, playerId, card)
+                    || !isCountedOperativeBoardControlCompanion(
+                        game, playerId, card)
+                    || !candidateProvidesPresenceOutsideRemovedGroup(
+                        game, card, candidate, null)) {
+                continue;
+            }
+            PhysicalCard cardLocation = presenceContributionLocation(
+                    game, card);
+            if (samePhysicalLocation(cardLocation, location)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private FlipGateFormationRole classifyPlainPresenceIfRemoved(

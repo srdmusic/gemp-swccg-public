@@ -788,6 +788,19 @@ public class DeployPhasePlanner {
 
         // V297: A control-gated actor objective needs a formation, not a sacrificial
         // one-body score. Build the exact actor-plus-buddy plan before generic siting.
+        DeploymentPlan countedOperativeFormation =
+            generateCountedOperativeFormationPlan(
+                characters, allLocations,
+                objectiveFormationForceAvailable);
+        if (countedOperativeFormation != null
+                && !countedOperativeFormation.getInstructions().isEmpty()) {
+            float score = scoreObjectiveFlipGateFormationPlan(
+                countedOperativeFormation, allLocations, turn);
+            plans.add(new ScoredPlan(
+                countedOperativeFormation, score,
+                "ground_objective_counted_operative_formation"));
+        }
+
         DeploymentPlan flipGateFormation = generateFlipGateFormationPlan(
             characters, allLocations, objectiveFormationForceAvailable);
         if (flipGateFormation != null && !flipGateFormation.getInstructions().isEmpty()) {
@@ -892,6 +905,303 @@ public class DeployPhasePlanner {
                 plan.getStrategy(), adjustment, plan.getReason());
         }
         return adjustment;
+    }
+
+    /**
+     * Build only complete operative-plus-companion teams and distribute them
+     * across the three runtime-selected battleground sites. A lone operative
+     * cannot control its matching-planet site, so a partial pair is never a
+     * valid objective plan.
+     */
+    private DeploymentPlan generateCountedOperativeFormationPlan(
+            List<CardInfo> characters,
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations,
+            int forceAvailable) {
+        if (objectiveAnalyzer == null || !objectiveAnalyzer.isAnalyzed()
+                || !objectiveAnalyzer
+                    .hasCountedOperativeFormationRule()
+                || currentGame == null || currentPlayerId == null
+                || forceAvailable <= 0 || characters.isEmpty()) {
+            return null;
+        }
+        int formationsNeeded = objectiveAnalyzer
+                .getCountedOperativeFormationsStillNeeded(
+                    currentGame, currentPlayerId);
+        if (formationsNeeded <= 0) return null;
+
+        List<AiBoardAnalyzer.LocationAnalysis> targets =
+                allLocations.stream()
+                    .filter(loc -> loc != null && loc.isGround()
+                        && loc.location != null
+                        && objectiveAnalyzer
+                            .isCountedOperativeFormationLocation(
+                                currentGame, currentPlayerId,
+                                loc.location)
+                        && !objectiveAnalyzer
+                            .isCountedOperativeFormationCompleteAt(
+                                currentGame, currentPlayerId,
+                                loc.location))
+                    .sorted(Comparator
+                        .comparingInt((AiBoardAnalyzer.LocationAnalysis loc) -> {
+                            int missing = 0;
+                            if (!objectiveAnalyzer
+                                    .hasCountedOperativeActorAtLocation(
+                                        currentGame, currentPlayerId,
+                                        loc.location)) missing++;
+                            if (!objectiveAnalyzer
+                                    .hasCountedOperativeCompanionAtLocation(
+                                        currentGame, currentPlayerId,
+                                        loc.location)) missing++;
+                            return missing;
+                        })
+                        .thenComparingInt(loc ->
+                            loc.location.getPermanentCardId()))
+                    .collect(Collectors.toList());
+        if (targets.isEmpty()) return null;
+
+        List<CardInfo> available = new ArrayList<>(characters);
+        DeploymentPlan plan = new DeploymentPlan(
+            DeployStrategy.REINFORCE,
+            "Objective counted-operative formations");
+        int remainingForce = forceAvailable;
+        int routeActionReserve = 0;
+        int formationsPlanned = 0;
+        int priority = 1;
+
+        for (AiBoardAnalyzer.LocationAnalysis target : targets) {
+            if (formationsPlanned >= formationsNeeded
+                    || remainingForce <= 0) break;
+            boolean actorPresent = objectiveAnalyzer
+                    .hasCountedOperativeActorAtLocation(
+                        currentGame, currentPlayerId,
+                        target.location);
+            boolean companionPresent = objectiveAnalyzer
+                    .hasCountedOperativeCompanionAtLocation(
+                        currentGame, currentPlayerId,
+                        target.location);
+            if (actorPresent && companionPresent) {
+                continue;
+            }
+
+            List<CardInfo> deployable = available.stream()
+                    .filter(card -> canDeployPaidDirectly(
+                        card.card, target.location))
+                    .collect(Collectors.toList());
+            List<CardInfo> actors = deployable.stream()
+                    .filter(card -> objectiveAnalyzer
+                        .matchesCountedOperativeFormationActor(
+                            currentGame, currentPlayerId,
+                            card.card))
+                    .collect(Collectors.toList());
+            List<CardInfo> companions = deployable.stream()
+                    .filter(card -> objectiveAnalyzer
+                        .isCountedOperativeFormationCompanion(
+                            currentGame, currentPlayerId,
+                            card.card))
+                    .collect(Collectors.toList());
+
+            List<CardInfo> selected = new ArrayList<>(2);
+            int targetActionReserve = target.theirCardCount > 0
+                    || target.theirPower > 0.0f
+                    || target.theirAbility > 0.0f ? 1 : 0;
+            int spendableForce = remainingForce
+                    - Math.max(routeActionReserve,
+                        targetActionReserve);
+            if (spendableForce <= 0) continue;
+            if (actorPresent) {
+                CardInfo companion = selectCheapestOperativeFormationCard(
+                        companions, target.location, spendableForce);
+                if (companion == null) continue;
+                selected.add(companion);
+            } else if (companionPresent) {
+                CardInfo actor = selectCheapestOperativeFormationCard(
+                        actors, target.location, spendableForce);
+                if (actor == null) continue;
+                selected.add(actor);
+            } else {
+                selected.addAll(selectCheapestOperativeFormationPair(
+                        actors, companions,
+                        target.location, spendableForce));
+                if (selected.size() != 2) continue;
+            }
+
+            int selectedCost = selected.stream()
+                    .map(card -> exactDeployCostAt(
+                        card.card, target.location))
+                    .filter(Objects::nonNull)
+                    .mapToInt(Integer::intValue).sum();
+            if (selectedCost > spendableForce
+                    || !countedOperativeContactIsSafe(
+                        target, selected)) {
+                continue;
+            }
+
+            for (CardInfo card : selected) {
+                Integer exactCost = exactDeployCostAt(
+                        card.card, target.location);
+                if (exactCost == null) {
+                    selectedCost = Integer.MAX_VALUE;
+                    break;
+                }
+                addCardToPlan(
+                    plan, card.card, target, priority++,
+                    "Complete operative-plus-companion objective team");
+                DeploymentInstruction instruction =
+                    plan.getInstructions().get(
+                        plan.getInstructions().size() - 1);
+                instruction.setDeployCost(exactCost);
+                instruction.setAbilityContribution(card.ability);
+            }
+            if (selectedCost == Integer.MAX_VALUE) {
+                return null;
+            }
+            available.removeAll(selected);
+            remainingForce -= selectedCost;
+            routeActionReserve = Math.max(
+                    routeActionReserve, targetActionReserve);
+            formationsPlanned++;
+        }
+
+        if (plan.getInstructions().isEmpty()) return null;
+        LOG.warn("OBJECTIVE OPERATIVE FORMATIONS: funded {} complete team(s) with {} Force remaining",
+            formationsPlanned, remainingForce);
+        return plan;
+    }
+
+    private CardInfo selectCheapestOperativeFormationCard(
+            List<CardInfo> candidates, PhysicalCard location,
+            int budget) {
+        return candidates.stream()
+            .filter(card -> {
+                Integer cost = exactDeployCostAt(card.card, location);
+                return cost != null && cost <= budget;
+            })
+            .min(Comparator
+                .comparingInt((CardInfo card) ->
+                    exactDeployCostAt(card.card, location))
+                .thenComparingInt(card -> -(card.power + card.ability))
+                .thenComparingInt(card ->
+                    card.card.getPermanentCardId()))
+            .orElse(null);
+    }
+
+    private List<CardInfo> selectCheapestOperativeFormationPair(
+            List<CardInfo> actors, List<CardInfo> companions,
+            PhysicalCard location, int budget) {
+        CardInfo bestActor = null;
+        CardInfo bestCompanion = null;
+        int bestCost = Integer.MAX_VALUE;
+        int bestStrength = Integer.MIN_VALUE;
+        for (CardInfo actor : actors) {
+            Integer actorCost = exactDeployCostAt(
+                    actor.card, location);
+            if (actorCost == null) continue;
+            for (CardInfo companion : companions) {
+                if (actor.card == companion.card) continue;
+                Integer companionCost = exactDeployCostAt(
+                        companion.card, location);
+                if (companionCost == null) continue;
+                int total = actorCost + companionCost;
+                int strength = actor.power + actor.ability
+                        + companion.power + companion.ability;
+                if (total <= budget
+                        && (total < bestCost
+                            || total == bestCost
+                                && strength > bestStrength)) {
+                    bestActor = actor;
+                    bestCompanion = companion;
+                    bestCost = total;
+                    bestStrength = strength;
+                }
+            }
+        }
+        return bestActor == null
+                ? Collections.emptyList()
+                : List.of(bestActor, bestCompanion);
+    }
+
+    private boolean countedOperativeContactIsSafe(
+            AiBoardAnalyzer.LocationAnalysis target,
+            List<CardInfo> selected) {
+        boolean opponentPresent = target.theirCardCount > 0
+                || target.theirPower > 0.0f
+                || target.theirAbility > 0.0f;
+        if (!opponentPresent) return true;
+        int friendlyCharacters = com.gempukku.swccgo.ai.models.common
+                .strategy.FormationSafety
+                .countFriendlyNonUndercoverCharacters(
+                    currentGame.getGameState()
+                        .getCardsAtLocation(target.location),
+                    currentPlayerId);
+        int selectedPower = selected.stream()
+                .mapToInt(card -> card.power).sum();
+        float projectedAbility = objectiveAnalyzer
+                .getCountedOperativeProjectedBattleDestinyAbility(
+                    currentGame, currentPlayerId, target.location,
+                    selected.stream().map(card -> card.card).toList());
+        int armedOpponentCount =
+                countArmedOpponentCharactersAt(target.location);
+        CardInfo lead = selected.get(0);
+        DeployTacticalPolicy.ContactAssessment contact =
+            DeployTacticalPolicy.assessV171V172Contact(
+                new DeployTacticalPolicy.ContactFacts(
+                    "counted-operative-formation",
+                    target.location.getTitle(), true, true,
+                    friendlyCharacters + selected.size(),
+                    target.ourPower, lead.power,
+                    selectedPower - lead.power,
+                    Math.max(0,
+                        friendlyCharacters + selected.size() - 1),
+                    0.0f, target.theirPower,
+                    selected.stream().mapToInt(card -> card.power)
+                        .max().orElse(0),
+                    armedOpponentCount));
+        return contact.viable() && projectedAbility >= 4.0f;
+    }
+
+    private int countArmedOpponentCharactersAt(PhysicalCard location) {
+        if (location == null || currentGame == null
+                || currentGame.getGameState() == null) {
+            return 0;
+        }
+        String opponent = currentGame.getOpponent(currentPlayerId);
+        if (opponent == null) return 0;
+        int armed = 0;
+        try {
+            for (PhysicalCard card : currentGame.getGameState()
+                    .getCardsAtLocation(location)) {
+                if (card == null || card.getBlueprint() == null
+                        || !opponent.equals(card.getOwner())
+                        || card.getBlueprint().getCardCategory()
+                            != CardCategory.CHARACTER) {
+                    continue;
+                }
+                boolean hasWeapon = false;
+                List<PhysicalCard> attachments = currentGame.getGameState()
+                        .getAttachedCards(card);
+                if (attachments != null) {
+                    for (PhysicalCard attachment : attachments) {
+                        if (attachment != null
+                                && attachment.getBlueprint() != null
+                                && attachment.getBlueprint().getCardCategory()
+                                    == CardCategory.WEAPON) {
+                            hasWeapon = true;
+                            break;
+                        }
+                    }
+                }
+                String gameText = card.getBlueprint().getGameText();
+                if (!hasWeapon && gameText != null
+                        && gameText.toLowerCase(Locale.ROOT)
+                            .contains("permanent weapon")) {
+                    hasWeapon = true;
+                }
+                if (hasWeapon) armed++;
+            }
+        } catch (Exception ignored) {
+            return 0;
+        }
+        return armed;
     }
 
     /**
@@ -1387,6 +1697,18 @@ public class DeployPhasePlanner {
         try {
             return Filters.deployableToLocation(
                     card, Filters.sameCardId(location), true, 0.0f)
+                    .accepts(currentGame.getGameState(),
+                            currentGame.getModifiersQuerying(), card);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean canDeployPaidDirectly(
+            PhysicalCard card, PhysicalCard location) {
+        try {
+            return Filters.deployableToLocation(
+                    card, Filters.sameCardId(location), false, 0.0f)
                     .accepts(currentGame.getGameState(),
                             currentGame.getModifiersQuerying(), card);
         } catch (Exception e) {
@@ -2231,7 +2553,10 @@ public class DeployPhasePlanner {
 
     private boolean isObjectiveFlipGateFormationPlan(DeploymentPlan plan) {
         return plan != null && plan.getReason() != null
-            && plan.getReason().startsWith("V297 objective flip-gate formation");
+            && (plan.getReason().startsWith(
+                    "V297 objective flip-gate formation")
+                || plan.getReason().startsWith(
+                    "Objective counted-operative formations"));
     }
 
     /**

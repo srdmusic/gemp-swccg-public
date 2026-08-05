@@ -1460,7 +1460,13 @@ public class MoveEvaluator extends ActionEvaluator {
                                     || gateAnalyzer
                                         .hasShieldMainGeneratorRouteDestination(
                                             game, playerId,
-                                            cardToMove));
+                                            cardToMove)
+                                    || gateAnalyzer
+                                        .hasCountedOperativeFormationRule()
+                                        && gateAnalyzer
+                                            .hasSafePreFlipRuntimeActorLandspeedDestination(
+                                                game, playerId,
+                                                cardToMove));
                         MoveObjectiveGateHoldPolicy.Evaluation countedHold =
                                 MoveObjectiveGateHoldPolicy
                                     .evaluateCountedFormation(

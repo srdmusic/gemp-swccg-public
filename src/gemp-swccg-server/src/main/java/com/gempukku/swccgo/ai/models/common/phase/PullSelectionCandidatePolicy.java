@@ -45,17 +45,27 @@ public final class PullSelectionCandidatePolicy {
 
     public static PolicyResult scoreCountedObjectiveProgress(
             String actionId, boolean requiredActor,
+            boolean requiredCompanion,
             boolean requiredLocation) {
         Objects.requireNonNull(actionId, "actionId");
-        if (requiredActor && requiredLocation) {
+        if ((requiredActor ? 1 : 0)
+                + (requiredCompanion ? 1 : 0)
+                + (requiredLocation ? 1 : 0) > 1) {
             throw new IllegalArgumentException(
-                    "A pull candidate cannot be both a required actor and location");
+                    "A pull candidate cannot fill multiple counted roles");
         }
         if (requiredActor) {
             return one(actionId, "PULL.OBJECTIVE.COUNTED_REQUIRED_ACTOR",
                     TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED,
                     400.0f,
                     "Pull the typed actor required by the counted objective");
+        }
+        if (requiredCompanion) {
+            return one(actionId,
+                    "PULL.OBJECTIVE.COUNTED_REQUIRED_COMPANION",
+                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceOutputKind.BANDED, 400.0f,
+                    "Pull the control companion required by the counted objective");
         }
         if (requiredLocation) {
             return one(actionId, "PULL.OBJECTIVE.COUNTED_REQUIRED_LOCATION",
@@ -64,6 +74,18 @@ public final class PullSelectionCandidatePolicy {
                     "Pull a missing location required by the counted objective");
         }
         return empty();
+    }
+
+    public static PolicyResult scoreCountedObjectiveHoldLocation(
+            String actionId, boolean expandsHoldRoute) {
+        Objects.requireNonNull(actionId, "actionId");
+        return expandsHoldRoute
+                ? one(actionId,
+                    "PULL.OBJECTIVE.COUNTED_HOLD_LOCATION",
+                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceOutputKind.BANDED, 300.0f,
+                    "Pull a third selected-planet site to buffer the two-site back hold")
+                : empty();
     }
 
     public static PolicyResult scoreMassassiWarRoom(

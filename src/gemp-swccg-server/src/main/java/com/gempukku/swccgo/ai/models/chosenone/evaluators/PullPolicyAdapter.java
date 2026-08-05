@@ -229,6 +229,9 @@ final class PullPolicyAdapter {
                 boolean massassiFrontSiteRoute = objective
                         .isMassassiFrontSiteRouteAction(
                                 game, playerId, source, actionText);
+                boolean countedOperativeSiteRoute = objective
+                        .isCountedOperativeSiteRouteAction(
+                                game, playerId, source, actionText);
                 boolean bringHimBeforeMeEmperorRoute =
                         CaptureObjectiveFacts.objectiveKind(objective)
                             == CaptureObjectivePolicy.ObjectiveKind.BHBM
@@ -244,7 +247,16 @@ final class PullPolicyAdapter {
                 return firstOrderRoute
                         || massassiFrontSiteRoute
                         || imperialEntanglementsBackSiteRoute
+                        || countedOperativeSiteRoute
                         || bringHimBeforeMeEmperorRoute;
+            }
+
+            @Override
+            public boolean objectiveRoutePullOracleValidationBypass(
+                    SwccgGame game, String playerId,
+                    PhysicalCard source, String actionText) {
+                return objective.isCountedOperativeSiteRouteAction(
+                        game, playerId, source, actionText);
             }
         };
     }

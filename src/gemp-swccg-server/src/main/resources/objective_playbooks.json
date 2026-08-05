@@ -248,7 +248,9 @@
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
-      "weights": {},
+      "weights": {
+        "deployFlipGateSite": 1600
+      },
       "frontBp": "7_137",
       "backBp": "7_137_BACK",
       "abbreviation": "LU",
@@ -315,7 +317,7 @@
               },
               "includeExcludedFromBattle": true,
               "scoreRole": "flipProgress",
-              "sourceText": "single leg: control three battleground sites of the Subjugated planet, each WITH your matching operative (Card7_137.java L110-L111). The planet is a runtime choice made at setup (any planet system, in practice the ten LIGHT operative systems); Filters.Subjugated_planet_location reads it from gameState at evaluation time. Operative = Keyword.OPERATIVE + matching system; the engine also injects owner + not-undercover (ControlsWithCondition L102/L110). OPERATIVE RULE, proven in the contract test: a lone matching operative can NEVER control a site on its matching planet - its ability is excluded from the control total (LocationControl.java L372-L382) - so every counted site needs the operative PLUS a non-operative companion with ability. The once-per-deploy-phase generic-site pull is NOT free and reshuffles; the two setup deploys are free without reshuffle."
+              "sourceText": "single leg: control three battleground sites of the Subjugated planet, each WITH your matching operative (Card7_137.java L110-L111). The planet is a runtime choice made at setup (any planet system, in practice the ten LIGHT operative systems); Filters.Subjugated_planet_location reads it from gameState at evaluation time. Operative = Keyword.OPERATIVE + matching system; the engine also injects owner + not-undercover (ControlsWithCondition L102/L110). OPERATIVE RULE, proven in the contract test: a lone matching operative can NEVER control a site on its matching planet - its ability is excluded from the control total (LocationControl.java L372-L382) - so every counted site needs that operative PLUS another legal presence source other than that matching operative. The proactive hand planner prefers a non-operative character for this second half. The once-per-deploy-phase generic-site pull is NOT free and reshuffles; the two setup deploys are free without reshuffle."
             }
           ]
         },
@@ -4653,7 +4655,9 @@
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
-      "weights": {},
+      "weights": {
+        "deployFlipGateSite": 1600
+      },
       "frontBp": "7_298",
       "backBp": "7_298_BACK",
       "abbreviation": "IO",
@@ -4720,7 +4724,7 @@
               },
               "includeExcludedFromBattle": true,
               "scoreRole": "flipProgress",
-              "sourceText": "single leg: control three battleground sites of the Renegade planet, each WITH your matching operative (Card7_298.java L110-L111). TRUE TWIN of 7_137 (five-token diff: side, titles, action id, Renegade state, back companion filter); Filters.Renegade_planet_location reads the setup-time planet choice from gameState. OPERATIVE RULE, proven in the contract test: a lone matching operative can NEVER control a site on its matching planet (ability excluded from the control total, LocationControl.java L372-L382) - every counted site needs operative PLUS a non-operative companion with ability. The once-per-deploy-phase generic-site pull is NOT free and reshuffles; the two setup deploys are free without reshuffle."
+              "sourceText": "single leg: control three battleground sites of the Renegade planet, each WITH your matching operative (Card7_298.java L110-L111). TRUE TWIN of 7_137 (five-token diff: side, titles, action id, Renegade state, back companion filter); Filters.Renegade_planet_location reads the setup-time planet choice from gameState. OPERATIVE RULE, proven in the contract test: a lone matching operative can NEVER control a site on its matching planet (ability excluded from the control total, LocationControl.java L372-L382) - every counted site needs that operative PLUS another legal presence source other than that matching operative. The proactive hand planner prefers a non-operative character for this second half. The once-per-deploy-phase generic-site pull is NOT free and reshuffles; the two setup deploys are free without reshuffle."
             }
           ]
         },

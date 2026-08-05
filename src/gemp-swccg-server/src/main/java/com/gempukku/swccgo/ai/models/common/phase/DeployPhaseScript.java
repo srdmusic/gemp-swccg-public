@@ -249,15 +249,21 @@ public abstract class DeployPhaseScript {
         PhysicalCard sourceCard =
                 findCardByIdSafe(
                     gameState, cardIdStr);
+        boolean countedOperativeLocationSource =
+                objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isCountedOperativeSiteRouteSource(
+                        game, playerId, sourceCard);
         boolean exhaustedObjectiveLocationPull =
                 objectiveAnalyzer != null
                 && objectiveAnalyzer
                     .usesObjectiveLocationPullSequence()
-                && objectiveAnalyzer.isCurrentObjectiveSourceCard(
-                    sourceCard)
+                && (objectiveAnalyzer.isCurrentObjectiveSourceCard(
+                        sourceCard)
+                    || countedOperativeLocationSource)
                 && !objectiveAnalyzer
                     .hasObjectiveLocationRouteCandidateInReserve(
-                        game, playerId);
+                        game, playerId, sourceCard);
         if (objectiveAnalyzer != null
                 && objectiveAnalyzer
                     .isFirstOrderReignsNavyRouteAction(

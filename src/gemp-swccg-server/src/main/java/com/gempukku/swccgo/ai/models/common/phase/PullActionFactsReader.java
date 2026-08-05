@@ -105,6 +105,12 @@ public final class PullActionFactsReader {
                 PhysicalCard source, String actionText) {
             return false;
         }
+
+        default boolean objectiveRoutePullOracleValidationBypass(
+                SwccgGame game, String playerId,
+                PhysicalCard source, String actionText) {
+            return false;
+        }
     }
 
     public interface LateView {
@@ -141,6 +147,13 @@ public final class PullActionFactsReader {
             PhysicalCard source = context.gameState().findCardById(
                     Integer.parseInt(sourceCardId));
             if (source == null || source.getBlueprint() == null) {
+                return none(actionId);
+            }
+            if (context.objective() != null
+                    && context.objective()
+                        .objectiveRoutePullOracleValidationBypass(
+                            context.game(), context.playerId(),
+                            source, actionText)) {
                 return none(actionId);
             }
             String gameText = context.oracle().sourceCardFullGameText(
@@ -266,6 +279,13 @@ public final class PullActionFactsReader {
                     .objectiveRoutePullVetoBypass(
                         context.game(), context.playerId(),
                         source, text);
+        boolean objectiveRoutePullOracleValidationBypass =
+                context != null
+                && context.objective() != null
+                && context.objective()
+                    .objectiveRoutePullOracleValidationBypass(
+                        context.game(), context.playerId(),
+                        source, text);
 
         if (!requiredOnTableCardPullVetoBypass
                 && !objectiveRoutePullVetoBypass
@@ -276,7 +296,8 @@ public final class PullActionFactsReader {
                     context, false, formation);
         }
 
-        String namedMissingTarget = namedMissingTarget(text, oracle);
+        String namedMissingTarget = objectiveRoutePullOracleValidationBypass
+                ? "" : namedMissingTarget(text, oracle);
         if (!namedMissingTarget.isEmpty()) {
             return buildParent(actionId, text, reserveSize, namedMissingTarget,
                     memoryValidation, sourceValidation, "?", null, false,
@@ -284,7 +305,9 @@ public final class PullActionFactsReader {
                     context, false, formation);
         }
 
-        memoryValidation = memoryValidation(text, oracle);
+        memoryValidation = objectiveRoutePullOracleValidationBypass
+                ? unknownValidation()
+                : memoryValidation(text, oracle);
         if (memoryValidation.outcome() == PullOracleView.Outcome.WILL_FAIL) {
             return buildParent(actionId, text, reserveSize, "",
                     memoryValidation, sourceValidation, "?", null, false,
@@ -295,7 +318,8 @@ public final class PullActionFactsReader {
         String sourceText = sourceText(source, context, oracle);
         List<String> targets = pullTargets(sourceText, oracle);
         Zone sourceZone = sourceZone(text, oracle);
-        if (oracle != null && oracle.isAnalyzed()
+        if (!objectiveRoutePullOracleValidationBypass
+                && oracle != null && oracle.isAnalyzed()
                 && sourceZone != null && sourceText != null) {
             sourceValidation = sourceValidation(sourceZone, sourceText, oracle);
         }

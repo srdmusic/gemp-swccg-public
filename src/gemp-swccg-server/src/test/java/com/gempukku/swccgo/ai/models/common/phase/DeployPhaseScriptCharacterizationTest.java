@@ -362,7 +362,7 @@ public class DeployPhaseScriptCharacterizationTest {
 
         TestDeployPhaseScript script = new TestDeployPhaseScript();
         when(analyzer.hasObjectiveLocationRouteCandidateInReserve(
-                game, "p")).thenReturn(true);
+                game, "p", objective)).thenReturn(true);
         DeployPhaseScript.Result routeOpen = script.selectAllowedActions(
                 decision, gameState, game, "p", analyzer);
         assertEquals("[LOCATIONS, OTHER_CHARACTERS]",
@@ -371,7 +371,7 @@ public class DeployPhaseScriptCharacterizationTest {
                 routeOpen.stepBuckets.toString());
 
         when(analyzer.hasObjectiveLocationRouteCandidateInReserve(
-                game, "p")).thenReturn(false);
+                game, "p", objective)).thenReturn(false);
         DeployPhaseScript.Result routeExhausted = script.selectAllowedActions(
                 decision, gameState, game, "p", analyzer);
         assertEquals("[OTHER_CHARACTERS]",

@@ -658,6 +658,16 @@ public class DeployEvaluator extends ActionEvaluator {
                 actions.add(action);
                 continue;
             }
+            if (deployObjectiveAnalyzer != null
+                    && deployObjectiveAnalyzer
+                        .isExhaustedCountedOperativeSiteRouteAction(
+                            game, playerId,
+                            deployActionSource, actionText)) {
+                action.hardVeto(
+                    "OBJECTIVE.COUNTED_OPERATIVE.SITE_ROUTE_EXHAUSTED: the three-site route is complete or no legal battleground candidate remains");
+                actions.add(action);
+                continue;
+            }
 
             // V209 PULL deploy-side guards. The shared policy keeps this evaluator's
             // historical additive veto layer separate from ActionText's parent scorer.
@@ -1384,6 +1394,44 @@ public class DeployEvaluator extends ActionEvaluator {
                                 context.getObjectiveAnalyzer();
                             // step 3b (2026-07-10): filter-based relevance overload (rules) — for objectives
                             // WITHOUT rules this equals the old title/fragment check (behavior-neutral).
+                            boolean v136CountedFormationExemption = true;
+                            if (v136Obj != null
+                                    && v136Obj.hasCountedOperativeFormationRule()) {
+                                boolean v136ExactPlannedPair = false;
+                                if (plan != null && plan.getReason() != null
+                                        && plan.getReason().startsWith(
+                                            "Objective counted-operative formations")) {
+                                    DeploymentInstruction v136Instruction =
+                                        plan.getInstructionForPhysicalCard(
+                                            card.getPermanentCardId(), card.getCardId(),
+                                            card.getBlueprintId(true));
+                                    if (v136Instruction != null) {
+                                        java.util.Set<Integer> v136CharacterIdsInHand =
+                                            new java.util.HashSet<>();
+                                        for (PhysicalCard v136HandCard : v136Hand) {
+                                            if (v136HandCard != null
+                                                    && v136HandCard.getBlueprint() != null
+                                                    && v136HandCard.getBlueprint().getCardCategory()
+                                                        == CardCategory.CHARACTER) {
+                                                v136CharacterIdsInHand.add(
+                                                    v136HandCard.getPermanentCardId());
+                                            }
+                                        }
+                                        Float v136BuddyCost =
+                                            plan.getCheapestPlannedCharacterBuddyCost(
+                                                v136Instruction,
+                                                String.valueOf(v136Candidate.getCardId()),
+                                                v136CharacterIdsInHand);
+                                        v136ExactPlannedPair = v136BuddyCost != null
+                                            && v136Instruction.getDeployCost()
+                                                + v136BuddyCost <= v136ForceAvail;
+                                    }
+                                }
+                                v136CountedFormationExemption =
+                                    v136Obj.advancesPreFlipRequirementAt(
+                                        game, playerId, card, v136Candidate)
+                                    || v136ExactPlannedPair;
+                            }
                             boolean v136ObjRelevant = v136Obj != null && v136Obj.isAnalyzed()
                                 && v136Candidate.getTitle() != null
                                 && v136Obj.isObjectiveRelevantLocation(v136Candidate, game, playerId);
@@ -1391,6 +1439,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                 .CharacterDeploySiteEvaluator.evaluateSite(
                                     game, card, v136Candidate, playerId,
                                     v136ObjRelevant,
+                                    v136ObjRelevant && v136CountedFormationExemption,
                                     v136Hand,
                                     v136ForceAvail,
                                     v136Turn,
@@ -1611,10 +1660,15 @@ public class DeployEvaluator extends ActionEvaluator {
                     boolean tdigwattPlan = context.getObjectiveAnalyzer() != null
                         && context.getObjectiveAnalyzer().isAnalyzed()
                         && context.getObjectiveAnalyzer().isTdigwatt();
-                    boolean objectiveFormationPlan = plan != null
+                    boolean countedOperativeFormationPlan = plan != null
                         && plan.getReason() != null
                         && plan.getReason().startsWith(
-                            "V297 objective flip-gate formation");
+                                "Objective counted-operative formations");
+                    boolean objectiveFormationPlan = plan != null
+                        && plan.getReason() != null
+                        && (plan.getReason().startsWith(
+                                "V297 objective flip-gate formation")
+                            || countedOperativeFormationPlan);
                     boolean eopBunkerGarrisonPlan = plan != null
                         && EndorOperationsTacticalPolicy
                             .isBunkerGarrisonPlan(plan.getReason());
@@ -1640,16 +1694,16 @@ public class DeployEvaluator extends ActionEvaluator {
                                     context.getObjectiveAnalyzer(),
                                     card)
                             : 0;
+                    Integer exactNormalDeployPayment = !reservePull
+                        ? CaptureDeployBudgetFactsReader.actionPayment(
+                            context.getExtra(
+                                CaptureDeployBudgetFactsReader
+                                    .ACTION_PAYMENTS_EXTRA),
+                            actionId)
+                        : null;
                     Integer exactCaptureDeployPayment =
                         captureMoveForceReserve > 0
-                                && !reservePull
-                            ? CaptureDeployBudgetFactsReader
-                                .actionPayment(
-                                    context.getExtra(
-                                        CaptureDeployBudgetFactsReader
-                                            .ACTION_PAYMENTS_EXTRA),
-                                    actionId)
-                            : null;
+                            ? exactNormalDeployPayment : null;
                     boolean unknownCaptureDeployPayment =
                         captureMoveForceReserve > 0
                             && !reservePull
@@ -1684,6 +1738,18 @@ public class DeployEvaluator extends ActionEvaluator {
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
                                 .getShieldMainGeneratorRouteMoveForceReserve(
+                                    game, playerId)
+                            : 0;
+                    int countedOperativeMoveReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getCountedOperativeFormationMoveForceReserve(
+                                    game, playerId, card)
+                            : 0;
+                    int countedOperativeBattleReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getCountedOperativeBattleForceReserve(
                                     game, playerId)
                             : 0;
                     DeployPlanPolicy.Evaluation planEvaluation = DeployPlanPolicy.evaluate(
@@ -1770,6 +1836,10 @@ public class DeployEvaluator extends ActionEvaluator {
                             : 0;
                     int massassiDeployPayment = Math.max(
                             cost, exactMassassiDeployPayment);
+                    int countedOperativeDeployPayment =
+                        exactNormalDeployPayment != null
+                            ? exactNormalDeployPayment
+                            : massassiDeployPayment;
                     futureObligationDeployCost = massassiDeployPayment;
                     if (exactCaptureDeployPayment != null) {
                         futureObligationDeployCost =
@@ -1843,6 +1913,19 @@ public class DeployEvaluator extends ActionEvaluator {
                         actions.add(action);
                         continue;
                     }
+                    if (countedOperativeFormationPlan
+                            && plannedInstruction != null
+                            && winnableBattle != null
+                            && plannedInstruction.getTargetLocationName()
+                                != null
+                            && plannedInstruction.getTargetLocationName()
+                                .equals(winnableBattle.locationTitle())
+                            && availableForce
+                                - countedOperativeDeployPayment >= 1) {
+                        action.addReasoning(
+                            "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_CONTINUITY: complete the planned contested team while retaining the initiation fee",
+                            800.0f);
+                    }
                     if (massassiDeployPayment > 0
                             && "deploy".equals(actionLower.trim())
                             && massassiRouteReserve > 0
@@ -1869,6 +1952,47 @@ public class DeployEvaluator extends ActionEvaluator {
                             "HOTH.SHIELD.MOVE_FORCE_RESERVE: preserve the selected walker's exact next forward landspeed payment");
                         actions.add(action);
                         continue;
+                    }
+                    boolean countedOperativeOrdinaryDeploy =
+                        !reservePull
+                        && "deploy".equals(actionLower.trim());
+                    if (countedOperativeOrdinaryDeploy
+                            && countedOperativeMoveReserve > 0) {
+                        if (exactNormalDeployPayment == null
+                                && massassiDeployPayment > 0) {
+                            action.hardVeto(
+                                "OBJECTIVE.COUNTED_OPERATIVE.MOVE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the exact net-progress landspeed payment");
+                            actions.add(action);
+                            continue;
+                        }
+                        if (exactNormalDeployPayment != null
+                                && availableForce
+                                    - exactNormalDeployPayment
+                                    < countedOperativeMoveReserve) {
+                            action.hardVeto(
+                                "OBJECTIVE.COUNTED_OPERATIVE.MOVE_FORCE_RESERVE: preserve the exact net-progress landspeed payment");
+                            actions.add(action);
+                            continue;
+                        }
+                    }
+                    if (countedOperativeOrdinaryDeploy
+                            && countedOperativeBattleReserve > 0) {
+                        if (exactNormalDeployPayment == null
+                                && massassiDeployPayment > 0) {
+                            action.hardVeto(
+                                "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the pending winnable battle payment");
+                            actions.add(action);
+                            continue;
+                        }
+                        if (exactNormalDeployPayment != null
+                                && availableForce
+                                    - exactNormalDeployPayment
+                                    < countedOperativeBattleReserve) {
+                            action.hardVeto(
+                                "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_RESERVE: preserve the pending winnable battle payment after the formation plan completes");
+                            actions.add(action);
+                            continue;
+                        }
                     }
 
                     boolean obligationMaintenance = false;

@@ -957,7 +957,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         .isNativeObjectiveLocationRouteCandidate(
                             context.getGame(),
                             context.getPlayerId(),
+                            nativeLocationSource,
                             nativeLocationCandidate);
+        boolean countedHoldLocation =
+                nativeLocationSource != null
+                && nativeLocationCandidate != null
+                && context.getObjectiveAnalyzer().isFlipped()
+                && context.getObjectiveAnalyzer()
+                    .isCountedOperativeObjectiveFamily()
+                && context.getObjectiveAnalyzer()
+                    .isNativeObjectiveLocationRouteCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        nativeLocationSource,
+                        nativeLocationCandidate);
         applyPullSelectionPolicy(action,
                 PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
                         action.getActionId(),
@@ -965,12 +978,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 .ObjectiveAnalyzer
                                 .ObjectiveProgressCandidateRole
                                 .REQUIRED_ACTOR,
+                        role == com.gempukku.swccgo.ai.models.common
+                                .strategy.ObjectiveAnalyzer
+                                .ObjectiveProgressCandidateRole
+                                .REQUIRED_COMPANION,
                         role == com.gempukku.swccgo.ai.models.common.strategy
                                 .ObjectiveAnalyzer
                                 .ObjectiveProgressCandidateRole
                                 .REQUIRED_LOCATION
                                 && !dedicatedFlipGateLocation
                                 && nativeCountedLocation));
+        applyPullSelectionPolicy(action,
+                PullSelectionCandidatePolicy
+                    .scoreCountedObjectiveHoldLocation(
+                        action.getActionId(), countedHoldLocation));
         applyPullSelectionPolicy(action,
                 PullSelectionCandidatePolicy.scoreRequiredOnTableCard(
                         action.getActionId(),
@@ -1022,7 +1043,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     ? liveAction.getText() : null;
             var objective = context.getObjectiveAnalyzer();
             if (source == null
-                    || !objective.isCurrentObjectiveSourceCard(source)
                     || !objective.usesObjectiveLocationPullSequence()) {
                 return null;
             }
@@ -1038,7 +1058,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         .IMPERIAL_ENTANGLEMENTS__DOWNLOAD_TATOOINE_BATTLEGROUND_SITE
                     && "Deploy Tatooine battleground site from Reserve Deck"
                         .equals(actionText);
-            return exactMassassi || exactEntanglements ? source : null;
+            boolean exactCountedOperative = objective
+                    .isCountedOperativeSiteRouteAction(
+                        context.getGame(), context.getPlayerId(),
+                        source, actionText);
+            return exactMassassi || exactEntanglements
+                    || exactCountedOperative ? source : null;
         } catch (Exception ignored) {
             return null;
         }
@@ -1307,6 +1332,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 context)) {
             return evaluateFirstOrderReignsNavyRouteSelection(
                     context);
+        }
+
+        if ("ARBITRARY_CARDS".equals(context.getDecisionType())
+                && ("choose subjugated planet".equals(textLower.trim())
+                    || "choose renegade planet".equals(textLower.trim()))
+                && context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isCountedOperativeSetupSystemChoiceOpen(
+                        context.getGame())
+                && cardIds != null && blueprints != null
+                && !cardIds.isEmpty()
+                && cardIds.size() == blueprints.size()) {
+            return evaluateStartingLocation(context);
         }
 
         // If we have blueprints but no cardIds, handle reserve deck selection
@@ -1739,7 +1777,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 // an unknown source never inherit the first unrelated destination.
                 deploymentPlanSnapshot = currentPlan.assessmentCopy();
                 if (deployingBlueprintId != null) {
-                    plannedDeployInstruction = deploymentPlanSnapshot.getInstructionForCard(deployingBlueprintId);
+                    plannedDeployInstruction = objectiveProgressDeployingCard != null
+                        ? deploymentPlanSnapshot.getInstructionForPhysicalCard(
+                            objectiveProgressDeployingCard.getPermanentCardId(),
+                            objectiveProgressDeployingCard.getCardId(),
+                            deployingBlueprintId)
+                        : deploymentPlanSnapshot.getInstructionForCard(
+                            deployingBlueprintId);
                     if (plannedDeployInstruction != null && plannedDeployInstruction.getTargetLocationId() != null) {
                         plannedTargetId = plannedDeployInstruction.getTargetLocationId();
                         plannedTargetName = plannedDeployInstruction.getTargetLocationName();
@@ -3648,6 +3692,47 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             context.getObjectiveAnalyzer();
                                         // step 3b (2026-07-10): filter-based relevance overload (rules) — for
                                         // objectives WITHOUT rules this equals the old title check (neutral).
+                                        boolean v136CountedFormationExemption = true;
+                                        if (v136Obj != null
+                                                && v136Obj.hasCountedOperativeFormationRule()) {
+                                            boolean v136ExactPlannedPair = false;
+                                            if (deploymentPlanSnapshot != null
+                                                    && deploymentPlanSnapshot.getReason() != null
+                                                    && deploymentPlanSnapshot.getReason().startsWith(
+                                                        "Objective counted-operative formations")
+                                                    && plannedDeployInstruction != null
+                                                    && plannedDeployInstruction.getCardPermanentCardId() != null
+                                                    && plannedDeployInstruction.getCardCurrentCardId() != null
+                                                    && v136DeployingCard.getPermanentCardId()
+                                                        == plannedDeployInstruction.getCardPermanentCardId()
+                                                    && v136DeployingCard.getCardId()
+                                                        == plannedDeployInstruction.getCardCurrentCardId()) {
+                                                java.util.Set<Integer> v136CharacterIdsInHand =
+                                                    new java.util.HashSet<>();
+                                                for (PhysicalCard v136HandCard : v136Hand) {
+                                                    if (v136HandCard != null
+                                                            && v136HandCard.getBlueprint() != null
+                                                            && v136HandCard.getBlueprint().getCardCategory()
+                                                                == CardCategory.CHARACTER) {
+                                                        v136CharacterIdsInHand.add(
+                                                            v136HandCard.getPermanentCardId());
+                                                    }
+                                                }
+                                                Float v136BuddyCost = deploymentPlanSnapshot
+                                                    .getCheapestPlannedCharacterBuddyCost(
+                                                        plannedDeployInstruction,
+                                                        String.valueOf(location.getCardId()),
+                                                        v136CharacterIdsInHand);
+                                                v136ExactPlannedPair = v136BuddyCost != null
+                                                    && plannedDeployInstruction.getDeployCost()
+                                                        + v136BuddyCost <= v136ForceAvail;
+                                            }
+                                            v136CountedFormationExemption =
+                                                v136Obj.advancesPreFlipRequirementAt(
+                                                    context.getGame(), context.getPlayerId(),
+                                                    v136DeployingCard, location)
+                                                || v136ExactPlannedPair;
+                                        }
                                         boolean v136ObjRelevant = v136Obj != null && v136Obj.isAnalyzed()
                                             && title != null
                                             && v136Obj.isObjectiveRelevantLocation(location, context.getGame(), context.getPlayerId());
@@ -3656,6 +3741,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 context.getGame(), v136DeployingCard, location,
                                                 context.getPlayerId(),
                                                 v136ObjRelevant,
+                                                v136ObjRelevant && v136CountedFormationExemption,
                                                 v136Hand,
                                                 v136ForceAvail,
                                                 v136Turn,
@@ -7812,7 +7898,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         || routeAnalyzer
                                             .advancesShieldMainGeneratorRoute(
                                                 game, playerId,
-                                                fsMover, location);
+                                                fsMover, location)
+                                        || routeAnalyzer
+                                            .hasCountedOperativeFormationRule()
+                                            && preservesRuntimeActor;
                                     var countedDestinationHold =
                                         MoveObjectiveGateHoldPolicy
                                             .evaluateCountedFormation(
@@ -9482,6 +9571,36 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             true,
                                             startLocObjAnalyzer.getLocationObjectiveBonus(locTitle)));
                         }
+                        int matchingOperatives = startLocObjAnalyzer
+                                .countMatchingOperativesAvailableForSetupSystem(
+                                    context.getGame(),
+                                    context.getPlayerId(), locBp);
+                        if (matchingOperatives > 0) {
+                            float packageScore = matchingOperatives * 500.0f;
+                            action.addReasoning(
+                                "OPERATIVE OBJECTIVE SETUP: "
+                                    + matchingOperatives
+                                    + " matching operatives support "
+                                    + locTitle,
+                                packageScore);
+                            logger.warn("OPERATIVE OBJECTIVE SETUP: {} has {} matching operative(s), +{}",
+                                locTitle, matchingOperatives,
+                                (int) packageScore);
+                        }
+                        if (isArbitrary
+                                && "choose site to deploy".equals(
+                                    decisionTextLower.trim())
+                                && blueprintIds != null
+                                && idx < blueprintIds.size()
+                                && startLocObjAnalyzer
+                                    .isCountedOperativeSetupSiteRouteCandidate(
+                                        context.getGame(),
+                                        context.getPlayerId(),
+                                        blueprintIds.get(idx))) {
+                            action.addReasoning(
+                                "OBJECTIVE.COUNTED_OPERATIVE.SETUP_SITE_ROUTE",
+                                2000.0f);
+                        }
                     }
 
                     if (locTitleLower.contains("cloud city")) {
@@ -10490,6 +10609,22 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             applyCountedObjectivePullPolicy(
                     context, action, candidateCardId,
                     blueprintId, false);
+            if (context.getObjectiveAnalyzer() != null
+                    && pullBlueprint != null) {
+                int matchingOperatives = context.getObjectiveAnalyzer()
+                        .countMatchingOperativesAvailableForSetupSystem(
+                            context.getGame(), context.getPlayerId(),
+                            pullBlueprint);
+                if (matchingOperatives > 0) {
+                    float packageScore = matchingOperatives * 500.0f;
+                    action.addReasoning(
+                        "OPERATIVE OBJECTIVE SETUP: "
+                            + matchingOperatives
+                            + " matching operatives support "
+                            + cardTitle,
+                        packageScore);
+                }
+            }
 
             // === Shield scoring ===
             if (pullCategory == CardCategory.DEFENSIVE_SHIELD) {

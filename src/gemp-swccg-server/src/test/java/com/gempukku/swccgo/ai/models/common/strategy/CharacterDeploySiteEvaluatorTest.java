@@ -121,6 +121,31 @@ public class CharacterDeploySiteEvaluatorTest {
     }
 
     @Test
+    public void objectiveGeographyDoesNotAutomaticallyExemptAWeakSolo() {
+        PhysicalCard site = site("Objective Battleground");
+        PhysicalCard weak = character(
+                "Weak Objective Solo", ME, 3f, 3f, 2f, 3f);
+        PhysicalCard buddy = character(
+                "Available Buddy", ME, 1f, 1f, 2f, 2f);
+        when(modifiers.isBattleground(gameState, site, null))
+                .thenReturn(true);
+
+        float unsupported = CharacterDeploySiteEvaluator.evaluateSite(
+                game, weak, site, ME,
+                true, false,
+                Collections.singletonList(buddy),
+                8, 4, 0, false);
+        float supported = CharacterDeploySiteEvaluator.evaluateSite(
+                game, weak, site, ME,
+                true, true,
+                Collections.singletonList(buddy),
+                8, 4, 0, false);
+
+        assertScore(-300f, unsupported);
+        assertScore(800f, supported);
+    }
+
+    @Test
     public void strategicPositionOverstackPenaltyProducesExactCompositeTotal() {
         PhysicalCard site = site("Overstacked Battleground");
         PhysicalCard deploying = character("Additional Body", ME, 6f, 1f, 2f, 5f);

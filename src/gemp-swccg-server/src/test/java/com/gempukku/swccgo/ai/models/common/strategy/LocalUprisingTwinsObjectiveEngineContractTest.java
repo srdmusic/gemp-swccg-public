@@ -49,18 +49,19 @@ public class LocalUprisingTwinsObjectiveEngineContractTest {
         public void Setup(VirtualTableScenario scn) {
             // Required deploys in order: any planet system (becomes the
             // Subjugated planet), then a generic site to it. Answer "On
-            // which side" first; pick whichever required card is still in
-            // Reserve on the card-choice prompts.
+            // which side" first; pick whichever required card the current
+            // prompt actually offers.
             for (int i = 0; i < 8; i++) {
                 if (scn.LSDecisionAvailable("On which side")) {
                     scn.LSChoose("Left");
-                } else if (scn.LSDecisionAvailable("to deploy")
-                        || scn.LSDecisionAvailable("Subjugated planet")) {
-                    if (scn.GetLSCard("system").getZone() == Zone.RESERVE_DECK) {
-                        scn.LSChooseCard(scn.GetLSCard("system"));
-                    } else {
-                        scn.LSChooseCard(scn.GetLSCard("desert"));
-                    }
+                } else if (scn.LSDecisionAvailable("Subjugated planet")
+                        && scn.LSHasCardChoiceAvailable(
+                            scn.GetLSCard("system"))) {
+                    scn.LSChooseCard(scn.GetLSCard("system"));
+                } else if (scn.LSDecisionAvailable("site to deploy")
+                        && scn.LSHasCardChoiceAvailable(
+                            scn.GetLSCard("desert"))) {
+                    scn.LSChooseCard(scn.GetLSCard("desert"));
                 }
             }
         }
@@ -283,13 +284,14 @@ public class LocalUprisingTwinsObjectiveEngineContractTest {
             for (int i = 0; i < 8; i++) {
                 if (scn.DSDecisionAvailable("On which side")) {
                     scn.DSChoose("Left");
-                } else if (scn.DSDecisionAvailable("to deploy")
-                        || scn.DSDecisionAvailable("Renegade planet")) {
-                    if (scn.GetDSCard("system").getZone() == Zone.RESERVE_DECK) {
-                        scn.DSChooseCard(scn.GetDSCard("system"));
-                    } else {
-                        scn.DSChooseCard(scn.GetDSCard("desert"));
-                    }
+                } else if (scn.DSDecisionAvailable("Renegade planet")
+                        && scn.DSHasCardChoiceAvailable(
+                            scn.GetDSCard("system"))) {
+                    scn.DSChooseCard(scn.GetDSCard("system"));
+                } else if (scn.DSDecisionAvailable("site to deploy")
+                        && scn.DSHasCardChoiceAvailable(
+                            scn.GetDSCard("desert"))) {
+                    scn.DSChooseCard(scn.GetDSCard("desert"));
                 }
             }
         }

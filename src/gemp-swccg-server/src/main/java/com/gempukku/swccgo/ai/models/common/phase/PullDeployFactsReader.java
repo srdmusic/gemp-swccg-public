@@ -87,6 +87,13 @@ public final class PullDeployFactsReader {
                     .objectiveRoutePullVetoBypass(
                         context.game(), playerId,
                         source, text);
+        boolean objectiveRoutePullOracleValidationBypass =
+                context != null
+                && context.objective() != null
+                && context.objective()
+                    .objectiveRoutePullOracleValidationBypass(
+                        context.game(), playerId,
+                        source, text);
         if (!objectiveRoutePullVetoBypass
                 && lowReserve) {
             return facts(actionId, text, reserveSize, "", "", "",
@@ -95,7 +102,8 @@ public final class PullDeployFactsReader {
         }
 
         String namedMissing = "";
-        if (oracle != null && oracle.isAvailable()) {
+        if (!objectiveRoutePullOracleValidationBypass
+                && oracle != null && oracle.isAvailable()) {
             try {
                 Matcher named = NAMED_TARGET.matcher(text);
                 if (named.find()) {
@@ -116,7 +124,8 @@ public final class PullDeployFactsReader {
 
         String genericTypedMiss = "";
         String genericUntypedMiss = "";
-        if (oracle != null && oracle.isAvailable()) {
+        if (!objectiveRoutePullOracleValidationBypass
+                && oracle != null && oracle.isAvailable()) {
             try {
                 Matcher generic = GENERIC_TARGET.matcher(text);
                 if (generic.find()) {
@@ -142,7 +151,9 @@ public final class PullDeployFactsReader {
                     false, objectiveRoutePullVetoBypass);
         }
 
-        memory = memoryValidation(text, oracle);
+        memory = objectiveRoutePullOracleValidationBypass
+                ? unknownValidation()
+                : memoryValidation(text, oracle);
         if (memory.outcome() == PullOracleView.Outcome.WILL_FAIL) {
             return facts(actionId, text, reserveSize, "", "", "", memory,
                     sourceValidation, "?", false, false,
@@ -152,7 +163,8 @@ public final class PullDeployFactsReader {
         String sourceTitle = sourceTitle(source);
         String sourceText = sourceText(source, context, oracle);
         Zone sourceZone = sourceZone(text, oracle);
-        if (oracle != null && oracle.isAnalyzed()
+        if (!objectiveRoutePullOracleValidationBypass
+                && oracle != null && oracle.isAnalyzed()
                 && sourceText != null && sourceZone != null) {
             sourceValidation = sourceValidation(sourceZone, sourceText, oracle);
         }

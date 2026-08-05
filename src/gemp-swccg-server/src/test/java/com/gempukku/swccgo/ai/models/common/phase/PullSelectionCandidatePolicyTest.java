@@ -32,17 +32,25 @@ public class PullSelectionCandidatePolicyTest {
     }
 
     @Test
-    public void countedObjectivePullDistinguishesActorFromLocationProgress() {
+    public void countedObjectivePullDistinguishesActorCompanionAndLocationProgress() {
         PolicyOperation actor = only(
                 PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
-                        ACTION_ID, true, false));
+                        ACTION_ID, true, false, false));
+        PolicyOperation companion = only(
+                PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
+                        ACTION_ID, false, true, false));
         PolicyOperation location = only(
                 PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
-                        ACTION_ID, false, true));
+                        ACTION_ID, false, false, true));
 
         assertOperation(actor, "PULL.OBJECTIVE.COUNTED_REQUIRED_ACTOR",
                 TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED, 400.0f,
                 "Pull the typed actor required by the counted objective");
+        assertOperation(companion,
+                "PULL.OBJECTIVE.COUNTED_REQUIRED_COMPANION",
+                TraceDomainId.DECK_PLAYBOOK,
+                TraceOutputKind.BANDED, 400.0f,
+                "Pull the control companion required by the counted objective");
         assertOperation(location, "PULL.OBJECTIVE.COUNTED_REQUIRED_LOCATION",
                 TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED, 300.0f,
                 "Pull a missing location required by the counted objective");
@@ -52,10 +60,10 @@ public class PullSelectionCandidatePolicyTest {
     public void countedObjectivePullScoresStayInsideLegacyPriorityBand() {
         float actorScore = only(
                 PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
-                        ACTION_ID, true, false)).delta();
+                        ACTION_ID, true, false, false)).delta();
         float locationScore = only(
                 PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
-                        ACTION_ID, false, true)).delta();
+                        ACTION_ID, false, false, true)).delta();
 
         assertTrue(locationScore > 10.0f);
         assertTrue(actorScore > locationScore);
@@ -63,15 +71,28 @@ public class PullSelectionCandidatePolicyTest {
     }
 
     @Test
+    public void countedObjectiveBackPullBuffersTheTwoSiteHold() {
+        assertEmpty(PullSelectionCandidatePolicy
+                .scoreCountedObjectiveHoldLocation(ACTION_ID, false));
+        PolicyOperation hold = only(PullSelectionCandidatePolicy
+                .scoreCountedObjectiveHoldLocation(ACTION_ID, true));
+        assertOperation(hold,
+                "PULL.OBJECTIVE.COUNTED_HOLD_LOCATION",
+                TraceDomainId.DECK_PLAYBOOK,
+                TraceOutputKind.BANDED, 300.0f,
+                "Pull a third selected-planet site to buffer the two-site back hold");
+    }
+
+    @Test
     public void irrelevantCountedObjectivePullCandidateStaysSilent() {
         assertEmpty(PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
-                ACTION_ID, false, false));
+                ACTION_ID, false, false, false));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void countedObjectivePullRoleMustBeExclusive() {
         PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
-                ACTION_ID, true, true);
+                ACTION_ID, true, true, false);
     }
 
     @Test
