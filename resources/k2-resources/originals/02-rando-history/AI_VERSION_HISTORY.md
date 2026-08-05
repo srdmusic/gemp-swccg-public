@@ -9604,3 +9604,106 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     records. No engine, card Java, client, deck library, database, or workbook
     changed. Deterministic unchanged-engine tests provide FLIP_OBSERVED. Live
     replay proof remains separate. Nothing was pushed.
+
+  ==== Local Uprising and Imperial Occupation counted-operative behavior seal (2026-08-05) ====
+
+    Local Uprising 7_137 and Imperial Occupation 7_298 require control of three
+    battleground sites related to the setup-selected planet, each with one
+    matching operative. A matching operative's own ability cannot establish
+    control there, so the executable route needs three additional control or
+    presence sources. Both backs need only two plainly occupied qualifying
+    sites. The Objective and an eligible matching operative each expose an
+    independent site pull. Card Java, OperativesRule, and LocationControl own
+    those facts and remain unchanged. The Excel tracker, Advanced Rulebook,
+    public operative discussion, and championship deck informed sequencing
+    only.
+
+    Batch Nineteen proved card law with manually staged engine fixtures. It did
+    not prove public bot choices through setup, pulls, budgeting, deployment,
+    movement, battle, loss, or retention. Its broad all-sixteen-generic-sites
+    statement is superseded by exact source-defined deployment projection and
+    runtime battleground validation. Source-illegal and legal non-battleground
+    candidates now receive no false route credit.
+
+    Both bots choose the planet with the largest matching-operative package in
+    hand plus Reserve Deck, then project a legal generic battleground setup
+    site through the objective source's exact free deploy law. The Objective
+    and an on-planet operative use both independent pulls in either order when
+    needed. The route stops at the profile-defined count of three usable sites;
+    an opponent-occupied incomplete site does not strand the route. An
+    operative source may stand at any matching-planet site while the downloaded
+    destination still must project as a legal battleground. An engine-confirmed
+    counted route alone bypasses the legacy source-text parser's false
+    `[site to dantooine]` dead-search verdict. An exhausted extra action is
+    hard-blocked through OBJECTIVE.COUNTED_OPERATIVE.SITE_ROUTE_EXHAUSTED.
+
+    The mirrored planners build three physical operative-plus-companion pairs,
+    require the engine's exact deploy-to-location filter, price actual modified
+    payments, and bind each copy to an exact destination. They distinguish a
+    lone operative from a legal companion and prevent a matching operative
+    pilot from laundering its excluded ability through a vehicle. Objective
+    geography no longer automatically bypasses inherited weak-solo safety.
+    Armed opposing characters apply the existing V171/V172 expected-hit
+    discount before a contested pair is accepted. The public Light ladder
+    spends exactly six Force on three Tibrin Operatives and three companions.
+    The public Dark ladder independently spends six Force on the corresponding
+    Dantooine package. Both unchanged objective cards then flip natively.
+
+    OBJECTIVE.COUNTED_OPERATIVE.SETUP_SITE_ROUTE +2000 chooses the projected
+    setup site. OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_CONTINUITY +800
+    dominates the inherited contested-team collision while preserving the
+    one-Force battle fee. After the pair plan completes,
+    OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_RESERVE remains a terminal veto;
+    a positive-cost action with unknown payment fails closed.
+    OBJECTIVE.COUNTED_OPERATIVE.MOVE_FORCE_RESERVE uses the actual normal deploy
+    payment and blocks spending that would consume the exact landspeed payment
+    needed for net progress. Movement counterfactuals complete or preserve real
+    pairs. Battle casualty, standalone loss, and battle-forfeit policy retain
+    the last needed formation half while a safe alternative exists. Back-side
+    logic protects two plain occupied sites even when an opponent is present.
+    The flipped Objective remains ineligible as a pull source, while an eligible
+    operative receives PULL.OBJECTIVE.COUNTED_HOLD_LOCATION +300 to add a
+    legal third site and buffer the two-site hold.
+
+    LocalUprisingTwinsObjectiveBehaviorTest contains 34 focused methods. Public
+    Rando and Chosen One decisions prove the full Light route through movement,
+    battle, real Force loss, post-flip buffer pull, and exact Force-continuity
+    boundaries. Public Dark decisions prove setup, both pulls including the
+    deterministic Objective-first parser-recovery order, all six paid deploy
+    parent and child choices, and native flip. Dark cross-phase choices are
+    shared and normalized rather than duplicated solely for side symmetry. The
+    battle-forfeit probe is synthetic CombinedEvaluator proof and is labeled
+    accordingly.
+
+    The focused family, unchanged-engine, policy, and deploy-script gate passes
+    77/0/0/0. The bounded analyzer, deploy, pull, post-flip, battle, loss,
+    forfeit, movement, neighboring-objective, and source-parity gate passes
+    179/0/0/0, for 256/0/0/0 current tests. JSON, normalized equality across
+    all five mirrored production pairs, and diff checks pass. The known Senate
+    DeployActionTextSourceParityTest failure predates and is untouched by this
+    family.
+
+    Local behavior commit d60608435 packaged successfully from the isolated
+    worktree. All 97 generated class files from the 16 changed production
+    sources byte-match target/classes, the server jar, and web.jar; the
+    embedded playbook also byte-matches. Server jar SHA-256 is
+    13fb7f4c6d676298a04513f055814eeed2ea700db0604edfd4ca6014fdd7d235;
+    candidate, live-host, and running-container web.jar SHA-256 is
+    a81be62840b8038f334613e84c9722d2ef9ef062c0ca4ae0660fabc2ee9b27ad;
+    playbook SHA-256 is
+    dedc1bc13a0e7453e23326795c09a85d48d854dd8c24c3a138ec22946a6bcd29.
+    The prior Massassi jar is preserved as
+    web.jar.pre-lu-io-d60608435. Table creation was frozen and the authenticated
+    hall contained zero tables and games before replacement. The fresh app
+    started at 2026-08-05T23:02:10.835856713Z after jar mtime, with restart
+    count zero and Java at PID 1. Health, login, all five gameplay-switch posts,
+    and the reopened hall returned 200. Startup completed without a material
+    exception and the hall remained empty.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    evaluators and planners, approved objective data, AI tests, and approved
+    audit/history records. No engine, card Java, client, deck library, database,
+    or workbook changed. Deterministic unchanged-engine execution supplies
+    FLIP_OBSERVED. Package and fresh-JVM gates are verified; live replay proof
+    remains separate. Nothing was pushed. Revert d60608435 to remove only this
+    family seal.

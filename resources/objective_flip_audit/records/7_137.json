@@ -13,6 +13,7 @@
   "expression": {
    "op": "allOf",
    "children": [
+    {"req": "timing: table changed", "filter": "(n/a)", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137.java:108"},
     {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137.java:109"},
     {"req": "controls-with >=3 locations (you control location, with your actor-filter card there)", "filter": "location: Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location); actor: Filters.and(Filters.your(self), Filters.matchingOperativeToSubjugatedPlanet)", "gameConditions": "GameConditions.controlsWith(game, self, playerId, 3, Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(self), Filters.matchingOperativeToSubjugatedPlanet))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137.java:110-111"}
    ]
@@ -27,6 +28,7 @@
   "expression": {
    "op": "allOf",
    "children": [
+    {"req": "timing: table changed", "filter": "(n/a)", "gameConditions": "TriggerConditions.isTableChanged(game, effectResult)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137_BACK.java:126"},
     {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137_BACK.java:127"},
     {"op": "not", "children": [
      {"req": "occupies >=2 locations", "filter": "Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location)", "gameConditions": "GameConditions.occupies(game, playerId, 2, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location))", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/light/Card7_137_BACK.java:128"}
@@ -48,13 +50,15 @@
   "Filters.and(Filters.your(self), Filters.matchingOperativeToSubjugatedPlanet) - front flip actors",
   "Filters.planet_system - setup: choose Subjugated planet",
   "Filters.and(Filters.generic, Filters.site) - setup + per-deploy-phase download site",
+  "Filters.site - independent Tibrin Operative download to Tibrin while that operative is at a Tibrin site",
   "Filters.or(Filters.Imperial, Filters.AT_AT) - back power +2 trigger companions",
   "Filters.on(subjugatedPlanet) - back operative-buff scope"
  ],
  "setupAndPullRoutes": [
-  "Setup (front, required): deploy any planet system from Reserve Deck (Filters.planet_system); its systemName becomes the Subjugated planet (gameState.setSubjugatedPlanet). Card7_137.java:46-56",
-  "Setup (front, required, chained): deploy one generic site (Filters.and(Filters.generic, Filters.site)) to that system from Reserve Deck. Card7_137.java:58-64",
-  "Front, once during each of your deploy phases (GameTextActionId.LOCAL_UPRISING__DOWNLOAD_SITE): deploy one generic site to the Subjugated planet from Reserve Deck; reshuffle. Card7_137.java:83-99"
+  "Setup order 1 (Objective, required): deploy any planet system from Reserve Deck for free and without reshuffling; its system name becomes the Subjugated planet [Card7_137.java:46-56; DeployCardFromReserveDeckEffect.java:41-45].",
+  "Setup order 2 (nested in the selected system's cardDeployed callback): deploy one generic site to that system for free and without reshuffling [Card7_137.java:58-64; DeployCardToSystemFromReserveDeckEffect.java:31-35].",
+  "Later Objective source, once during each owner deploy phase: deploy one generic site to the Subjugated planet; this overload is not flagged free and reshuffles [Card7_137.java:83-98; DeployCardToSystemFromReserveDeckEffect.java:21-23].",
+  "Tested operative source, independently once during each owner deploy phase: Tibrin Operative at a Tibrin site may deploy one site (Filters.site, not generic-only) to Tibrin and reshuffle [Card7_047.java:65-83]. No source order exists between this action and the Objective action."
  ],
  "otherObligations": [
   "Back: opponent's Force drains are -1 everywhere (ForceDrainModifier(self, Filters.any, -1, opponent)). Card7_137_BACK.java:66",
@@ -66,14 +70,28 @@
  "seedMismatches": [],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
-  "profileGaps": [
-   "flipGateSite is null; true gate is battleground sites of the runtime-selected Subjugated planet (Filters.and(Filters.battleground_site, Filters.Subjugated_planet_location)) - only expressed inside objectiveNamedLocations, not as the flip gate",
-   "keyCharacterFilter is null; front flip requires Filters.matchingOperativeToSubjugatedPlanet actors",
-   "flipGateCardIds empty (unavoidably runtime-dependent, but no marker of the runtime dependency exists at profile top level)",
-   "weights empty",
-   "control-vs-occupy asymmetry (front CONTROLS_WITH 3 / back holds with plain OCCUPY 2) not represented anywhere in profile"
-  ]
+  "loaderEnabled": true,
+  "frontStructuredRule": "preFlip/flip allOf: self controlsWith >=3 Subjugated_planet_battleground_site using matchingOperativeToSubjugatedPlanet",
+  "backStructuredRule": "postFlip/flipBack allOf: self occupies <2 Subjugated_planet_battleground_site",
+  "runtimeGeography": "The selected Subjugated planet is read from gameState. Candidate sites are projected through the exact source-card deploy filter at that planet.",
+  "formationLaw": "Each counted site needs a matching operative plus another legal source of presence or ability because the operative's own ability is excluded from control on its matching planet.",
+  "weights": {"deployFlipGateSite": 1600},
+  "profileGaps": []
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "setup": "At the Light-side setup prompt, both public facades choose Tibrin (three matching operatives) over Dantooine (zero), then choose a source-projected legal battleground site. The test asserts the winners, not the numeric score.",
+  "pull": "Public Light-side decisions use the Objective and Tibrin Operative sources once each, in either order, to reach three usable route sites. An opponent-occupied incomplete third site keeps the route open. After flip, an operative, but not the Objective, pulls a third legal site to buffer the two-site hold.",
+  "deploy": "Public Light-side decisions deploy three one-Force matching operatives and three one-Force companions with six Force and trigger the unchanged 7_137 flip. The planner requires exact engine deployability, actual modified payments, and safe weapon-adjusted contact.",
+  "crossPhase": "Public Light-side tests cover movement, battle, one real Force-loss choice, contested battle-Force continuity after the pair plan completes, and exact modified movement-Force continuity. Battle-forfeit is a synthetic CombinedEvaluator fixture; contested post-flip blocker and casualty cases are direct analyzer checks.",
+  "sourceProjection": "Direct analyzer tests reject a source-illegal site and a legal non-battleground site, allow the operative source to stand at a matching non-battleground site, and prevent a matching operative pilot from laundering excluded control ability through its vehicle. Setup uses the source's free projection; later pulls use their paid projection.",
+  "parity": "Every public behavior decision is compared between Rando and Chosen One. All five paired production files match after package normalization.",
+  "verification": "The focused family, engine, policy, and deploy-script gate passes 77 tests. The bounded neighboring regression gate passes 179 tests, for 256 current tests with zero failures. JSON validation and normalized mirror checks pass; package proof is recorded separately when run.",
+  "deployment": "Behavior commit d60608435 packaged successfully. All 97 changed class files and the playbook byte-match target/classes, the server jar, and web.jar. Live host and running container web.jar SHA-256 is a81be62840b8038f334613e84c9722d2ef9ef062c0ca4ae0660fabc2ee9b27ad. Deployment used a frozen authenticated hall with zero tables and games; the fresh JVM has restart count zero and all five gameplay switches were restored.",
+  "replay": "No live replay claim. Deterministic unchanged-engine tests provide FLIP_OBSERVED."
+ },
+ "knownLimits": [
+  "The proactive hand planner prefers non-operative character companions. Other legal board presence sources are recognized but not all are proactively planned from hand.",
+  "Live server branch firing and replay observation remain separate proof gates."
+ ],
+ "proofGate": "FLIP_OBSERVED"
 }

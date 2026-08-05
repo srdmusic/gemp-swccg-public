@@ -75,20 +75,24 @@
  "requirementSemantics": [
   "flipToBack: CONTROL (controlsWith) 3 Renegade-planet battleground sites, each with at least one of YOUR matching operatives there; control-with, not mere occupy",
   "flipToFront: NOT OCCUPY 2 Renegade-planet battleground sites; plain occupy (any of your cards), operatives NOT required to hold the back",
-  "asymmetry: flip needs operatives at controlled sites; staying flipped only needs occupation by anything of yours"
+  "asymmetry: flip needs operatives at controlled sites; staying flipped only needs occupation by anything of yours",
+  "Both flip checks use SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE.",
+  "The Renegade planet is runtime state selected during Objective setup via gameState.setRenegadePlanet(systemName) (Card7_298.java:53-56)."
  ],
  "typedIdentities": [
   "Filters.and(Filters.battleground_site, Filters.Renegade_planet_location) (both flip laws)",
   "Filters.and(Filters.your(self), Filters.matchingOperativeToRenegadePlanet) (flip actor)",
   "Filters.planet_system (setup: choose Renegade planet; sets gameState.setRenegadePlanet(systemName))",
   "Filters.and(Filters.generic, Filters.site) (setup site + per-deploy-phase download, both to Renegade planet system)",
+  "Filters.site (independent Dantooine Operative download to Dantooine while that operative is at a Dantooine site)",
   "Filters.matchingOperativeToRenegadePlanet + Filters.on(renegadePlanet) (back modifiers)",
   "Filters.Rebel (back: power +2 when operative at same site as a Rebel)"
  ],
  "setupAndPullRoutes": [
-  "On deploy: deploy any planet system from Reserve Deck (Filters.planet_system); that system becomes the Renegade planet via gameState.setRenegadePlanet [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java:47-56]",
-  "On deploy: then deploy one generic site to that system (Filters.and(Filters.generic, Filters.site)) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java:58-64]",
-  "Front, once per YOUR deploy phase: deploy one generic site to the Renegade planet from Reserve Deck; reshuffle (GameTextActionId.IMPERIAL_OCCUPATION__DOWNLOAD_SITE) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298.java:86-98]"
+  "Setup order 1 (Objective, required): deploy any planet system from Reserve Deck for free and without reshuffling; its system name becomes the Renegade planet [Card7_298.java:46-56; DeployCardFromReserveDeckEffect.java:41-45].",
+  "Setup order 2 (nested in the selected system's cardDeployed callback): deploy one generic site to that system for free and without reshuffling [Card7_298.java:58-64; DeployCardToSystemFromReserveDeckEffect.java:31-35].",
+  "Later Objective source, once during each owner deploy phase: deploy one generic site to the Renegade planet; this overload is not flagged free and reshuffles [Card7_298.java:83-98; DeployCardToSystemFromReserveDeckEffect.java:21-23].",
+  "Tested operative source, independently once during each owner deploy phase: Dantooine Operative at a Dantooine site may deploy one site (Filters.site, not generic-only) to Dantooine and reshuffle [Card7_174.java:64-81]. No source order exists between this action and the Objective action."
  ],
  "otherObligations": [
   "Back modifier: opponent's Force drains are -1 everywhere (ForceDrainModifier(self, Filters.any, -1, opponent)) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_298_BACK.java:66]",
@@ -99,13 +103,28 @@
  "seedMismatches": [],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
-  "profileGaps": [
-   "flipGateSite null; true gate = Filters.and(Filters.battleground_site, Filters.Renegade_planet_location) (dynamic, present in objectiveNamedLocations but not wired as flip gate)",
-   "keyCharacterFilter null; true flip actor Filters.matchingOperativeToRenegadePlanet is nowhere in the profile",
-   "no count thresholds (3 to flip / hold 2 to stay) represented; weights empty",
-   "pullableCards empty despite per-deploy-phase generic-site download"
-  ]
+  "loaderEnabled": true,
+  "frontStructuredRule": "preFlip/flip allOf: self controlsWith >=3 Renegade_planet_battleground_site using matchingOperativeToRenegadePlanet",
+  "backStructuredRule": "postFlip/flipBack allOf: self occupies <2 Renegade_planet_battleground_site",
+  "runtimeGeography": "The selected Renegade planet is read from gameState. Candidate sites are projected through the exact source-card deploy filter at that planet.",
+  "formationLaw": "Each counted site needs a matching operative plus another legal source of presence or ability because the operative's own ability is excluded from control on its matching planet.",
+  "weights": {"deployFlipGateSite": 1600},
+  "profileGaps": []
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "setup": "Dark public Rando and Chosen One both choose Dantooine (three matching operatives) over Tatooine (zero), then choose a source-projected legal battleground site.",
+  "pull": "Dark public decisions use Imperial Occupation and Dantooine Operative once each, in either order, to reach three usable route sites through their real child selections. The deterministic Objective-first case proves the operative action survives a stale source-text parser false negative. The shared back-side route lets only an eligible operative add a third hold-buffer site.",
+  "deploy": "Dark public decisions deploy three one-Force Dantooine Operatives and three one-Force Stormtroopers with exactly six Force, distribute three complete formations, and trigger unchanged 7_298 card Java's native flip. The planner requires exact engine deployability, actual modified payments, and safe weapon-adjusted contact.",
+  "crossPhase": "Dark movement, battle, loss, forfeit, casualty, contested post-flip blocker, and back-side buffer-pull branches are shared with the Light-side fixtures and mirrored between both bot implementations rather than duplicated solely for side symmetry.",
+  "sourceProjection": "The Dark public setup choice uses the source's free deploy-to-system projection. Later Objective and operative pulls use their exact paid filters and require a projected battleground destination, while the operative source itself may stand at any matching-planet site.",
+  "parity": "Every Dark public setup, pull, and deploy decision is compared between Rando and Chosen One. All five paired production files match after package normalization.",
+  "verification": "The focused family, engine, policy, and deploy-script gate passes 77 tests. The bounded neighboring regression gate passes 179 tests, for 256 current tests with zero failures. JSON validation and normalized mirror checks pass; package proof is recorded separately when run.",
+  "deployment": "Behavior commit d60608435 packaged successfully. All 97 changed class files and the playbook byte-match target/classes, the server jar, and web.jar. Live host and running container web.jar SHA-256 is a81be62840b8038f334613e84c9722d2ef9ef062c0ca4ae0660fabc2ee9b27ad. Deployment used a frozen authenticated hall with zero tables and games; the fresh JVM has restart count zero and all five gameplay switches were restored.",
+  "replay": "The deterministic public-bot harness reaches Imperial Occupation's native front flip; the engine contract observes below-two flip-back after manual staging. No live replay claim is made."
+ },
+ "knownLimits": [
+  "The proactive hand planner prefers non-operative character companions. Other legal board presence sources are recognized but not all are proactively planned from hand.",
+  "Live server branch firing and replay observation remain separate proof gates."
+ ],
+ "proofGate": "FLIP_OBSERVED"
 }
