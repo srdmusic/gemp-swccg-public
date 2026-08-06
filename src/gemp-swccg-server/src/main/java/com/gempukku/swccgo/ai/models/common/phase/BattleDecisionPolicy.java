@@ -560,6 +560,11 @@ public final class BattleDecisionPolicy {
                                         captureAnalyzer
                                             .getNoMoneyNoPartsCurrentMoveForceReserve(
                                                 game, playerId));
+                                    phaseMoveForceReserve = Math.max(
+                                        phaseMoveForceReserve,
+                                        captureAnalyzer
+                                            .getTwinSunsCurrentMoveForceReserve(
+                                                game, playerId));
                                 }
 
                                 if (ourPower > 0 && theirPower > 0) {

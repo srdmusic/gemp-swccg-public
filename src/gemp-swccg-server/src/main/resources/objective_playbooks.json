@@ -8643,7 +8643,7 @@
       "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
-      "keyCharacterFilter": null,
+      "keyCharacterFilter": "Dark_Jedi",
       "keySiteFilter": null,
       "weights": {},
       "frontBp": "301_4",
@@ -8731,13 +8731,14 @@
                 "relation": "control",
                 "locationFilterKey": "Tatooine_site",
                 "includeExcludedFromBattle": true,
+                "spotOverride": "INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE",
                 "count": {
                   "comparator": "==",
                   "value": 0
                 }
               },
               "scoreRole": "flipProgress",
-              "sourceText": "you control two Tatooine battleground sites while opponent controls zero Tatooine sites of any kind (Card301_004.java L107, L110; the card's opponent-zero leg counts captives, unexpressed here)"
+              "sourceText": "you control two Tatooine battleground sites while opponent controls zero Tatooine sites of any kind (Card301_004.java L107, L110; the opponent-zero leg counts captives and excluded-from-battle cards)"
             },
             {
               "relation": "controlWith",
@@ -8752,7 +8753,7 @@
                 "value": 1
               },
               "includeExcludedFromBattle": true,
-              "scoreRole": "flipProgress",
+              "scoreRole": "actorToLocation",
               "sourceText": "at least one of those sites is controlled WITH a Dark Jedi, a computed class: dark character of ability six or more (L108)"
             },
             {
@@ -8767,8 +8768,9 @@
                 "value": 1
               },
               "includeExcludedFromBattle": true,
+              "spotOverride": "INCLUDE_CAPTIVE_AND_EXCLUDED_FROM_BATTLE",
               "scoreRole": "flipProgress",
-              "sourceText": "you occupy Tatooine system (L109; card law counts captives, unexpressed here)"
+              "sourceText": "you occupy Tatooine system (L109; card law counts captives and excluded-from-battle cards)"
             }
           ]
         },

@@ -7,7 +7,9 @@ import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.TargetingReason;
@@ -10306,6 +10308,7 @@ public class ObjectiveAnalyzer {
                     || "111_4".equals(objectiveBlueprintId)
                     || "201_39".equals(objectiveBlueprintId)
                     || "204_32".equals(objectiveBlueprintId)
+                    || "301_4".equals(objectiveBlueprintId)
                     || "7_137".equals(objectiveBlueprintId)
                     || "7_298".equals(objectiveBlueprintId)
                     || "226_28".equals(objectiveBlueprintId))
@@ -10359,6 +10362,22 @@ public class ObjectiveAnalyzer {
             }
             return false;
         }
+        if (isTwinSunsObjectiveFamily() && !isFlipped) {
+            if (countTwinSunsUsableRouteSites(
+                    game, playerId) >= 2) {
+                return false;
+            }
+            List<PhysicalCard> reserve = game.getGameState()
+                    .getReserveDeck(playerId);
+            if (reserve == null) return false;
+            for (PhysicalCard card : reserve) {
+                if (isNativeObjectiveLocationRouteCandidate(
+                        game, playerId, sourceCard, card)) {
+                    return true;
+                }
+            }
+            return false;
+        }
         if (!isFlipped) {
             return hasMissingPreFlipRequiredLocationInReserve(
                     game, playerId);
@@ -10393,6 +10412,12 @@ public class ObjectiveAnalyzer {
         }
         try {
             if (isCountedOperativeObjectiveFamily()) {
+                return hasObjectiveLocationRouteCandidateInReserve(
+                        game, playerId,
+                        findOurObjective(
+                            game.getGameState(), playerId));
+            }
+            if (isTwinSunsObjectiveFamily()) {
                 return hasObjectiveLocationRouteCandidateInReserve(
                         game, playerId,
                         findOurObjective(
@@ -10448,6 +10473,83 @@ public class ObjectiveAnalyzer {
     public boolean isNoMoneyNoPartsObjectiveFamily() {
         return analyzed && ("12_180".equals(objectiveBlueprintId)
                 || "12_180_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isTwinSunsObjectiveFamily() {
+        return analyzed && ("301_4".equals(objectiveBlueprintId)
+                || "301_4_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isTwinSunsFrontSiteRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isTwinSunsObjectiveFamily() && !isFlipped
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "301_4".equals(sourceCard.getBlueprintId(
+                    game.getGameState(), false))
+                && actionText != null
+                && "deploy tatooine battleground site from reserve deck"
+                    .equals(actionText.trim().toLowerCase(Locale.ROOT))
+                && hasObjectiveLocationRouteCandidateInReserve(
+                    game, playerId, sourceCard);
+    }
+
+    public boolean isExhaustedTwinSunsFrontSiteRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isTwinSunsObjectiveFamily() && !isFlipped
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "301_4".equals(sourceCard.getBlueprintId(
+                    game.getGameState(), false))
+                && actionText != null
+                && "deploy tatooine battleground site from reserve deck"
+                    .equals(actionText.trim().toLowerCase(Locale.ROOT))
+                && !hasObjectiveLocationRouteCandidateInReserve(
+                    game, playerId, sourceCard);
+    }
+
+    public boolean isTwinSunsOccupationPullAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isTwinSunsObjectiveFamily() || !isFlipped
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                || !"301_4_BACK".equals(sourceCard.getBlueprintId(
+                    game.getGameState(), false))
+                || actionText == null
+                || !"deploy tatooine occupation from reserve deck"
+                    .equals(actionText.trim().toLowerCase(Locale.ROOT))) {
+            return false;
+        }
+        List<PhysicalCard> reserve = game.getGameState()
+                .getReserveDeck(playerId);
+        if (reserve == null) return false;
+        for (PhysicalCard card : reserve) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && Filters.Tatooine_Occupation.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isTwinSunsPeekAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isTwinSunsObjectiveFamily() && isFlipped
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "301_4_BACK".equals(sourceCard.getBlueprintId(
+                    game.getGameState(), false))
+                && game.getGameState().getCurrentPhase() == Phase.CONTROL
+                && game.getGameState().getReserveDeckSize(playerId) > 0
+                && actionText != null
+                && "peek at top two cards of reserve deck".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT));
     }
 
     public boolean isNoMoneyNoPartsWattoPullAction(
@@ -12376,7 +12478,8 @@ public class ObjectiveAnalyzer {
                     && !isImperialEntanglementsFamily()
                     && !isOldAlliesObjectiveFamily()
                     && !isCountedOperativeObjectiveFamily()
-                    && !isHiddenPathObjectiveFamily())
+                    && !isHiddenPathObjectiveFamily()
+                    && !isTwinSunsObjectiveFamily())
                 || isFlipped && !isImperialEntanglementsFamily()
                     && !isCountedOperativeObjectiveFamily()
                     && !isHiddenPathObjectiveFamily()
@@ -12444,6 +12547,22 @@ public class ObjectiveAnalyzer {
                         game.getModifiersQuerying(), candidate)
                     && Filters.deployable(
                         objectiveCard, null,
+                        false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate);
+        }
+        if (isTwinSunsObjectiveFamily()) {
+            return !isFlipped
+                    && sourceCard != null
+                    && isExactCurrentObjectiveSourceCard(
+                        game, playerId, sourceCard)
+                    && countTwinSunsUsableRouteSites(
+                        game, playerId) < 2
+                    && Filters.Tatooine_battleground_site.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    && Filters.deployable(
+                        objectiveCard, Filters.battleground,
                         false, 0.0f).accepts(
                             game.getGameState(),
                             game.getModifiersQuerying(), candidate);
@@ -12563,6 +12682,41 @@ public class ObjectiveAnalyzer {
                         game.getGameState(), location,
                         opponent, overrides);
             if (complete || !contested) usable++;
+        }
+        return usable;
+    }
+
+    private int countTwinSunsUsableRouteSites(
+            SwccgGame game, String playerId) {
+        if (!isTwinSunsObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return 0;
+        String opponent = game.getGameState().getOpponent(playerId);
+        Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
+                resolveSpotOverride(true, null);
+        int usable = 0;
+        for (PhysicalCard location : locations) {
+            if (location == null
+                    || !Filters.Tatooine_battleground_site.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)) {
+                continue;
+            }
+            boolean selfControls = game.getModifiersQuerying()
+                    .controlsLocation(
+                        game.getGameState(), location,
+                        playerId, overrides);
+            boolean opponentControls = opponent != null
+                    && game.getModifiersQuerying().controlsLocation(
+                        game.getGameState(), location,
+                        opponent, overrides);
+            if (selfControls || !opponentControls) usable++;
         }
         return usable;
     }
@@ -13976,6 +14130,174 @@ public class ObjectiveAnalyzer {
                 game, playerId, null);
     }
 
+    public int getTwinSunsCurrentSiteRouteForceReserve(
+            SwccgGame game, String playerId) {
+        if (!isTwinSunsObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || game.getGameState().getCurrentPhase()
+                    != Phase.DEPLOY
+                || countTwinSunsUsableRouteSites(
+                    game, playerId) >= 2) {
+            return 0;
+        }
+        try {
+            PhysicalCard objective = findOurObjective(
+                    game.getGameState(), playerId);
+            if (objective == null
+                    || !"301_4".equals(objective.getBlueprintId(
+                        game.getGameState(), false))
+                    || game.getModifiersQuerying()
+                        .getUntilEndOfTurnLimitCounter(
+                            objective, playerId,
+                            objective.getCardId(),
+                            GameTextActionId
+                                .TWIN_SUNS_OF_TATOOINE__DOWNLOAD_TATOOINE_BATTLEGROUND_SITE)
+                        .getUsedLimit() >= 1) {
+                return 0;
+            }
+            return hasObjectiveLocationRouteCandidateInReserve(
+                    game, playerId, objective) ? 1 : 0;
+        } catch (Exception e) {
+            LOG.debug("Twin Suns site-route Force reserve failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+    }
+
+    public int getTwinSunsCurrentMoveForceReserve(
+            SwccgGame game, String playerId) {
+        return getTwinSunsCurrentMoveForceReserve(
+                game, playerId, null);
+    }
+
+    public int getTwinSunsCurrentMoveForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!isTwinSunsObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        if (deployingCandidate != null
+                && deployingCandidate.getZone() == Zone.HAND
+                && hasLegalTwinSunsCompletionDeployDestination(
+                    game, playerId, deployingCandidate)) {
+            return 0;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (permanents == null || locations == null) return 0;
+
+        int cheapest = Integer.MAX_VALUE;
+        try {
+            for (PhysicalCard mover : permanents) {
+                if (mover == null
+                        || !playerId.equals(mover.getOwner())
+                        || mover.getZone() == null
+                        || !mover.getZone().isInPlay()
+                        || !isActiveForSpot(game, mover, true)) {
+                    continue;
+                }
+                PhysicalCard origin = presenceContributionLocation(
+                        game, mover);
+                if (origin == null) continue;
+                for (PhysicalCard destination : locations) {
+                    if ((!advancesPreFlipActorAtRuntimeLocation(
+                                game, playerId, mover, destination)
+                            && !advancesPreFlipPlainPresenceAtRequiredLocation(
+                                game, playerId, mover, destination))
+                            || samePhysicalLocation(
+                                origin, destination)
+                            || isPreFlipPlainPresenceRequirementLocation(
+                                game, playerId, origin)
+                                && isSolePresenceSourceAtRequiredLocation(
+                                    game, playerId, mover, origin)
+                            || FormationSafety.vetoMoveDestination(
+                                game, game.getGameState(), playerId,
+                                mover, destination) != null
+                            || FormationSafety.vetoMoveOrigin(
+                                game, game.getGameState(), playerId,
+                                mover, origin) != null) {
+                        continue;
+                    }
+                    if (Filters.canMoveToUsingLandspeed(
+                            playerId, mover, false, false,
+                            false, 0.0f, null).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), destination)) {
+                        float exact = game.getModifiersQuerying()
+                                .getMoveUsingLandspeedCost(
+                                    game.getGameState(), mover,
+                                    origin, destination,
+                                    false, 0.0f);
+                        if (Float.isFinite(exact)) {
+                            cheapest = Math.min(cheapest,
+                                    Math.max(0,
+                                        (int) Math.ceil(exact)));
+                        }
+                    }
+                    if (Filters.canMoveToUsingHyperspeed(
+                            playerId, mover, false,
+                            false, 0.0f).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), destination)) {
+                        float exact = game.getModifiersQuerying()
+                                .getMoveUsingHyperspeedCost(
+                                    game.getGameState(), mover,
+                                    origin, destination,
+                                    false, 0.0f);
+                        if (Float.isFinite(exact)) {
+                            cheapest = Math.min(cheapest,
+                                    Math.max(0,
+                                        (int) Math.ceil(exact)));
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Twin Suns move Force reserve failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
+    private boolean hasLegalTwinSunsCompletionDeployDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isTwinSunsObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null || candidate.getZone() != Zone.HAND
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            for (PhysicalCard location
+                    : game.getGameState().getLocationsInOrder()) {
+                if (wouldCompletePreFlipRequirementAt(
+                            game, playerId, candidate, location)
+                        && Filters.deployableToLocation(
+                            candidate, Filters.sameCardId(location),
+                            false, 0.0f).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), candidate)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Twin Suns completion-deploy assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
     /**
      * Preserves the cheapest exact landspeed payment that completes the
      * No Money front-side formation. The reserve is live only while Watto is
@@ -14625,7 +14947,8 @@ public class ObjectiveAnalyzer {
             SwccgGame game, String playerId, PhysicalCard candidate) {
         if ((!isMassassiBaseOperationsFamily()
                     && !isImperialEntanglementsFamily()
-                    && !isOldAlliesObjectiveFamily())
+                    && !isOldAlliesObjectiveFamily()
+                    && !isTwinSunsObjectiveFamily())
                 || isFlipped || game == null || playerId == null
                 || candidate == null || activeFlipLocationRules == null
                 || !playerId.equals(candidate.getOwner())) {
@@ -14691,6 +15014,7 @@ public class ObjectiveAnalyzer {
                     && !isImperialEntanglementsFamily()
                     && !isOldAlliesObjectiveFamily()
                     && !isNoMoneyNoPartsObjectiveFamily()
+                    && !isTwinSunsObjectiveFamily()
                     && !isISBOperations)
                 || isFlipped || game == null || playerId == null
                 || candidate == null || candidate.getZone() != Zone.HAND

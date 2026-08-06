@@ -238,6 +238,11 @@ final class PullPolicyAdapter {
                 boolean noMoneyWattoRoute = objective
                         .isNoMoneyNoPartsWattoPullAction(
                                 game, playerId, source, actionText);
+                boolean twinSunsRoute = objective
+                        .isTwinSunsFrontSiteRouteAction(
+                                game, playerId, source, actionText)
+                        || objective.isTwinSunsOccupationPullAction(
+                                game, playerId, source, actionText);
                 boolean bringHimBeforeMeEmperorRoute =
                         CaptureObjectiveFacts.objectiveKind(objective)
                             == CaptureObjectivePolicy.ObjectiveKind.BHBM
@@ -256,6 +261,7 @@ final class PullPolicyAdapter {
                         || imperialEntanglementsBackSiteRoute
                         || countedOperativeSiteRoute
                         || noMoneyWattoRoute
+                        || twinSunsRoute
                         || bringHimBeforeMeEmperorRoute;
             }
 
@@ -266,6 +272,10 @@ final class PullPolicyAdapter {
                 return objective.isCountedOperativeSiteRouteAction(
                             game, playerId, source, actionText)
                         || objective.isNoMoneyNoPartsWattoPullAction(
+                            game, playerId, source, actionText)
+                        || objective.isTwinSunsFrontSiteRouteAction(
+                            game, playerId, source, actionText)
+                        || objective.isTwinSunsOccupationPullAction(
                             game, playerId, source, actionText);
             }
 

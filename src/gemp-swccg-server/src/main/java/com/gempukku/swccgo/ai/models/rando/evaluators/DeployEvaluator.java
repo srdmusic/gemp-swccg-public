@@ -35,6 +35,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFacts;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveScoringPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.TwinSunsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
@@ -1783,6 +1784,15 @@ public class DeployEvaluator extends ActionEvaluator {
                                 .getNoMoneyNoPartsCurrentMoveForceReserve(
                                     game, playerId, card)
                             : 0;
+                    int twinSunsRouteReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getTwinSunsCurrentSiteRouteForceReserve(
+                                    game, playerId)
+                                + context.getObjectiveAnalyzer()
+                                    .getTwinSunsCurrentMoveForceReserve(
+                                        game, playerId, card)
+                            : 0;
                     int countedOperativeMoveReserve =
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
@@ -2047,6 +2057,30 @@ public class DeployEvaluator extends ActionEvaluator {
                     PolicyOperationAdapter.apply(
                         action, noMoneyMoveBudgetLedger);
                     if (!noMoneyMoveBudget.operations().isEmpty()) {
+                        actions.add(action);
+                        continue;
+                    }
+                    PolicyResult twinSunsRouteBudget =
+                        TwinSunsObjectivePolicy
+                            .preserveRouteForceForOrdinaryDeploy(
+                                actionId,
+                                countedOperativeOrdinaryDeploy,
+                                twinSunsRouteReserve,
+                                availableForce,
+                                exactNormalDeployPayment,
+                                massassiDeployPayment);
+                    PolicyContributionLedger twinSunsRouteBudgetLedger =
+                        new PolicyContributionLedger(
+                            (decisionId == null || decisionId.isBlank()
+                                ? "deploy-twin-suns-route-budget"
+                                : decisionId
+                                    + "-deploy-twin-suns-route-budget")
+                                + "-" + actionId);
+                    twinSunsRouteBudgetLedger.register(
+                        twinSunsRouteBudget);
+                    PolicyOperationAdapter.apply(
+                        action, twinSunsRouteBudgetLedger);
+                    if (!twinSunsRouteBudget.operations().isEmpty()) {
                         actions.add(action);
                         continue;
                     }

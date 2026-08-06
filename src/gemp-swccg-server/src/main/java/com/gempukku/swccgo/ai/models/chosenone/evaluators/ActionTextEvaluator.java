@@ -41,6 +41,7 @@ import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFacts;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveScoringPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.TwinSunsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
@@ -246,6 +247,29 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             game,
                             context.getPlayerId(),
                             actionSource, actionText);
+            boolean exactTwinSunsFrontRoute =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isTwinSunsFrontSiteRouteAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean exhaustedTwinSunsFrontRoute =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isExhaustedTwinSunsFrontSiteRouteAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean exactTwinSunsOccupation =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isTwinSunsOccupationPullAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean exactTwinSunsPeek =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer.isTwinSunsPeekAction(
+                        game, context.getPlayerId(),
+                        actionSource, actionText);
             boolean exactSetYourCourseCpi =
                     exactDeployAnalyzer != null
                     && exactDeployAnalyzer
@@ -4844,6 +4868,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
             }
 
             // ========== USED: Peek at top ==========
+            else if (exactTwinSunsPeek) {
+                PolicyContributionLedger twinSunsPeekLedger =
+                    new PolicyContributionLedger(
+                        "twin-suns-peek-" + actionId);
+                twinSunsPeekLedger.register(
+                    TwinSunsObjectivePolicy.scorePeek(
+                        actionId, true));
+                PolicyOperationAdapter.apply(
+                    action, twinSunsPeekLedger);
+            }
             else if (actionText.startsWith("USED: Peek at top")) {
                 controlLedger.register(ControlActionPolicy.peekAtTop(actionId));
                 PolicyOperationAdapter.apply(action, controlLedger);
@@ -5213,6 +5247,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                             context.getPlayerId(),
                                             actionSource,
                                             actionText)));
+                pullLedger.register(
+                        TwinSunsObjectivePolicy.scoreFrontSiteRoute(
+                            actionId,
+                            exactTwinSunsFrontRoute,
+                            exhaustedTwinSunsFrontRoute));
+                pullLedger.register(
+                        TwinSunsObjectivePolicy.scoreOccupationRoute(
+                            actionId,
+                            exactTwinSunsOccupation));
                 PolicyOperationAdapter.apply(action, pullLedger);
             }
 

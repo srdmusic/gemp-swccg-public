@@ -1109,9 +1109,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     .isCountedOperativeSiteRouteAction(
                         context.getGame(), context.getPlayerId(),
                         source, actionText);
+            boolean exactTwinSuns = objective
+                    .isTwinSunsObjectiveFamily()
+                    && actionId == GameTextActionId
+                        .TWIN_SUNS_OF_TATOOINE__DOWNLOAD_TATOOINE_BATTLEGROUND_SITE
+                    && "Deploy Tatooine battleground site from Reserve Deck"
+                        .equals(actionText);
             return exactMassassi || exactEntanglements
                     || exactOldAllies
-                    || exactCountedOperative ? source : null;
+                    || exactCountedOperative
+                    || exactTwinSuns ? source : null;
         } catch (Exception ignored) {
             return null;
         }
@@ -2308,7 +2315,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 || objectiveProgressAnalyzer
                                                     .isImperialEntanglementsFamily()
                                                 || objectiveProgressAnalyzer
-                                                    .isNoMoneyNoPartsObjectiveFamily())
+                                                    .isNoMoneyNoPartsObjectiveFamily()
+                                                || objectiveProgressAnalyzer
+                                                    .isTwinSunsObjectiveFamily())
                                             && objectiveProgressAnalyzer
                                                 .wouldCompletePreFlipRequirementAt(
                                                     game, playerId,

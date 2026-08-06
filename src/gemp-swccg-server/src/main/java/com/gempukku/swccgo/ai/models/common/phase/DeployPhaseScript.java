@@ -312,6 +312,29 @@ public abstract class DeployPhaseScript {
         }
         if (objectiveAnalyzer != null
                 && objectiveAnalyzer
+                    .isExhaustedTwinSunsFrontSiteRouteAction(
+                        game, playerId,
+                        sourceCard, actionText)) {
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isTwinSunsFrontSiteRouteAction(
+                        game, playerId,
+                        sourceCard, actionText)) {
+            steps.add(Step.LOCATIONS);
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isTwinSunsOccupationPullAction(
+                        game, playerId,
+                        sourceCard, actionText)) {
+            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
                     .isNoMoneyNoPartsWattoPullAction(
                         game, playerId,
                         sourceCard, actionText)) {
