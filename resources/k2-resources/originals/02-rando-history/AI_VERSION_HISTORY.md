@@ -9707,3 +9707,94 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     FLIP_OBSERVED. Package and fresh-JVM gates are verified; live replay proof
     remains separate. Nothing was pushed. Revert d60608435 to remove only this
     family seal.
+
+  ==== The Hidden Path behavior seal (2026-08-05) ====
+
+    The Hidden Path 226_28 starts Mapuzo: Mining Village 226_21, Mapuzo:
+    Safehouse 226_22, Mapuzo: Underground Corridor 226_23, and Fallen Order
+    226_14. It flips when the owner's Jedi occupy two distinct non-Mapuzo
+    sites, including cards excluded from battle. The law requires presence,
+    not control, and does not require battlegrounds. Gather Allies And Train
+    flips back below that same two-site hold. Its separate end-of-opponent-turn
+    rider makes the opponent lose 1 Force when the owner's Jedi occupy two
+    battleground sites. Card Java remains authoritative and unchanged.
+
+    Batch Twenty verified this source law and activated the objective profile,
+    but did not prove public Rando or Chosen One choices through setup, Jabiim
+    pull, stacked Survivor deployment, paid Corridor transit, the real flip,
+    retention, or the back-side payoff. The workbook and generated Rulebook
+    informed the route only.
+
+    Both bots now use the Objective's legal Jabiim-location pull before
+    optional Holocron spending and reject an exhausted pull. They retain the
+    physical location and Jedi required for the route during Force loss. A
+    stacked Fallen Order Survivor costs exactly 3 Force while the front is
+    active and 7 after the objective flips. The optional Holocron costs 2.
+    The deploy evaluators reserve 1 Force for each ready Underground Corridor
+    exit and block unrelated paid actions that would consume it. A useful
+    back-side relocation similarly reserves its exact 2-Force payment.
+
+    Survivors walk from Safehouse to Underground Corridor, then use the
+    Corridor's paid action to reach a legal Jabiim site or an opponent's
+    battleground site.
+    Each destination must produce net progress toward a distinct non-Mapuzo
+    Jedi site and pass formation safety for the exact offered Survivor. The
+    selected physical destination now survives the nested prompt chain so the
+    final child cannot tie-select a different unsafe Survivor. V62's split-site
+    contribution is restricted to an exact owned Jedi whose move produces net
+    distinct-site progress. A non-Jedi and a sole Jedi transferred between two
+    qualifying sites receive no fake progress score.
+
+    On the back, movement and constructed battle-forfeit selection preserve
+    the last Jedi at either required site while an expendable alternative
+    exists. The separate public Force-loss proof retains pre-flip route cards
+    in hand. Ordinary and combined-battle Force-loss choices contain hand and
+    Life Force cards, not active table cards; removal of a site-holding Jedi
+    therefore uses the separately proved battle-forfeit path. The printed
+    2-Force relocation is selected only when a formation-safe
+    mover and destination preserve the two-site hold and advance toward a
+    second Jedi battleground. Unchanged-engine execution observes the real
+    front flip, symmetric flip-back, restored back face, and exactly 1 Force
+    lost by the opponent at the printed end-turn trigger.
+
+    Exact Corridor prompt branches use semantic
+    OBJECTIVE.HIDDEN_PATH.CORRIDOR identities at +20000. Exact relocation
+    branches use OBJECTIVE.HIDDEN_PATH.RELOCATE identities at +5000. Existing
+    V62 remains +200 for real distinct-site progress and -500 for consolidation.
+    Formation-safety and hold-preservation vetoes remain terminal. No new
+    numeric V-tag was added; this seals the existing V60, V62, and V67z routes.
+
+    HiddenPathObjectiveEngineContractTest passes 12 focused tests, with setup
+    driven by the scripted engine fixture rather than a public-bot choice.
+    MoveObjectiveConsolidationPolicyTest passes 11 exact movement-policy tests.
+    The final bounded 17-suite gate passes 195/0/0/0 across deploy, reserve,
+    movement, destination, transit, Force-loss, battle-forfeit, analyzer, and
+    bot-parity surfaces. Extra pull, setup, movement-budget, and transit parity
+    checks pass. The one existing DeployActionTextSourceParityTest direct-
+    reasoning ownership failure predates and is untouched by this family.
+    K-2's final v2 review and three independent reviews passed. Battle-forfeit
+    proof is a constructed CombinedEvaluator decision, not native battle.
+
+    Local behavior commit a9bcfbbbb packaged successfully. All 78 generated
+    class files from 17 changed production sources byte-match target/classes,
+    the server jar, and web.jar; the embedded playbook also byte-matches.
+    Server jar SHA-256 is
+    a4e78f6d0161ff8e73842886c9a2c000727b5a3c2cd0a5a3cca4067e3c3748f5;
+    candidate, live-host, and running-container web.jar SHA-256 is
+    fd913557e2ddc6782d9a03266b67cd1574ab5b0bf04d836f5f4172499eb0effe;
+    playbook SHA-256 is
+    5698142276a73776334c5b5d8d6d2d0ebf758024c69174915bb1531f10b2f0dc.
+    The prior live jar is preserved as web.jar.pre-thp-a9bcfbbbb. Table
+    creation was frozen and the authenticated hall contained zero tables and
+    games. The fresh app started at 2026-08-06T01:45:21.460195259Z after jar
+    mtime, with restart count zero and Java at PID 1. Gameplay switches were
+    restored, the hall remained empty, startup completed once, and no material
+    runtime error was present.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    adapters, approved objective data, AI tests, and approved audit/history
+    records. No engine, card Java, client, deck library, database, or workbook
+    changed. Deterministic unchanged-engine tests provide FLIP_OBSERVED.
+    Package, byte identity, and fresh-JVM deployment are verified; fresh live
+    replay firing remains separate. Nothing was pushed. Restore
+    web.jar.pre-thp-a9bcfbbbb and revert a9bcfbbbb to remove only this seal.
