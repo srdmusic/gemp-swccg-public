@@ -9926,3 +9926,61 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     FLIP_OBSERVED. Package, byte identity, and fresh-JVM deployment are
     verified; fresh live replay firing remains separate. Nothing was pushed.
     Restore web.jar.pre-oa-4f74b9139 and revert 4f74b9139 to remove this seal.
+
+  ==== They Have No Idea We're Coming behavior seal (2026-08-06) ====
+
+    They Have No Idea We're Coming 209_29 starts Scarif system, Data Vault,
+    Stardust, and Massassi War Room. It flips when its owner controls two
+    Scarif locations. Its back flips to front only when its owner occupies
+    fewer than two Scarif locations and no Rogue One is at a Scarif site that
+    owner occupies. The source exception uses at, not presentAt. Card and
+    engine Java remain unchanged.
+
+    Both public bots use the exact native action to stage Landing Pad Nine
+    before pulling Rogue One. With exactly 5 Force, they deploy Rogue One and
+    Bodhi Rook simultaneously to Scarif system for 4, then deploy a Rebel
+    Trooper to Data Vault for 1. Scarif beats an offered Dantooine, the Trooper
+    stays at Data Vault instead of boarding, and unchanged objective Java
+    flips. Rogue One then lands at uncontested Landing Pad Nine for 0 Force,
+    establishing the exact back-side exception.
+
+    Exact native-pull and landing parents receive +800. Exact Scarif, Data
+    Vault, and Landing Pad Nine children receive +1600. The live simultaneous
+    deploy-cost API owns the exact route reserve, and unrelated spending is
+    blocked only when it would consume that payment. An enemy-held Landing Pad
+    receives no safety override. The compound back-side counterfactual protects
+    either the two-location occupation floor or Rogue One at an occupied
+    Scarif site. Real Force loss preserves one still-needed Landing Pad, Rogue
+    One, Bodhi, and cheapest Trooper while fodder exists. A real battle-forfeit
+    prompt chooses attached crew rather than loaded Rogue One. The seal proves
+    only the Landing Pad Nine route and does not claim a generic Scarif-site
+    fallback. No new numeric V-tag was introduced.
+
+    The four THNI suites passed 14/0/0/0. The bounded THNI, Old Allies,
+    Massassi, Imperial Entanglements, Local Uprising, and Hidden Path ring
+    passed 99/0/0/0. Diff checks, exact mirrored additions, and two hostile
+    reviews passed.
+
+    Local behavior commit c2447a7dc packaged successfully. All 105 generated
+    class files from 10 production sources byte-match target/classes, the
+    server jar, and web.jar; the embedded playbook also byte-matches. Server
+    jar SHA-256 is
+    5f92773d229bf907d1e2406b3892b6d87e01cb25033936c94e0b0d517b7b5892;
+    candidate, live-host, and running-container web.jar SHA-256 is
+    ab6a9c62b62a71aaec9fd364049f913b3f779ad541e52972df5358a5ba5c1c85;
+    playbook SHA-256 is
+    40543e3940294cc104bf99e4ca395b5e40b6496eadc1c6644f1eb4ecff76c1ef.
+    The prior live jar is preserved as web.jar.pre-thni-c2447a7dc. The hall was
+    frozen at zero tables and games. The fresh app started at
+    2026-08-06T15:11:34.101404008Z after jar mtime, with restart count zero and
+    Java at PID 1. Health, login, operational, all four gameplay settings, and
+    the reopened hall returned HTTP 200. Startup completed once without a
+    material runtime error and the hall remained empty.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    evaluators, AI tests, and approved audit/history records. No engine, card
+    Java, objective playbook, client, deck library, database, or workbook
+    changed. Deterministic unchanged-engine public-bot execution provides
+    FLIP_OBSERVED. Package, byte identity, and fresh-JVM deployment are
+    verified; fresh live replay firing remains separate. Nothing was pushed.
+    Restore web.jar.pre-thni-c2447a7dc and revert c2447a7dc to remove this seal.

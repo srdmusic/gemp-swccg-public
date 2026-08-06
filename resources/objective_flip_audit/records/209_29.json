@@ -74,13 +74,41 @@
   "exists": true,
   "loaderEnabled": true,
   "profileGaps": [
-   "flipGateSite is null; gate is Scarif locations (Filters.Scarif_location) - present in objectiveNamedLocations but not as the flip gate",
-   "flipGateCardIds empty; Rogue One (206_7) is a load-bearing back-hold exception card",
-   "keyCharacterFilter is null; spies (Baze/Chirrut/Rebel troopers) and Rogue One drive the strategy",
-   "requiredCardsOnTable empty; Stardust and Rogue One placement materially change the flip/hold law",
-   "front-only nature of the Rogue One/corvette/Scarif-site download (lost after flipping) not represented",
-   "weights empty"
+   "The legacy scalar flipGateSite is null because the exact front gate is represented by the active preFlip flipLocationRule over two controlled Scarif locations.",
+   "The exact postFlip flipLocationRule records the compound fewer-than-two occupation leg and the zero-Rogue-One-at-an-owned-occupied-Scarif-site leg. Runtime departure analysis evaluates those legs together as one counterfactual.",
+   "Legacy flipGateCardIds, requiredCardsOnTable, and pullableCards remain empty. Exact source-and-action-id-gated AI behavior owns the front-only Landing Pad Nine then Rogue One route without widening generic profile behavior.",
+   "Generic weights remain empty. Semantic THNI pull, deploy, movement, budget, loss, and hold policies supply the proved behavior."
   ]
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "status": "BEHAVIOR_SEALED",
+  "publicBots": [
+   "RandoCalAi",
+   "TheChosenOneAi"
+  ],
+  "nativeEngineTests": [
+   "TheyHaveNoIdeaObjectiveEngineContractTest",
+   "TheyHaveNoIdeaBattleForfeitEngineContractTest",
+   "TheyHaveNoIdeaLandingSafetyContractTest",
+   "TheyHaveNoIdeaRogueOneDestinationEngineContractTest"
+  ],
+  "observed": [
+   "both public bots use the exact native objective action to stage Landing Pad Nine before Rogue One",
+   "with exactly 5 Force, both bots deploy Rogue One and Bodhi Rook simultaneously to Scarif system for 4, then spend 1 on a Rebel Trooper at Data Vault",
+   "Scarif beats an offered Dantooine in the real simultaneous Rogue One and Bodhi destination prompt",
+   "the unchanged objective flips when Rogue One with Bodhi controls Scarif system and the Rebel Trooper controls Data Vault",
+   "Rogue One lands at uncontested Landing Pad Nine for 0 Force and the unchanged back remains stable through its exact at-location exception",
+   "an enemy-occupied Landing Pad remains a legal engine destination but receives no THNI safety or formation override",
+   "the compound back-side counterfactual protects the exact occupation floor or Rogue One at an occupied Scarif site, while Rogue One at the system is a proved near miss",
+   "an exact route reserve blocks unrelated spending that would consume the live simultaneous ship-and-pilot plus Data Vault payments",
+   "a real Force-loss prompt preserves one still-needed Landing Pad Nine, Rogue One, Bodhi, and Rebel trooper while expendable fodder exists",
+   "a real battle-forfeit prompt chooses attached crew rather than forfeiting loaded Rogue One first"
+  ],
+  "verification": "Focused THNI suites 14/0/0/0; bounded THNI, Old Allies, Massassi, Imperial Entanglements, Local Uprising, and Hidden Path ring 99/0/0/0; diff checks, normalized bot mirroring, and two hostile reviews passed.",
+  "localBehaviorCommit": "c2447a7dc",
+  "artifact": "105 generated class files from 10 production sources byte-match target/classes, the server jar, and web.jar. Server jar SHA-256 5f92773d229bf907d1e2406b3892b6d87e01cb25033936c94e0b0d517b7b5892; live web.jar SHA-256 ab6a9c62b62a71aaec9fd364049f913b3f779ad541e52972df5358a5ba5c1c85; playbook SHA-256 40543e3940294cc104bf99e4ca395b5e40b6496eadc1c6644f1eb4ecff76c1ef.",
+  "deployment": "The authenticated hall was frozen at zero tables and games. Prior Old Allies jar preserved as web.jar.pre-thni-c2447a7dc. Fresh app start 2026-08-06T15:11:34.101404008Z, restart count 0, Java PID 1, jar mtime precedes JVM start, host/container jar hashes match, health, login, operational, all four gameplay settings, and reopened hall returned HTTP 200, startup completed once without a material runtime error, and the hall remained empty.",
+  "proofCeiling": "Deterministic unchanged-engine and public-bot decision proof provides FLIP_OBSERVED. Fresh deployed replay firing remains separate. Nothing was pushed."
+ },
+ "proofGate": "FLIP_OBSERVED"
 }
