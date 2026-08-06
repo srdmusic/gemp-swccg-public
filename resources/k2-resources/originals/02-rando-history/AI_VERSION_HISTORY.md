@@ -9865,3 +9865,64 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     FLIP_OBSERVED. Package, byte identity, and fresh-JVM deployment are
     verified; live replay firing remains separate. Nothing was pushed. Restore
     web.jar.pre-syc-c0a9370c4 and revert c0a9370c4 to remove this seal.
+
+  ==== Old Allies behavior seal (2026-08-06) ====
+
+    Old Allies 204_32 starts Jakku system, Niima Outpost Shipyard, and an
+    Episode VII Falcon landed there. It flips through either exact source
+    branch: control the system plus occupy two Jakku battleground sites, or
+    occupy the system plus control two sites. Its back remains stable while
+    its owner occupies any two battlegrounds anywhere. Niima is a computed
+    battleground through its two-sided Force icons. Card and engine Java remain
+    unchanged.
+
+    Public Rando and Chosen One take the native Jakku-location pull, choose a
+    battleground site, and reject Rey's Encampment. The selected all-of plan
+    uses unique physical cards and destinations. Its canonical empty-space
+    route reserves exactly 4 Force for Theron Nett, two Rebel Troopers, and the
+    free Falcon takeoff. The pilot boards the setup Falcon, one ground body
+    remains at Niima, the other takes a distinct battleground site, and the
+    Falcon moves to Jakku system. When another ship already covers Jakku, the
+    Falcon stays at Niima and only one additional ground body is funded.
+
+    Exact route candidates receive +1000 during deploy, and the selected
+    Falcon-to-Jakku child receives +1200. Spending the remaining route payment
+    or taking off through an incompatible branch is hard-blocked. A safe
+    objective-advancing battle reserves its exact 1 Force and executes through
+    the engine. A real Force-loss window retains the selected route cards;
+    constructed mirrored forfeit evaluation retains the Falcon and sole pilot.
+    On the back, both bots choose and execute Pass rather than abandon either
+    final battleground holder. A hopeless Niima defense releases the Falcon
+    hold beyond the shared six-power retreat threshold, including opponent
+    weapon adjustment. No new numeric V-tag was introduced.
+
+    OldAlliesObjectiveEngineContractTest passed 13/0/0/0. The bounded
+    five-family regression ring passed 79/0/0/0. Diff checks, mirrored-source
+    additions, and two independent blocker reviews passed. The native suite
+    covers pull, exact payment, takeoff, battle, flip, Force loss, post-flip
+    Pass, and stable back state. Forfeit remains constructed evaluator proof,
+    not a native attrition window.
+
+    Local behavior commit 4f74b9139 packaged successfully. All 81 generated
+    class files from 11 production sources byte-match target/classes, the
+    server jar, and web.jar; the embedded playbook also byte-matches. Server
+    jar SHA-256 is
+    a90d7edaf6908cf7442cd043e1c66ae361e7905666905177c8f8b2cfde4fb73e;
+    candidate, live-host, and running-container web.jar SHA-256 is
+    898ff770bd18604e891b61b2d80fcbeb7e49b9c5d397b64fde42a6a498153211;
+    playbook SHA-256 is
+    40543e3940294cc104bf99e4ca395b5e40b6496eadc1c6644f1eb4ecff76c1ef.
+    The prior live jar is preserved as web.jar.pre-oa-4f74b9139. The hall was
+    frozen at zero tables and games. The fresh app started at
+    2026-08-06T12:33:33.947930259Z after jar mtime, with restart count zero and
+    Java at PID 1. Health, login, operational, all four gameplay settings, and
+    the reopened hall returned HTTP 200. Startup completed without a material
+    runtime error and the hall remained empty.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    adapters, AI tests, and approved audit/history records. No engine, card
+    Java, objective playbook, client, deck library, database, or workbook
+    changed. Deterministic unchanged-engine public-bot execution provides
+    FLIP_OBSERVED. Package, byte identity, and fresh-JVM deployment are
+    verified; fresh live replay firing remains separate. Nothing was pushed.
+    Restore web.jar.pre-oa-4f74b9139 and revert 4f74b9139 to remove this seal.

@@ -80,12 +80,37 @@
   "exists": true,
   "loaderEnabled": true,
   "profileGaps": [
-   "flipGateSite is null; the flip gate is the Jakku system + two Jakku battleground sites combination - the count-2 requirement and the control/occupy either-way pairing are not represented.",
-   "flipGateCardIds is empty although the profile's own objectiveNamedLocations resolves Jakku system to [204_26, 204_51] and Niima Outpost Shipyard to [204_27].",
-   "requiredCardsOnTable is empty; [Episode VII] Falcon is a REQUIRED setup deploy (home site Niima Outpost Shipyard, Card204_027, is NOT a battleground - no Icon.BATTLEGROUND - so it does NOT count toward the Jakku_battleground_site flip count; nor does Graveyard Of Giants, Card204_014, which is an Effect) - unrepresented.",
-   "keyCharacterFilter is null; no flip actor exists (acceptable), but Rey (Visage suspension) and Han (defense bonus) obligations have no representation.",
-   "Flip-back hazard (must occupy 2 battlegrounds ANYWHERE) appears only as a generic 'Battleground' fragment with no count or occupy semantics."
+   "The legacy scalar flipGateSite and flipGateCardIds fields remain empty because the exact cross-paired law is represented by two preFlip allOf flipLocationRules: control system plus occupy two sites, or occupy system plus control two sites.",
+   "requiredCardsOnTable remains empty, but exact Old Allies route analysis identifies the mandatory live [Episode VII] Falcon at Niima Outpost Shipyard, its pilot requirement, free takeoff, and the separate body that must remain at Niima. Niima is a battleground by its two-sided Force icons; GEMP computes battleground status rather than requiring an Icon.BATTLEGROUND declaration.",
+   "startingLocations and pullableCards remain empty generic slots. Native card Java owns the mandatory setup, while exact public-bot pull policy owns the printed once-per-turn Jakku battleground-site pull and rejects non-battleground Jakku sites.",
+   "keyCharacterFilter is null because the flip has no named actor. Rey's Visage suspension and Han's back-side defense bonus remain payoff text, not flip-route requirements.",
+   "The postFlip flipLocationRule exactly represents the back-side hazard: fewer than two occupied battlegrounds anywhere flips the objective back."
   ]
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "status": "BEHAVIOR_SEALED",
+  "publicBots": [
+   "RandoCalAi",
+   "TheChosenOneAi"
+  ],
+  "nativeEngineTest": "OldAlliesObjectiveEngineContractTest",
+  "observed": [
+   "unchanged objective Java performs the mandatory Jakku system, Niima Outpost Shipyard, and landed [Episode VII] Falcon setup",
+   "both public bots choose the native once-per-turn Jakku-location parent and a Jakku battleground-site child while rejecting Rey's Encampment",
+   "one executable cross-phase plan reserves and spends exactly 4 Force for Theron Nett, two separate Rebel Troopers, and Niima's free Falcon takeoff",
+   "the pilot boards the setup Falcon, ground bodies occupy distinct Jakku battleground sites, the Falcon takes off to empty Jakku space, and the unchanged objective flips natively",
+   "when another ship already occupies Jakku, the piloted Falcon stays as Niima's site body and only one additional ground body is funded",
+   "a safe objective-advancing battle reserves its exact 1 Force, rejects a deploy distraction, executes through the engine, removes the opponent, and completes the unchanged flip",
+   "a real public-bot Force-loss window and a causal candidate reversal retain the selected pilot, Falcon route, and two ground bodies while expendable hand cards exist",
+   "constructed mirrored battle-forfeit evaluation retains the selected Falcon and sole pilot while forfeiting a valuable expendable passenger; this is evaluator proof, not a native attrition window",
+   "after flipping, both bots preserve any two occupied battlegrounds anywhere, execute Pass instead of abandoning either holder, and the native back remains stable",
+   "the Niima hold releases when opponent power, including weapon adjustment, exceeds friendly power by more than the shared six-power retreat threshold"
+  ],
+  "verification": "Focused Old Allies suite 13/0/0/0; bounded five-family regression ring 79/0/0/0; diff checks, normalized mirrored additions, and two independent shipment-blocker reviews passed.",
+  "localBehaviorCommit": "4f74b9139",
+  "artifact": "81 generated class files from 11 production sources byte-match target/classes, the server jar, and web.jar. Server jar SHA-256 a90d7edaf6908cf7442cd043e1c66ae361e7905666905177c8f8b2cfde4fb73e; live web.jar SHA-256 898ff770bd18604e891b61b2d80fcbeb7e49b9c5d397b64fde42a6a498153211; playbook SHA-256 40543e3940294cc104bf99e4ca395b5e40b6496eadc1c6644f1eb4ecff76c1ef.",
+  "deployment": "The authenticated hall was frozen at zero tables and games. Prior Set Your Course jar preserved as web.jar.pre-oa-4f74b9139. Fresh app start 2026-08-06T12:33:33.947930259Z, restart count 0, Java PID 1, jar mtime precedes JVM start, host/container jar hashes match, health, login, operational, all four gameplay settings, and reopened hall returned HTTP 200, startup completed once without a material runtime error, and the hall remained empty.",
+  "proofCeiling": "Deterministic unchanged-engine and public-bot decision proof provides FLIP_OBSERVED. Fresh deployed replay firing remains separate. Nothing was pushed."
+ },
+ "proofGate": "FLIP_OBSERVED"
 }
