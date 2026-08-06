@@ -817,15 +817,15 @@
    "frontBp": "301_4",
    "title": "Twin Suns Of Tatooine",
    "side": "DARK",
-   "classification": "PARTIAL",
+   "classification": "COMPLETE",
    "subclass": "ENABLED",
-   "why": "control-vs-occupy split, Dark Jedi actor, opponent-zero constraint unencoded",
+   "why": "Loader-enabled source-exact four-leg profile plus native site pull, Dark Jedi and system deployment, deploy and battle Force budgeting, movement, Force-loss retention, viable back payoffs with self-cancel avoidance, strict-count hold, and deterministic native flip behavior in both public bots.",
    "flipLaw": "Flip if you control two Tatooine battleground sites (at least one controlled with a Dark Jedi), occupy Tatooine system, and opponent controls no Tatooine sites.",
    "flipBackLaw": "Back flips to front if opponent controls MORE Tatooine sites than you (strict count comparison).",
-   "profileGaps": 4,
+   "profileGaps": 0,
    "seedMismatches": 0,
-   "engineClass": "EXISTING_ENGINE_FIT",
-   "engineClassNote": "control+controlWith(Dark_Jedi)+occupy+opponent-zero, flat legs; registry keys incl. Dark_Jedi"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven at cumulative behavior commit bf28e62e1 by TwinSunsObjectiveEngineContractTest and TwinSunsObjectivePolicyTest: final bounded affected and neighboring Dark-objective set passed 197 tests after isolated rerun of one order-dependent No Money fixture, with exact mirrored parity."
   },
   {
    "frontBp": "501_14",

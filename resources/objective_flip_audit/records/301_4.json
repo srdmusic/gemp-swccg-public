@@ -118,12 +118,47 @@
  "profile": {
   "exists": true,
   "loaderEnabled": true,
-  "profileGaps": [
-   "flipGateSite null: gates are 2 controlled Tatooine battleground sites plus occupied Tatooine system; present only as generic named-location recipes with no control/occupy semantics",
-   "keyCharacterFilter null: at least one gate site must be controlled WITH a Dark Jedi (Filters.Dark_Jedi)",
-   "no encoding of count=2, the control-vs-occupy split (control the sites, merely occupy the system), or the opponentConstraint (opponent controls 0 Tatooine sites; flips back when opponent controls more than you)",
-   "pullableCards empty: front 1-Force Tatooine-battleground-site download and back once-per-game Tatooine Occupation download not represented"
-  ]
+  "profileGaps": []
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "ownerBehavior": [
+   "exact once-per-turn 1-Force Tatooine battleground site route",
+   "Dark Jedi deployment to a controlled Tatooine battleground site",
+   "presence-capable ship deployment to Tatooine system",
+   "site and movement Force reservation through deploy and battle",
+   "origin-preserving legal landspeed and hyperspeed movement",
+   "real Force-loss protection for the still-needed site, Dark Jedi, and ship",
+   "native front flip after the complete four-leg route",
+   "back once-per-game Tatooine Occupation route",
+   "back Occupation self-cancel avoidance while opponent controls Tatooine system",
+   "back control-phase top-two selection",
+   "strict-count tie hold and flip-back-blocker retention"
+  ],
+  "opponentBehavior": [
+   "opponent-controlled Tatooine sites block the front flip",
+   "strictly greater opponent Tatooine-site control flips the back to the front"
+  ],
+  "scoring": [
+   "OBJECTIVE.TWIN_SUNS.SITE_ROUTE +2000",
+   "OBJECTIVE.TWIN_SUNS.TATOOINE_OCCUPATION +2000",
+   "OBJECTIVE.TWIN_SUNS.PEEK +300",
+   "exact completion +8000",
+   "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD -9999"
+  ],
+  "nativeEngineTests": [
+   "TwinSunsObjectiveEngineContractTest",
+   "TwinSunsObjectivePolicyTest"
+  ],
+  "verification": "Twin Suns contract 13/0/0/0 and pure policy 3/0/0/0; final bounded affected and neighboring Dark-objective set passed 197 tests after isolated rerun of one order-dependent No Money fixture; independent blocker review, JSON, diff, and normalized four-adapter bot parity passed.",
+  "knownLimits": [
+   "Fresh live replay firing is not yet proved.",
+   "Keep-flipped battle forfeit is objective-specific analyzer-plus-adapter proof rather than a complete native battle prompt.",
+   "The workbook remains research only."
+  ],
+  "localBehaviorCommit": "bf28e62e1",
+  "artifact": "85 generated class entries from 12 changed production Java sources byte-match target/classes, the server jar, and web.jar. Server jar SHA-256 965154ca6a4d77e2a1d3693b72c521a6c3fc597a06d2d9ac7fc3c73b486ecd4b; live web.jar SHA-256 666f611a406ed73aabc0e81ada509434b2f1a67e06a8edc7ba4fe8de37727fb2; playbook SHA-256 07461b1d80fe6cdb224f289b02fda6548a2f9493a4458493d158b658dde16841.",
+  "deployment": "The authenticated hall was frozen at zero tables and games. Prior No Money jar preserved as web.jar.pre-twin-suns-458b5390c; preliminary Twin jar preserved as web.jar.pre-twin-suns-occupation-bf28e62e1. Final fresh app start 2026-08-06T23:40:59.736400461Z, restart count 0, Java PID 1, jar mtime precedes JVM start, host/container/candidate jar hashes match, root health, login, operational, all four gameplay settings, common and mirrored live markers, startup completion, and reopened empty hall passed.",
+  "proofCeiling": "Deterministic unchanged-engine public-bot execution provides FLIP_OBSERVED. Package identity and fresh-JVM deployment are verified; fresh live replay firing remains separate. Nothing was pushed."
+ },
+ "proofGate": "FLIP_OBSERVED"
 }

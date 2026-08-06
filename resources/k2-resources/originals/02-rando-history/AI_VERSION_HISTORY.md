@@ -10098,3 +10098,67 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     verified; fresh live replay firing remains separate. Nothing was pushed.
     Restore web.jar.pre-nmnpnd-6af893195 and revert 6af893195 to remove this
     seal.
+
+  ==== Twin Suns Of Tatooine behavior seal (2026-08-06) ====
+
+    Dark 301_4/301_4_BACK flips when its owner controls two Tatooine
+    battleground sites, controls at least one with a Dark Jedi there, occupies
+    Tatooine system, and the opponent controls zero Tatooine sites. The back
+    flips only when the opponent controls strictly more Tatooine sites; ties
+    hold. The front has a once-per-turn 1-Force battleground-site route. The
+    back has a once-per-game Tatooine Occupation route and a control-phase
+    top-two selection. Tatooine Occupation cancels immediately if the opponent
+    controls Tatooine system. There is no hard-loss condition. Card and engine
+    Java remain unchanged.
+
+    Both public bots use the exact native site action, deploy the Dark Jedi and
+    system ship, preserve the live site and movement payments through ordinary
+    deploy and battle, make a safe origin-preserving move, and trigger the
+    unchanged native flip. A hand candidate waives movement reserve only when
+    its legal deployment completes the entire remaining rule, so a system ship
+    cannot spend Vader's separate ground-move Force. Real Force loss preserves
+    the still-needed site, Dark Jedi, and ship.
+
+    Exact front site and viable back Occupation actions receive +2000, the back
+    peek receives +300, and exact completion receives +8000. Both bots decline
+    the once-per-game Occupation route while the opponent controls Tatooine
+    system, avoiding its immediate native cancellation. At a 1-1 Tatooine-site
+    tie, the sole owner control source reaches LAST_FLIP_BACK_BLOCKER and the
+    shared battle-forfeit -9999 hold while another legal loss exists. Existing
+    hard legality, affordability, formation-safety, and terminal objective
+    rules remain dominant. No numeric V-tag was introduced.
+
+    The Twin contract passed 13/0/0/0 and the pure policy passed 3/0/0/0. The
+    final bounded affected and neighboring Dark-objective set passed 197 tests.
+    One order-dependent No Money fixture failed in the first combined run and
+    passed alone; a clean rerun of the other 21 suites plus that fixture alone
+    passed. Independent blocker review, JSON, diff, and normalized four-adapter
+    parity checks passed.
+
+    Cumulative local behavior commit bf28e62e1 (base seal 458b5390c plus the
+    Occupation amendment) packaged successfully. All 85 generated
+    class entries from 12 changed production Java sources byte-match
+    target/classes, the server jar, and web.jar; the embedded playbook also
+    byte-matches. Server jar SHA-256 is
+    965154ca6a4d77e2a1d3693b72c521a6c3fc597a06d2d9ac7fc3c73b486ecd4b;
+    candidate, live-host, and running-container web.jar SHA-256 is
+    666f611a406ed73aabc0e81ada509434b2f1a67e06a8edc7ba4fe8de37727fb2;
+    playbook SHA-256 is
+    07461b1d80fe6cdb224f289b02fda6548a2f9493a4458493d158b658dde16841.
+    The prior No Money jar is preserved as
+    web.jar.pre-twin-suns-458b5390c; the preliminary Twin jar is preserved as
+    web.jar.pre-twin-suns-occupation-bf28e62e1. The authenticated hall was
+    frozen at zero tables and games. The final fresh app started at
+    2026-08-06T23:40:59.736400461Z after jar mtime, with restart count zero and
+    Java at PID 1. Health, login, operational status, all four gameplay
+    settings, live common and mirrored markers, startup completion, and the
+    reopened empty hall passed.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    evaluators, approved objective data, AI tests, and approved audit/history
+    records. No engine Java, card Java, client, deck library, database, or
+    workbook changed. Deterministic unchanged-engine public-bot execution
+    provides FLIP_OBSERVED. Keep-flipped forfeit is objective-specific
+    analyzer-plus-adapter proof; fresh live replay firing remains separate.
+    Nothing was pushed. Restore web.jar.pre-twin-suns-458b5390c and revert
+    bf28e62e1 followed by 458b5390c to remove this seal.
