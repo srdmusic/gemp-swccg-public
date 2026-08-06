@@ -10526,6 +10526,21 @@ public class ObjectiveAnalyzer {
         List<PhysicalCard> reserve = game.getGameState()
                 .getReserveDeck(playerId);
         if (reserve == null) return false;
+        String opponent = game.getGameState().getOpponent(playerId);
+        if (opponent != null) {
+            for (PhysicalCard location
+                    : game.getGameState().getLocationsInOrder()) {
+                if (location != null
+                        && Filters.Tatooine_system.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), location)
+                        && game.getModifiersQuerying().controlsLocation(
+                            game.getGameState(), location, opponent,
+                            SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)) {
+                    return false;
+                }
+            }
+        }
         for (PhysicalCard card : reserve) {
             if (card != null && playerId.equals(card.getOwner())
                     && Filters.Tatooine_Occupation.accepts(

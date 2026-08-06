@@ -5,6 +5,7 @@ import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitPolicy;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.framework.StartingSetup;
@@ -876,6 +877,56 @@ public class TwinSunsObjectiveEngineContractTest {
                 scn.DSCardActionAvailable(
                     objective,
                     "Deploy Tatooine Occupation from Reserve Deck"));
+    }
+
+    @Test
+    public void tsotPublicBotsSkipOccupationWhenOpponentControlsSystem() {
+        var scn = tsotScenario();
+        var objective = scn.GetDSCard("objective");
+        var system = scn.GetDSCard("system");
+        var tie = scn.GetDSCard("tie");
+        var occupation = scn.GetDSCard("occupation");
+        var lsShip = scn.GetLSCard("lsShip");
+
+        flipTwinSunsWithNativeTrigger(scn);
+        scn.MoveOutOfPlay(tie);
+        scn.MoveCardsToLocation(system, lsShip);
+        scn.BoardAsPilot(lsShip, scn.GetLSFiller(1));
+        scn.MoveCardsToBottomOfDSReserveDeck(occupation);
+        assertTrue(objective.isFlipped());
+        assertTrue("Light Side must control the Occupation host",
+                scn.game().getModifiersQuerying().controlsLocation(
+                    scn.gameState(), system, VirtualTableScenario.LS,
+                    SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE));
+
+        String occupationRoute = scn.GetCardActionId(
+                VirtualTableScenario.DS, objective,
+                "Deploy Tatooine Occupation from Reserve Deck");
+        assertNotNull("The native once-per-game action remains legal",
+                occupationRoute);
+
+        var randoAnalyzer =
+                new com.gempukku.swccgo.ai.models.rando.strategy
+                    .ObjectiveAnalyzer();
+        var chosenAnalyzer =
+                new com.gempukku.swccgo.ai.models.chosenone.strategy
+                    .ObjectiveAnalyzer();
+        randoAnalyzer.analyze(
+                scn.game(), VirtualTableScenario.DS, Side.DARK);
+        chosenAnalyzer.analyze(
+                scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertFalse("Do not spend the once-per-game route into cancellation",
+                randoAnalyzer.isTwinSunsOccupationPullAction(
+                    scn.game(), VirtualTableScenario.DS,
+                    objective,
+                    "Deploy Tatooine Occupation from Reserve Deck"));
+        assertFalse(chosenAnalyzer.isTwinSunsOccupationPullAction(
+                scn.game(), VirtualTableScenario.DS,
+                objective,
+                "Deploy Tatooine Occupation from Reserve Deck"));
+        assertFalse("Both public bots must decline the self-canceling route",
+                occupationRoute.equals(
+                    PublicBots.forGame(scn).decideBoth(scn)));
     }
 
     @Test
