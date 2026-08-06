@@ -112,6 +112,22 @@ public final class PullSelectionCandidatePolicy {
                 : empty();
     }
 
+    public static PolicyResult scoreTheyHaveNoIdeaNativeRoute(
+            String actionId, int routePriority) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (routePriority <= 0) return empty();
+        String stage = routePriority >= 4
+                ? "LANDING_PAD_STAGE" : "ROGUE_ONE_READY";
+        String reason = routePriority >= 4
+                ? "THNI: stage Landing Pad Nine before Rogue One so the flipped objective retains its site exception"
+                : "THNI: Landing Pad Nine is staged, secure Rogue One for the Scarif system and back-side exception";
+        return one(actionId,
+                "PULL.OBJECTIVE.THEY_HAVE_NO_IDEA." + stage,
+                TraceDomainId.DECK_PLAYBOOK,
+                TraceOutputKind.BANDED, 800.0f,
+                reason);
+    }
+
     public static PolicyResult scoreMassassiAttackRunPackage(
             String actionId, int prerequisitePriority) {
         Objects.requireNonNull(actionId, "actionId");

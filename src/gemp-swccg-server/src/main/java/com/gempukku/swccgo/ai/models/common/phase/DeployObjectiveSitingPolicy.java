@@ -102,6 +102,32 @@ public final class DeployObjectiveSitingPolicy {
                         "Deploy here to advance a missing counted-objective location"));
     }
 
+    public static PolicyResult scoreTheyHaveNoIdeaDataVaultRoute(
+            String actionId, boolean routeDestination) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!routeDestination) {
+            return new PolicyResult(
+                    "DEPLOY_THNI_DATA_VAULT_ROUTE_POLICY", List.of());
+        }
+        return single("DEPLOY_THNI_DATA_VAULT_ROUTE_POLICY",
+                add(actionId, "OBJECTIVE.THNI.DATA_VAULT_CONTROLLER",
+                        TraceOutputKind.BANDED, 1600.0f,
+                        "Keep the Rebel trooper at Data Vault to complete the two-location flip route"));
+    }
+
+    public static PolicyResult scoreTheyHaveNoIdeaRogueOneScarifRoute(
+            String actionId, boolean routeDestination) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!routeDestination) {
+            return new PolicyResult(
+                    "DEPLOY_THNI_ROGUE_ONE_SCARIF_ROUTE_POLICY", List.of());
+        }
+        return single("DEPLOY_THNI_ROGUE_ONE_SCARIF_ROUTE_POLICY",
+                add(actionId, "OBJECTIVE.THNI.ROGUE_ONE_SCARIF",
+                        TraceOutputKind.BANDED, 1600.0f,
+                        "Deploy Rogue One to Scarif so it supplies the system-control leg of the flip route"));
+    }
+
     public static PolicyResult scoreThreeSiteObjectiveCompletion(
             String actionId, boolean completesThreeSiteObjective) {
         Objects.requireNonNull(actionId, "actionId");

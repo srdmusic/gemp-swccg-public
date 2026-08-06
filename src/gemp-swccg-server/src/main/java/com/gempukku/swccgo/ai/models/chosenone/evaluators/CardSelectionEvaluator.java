@@ -917,6 +917,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     ? findExactReservePullCandidate(
                         context, cardId, blueprintId)
                     : null;
+        PhysicalCard theyHaveNoIdeaSource =
+                readExactTheyHaveNoIdeaPullSource(context);
+        PhysicalCard theyHaveNoIdeaCandidate =
+                theyHaveNoIdeaSource != null
+                    ? findExactReservePullCandidate(
+                        context, cardId, blueprintId)
+                    : null;
         com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer
                 .ObjectiveProgressCandidateRole role =
                 context.getObjectiveAnalyzer()
@@ -950,6 +957,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 action.addReasoning(
                     sycPull.reason(), sycPull.delta());
             }
+        }
+        if (theyHaveNoIdeaCandidate != null) {
+            applyPullSelectionPolicy(action,
+                    PullSelectionCandidatePolicy
+                        .scoreTheyHaveNoIdeaNativeRoute(
+                            action.getActionId(),
+                            context.getObjectiveAnalyzer()
+                                .getTheyHaveNoIdeaNativePullPriority(
+                                    context.getGame(),
+                                    context.getPlayerId(),
+                                    theyHaveNoIdeaCandidate)));
         }
         applyPullSelectionPolicy(action,
                 PullSelectionCandidatePolicy
@@ -1093,6 +1111,41 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return exactMassassi || exactEntanglements
                     || exactOldAllies
                     || exactCountedOperative ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private PhysicalCard readExactTheyHaveNoIdeaPullSource(
+            DecisionContext context) {
+        if (context == null || context.getGame() == null
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !"ARBITRARY_CARDS".equals(context.getDecisionType())
+                || context.getDecisionText() == null
+                || !"choose card to deploy from reserve deck"
+                    .equalsIgnoreCase(context.getDecisionText().trim())
+                || context.getMin() != 1 || context.getMax() != 1) {
+            return null;
+        }
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            GameTextActionId actionId = liveAction != null
+                    ? liveAction.getGameTextActionId() : null;
+            String actionText = liveAction != null
+                    ? liveAction.getText() : null;
+            return actionId == GameTextActionId
+                        .THEY_HAVE_NO_IDEA_WERE_COMING__DOWNLOAD_SITE_OR_STARSHIP
+                    && context.getObjectiveAnalyzer()
+                        .isTheyHaveNoIdeaNativePullAction(
+                            context.getGame(), context.getPlayerId(),
+                            source, actionText)
+                    ? source : null;
         } catch (Exception ignored) {
             return null;
         }
@@ -1490,6 +1543,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         } else if (textLower.contains("move to,")
                    || textLower.contains("where to move")
                    || textLower.contains("where to take off")
+                   || textLower.contains("where to land")
+                        && textLower.contains("206_7")
+                        && context.getObjectiveAnalyzer() != null
+                        && context.getObjectiveAnalyzer()
+                            .isTheyHaveNoIdeaObjectiveFamily()
                    || textLower.contains("where to shuttle")
                    || textLower.contains("where to disembark")
                    || (textLower.contains("move") && textLower.contains("to")
@@ -2213,6 +2271,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     .scoreCountedObjectiveProgress(
                                         action.getActionId(),
                                         countedProgress));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreTheyHaveNoIdeaDataVaultRoute(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .isTheyHaveNoIdeaDataVaultTrooperDeployDestination(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreTheyHaveNoIdeaRogueOneScarifRoute(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .isTheyHaveNoIdeaRogueOneScarifDeployDestination(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
                             applyDeploySitingPolicy(action,
                                 DeployObjectiveSitingPolicy
                                     .scoreThreeSiteObjectiveCompletion(
@@ -5659,6 +5735,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         context.getGame(),
                         context.getPlayerId(),
                         physicalCard);
+        boolean preferredTheyHaveNoIdeaRouteCard =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isPreferredTheyHaveNoIdeaRouteForceLossCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
         if (route == ForceLossPolicy.Route.STANDALONE) {
             myLord = objectiveAnalyzer.getObjectiveTitle() != null
                     && objectiveAnalyzer.isMyLord();
@@ -5670,6 +5755,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     || setYourCourseMovementForceReserve
                     || preferredCountedObjectiveLocation
                     || preferredCountedObjectivePresence
+                    || preferredTheyHaveNoIdeaRouteCard
                     || candidate.fromHand() && requiredActor;
             pullable = candidate.fromHand() && title != null && !required
                     && !requiredOnTableCard
@@ -5687,6 +5773,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     || setYourCourseMovementForceReserve
                     || preferredCountedObjectiveLocation
                     || preferredCountedObjectivePresence
+                    || preferredTheyHaveNoIdeaRouteCard
                     || requiredActor;
             pullable = title != null && !required
                     && !requiredOnTableCard
@@ -8039,6 +8126,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     if (location != null) {
                         String title = location.getTitle();
                         action.setDisplayText("Move to " + (title != null ? title : "location"));
+                        boolean objectiveTheyHaveNoIdeaLandingDestination =
+                            fsMover != null
+                            && context.getObjectiveAnalyzer() != null
+                            && context.getObjectiveAnalyzer().isAnalyzed()
+                            && context.getObjectiveAnalyzer()
+                                .isTheyHaveNoIdeaRogueOneLandingDestination(
+                                    game, playerId, fsMover, location);
                         boolean guaranteedCaptureMoveDestination =
                                 applyCaptureMoveDestination(
                                     context,
@@ -8083,7 +8177,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
                                     .vetoMoveOrigin(game, gameState, playerId, fsMover, fsOrigin);
                             }
-                            if (fsV != null) {
+                            if (fsV != null
+                                    && !objectiveTheyHaveNoIdeaLandingDestination) {
                                 action.hardVeto(fsV);
                                 logger.warn("FORMATION SAFETY (move-dest): {}", fsV);
                             } else {
@@ -8643,6 +8738,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         1200.0f,
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.OLD_ALLIES.FALCON_DESTINATION"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.ORDERING);
+                                }
+                                if (objectiveTheyHaveNoIdeaLandingDestination) {
+                                    action.addReasoning(
+                                        "OBJECTIVE THNI ROGUE ONE LANDING: choose Landing Pad Nine so Rogue One supplies the back-side exception",
+                                        1600.0f,
+                                        TraceRuleId.of(
+                                            "MOVE.OBJECTIVE.THNI.ROGUE_ONE_LANDING_DESTINATION"),
                                         TraceDomainId.MOVE,
                                         TraceOutputKind.ORDERING);
                                 }

@@ -477,6 +477,12 @@ public class MoveEvaluator extends ActionEvaluator {
                     logger.debug("[MoveEvaluator] Could not find card: {}", e.getMessage());
                 }
             }
+            boolean theyHaveNoIdeaRogueOneLanding =
+                    cardToMove != null
+                    && context.getObjectiveAnalyzer() != null
+                    && context.getObjectiveAnalyzer()
+                        .isTheyHaveNoIdeaRogueOneLandingAction(
+                            game, playerId, cardToMove, actionLower);
 
             if (cardToMove != null && gameState != null
                     && game != null && playerId != null
@@ -1631,6 +1637,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                 gateAnalyzer != null
                                 && gateAnalyzer.isAnalyzed()
                                 && gateAnalyzer.isFlipped()
+                                && !theyHaveNoIdeaRogueOneLanding
                                 && gateAnalyzer.wouldDepartureTriggerFlipBack(
                                     game, playerId, cardToMove);
                         boolean departureTriggersObjectiveLoss =
@@ -2817,14 +2824,32 @@ public class MoveEvaluator extends ActionEvaluator {
                 }
                 switch (landing.route()) {
                     case HARD_VETO:
-                        ladderVetoHard = true;
-                        ladderVetoHardReason = landing.reason();
-                        logger.warn("[MoveEvaluator] V49 LADDER VETO: {} landing at site with no passengers — power 0 death trap!",
-                            landing.cardName());
+                        if (theyHaveNoIdeaRogueOneLanding) {
+                            action.addReasoning(
+                                "OBJECTIVE.THNI.ROGUE_ONE_LAND: land at Landing Pad Nine to establish the back-side exception",
+                                800.0f);
+                            ladderClaimR2(
+                                "OBJECTIVE.THNI.ROGUE_ONE_LAND",
+                                800.0f, 0.0f, false);
+                        } else {
+                            ladderVetoHard = true;
+                            ladderVetoHardReason = landing.reason();
+                            logger.warn("[MoveEvaluator] V49 LADDER VETO: {} landing at site with no passengers — power 0 death trap!",
+                                landing.cardName());
+                        }
                         break;
                     case STARFIGHTER_PENALTY:
-                        action.addReasoning(landing.reason(), landing.delta());
-                        logger.info("[MoveEvaluator] BLOCKED: Landing starfighter {}", landing.cardName());
+                        if (theyHaveNoIdeaRogueOneLanding) {
+                            action.addReasoning(
+                                "OBJECTIVE.THNI.ROGUE_ONE_LAND: land at Landing Pad Nine to establish the back-side exception",
+                                800.0f);
+                            ladderClaimR2(
+                                "OBJECTIVE.THNI.ROGUE_ONE_LAND",
+                                800.0f, 0.0f, false);
+                        } else {
+                            action.addReasoning(landing.reason(), landing.delta());
+                            logger.info("[MoveEvaluator] BLOCKED: Landing starfighter {}", landing.cardName());
+                        }
                         break;
                     case PASSENGER_SHIP_ALLOWED:
                         action.addReasoning(landing.reason(), landing.delta());

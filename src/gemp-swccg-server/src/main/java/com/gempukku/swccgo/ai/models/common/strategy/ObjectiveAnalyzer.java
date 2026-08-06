@@ -4121,6 +4121,10 @@ public class ObjectiveAnalyzer {
             return false;
         }
         try {
+            if (isTheyHaveNoIdeaObjectiveFamily()) {
+                return wouldTheyHaveNoIdeaDepartureTriggerFlipBack(
+                        game, playerId, mover);
+            }
             // A location-scoped on-table actor stops matching when it leaves
             // that location. Global on-table actors, such as Vader for Hunt
             // Down, remain valid after ordinary movement.
@@ -4178,6 +4182,103 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Evaluates THNI's compound back-side law as one counterfactual. Treating
+     * its two allOf legs independently is incorrect because Rogue One at an
+     * occupied Scarif site is the explicit exception to the occupation floor.
+     */
+    public boolean wouldTheyHaveNoIdeaDepartureTriggerFlipBack(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (!isTheyHaveNoIdeaObjectiveFamily() || !isFlipped
+                || game == null || playerId == null || mover == null
+                || !playerId.equals(mover.getOwner())
+                || mover.getZone() == null || !mover.getZone().isInPlay()
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        TheyHaveNoIdeaBackState current =
+                theyHaveNoIdeaBackStateAfterRemoval(
+                    game, playerId, null);
+        if (current.flipBackConditionMet()) return false;
+        TheyHaveNoIdeaBackState after =
+                theyHaveNoIdeaBackStateAfterRemoval(
+                    game, playerId, mover);
+        return after.flipBackConditionMet();
+    }
+
+    private record TheyHaveNoIdeaBackState(
+            int occupiedScarifLocations,
+            boolean rogueOneAtOccupiedScarifSite) {
+        private boolean flipBackConditionMet() {
+            return occupiedScarifLocations <= 1
+                    && !rogueOneAtOccupiedScarifSite;
+        }
+    }
+
+    private TheyHaveNoIdeaBackState
+            theyHaveNoIdeaBackStateAfterRemoval(
+                    SwccgGame game, String playerId,
+                    PhysicalCard removedRoot) {
+        GameState gameState = game.getGameState();
+        Set<Integer> occupiedLocationIds = new HashSet<>();
+        List<PhysicalCard> locations = gameState.getTopLocations();
+        Collection<PhysicalCard> cards =
+                gameState.getAllPermanentCards();
+        if (locations != null && cards != null) {
+            for (PhysicalCard location : locations) {
+                if (location == null
+                        || !Filters.Scarif_location.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), location)) {
+                    continue;
+                }
+                for (PhysicalCard card : cards) {
+                    if (card == null
+                            || !playerId.equals(card.getOwner())
+                            || !candidateProvidesPresenceOutsideRemovedGroup(
+                                game, card, removedRoot, null)) {
+                        continue;
+                    }
+                    PhysicalCard contributionLocation =
+                            presenceContributionLocation(game, card);
+                    if (samePhysicalLocation(
+                            contributionLocation, location)) {
+                        occupiedLocationIds.add(
+                                location.getPermanentCardId());
+                        break;
+                    }
+                }
+            }
+        }
+
+        boolean validRogueOneException = false;
+        if (cards != null) {
+            for (PhysicalCard card : cards) {
+                if (!isExactOwnedCard(card, playerId, "206_7")
+                        || belongsToRemovedGroup(
+                            card, removedRoot, null)
+                        || !isActiveForSpot(game, card, true)) {
+                    continue;
+                }
+                PhysicalCard location = game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(gameState, card);
+                if (location != null
+                        && occupiedLocationIds.contains(
+                            location.getPermanentCardId())
+                        && Filters.Scarif_site.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), location)) {
+                    validRogueOneException = true;
+                    break;
+                }
+            }
+        }
+        return new TheyHaveNoIdeaBackState(
+                occupiedLocationIds.size(),
+                validRogueOneException);
     }
 
     /**
@@ -10277,6 +10378,532 @@ public class ObjectiveAnalyzer {
     public boolean isOldAlliesObjectiveFamily() {
         return analyzed && ("204_32".equals(objectiveBlueprintId)
                 || "204_32_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isTheyHaveNoIdeaObjectiveFamily() {
+        return analyzed && ("209_29".equals(objectiveBlueprintId)
+                || "209_29_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isTheyHaveNoIdeaNativePullAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isTheyHaveNoIdeaObjectiveFamily() && !isFlipped
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && actionText != null
+                && "deploy starship or location from reserve deck".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Orders the objective's one-per-turn mixed pull as one proved durable
+     * route: stage Landing Pad Nine first, then secure Rogue One. No other
+     * Scarif site is advertised as a fallback because this route's landing
+     * safety proof is intentionally exact to Landing Pad Nine.
+     */
+    public int getTheyHaveNoIdeaNativePullPriority(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!isTheyHaveNoIdeaObjectiveFamily() || isFlipped
+                || game == null || playerId == null || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        boolean landingPadAvailable = false;
+        List<PhysicalCard> locations =
+                game.getGameState().getTopLocations();
+        if (locations != null) {
+            for (PhysicalCard location : locations) {
+                if (exactBlueprint(location, "209_26")) {
+                    landingPadAvailable = true;
+                    break;
+                }
+            }
+        }
+        if (!landingPadAvailable) {
+            List<PhysicalCard> hand = game.getGameState()
+                    .getHand(playerId);
+            if (hand != null) {
+                for (PhysicalCard card : hand) {
+                    if (isExactOwnedCard(card, playerId, "209_26")) {
+                        landingPadAvailable = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (exactBlueprint(candidate, "209_26")) {
+            return landingPadAvailable ? 0 : 4;
+        }
+        if (exactBlueprint(candidate, "206_7")) {
+            return landingPadAvailable ? 3 : 0;
+        }
+        return 0;
+    }
+
+    /**
+     * Routes Rogue One to the system that supplies THNI's space-control leg.
+     * The destination must currently be uncontested; the rule does not turn
+     * an objective route into a blind attack on an enemy-held system.
+     */
+    public boolean isTheyHaveNoIdeaRogueOneScarifDeployDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        if (!isTheyHaveNoIdeaObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || !isExactOwnedCard(candidate, playerId, "206_7")
+                || destination == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !exactBlueprint(destination, "209_23")) {
+            return false;
+        }
+        String opponent = game.getGameState().getOpponent(playerId);
+        return opponent != null
+                && !Filters.occupies(opponent).accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    destination);
+    }
+
+    public boolean isTheyHaveNoIdeaRogueOneLandingAction(
+            SwccgGame game, String playerId,
+            PhysicalCard mover, String actionText) {
+        if (!isTheyHaveNoIdeaObjectiveFamily() || !isFlipped
+                || !isExactOwnedCard(mover, playerId, "206_7")
+                || actionText == null
+                || !actionText.toLowerCase(Locale.ROOT).contains("land")
+                || game == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !candidateProvidesPresence(game, mover)) {
+            return false;
+        }
+        PhysicalCard origin = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(game.getGameState(), mover);
+        if (origin == null || !Filters.Scarif_system.accepts(
+                game.getGameState(), game.getModifiersQuerying(),
+                origin)) {
+            return false;
+        }
+        List<PhysicalCard> locations =
+                game.getGameState().getTopLocations();
+        if (locations == null) return false;
+        for (PhysicalCard location : locations) {
+            if (isTheyHaveNoIdeaRogueOneLandingDestination(
+                    game, playerId, mover, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isTheyHaveNoIdeaRogueOneLandingDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard mover, PhysicalCard destination) {
+        if (!isTheyHaveNoIdeaObjectiveFamily() || !isFlipped
+                || !isExactOwnedCard(mover, playerId, "206_7")
+                || game == null || destination == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !exactBlueprint(destination, "209_26")
+                || !candidateProvidesPresence(game, mover)) {
+            return false;
+        }
+        String opponent = game.getGameState().getOpponent(playerId);
+        PhysicalCard origin = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(game.getGameState(), mover);
+        return opponent != null
+                && !Filters.occupies(opponent).accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    destination)
+                && Filters.canLandToLocation(
+                    playerId, mover, false, false, 0)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), destination)
+                && origin != null
+                && Filters.Scarif_system.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    origin)
+                && Filters.Scarif_site.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    destination);
+    }
+
+    /**
+     * Keeps the objective's cheap ground controller at Data Vault instead of
+     * loading it aboard Rogue One. Rebel troopers become spies from the
+     * objective's own game text, so an uncontested trooper here supplies the
+     * second controlled Scarif location without spending another body.
+     */
+    public boolean isTheyHaveNoIdeaDataVaultTrooperDeployDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        if (!isTheyHaveNoIdeaObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null || destination == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !exactBlueprint(destination, "209_25")
+                || !Filters.and(Filters.Rebel, Filters.trooper)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)) {
+            return false;
+        }
+        String opponent = game.getGameState().getOpponent(playerId);
+        return opponent != null
+                && !Filters.occupies(opponent).accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    destination)
+                && !Filters.controls(playerId).accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    destination)
+                && candidateProvidesPresence(game, candidate);
+    }
+
+    private record TheyHaveNoIdeaRoutePlan(
+            PhysicalCard rogueOne,
+            PhysicalCard bodhi,
+            PhysicalCard trooper,
+            boolean rogueOneInPlay,
+            int rogueOnePayment,
+            int bodhiPayment,
+            int trooperPayment) {
+        private int futureForceAfter(PhysicalCard deployingCandidate) {
+            int reserve = rogueOnePayment + bodhiPayment
+                    + trooperPayment;
+            if (deployingCandidate == rogueOne) {
+                reserve -= rogueOnePayment;
+            }
+            if (deployingCandidate == bodhi && rogueOneInPlay) {
+                reserve -= bodhiPayment;
+            }
+            if (deployingCandidate == trooper) {
+                reserve -= trooperPayment;
+            }
+            return Math.max(0, reserve);
+        }
+
+        private boolean includesOrdinaryDeploy(
+                PhysicalCard candidate) {
+            return candidate != null
+                    && (candidate == trooper
+                        || candidate == rogueOne
+                        || rogueOneInPlay && candidate == bodhi);
+        }
+    }
+
+    /**
+     * Exact, currently executable THNI route. It models the real engine
+     * sequence proved by the contract test: Rogue One plus Bodhi may deploy
+     * simultaneously to Scarif, then one Rebel trooper controls Data Vault.
+     */
+    private TheyHaveNoIdeaRoutePlan findTheyHaveNoIdeaRoutePlan(
+            SwccgGame game, String playerId) {
+        if (!isTheyHaveNoIdeaObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard scarif = findTheyHaveNoIdeaLocation(
+                    gameState, "209_23");
+            PhysicalCard dataVault = findTheyHaveNoIdeaLocation(
+                    gameState, "209_25");
+            PhysicalCard landingPad = findTheyHaveNoIdeaLocation(
+                    gameState, "209_26");
+            String opponent = gameState.getOpponent(playerId);
+            if (scarif == null || dataVault == null
+                    || landingPad == null || opponent == null
+                    || Filters.occupies(opponent).accepts(
+                        gameState, game.getModifiersQuerying(), scarif)
+                    || Filters.occupies(opponent).accepts(
+                        gameState, game.getModifiersQuerying(), dataVault)
+                    || Filters.occupies(opponent).accepts(
+                        gameState, game.getModifiersQuerying(), landingPad)) {
+                return null;
+            }
+
+            boolean vaultControlled = Filters.controls(playerId).accepts(
+                    gameState, game.getModifiersQuerying(), dataVault);
+            PhysicalCard trooper = null;
+            int trooperPayment = 0;
+            if (!vaultControlled) {
+                int cheapestTrooper = Integer.MAX_VALUE;
+                for (PhysicalCard card : gameState.getHand(playerId)) {
+                    if (card == null
+                            || !Filters.and(Filters.Rebel, Filters.trooper)
+                                .accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(), card)
+                            || !candidateProvidesPresence(game, card)
+                            || !Filters.deployableToLocation(
+                                    card, Filters.sameCardId(dataVault),
+                                    true, 0.0f)
+                                .accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(), card)) {
+                        continue;
+                    }
+                    Integer payment = requiredCardDeployCostAt(
+                            game, card, dataVault);
+                    if (payment != null && payment < cheapestTrooper) {
+                        trooper = card;
+                        trooperPayment = payment;
+                        cheapestTrooper = payment;
+                    }
+                }
+                if (trooper == null) return null;
+            }
+
+            PhysicalCard rogueOne = findTheyHaveNoIdeaOwnedCardInPlay(
+                    gameState, playerId, "206_7");
+            boolean rogueOneInPlay = rogueOne != null;
+            int rogueOnePayment = 0;
+            PhysicalCard bodhi = null;
+            int bodhiPayment = 0;
+            if (rogueOneInPlay) {
+                PhysicalCard rogueOneLocation = game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(gameState, rogueOne);
+                if (!samePhysicalLocation(rogueOneLocation, scarif)) {
+                    return null;
+                }
+                if (!Filters.piloted.accepts(
+                        gameState, game.getModifiersQuerying(), rogueOne)) {
+                    bodhi = findTheyHaveNoIdeaHandCard(
+                            gameState, playerId, "206_1");
+                    if (bodhi == null
+                            || !isProspectivePairRouteLegalAt(
+                                game, playerId, rogueOne, bodhi, scarif)) {
+                        return null;
+                    }
+                    Integer payment = requiredCardDeployCostAt(
+                            game, bodhi, rogueOne);
+                    if (payment == null) return null;
+                    bodhiPayment = payment;
+                }
+            } else {
+                rogueOne = findTheyHaveNoIdeaAccessibleCard(
+                        gameState, playerId, "206_7");
+                bodhi = findTheyHaveNoIdeaHandCard(
+                        gameState, playerId, "206_1");
+                if (rogueOne == null || bodhi == null
+                        || !isProspectivePairRouteLegalAt(
+                            game, playerId, rogueOne, bodhi, scarif)) {
+                    return null;
+                }
+                PhysicalCard objective = findOurObjective(
+                        gameState, playerId);
+                if (objective == null) return null;
+                float simultaneousPayment = game.getModifiersQuerying()
+                        .getSimultaneousDeployCost(
+                            gameState, objective,
+                            rogueOne, false, 0.0f,
+                            bodhi, false, 0.0f,
+                            scarif, null, true);
+                rogueOnePayment = (int) Math.ceil(
+                        Math.max(0.0f, simultaneousPayment));
+                bodhiPayment = 0;
+            }
+            return new TheyHaveNoIdeaRoutePlan(
+                    rogueOne, bodhi, trooper, rogueOneInPlay,
+                    rogueOnePayment, bodhiPayment, trooperPayment);
+        } catch (Exception e) {
+            LOG.debug("THNI exact route unavailable: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private PhysicalCard findTheyHaveNoIdeaLocation(
+            GameState gameState, String blueprintId) {
+        List<PhysicalCard> locations = gameState.getTopLocations();
+        if (locations == null) return null;
+        for (PhysicalCard card : locations) {
+            if (exactBlueprint(card, blueprintId)) return card;
+        }
+        return null;
+    }
+
+    private PhysicalCard findTheyHaveNoIdeaOwnedCardInPlay(
+            GameState gameState, String playerId,
+            String blueprintId) {
+        Collection<PhysicalCard> permanents =
+                gameState.getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard card : permanents) {
+            if (isExactOwnedCard(card, playerId, blueprintId)
+                    && card.getZone() != null
+                    && card.getZone().isInPlay()) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    private PhysicalCard findTheyHaveNoIdeaHandCard(
+            GameState gameState, String playerId,
+            String blueprintId) {
+        List<PhysicalCard> hand = gameState.getHand(playerId);
+        if (hand == null) return null;
+        for (PhysicalCard card : hand) {
+            if (isExactOwnedCard(card, playerId, blueprintId)) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    private PhysicalCard findTheyHaveNoIdeaAccessibleCard(
+            GameState gameState, String playerId,
+            String blueprintId) {
+        PhysicalCard hand = findTheyHaveNoIdeaHandCard(
+                gameState, playerId, blueprintId);
+        if (hand != null) return hand;
+        List<PhysicalCard> reserve = gameState.getReserveDeck(playerId);
+        if (reserve == null) return null;
+        for (PhysicalCard card : reserve) {
+            if (isExactOwnedCard(card, playerId, blueprintId)) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    public int getTheyHaveNoIdeaFutureRouteForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        TheyHaveNoIdeaRoutePlan route =
+                findTheyHaveNoIdeaRoutePlan(game, playerId);
+        return route != null
+                ? route.futureForceAfter(deployingCandidate) : 0;
+    }
+
+    public boolean isTheyHaveNoIdeaRouteDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        TheyHaveNoIdeaRoutePlan route =
+                findTheyHaveNoIdeaRoutePlan(game, playerId);
+        return route != null && route.includesOrdinaryDeploy(candidate);
+    }
+
+    /** Protect one physical copy of each still-missing durable route piece. */
+    public boolean isPreferredTheyHaveNoIdeaRouteForceLossCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isTheyHaveNoIdeaObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        GameState gameState = game.getGameState();
+        if (findTheyHaveNoIdeaLocation(gameState, "209_26") == null
+                && candidate == preferredTheyHaveNoIdeaForceLossCard(
+                    game, playerId, "209_26", false)) {
+            return true;
+        }
+
+        PhysicalCard rogueOne = findTheyHaveNoIdeaOwnedCardInPlay(
+                gameState, playerId, "206_7");
+        if (rogueOne == null
+                && candidate == preferredTheyHaveNoIdeaForceLossCard(
+                    game, playerId, "206_7", false)) {
+            return true;
+        }
+        boolean needsBodhi = rogueOne == null
+                || !Filters.piloted.accepts(
+                    gameState, game.getModifiersQuerying(), rogueOne);
+        if (needsBodhi
+                && candidate == preferredTheyHaveNoIdeaForceLossCard(
+                    game, playerId, "206_1", true)) {
+            return true;
+        }
+
+        PhysicalCard dataVault = findTheyHaveNoIdeaLocation(
+                gameState, "209_25");
+        boolean needsTrooper = dataVault != null
+                && !Filters.controls(playerId).accepts(
+                    gameState, game.getModifiersQuerying(), dataVault);
+        return needsTrooper
+                && candidate == preferredTheyHaveNoIdeaTrooperForceLossCard(
+                    game, playerId);
+    }
+
+    private PhysicalCard preferredTheyHaveNoIdeaForceLossCard(
+            SwccgGame game, String playerId,
+            String blueprintId, boolean preferHand) {
+        PhysicalCard preferred = null;
+        int preferredRank = Integer.MAX_VALUE;
+        for (PhysicalCard card : objectiveForceLossSurvivors(
+                game.getGameState(), playerId)) {
+            if (!isExactOwnedCard(card, playerId, blueprintId)) {
+                continue;
+            }
+            int rank = theyHaveNoIdeaForceLossZoneRank(
+                    card.getZone(), preferHand);
+            if (preferred == null || rank < preferredRank
+                    || rank == preferredRank
+                        && card.getPermanentCardId()
+                            < preferred.getPermanentCardId()) {
+                preferred = card;
+                preferredRank = rank;
+            }
+        }
+        return preferred;
+    }
+
+    private PhysicalCard preferredTheyHaveNoIdeaTrooperForceLossCard(
+            SwccgGame game, String playerId) {
+        PhysicalCard preferred = null;
+        int preferredRank = Integer.MAX_VALUE;
+        int preferredCost = Integer.MAX_VALUE;
+        PhysicalCard dataVault = findTheyHaveNoIdeaLocation(
+                game.getGameState(), "209_25");
+        if (dataVault == null) return null;
+        for (PhysicalCard card : objectiveForceLossSurvivors(
+                game.getGameState(), playerId)) {
+            if (card == null || !playerId.equals(card.getOwner())
+                    || !Filters.and(Filters.Rebel, Filters.trooper)
+                        .accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            int rank = theyHaveNoIdeaForceLossZoneRank(
+                    card.getZone(), true);
+            Integer liveCost = requiredCardDeployCostAt(
+                    game, card, dataVault);
+            int cost = liveCost != null
+                    ? liveCost : Integer.MAX_VALUE;
+            if (preferred == null || rank < preferredRank
+                    || rank == preferredRank && cost < preferredCost
+                    || rank == preferredRank && cost == preferredCost
+                        && card.getPermanentCardId()
+                            < preferred.getPermanentCardId()) {
+                preferred = card;
+                preferredRank = rank;
+                preferredCost = cost;
+            }
+        }
+        return preferred;
+    }
+
+    private int theyHaveNoIdeaForceLossZoneRank(
+            Zone zone, boolean preferHand) {
+        if (preferHand && zone == Zone.HAND) return 0;
+        if (zone == Zone.RESERVE_DECK
+                || zone == Zone.TOP_OF_RESERVE_DECK) {
+            return preferHand ? 1 : 0;
+        }
+        if (!preferHand && zone == Zone.HAND) return 1;
+        return 2;
     }
 
     public boolean isSetYourCourseObjectiveFamily() {

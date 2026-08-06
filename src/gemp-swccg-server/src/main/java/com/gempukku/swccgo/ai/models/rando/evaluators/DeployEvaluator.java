@@ -1739,6 +1739,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                 .getOldAlliesFutureRouteForceReserve(
                                     game, playerId, card)
                             : 0;
+                    int theyHaveNoIdeaRouteReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getTheyHaveNoIdeaFutureRouteForceReserve(
+                                    game, playerId, card)
+                            : 0;
                     boolean exactSetYourCourseSuperlaserDeploy =
                         context.getObjectiveAnalyzer() != null
                             && context.getObjectiveAnalyzer()
@@ -2046,6 +2052,25 @@ public class DeployEvaluator extends ActionEvaluator {
                                     < oldAlliesRouteReserve) {
                             action.hardVeto(
                                 "OBJECTIVE.OLD_ALLIES.ROUTE_FORCE_RESERVE: preserve the remaining system, two-site, move, and battle payments");
+                            actions.add(action);
+                            continue;
+                        }
+                    }
+                    if (countedOperativeOrdinaryDeploy
+                            && theyHaveNoIdeaRouteReserve > 0) {
+                        if (exactNormalDeployPayment == null
+                                && massassiDeployPayment > 0) {
+                            action.hardVeto(
+                                "OBJECTIVE.THNI.ROUTE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the exact Rogue One, pilot, and Data Vault payments");
+                            actions.add(action);
+                            continue;
+                        }
+                        if (exactNormalDeployPayment != null
+                                && availableForce
+                                    - exactNormalDeployPayment
+                                    < theyHaveNoIdeaRouteReserve) {
+                            action.hardVeto(
+                                "OBJECTIVE.THNI.ROUTE_FORCE_RESERVE: preserve the remaining Rogue One, pilot, and Data Vault payments");
                             actions.add(action);
                             continue;
                         }

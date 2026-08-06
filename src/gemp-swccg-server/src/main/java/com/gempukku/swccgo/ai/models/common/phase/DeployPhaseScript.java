@@ -466,6 +466,11 @@ public abstract class DeployPhaseScript {
                     game, playerId, card)) {
             return Step.OBJECTIVE_ROUTE_ASSETS;
         }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer.isTheyHaveNoIdeaRouteDeployCandidate(
+                    game, playerId, card)) {
+            return Step.OBJECTIVE_ROUTE_ASSETS;
+        }
         if (cat == CardCategory.WEAPON
                 && objectiveAnalyzer != null
                 && objectiveAnalyzer
