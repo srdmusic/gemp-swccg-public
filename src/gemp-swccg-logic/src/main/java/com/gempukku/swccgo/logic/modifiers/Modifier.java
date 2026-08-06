@@ -274,7 +274,7 @@ public interface Modifier {
     Icon getIcon();
     int getIconCountModifier(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard, Icon icon);
 
-    float getForfeitModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
+    float getForfeitIncreaseLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
 
     float getDestinyModifier(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
 

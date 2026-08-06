@@ -597,7 +597,7 @@ public abstract class AbstractModifier implements Modifier {
     }
 
     @Override
-    public float getForfeitModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+    public float getForfeitIncreaseLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
         return 0;
     }
 
