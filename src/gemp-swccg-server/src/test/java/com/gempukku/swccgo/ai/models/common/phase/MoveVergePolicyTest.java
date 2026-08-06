@@ -125,29 +125,31 @@ public class MoveVergePolicyTest {
     }
 
     @Test
-    public void preFlipOrbitHoldsWithoutScoreOrVeto() {
+    public void preFlipOrbitHardHoldsUntilTheActorGateCompletes() {
         MoveVergePolicy.Evaluation result = MoveVergePolicy.evaluate(
                 true, true, false, "Move using hyperspeed");
 
         assertEquals(MoveVergePolicy.Branch.PRE_FLIP_HOLD,
                 result.branch());
         assertFalse(result.contribution().applies());
-        assertFalse(result.hardVeto());
+        assertTrue(result.hardVeto());
+        assertEquals(
+                "V79 FRONT FLIP HOLD: Death Star must remain orbiting Scarif until Krennic or Tarkin completes the site gate",
+                result.hardVetoReason());
     }
 
     @Test
-    public void postFlipOrbitProducesExactHardVeto() {
-        MoveVergePolicy.Evaluation result = MoveVergePolicy.evaluate(
-                true, true, true, "Orbit Scarif");
+    public void postFlipReleasesEverywhereBecauseTheBackRequiresALeaderNotOrbit() {
+        for (boolean atScarif : new boolean[]{false, true}) {
+            MoveVergePolicy.Evaluation result = MoveVergePolicy.evaluate(
+                    true, atScarif, true, "Move toward Scarif");
 
-        assertEquals(MoveVergePolicy.Branch.POST_FLIP_HOLD,
-                result.branch());
-        assertFalse(result.contribution().applies());
-        assertTrue(result.hardVeto());
-        assertEquals(
-                "V79b FLIP-BACK GUARD: objective flipped + Death Star orbiting Scarif"
-                        + " — leaving orbit un-satisfies 'Death Star orbiting Scarif'; stay parked",
-                result.hardVetoReason());
+            assertEquals(MoveVergePolicy.Branch.POST_FLIP_RELEASE,
+                    result.branch());
+            assertFalse(result.contribution().applies());
+            assertFalse(result.hardVeto());
+            assertNull(result.hardVetoReason());
+        }
     }
 
     @Test

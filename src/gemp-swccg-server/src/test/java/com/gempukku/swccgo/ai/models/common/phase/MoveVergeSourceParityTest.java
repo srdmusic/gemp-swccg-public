@@ -21,6 +21,20 @@ public class MoveVergeSourceParityTest {
     }
 
     @Test
+    public void deployReserveUsesTheExactFrontAndStaysMirrored()
+            throws IOException {
+        String rando = evaluatorSource("rando", "DeployEvaluator.java");
+        String chosen = evaluatorSource(
+                "chosenone", "DeployEvaluator.java");
+
+        assertEquals(normalize(rando), normalize(chosen));
+        assertTrue(rando.contains(
+                "v48Objective.isOnTheVergeObjectiveFront()"));
+        assertFalse(rando.contains(
+                "pTitle.contains(\"taking control of the weapon\")"));
+    }
+
+    @Test
     public void vergeHasOneSharedClassifier() throws IOException {
         String move = evaluatorSource("rando", "MoveEvaluator.java");
         String policy = policySource();
@@ -45,6 +59,10 @@ public class MoveVergeSourceParityTest {
         assertTrue(move.contains("z == null || !z.isInPlay()"));
         assertTrue(move.contains("cardToMove.getSystemOrbited()"));
         assertTrue(move.contains("context.getObjectiveAnalyzer()"));
+        assertTrue(move.contains("if (v79Verge)"));
+        assertTrue(move.contains(
+                "v79Analyzer.isOnTheVergeObjectiveFamily()"));
+        assertFalse(move.contains("if (v79Verge && v79AtScarif)"));
         assertTrue(move.contains("V79b flip-state check error"));
         assertTrue(move.contains("V79 Death Star move check error"));
         assertTrue(move.contains("action.addReasoning("));
@@ -94,14 +112,14 @@ public class MoveVergeSourceParityTest {
         for (String branch : new String[]{
                 "ORBIT_SCARIF", "PARSEC_SEVEN", "ONE_HOP_FROM_SCARIF",
                 "TOWARD_SCARIF", "WRONG_DIRECTION", "DEFAULT_MOVE",
-                "POST_FLIP_HOLD", "PRE_FLIP_HOLD"}) {
+                "POST_FLIP_RELEASE", "PRE_FLIP_HOLD"}) {
             assertTrue(branch, move.contains(
                     "MoveVergePolicy.Branch." + branch));
         }
         assertTrue(move.contains(
-                "post-flip Death Star orbiting Scarif — hyperspeed move VETOED"));
+                "objective back does not require Scarif orbit"));
         assertTrue(move.contains(
-                "orbiting Scarif pre-flip — no move bonus, holding for flip"));
+                "Death Star orbiting Scarif pre-flip, hyperspeed move VETOED"));
     }
 
     @Test
@@ -144,9 +162,9 @@ public class MoveVergeSourceParityTest {
         assertTrue(actionText.contains("pZone == null || !pZone.isInPlay()"));
         assertTrue(actionText.contains("pc.getSystemOrbited()"));
         assertTrue(actionText.contains("catch (Exception e) { /* ignore */ }"));
-        assertEquals(2, countOccurrences(
+        assertEquals(3, countOccurrences(
                 actionText, "actions.add(action);"));
-        assertEquals(6, countOccurrences(actionText, "continue;"));
+        assertEquals(7, countOccurrences(actionText, "continue;"));
         assertFalse(actionText.contains(".sort("));
 
         assertTrue(policy.contains(
@@ -187,7 +205,7 @@ public class MoveVergeSourceParityTest {
         int detectLog = window.indexOf(
                 "logger.warn(\"V103 PARSEC DETECT:", scanCatch);
         int impliedVerge = window.indexOf(
-                "if (!v79Verge && v79HaveDeathStar)", detectLog);
+                "if (!v79Verge && v79HaveDeathStar", detectLog);
         int primaryGate = window.indexOf(
                 "if (v79Verge && !v79AtScarif)", impliedVerge);
         int primaryParse = window.indexOf(
@@ -202,7 +220,7 @@ public class MoveVergeSourceParityTest {
                 "actions.add(action);", destinationPolicy);
         int primaryContinue = window.indexOf("continue;", primaryAdd);
         int fallbackGate = window.indexOf(
-                "if (v79IsParsecChoice)", primaryContinue);
+                "if (v79Verge && v79IsParsecChoice)", primaryContinue);
         int fallbackParse = window.indexOf(
                 "Integer.parseInt(actionText.trim())", fallbackGate);
         int fallbackCatch = window.indexOf(
@@ -239,7 +257,7 @@ public class MoveVergeSourceParityTest {
     }
 
     @Test
-    public void randoOnlyParsecInterceptorRemainsUntouched()
+    public void legacyRandoInterceptorIsRetiredAndBothEvaluatorsOwnTheRoute()
             throws IOException {
         String calAi = Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models/rando")
@@ -248,6 +266,11 @@ public class MoveVergeSourceParityTest {
                 "V79b DEATH STAR PARSEC: choices={} -> index {} (parsec {}, closest to Scarif 7)"));
         assertTrue(calAi.contains(
                 "direct interceptor V79b: evaluator lane never runs on this route"));
+        assertTrue(calAi.contains(
+                "boolean useLegacyV79bDirectInterceptor = false"));
+        assertTrue(calAi.contains(
+                "V79b FRONT FLIP HOLD: unflipped + orbiting Scarif"));
+        assertFalse(calAi.contains("V79b FLIP-BACK GUARD"));
 
         for (String bot : new String[]{"rando", "chosenone"}) {
             String actionText = evaluatorSource(
@@ -258,6 +281,10 @@ public class MoveVergeSourceParityTest {
                     "V79 PARSEC CHOICE: parsec 7 (Scarif) → +1500"));
             assertTrue(actionText.contains(
                     "MoveVergePolicy.evaluateParsecFallback(fparsec)"));
+            assertEquals(3, countOccurrences(actionText,
+                    ".isOnTheVergeObjectiveFront()"));
+            assertFalse(actionText.contains(
+                    ".isOnTheVergeObjectiveFamily()"));
         }
     }
 

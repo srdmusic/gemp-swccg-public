@@ -22,6 +22,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveThreatPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveUnarmedVaderPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveWeaponHunterPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveWinnabilityPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
@@ -54,8 +55,8 @@ import java.util.Set;
 // deploys to spots it immediately flees.
 // NOTE: the V79 parsec PARSE in this file is INERT; live Verge parsec steering = V79b in RandoCalAi
 // (+ the V103 fallback in ActionTextEvaluator). LIVE here (2026-07-07): the V79 +500 default-move
-// arm (now orbit-gated via getSystemOrbited) and the V79b FLIP-BACK GUARD hard veto
-// (post-flip + orbiting Scarif = never initiate the DS hyperspeed move).
+// arm (now orbit-gated via getSystemOrbited) and the source-true front-side hold
+// (pre-flip + orbiting Scarif = retain the orbit until the actor gate completes).
 // Absorbs (dead, commented below/nearby — revert path, do not delete): none.
 // Cross-refs: DEPLOY-2 (V136 twin), MOVE region in ActionTextEvaluator (V67ae + Movement Actions dispatch),
 // SVC-SAFETY (V163/V167/V169 loop trio). See resources/RANDO_REORG_PLAN_2026-07-02.md §3 + Rando_Section_Manifest_2026-07-06.xlsx.
@@ -357,8 +358,23 @@ public class MoveEvaluator extends ActionEvaluator {
 
             // Blocked-response gate: if the cancel-loop detector added this
             // actionId/actionText to the block set, hard-block here too.
-            boolean v160Blocked = MoveBlockedResponsePolicy.matches(
-                v160MoveBlocked, actionId, actionText);
+            boolean exactSetYourCourseRouteMove = false;
+            try {
+                if (cardIdStr != null && gameState != null
+                        && context.getObjectiveAnalyzer() != null) {
+                    PhysicalCard routeMover = gameState.findCardById(
+                            Integer.parseInt(cardIdStr));
+                    exactSetYourCourseRouteMove =
+                        context.getObjectiveAnalyzer()
+                            .isSetYourCourseRouteMoveAction(
+                                game, playerId, routeMover, actionText);
+                }
+            } catch (Exception ignored) {
+                // Unknown sources receive no exact route exception.
+            }
+            boolean v160Blocked = !exactSetYourCourseRouteMove
+                    && MoveBlockedResponsePolicy.matches(
+                        v160MoveBlocked, actionId, actionText);
             if (v160Blocked) {
                 // V169 (Steve, 2026-06): if the MOVER is ENDANGERED (outpowered at its current
                 // site), keep the move attemptable — retreat is how it survives. Asajj's
@@ -1031,6 +1047,42 @@ public class MoveEvaluator extends ActionEvaluator {
                 }
             }
 
+            {
+                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer sycAnalyzer =
+                        context.getObjectiveAnalyzer();
+                SetYourCourseObjectivePolicy.Stage sycStage =
+                        sycAnalyzer != null
+                            ? sycAnalyzer.getSetYourCourseRouteStage(
+                                game, playerId)
+                            : SetYourCourseObjectivePolicy.Stage
+                                .INACTIVE_OR_UNSUPPORTED;
+                SetYourCourseObjectivePolicy.Evaluation sycMove =
+                        SetYourCourseObjectivePolicy.scoreMoveParent(
+                            sycStage,
+                            sycAnalyzer != null
+                                && sycAnalyzer
+                                    .isSetYourCourseClassicDeathStar(
+                                        game, playerId, cardToMove));
+                if (sycMove.applies()) {
+                    if (sycMove.delta() != 0.0f) {
+                        action.addReasoning(
+                            sycMove.reason(), sycMove.delta(),
+                            TraceRuleId.of(
+                                "OBJECTIVE.SET_YOUR_COURSE.MOVE_TO_ALDERAAN"),
+                            TraceDomainId.MOVE,
+                            TraceOutputKind.BANDED);
+                    }
+                    if (sycMove.hardVeto()) {
+                        ladderVetoHard = true;
+                        ladderVetoHardReason = sycMove.reason();
+                    }
+                    if (sycMove.mandatory()) {
+                        ladderClaimR4Transit(
+                            "OBJECTIVE SET YOUR COURSE ALDERAAN ROUTE");
+                    }
+                }
+            }
+
             // === V79 (Steve, 2026-05-15): VERGE OF GREATNESS — MOVE DEATH STAR TOWARD SCARIF ===
             // Rando-as-Krennic must shepherd the Death Star from parsec 4 to orbit Scarif.
             // Death Star (V) starts at parsec 4 with hyperspeed 2. Scarif is at parsec 7.
@@ -1073,11 +1125,13 @@ public class MoveEvaluator extends ActionEvaluator {
                         v79AtScarif = true;
                     }
                     boolean v79Flipped = false;
-                    if (v79Verge && v79AtScarif) {
+                    if (v79Verge) {
                         try {
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v79Analyzer =
                                 context.getObjectiveAnalyzer();
-                            v79Flipped = v79Analyzer != null && v79Analyzer.isAnalyzed() && v79Analyzer.isFlipped();
+                            v79Flipped = v79Analyzer != null
+                                && v79Analyzer.isOnTheVergeObjectiveFamily()
+                                && v79Analyzer.isFlipped();
                         } catch (Exception ex) {
                             logger.debug("V79b flip-state check error: {}", ex.getMessage());
                         }
@@ -1106,12 +1160,12 @@ public class MoveEvaluator extends ActionEvaluator {
                         logger.warn("V79 DEATH STAR WRONG WAY: parsec {} → -300", v79Evaluation.destinationParsec());
                     } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.DEFAULT_MOVE) {
                         logger.warn("V79 DEATH STAR MOVE (no parsec parsed): '{}' → +500", v79Evaluation.actionLower());
-                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.POST_FLIP_HOLD) {
+                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.POST_FLIP_RELEASE) {
+                        logger.info("V79 DEATH STAR: objective back does not require Scarif orbit; normal movement may compete");
+                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.PRE_FLIP_HOLD) {
                         ladderVetoHard = v79Evaluation.hardVeto();
                         ladderVetoHardReason = v79Evaluation.hardVetoReason();
-                        logger.warn("V79b FLIP-BACK GUARD: post-flip Death Star orbiting Scarif — hyperspeed move VETOED ('{}')", actionText);
-                    } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.PRE_FLIP_HOLD) {
-                        logger.info("V79 DEATH STAR: orbiting Scarif pre-flip — no move bonus, holding for flip");
+                        logger.warn("V79 FRONT FLIP HOLD: Death Star orbiting Scarif pre-flip, hyperspeed move VETOED ('{}')", actionText);
                     }
                 } catch (Exception e) {
                     logger.debug("V79 Death Star move check error: {}", e.getMessage());

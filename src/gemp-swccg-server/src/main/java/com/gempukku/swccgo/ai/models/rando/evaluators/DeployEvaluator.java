@@ -274,7 +274,8 @@ public class DeployEvaluator extends ActionEvaluator {
                     }
                 }
                 // V79: track Verge of Greatness + Death Star state across the same scan
-                boolean v79VergeActive = false;
+                boolean v79VergeActive = v48Objective != null
+                    && v48Objective.isOnTheVergeObjectiveFront();
                 PhysicalCard v79DeathStar = null;
                 boolean v79DeathStarAtScarif = false;
                 for (PhysicalCard pCard : vaderCheckGs.getAllPermanentCards()) {
@@ -283,11 +284,6 @@ public class DeployEvaluator extends ActionEvaluator {
                     if (pZone == null || !pZone.isInPlay()) continue;
                     if (pCard.getBlueprint() == null || pCard.getTitle() == null) continue;
                     String pTitle = pCard.getTitle().toLowerCase(Locale.ROOT);
-                    // V79 detection: scan for Verge objective and Death Star (V)
-                    if (pTitle.contains("on the verge of greatness")
-                            || pTitle.contains("taking control of the weapon")) {
-                        v79VergeActive = true;
-                    }
                     // V79: detect Death Star (title only — (V) marker is Rarity not title)
                     if (pTitle.contains("death star")
                             && pCard.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
@@ -297,7 +293,7 @@ public class DeployEvaluator extends ActionEvaluator {
                         // card, so this 1-Force move reserve fired EVERY turn forever — including
                         // while the DS was parked in Scarif orbit — and at 06:02 suppressed a real
                         // Mara Jade With Lightsaber deploy (cost 5, leaves 0) to hoard Force for a
-                        // move the MoveEvaluator now vetoes post-flip (V79b FLIP-BACK GUARD). Use
+                        // move that is unnecessary once Scarif orbit is established. Use
                         // the engine's orbit primitive getSystemOrbited() (same check as the flip
                         // condition, Filters.isOrbiting(Title.Scarif), Card216_011:122).
                         // PhysicalCard dsLoc = pCard.getAtLocation();
@@ -314,7 +310,7 @@ public class DeployEvaluator extends ActionEvaluator {
                 // V79: if Verge of Greatness + Death Star not yet at Scarif, reserve 1 Force
                 if (v79VergeActive && v79DeathStar != null && !v79DeathStarAtScarif) {
                     v79VergeMoveReserve = 1;
-                    LOG.warn("V79 VERGE MOVE RESERVE: Verge of Greatness active + Death Star not at Scarif — reserve 1 Force for Move phase");
+                    LOG.warn("V79 VERGE MOVE RESERVE: Verge front active + Death Star not at Scarif, reserve 1 Force for Move phase");
                 }
             } catch (Exception e) {
                 LOG.debug("V48 VADER MOVE RESERVE: Error: {}", e.getMessage());
@@ -1731,6 +1727,17 @@ public class DeployEvaluator extends ActionEvaluator {
                             : 0;
                     int massassiRouteReserve =
                         massassiPackageReserve + massassiMoveReserve;
+                    int setYourCourseRouteReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getSetYourCourseNextRouteForceReserve(
+                                    game, playerId)
+                            : 0;
+                    boolean exactSetYourCourseSuperlaserDeploy =
+                        context.getObjectiveAnalyzer() != null
+                            && context.getObjectiveAnalyzer()
+                                .isSetYourCourseCompatibleSuperlaserDeployCandidate(
+                                    game, playerId, card);
                     int objectiveRequiredCardReserve =
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
@@ -1942,6 +1949,21 @@ public class DeployEvaluator extends ActionEvaluator {
                                 < massassiRouteReserve) {
                         action.hardVeto(
                             "OBJECTIVE.MASSASSI.ATTACK_RUN_FORCE_RESERVE: preserve exact Force for the remaining Attack Run package and carrier movement");
+                        actions.add(action);
+                        continue;
+                    }
+                    if (!exactSetYourCourseSuperlaserDeploy
+                            && (exactNormalDeployPayment != null
+                                || "deploy".equals(actionLower.trim()))
+                            && (exactNormalDeployPayment != null
+                                ? exactNormalDeployPayment : cost) > 0
+                            && setYourCourseRouteReserve > 0
+                            && availableForce
+                                - (exactNormalDeployPayment != null
+                                    ? exactNormalDeployPayment : cost)
+                                < setYourCourseRouteReserve) {
+                        action.hardVeto(
+                            "OBJECTIVE.SET_YOUR_COURSE.NEXT_PAYMENT_RESERVE: preserve the exact next Death Star movement payment");
                         actions.add(action);
                         continue;
                     }
@@ -3604,7 +3626,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                     game.getModifiersQuerying(), card);
                     if (category == CardCategory.WEAPON
                             && gameState != null
-                            && !exactMassassiTorpedoesDeploy) {
+                            && !exactMassassiTorpedoesDeploy
+                            && !exactSetYourCourseSuperlaserDeploy) {
                         try {
                             String wepPlayerId = context.getPlayerId();
                             String v158Criteria = null;

@@ -6796,9 +6796,11 @@
       "hardLossLocationRules": [
         {
           "id": "sycfa-back-death-star-blown-away",
+          "phase": "postFlip",
           "locationFilterKey": "Death_Star_system",
           "defenseLocationFilterKey": "Death_Star_system",
           "threatCardFilterKey": "Attack_Run",
+          "threatRelation": "onTable",
           "trigger": "blownAwayLastStep",
           "outcome": "objectiveOutOfPlay",
           "sourceText": "The Ultimate Power In The Universe is placed out of play if the Death Star system is blown away (Card111_006_BACK.java L68-L76; the LIGHT Attack Run epic event is the killer). Same Endor-proven trigger/outcome pair. DELIBERATELY NO flipLocationRules: the front flip is an EVENT - Alderaan blown away via Commence Primary Ignition (Card111_006.java L190, isBlownAwayLastStep with includeBlownAway=true; the one-arg Alderaan_system filter would never match at that step) - which is the deferred blown-away schema primitive, not a board-state law; and the back NEVER flips back by its own text (the only revert is the external once-per-turn Krennic route on An Inkling 209_41, which also auto-flips back at end of turn). Encoding any occupy/control rule here would fabricate law. Also recorded: the external 209_41 flip-forward route (Krennic at a Death Star location, deploy phase); setup deploys Death Star + Deployable_By_SYCFA (DARK-side Alderaan OR Jedha City per the Set 9 errata living in the filter) + Docking Bay 327 free/no-reshuffle; the front's own-drain cancel at Death Star sites and no-drain-at-Alderaan are unexpressible modifiers."

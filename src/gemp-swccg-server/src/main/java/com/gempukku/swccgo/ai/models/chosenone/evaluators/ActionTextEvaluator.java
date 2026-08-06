@@ -34,6 +34,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFacts;
@@ -226,8 +227,22 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .isHiddenPathJabiimRouteAction(
                             game, context.getPlayerId(),
                             actionSource, actionText);
+            boolean exactSetYourCourseRouteMove =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isSetYourCourseRouteMoveAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean exactSetYourCourseCpi =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isSetYourCourseClassicCpiAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
             if (!exactShieldCannonDeploy
                     && !exactHiddenPathJabiimRoute
+                    && !exactSetYourCourseRouteMove
+                    && !exactSetYourCourseCpi
                     && (blocked.contains(actionId)
                         || blocked.contains(actionText))) {
                 // V167 (Steve, 2026-06): NEVER hard-veto a phase-fundamental action.
@@ -342,6 +357,33 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             actionId));
                 PolicyOperationAdapter.apply(
                         action, massassiLedger);
+                actions.add(action);
+                continue;
+            }
+
+            if (exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isSetYourCourseDeathStarSitePullAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText)) {
+                action.addReasoning(
+                    "OBJECTIVE.SET_YOUR_COURSE.PACKAGE_PULL: use the objective's Death Star site upload before unrelated deploys",
+                    12000.0f);
+                actions.add(action);
+                continue;
+            }
+
+            if (exactDeployAnalyzer != null
+                    && exactDeployAnalyzer.isSetYourCourseClassicCpiAction(
+                        game, context.getPlayerId(),
+                        actionSource, actionText)) {
+                SetYourCourseObjectivePolicy.Evaluation cpi =
+                    SetYourCourseObjectivePolicy.scoreCpiAction(
+                        exactDeployAnalyzer
+                            .getSetYourCourseRouteStage(
+                                game, context.getPlayerId()),
+                        true, actionText);
+                action.addReasoning(cpi.reason(), cpi.delta());
                 actions.add(action);
                 continue;
             }
@@ -1599,6 +1641,50 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // V100: location-pull sequencing now lives in shared PullActionPolicy/PullActionFactsReader.
 
+            {
+                String sycDecision = context.getDecisionText() != null
+                        ? context.getDecisionText().toLowerCase(Locale.ROOT)
+                        : "";
+                boolean sycParsecChoice = sycDecision.contains(
+                        "choose parsec to move to");
+                boolean sycDestinationChoice =
+                        sycDecision.contains("choose destination for")
+                        && sycDecision.contains("parsec");
+                if ((sycParsecChoice || sycDestinationChoice)
+                        && exactDeployAnalyzer != null) {
+                    SetYourCourseObjectivePolicy.Stage sycStage =
+                        exactDeployAnalyzer.getSetYourCourseRouteStage(
+                            game, context.getPlayerId());
+                    SetYourCourseObjectivePolicy.Evaluation sycChoice;
+                    if (sycParsecChoice) {
+                        Integer parsec = null;
+                        try {
+                            parsec = Integer.parseInt(actionText.trim());
+                        } catch (Exception ignored) {
+                        }
+                        sycChoice = SetYourCourseObjectivePolicy
+                            .scoreParsecChoice(sycStage, parsec);
+                    } else {
+                        sycChoice = SetYourCourseObjectivePolicy
+                            .scoreDestinationChoice(
+                                sycStage,
+                                context.getDecisionText(),
+                                actionText);
+                    }
+                    if (sycChoice.applies()) {
+                        if (sycChoice.hardVeto()) {
+                            action.hardVeto(sycChoice.reason());
+                        } else {
+                            action.addReasoning(
+                                sycChoice.reason(),
+                                sycChoice.delta());
+                        }
+                        actions.add(action);
+                        continue;
+                    }
+                }
+            }
+
             // V79 (Steve, 2026-05-15): VERGE — DEATH STAR PARSEC / ORBIT MULTIPLE_CHOICE
             // After picking "Move using hyperspeed" the engine fires a
             // MULTIPLE_CHOICE: "Choose parsec to move to ". Options are parsec
@@ -1625,9 +1711,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 boolean v79IsDestChoice = v79DtLower.contains("choose destination for")
                     && v79DtLower.contains("parsec");
                 if ((v79IsParsecChoice || v79IsDestChoice) && gameState != null
-                        && context.getPlayerId() != null) {
+                        && context.getPlayerId() != null
+                        && exactDeployAnalyzer != null
+                        && exactDeployAnalyzer
+                            .isOnTheVergeObjectiveFront()) {
                     // Confirm Verge of Greatness active + Death Star not at Scarif
-                    boolean v79Verge = false;
+                    boolean v79Verge = exactDeployAnalyzer != null
+                        && exactDeployAnalyzer
+                            .isOnTheVergeObjectiveFront();
                     boolean v79AtScarif = false;
                     boolean v79HaveDeathStar = false;
                     int v79IteratedCards = 0;
@@ -1692,7 +1783,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
                     // V103: fallback — if scan didn't find Verge but we DO own a Death Star
                     // and the decision text is the parsec/destination prompt, treat as Verge.
-                    if (!v79Verge && v79HaveDeathStar) {
+                    if (!v79Verge && v79HaveDeathStar
+                            && exactDeployAnalyzer != null
+                            && exactDeployAnalyzer
+                                .isOnTheVergeObjectiveFront()) {
                         v79Verge = true;
                         logger.warn("V103 PARSEC FALLBACK: Verge implied by Death Star ownership + parsec prompt");
                     }
@@ -1731,18 +1825,31 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 }
                             }
                         } else if (v79IsDestChoice) {
-                            // actionText is the destination — pick Scarif over deep space
-                            MoveVergePolicy.ParsecChoiceEvaluation v79DestinationChoice =
-                                MoveVergePolicy.evaluateDestinationChoice(
-                                    textLower.contains("scarif"));
-                            action.addReasoning(
-                                v79DestinationChoice.contribution().reason(),
-                                v79DestinationChoice.contribution().delta());
-                            if (v79DestinationChoice.branch()
-                                    == MoveVergePolicy.ParsecChoiceBranch.ORBIT_SCARIF) {
-                                logger.warn("V79 DESTINATION: orbit Scarif → +1500");
-                            } else {
-                                logger.warn("V79 DESTINATION: '{}' (not Scarif) → -200", actionText);
+                            java.util.regex.Matcher targetParsecMatcher =
+                                java.util.regex.Pattern
+                                    .compile("parsec\\s+(\\d+)")
+                                    .matcher(v79DtLower);
+                            Integer targetParsec = null;
+                            if (targetParsecMatcher.find()) {
+                                try {
+                                    targetParsec = Integer.parseInt(
+                                        targetParsecMatcher.group(1));
+                                } catch (Exception ignored) {
+                                }
+                            }
+                            if (Integer.valueOf(7).equals(targetParsec)) {
+                                MoveVergePolicy.ParsecChoiceEvaluation v79DestinationChoice =
+                                    MoveVergePolicy.evaluateDestinationChoice(
+                                        textLower.contains("orbit"));
+                                action.addReasoning(
+                                    v79DestinationChoice.contribution().reason(),
+                                    v79DestinationChoice.contribution().delta());
+                                if (v79DestinationChoice.branch()
+                                        == MoveVergePolicy.ParsecChoiceBranch.ORBIT_SCARIF) {
+                                    logger.warn("V79 DESTINATION: orbit the exact parsec-7 system → +1500");
+                                } else {
+                                    logger.warn("V79 DESTINATION: '{}' leaves the Death Star in deep space at Scarif's parsec → -200", actionText);
+                                }
                             }
                         }
                         // V79 (Steve, 2026-05-15): MUST add action to output list.
@@ -1759,7 +1866,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     // is still asking us to choose a parsec, score by distance to 7
                     // anyway so the AI picks the better option instead of defaulting
                     // to the first option (typically parsec 2).
-                    if (v79IsParsecChoice) {
+                    if (v79Verge && v79IsParsecChoice) {
                         Integer fparsec = null;
                         try { fparsec = Integer.parseInt(actionText.trim()); }
                         catch (Exception e) {
@@ -1783,6 +1890,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             continue;
                         }
                     }
+                    action.addReasoning(
+                        "MOBILE SYSTEM CHOICE: no audited objective route applies",
+                        0.0f);
+                    actions.add(action);
+                    continue;
                 }
             }
 
@@ -5178,6 +5290,37 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     .isClassicHuntDownObjective());
         controlLedger.register(ControlDrainAssessment.assess(action.getActionId(), facts));
         PolicyOperationAdapter.apply(action, controlLedger);
+        if (context.getGameState() != null
+                && context.getGame() != null
+                && context.getObjectiveAnalyzer() != null
+                && locationCardId != null) {
+            try {
+                PhysicalCard location = context.getGameState()
+                    .findCardById(Integer.parseInt(locationCardId));
+                if (location != null) {
+                    float spend = context.getGame()
+                        .getModifiersQuerying()
+                        .getInitiateForceDrainCost(
+                            context.getGameState(), location,
+                            context.getPlayerId());
+                    SetYourCourseObjectivePolicy.Evaluation sycReserve =
+                        SetYourCourseObjectivePolicy
+                            .preserveRouteForceDuringControl(
+                                context.getObjectiveAnalyzer()
+                                    .getSetYourCourseNextRouteForceReserve(
+                                        context.getGame(),
+                                        context.getPlayerId()),
+                                context.getForcePileSize(), spend);
+                    if (sycReserve.hardVeto()) {
+                        action.hardVeto(sycReserve.reason());
+                    }
+                }
+            } catch (Exception e) {
+                logger.debug(
+                    "Set Your Course control Force reserve failed open: {}",
+                    e.getMessage());
+            }
+        }
         Optional<TdigwattObjectiveFactsReader
                 .VirtualLandoLandspeedRoute> route =
             readOfferedTdigwattLandoRoute(context);

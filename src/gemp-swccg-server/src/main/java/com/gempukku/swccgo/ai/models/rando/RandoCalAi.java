@@ -853,7 +853,12 @@ public class RandoCalAi extends HeuristicAiBase {
             // are on our table, steer this choice toward Scarif (parsec 7): 4->6 turn 1, 6->7 turn 2,
             // and take an orbit/Scarif option immediately if offered. (Found via the now-readable
             // gemp-swccg.log: "No evaluators produced actions for decision: Choose parsec to move to".)
-            if (decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
+            // Retired 2026-08-05: the mirrored ActionTextEvaluator now owns
+            // this child decision for both public bots. Keep the legacy rule
+            // intact for audit history, but do not let Rando bypass parity.
+            boolean useLegacyV79bDirectInterceptor = false;
+            if (useLegacyV79bDirectInterceptor
+                    && decision.getDecisionType() == AwaitingDecisionType.MULTIPLE_CHOICE
                     && decisionText.toLowerCase(java.util.Locale.ROOT).contains("parsec")) {
                 String[] pResults = params != null ? params.get("results") : null;
                 if (pResults != null && pResults.length > 0 && gameState != null) {
@@ -869,22 +874,23 @@ public class RandoCalAi extends HeuristicAiBase {
                         }
                     } catch (Exception ignore) { /* fall through to default */ }
                     if (vergeOnTable) {
-                        // V79b UPDATED 2026-07-07 (VERGE post-flip fix, Game9f3c46b00681): from Scarif
+                        // V79b source correction: from Scarif
                         // orbit the old closest-to-7 pick was the DEEP-SPACE EXIT — the engine excludes
                         // the currently-orbited system from re-orbit at the chosen parsec
                         // (MoveMobileSystemUsingHyperspeedAction:82, Filters.not(Filters.isOrbitedBy(card))),
                         // so answering '7' silently dropped the DS out of orbit (the turns-3/5 toggle).
-                        // Post-flip + orbiting Scarif this prompt should never appear at all (the
-                        // MoveEvaluator V79b FLIP-BACK GUARD vetoes the hyperspeed move) — belt-and-
-                        // suspenders here: prefer an orbit/Scarif option, else answer the DS's CURRENT
+                        // Pre-flip + orbiting Scarif this prompt should never appear because the
+                        // objective still needs that orbit for its actor gate. Prefer an orbit/Scarif
+                        // option, else answer the DS's CURRENT
                         // parsec (least-bad: stays at Scarif's parsec; from deep space at that parsec
                         // the engine auto-re-orbits the lone orbitable system, :91-96). Pre-flip and
-                        // post-flip deep-space recovery keep the original closest-to-7 steering below.
-                        boolean v79bStayParked = false;
+                        // post-flip movement uses the normal closest-to-7 steering below. The back
+                        // flips on loss of a Scarif leader, not on Death Star movement.
+                        boolean v79bFrontHold = false;
                         Integer v79bCurrentParsec = null;
                         try {
                             objectiveAnalyzer.refreshFlipStatus(gameState, playerId);
-                            if (objectiveAnalyzer.isAnalyzed() && objectiveAnalyzer.isFlipped()) {
+                            if (objectiveAnalyzer.isAnalyzed() && !objectiveAnalyzer.isFlipped()) {
                                 for (PhysicalCard pc : gameState.getAllPermanentCards()) {
                                     if (pc == null || !playerId.equals(pc.getOwner()) || pc.getBlueprint() == null) continue;
                                     if (pc.getZone() == null || !pc.getZone().isInPlay()) continue;
@@ -893,22 +899,22 @@ public class RandoCalAi extends HeuristicAiBase {
                                     if (!dsT.contains("death star")) continue;
                                     v79bCurrentParsec = pc.getParsec();
                                     String orbited = pc.getSystemOrbited();
-                                    v79bStayParked = orbited != null
+                                    v79bFrontHold = orbited != null
                                         && orbited.toLowerCase(java.util.Locale.ROOT).contains("scarif");
                                     break;
                                 }
                             }
-                        } catch (Exception ignore) { /* fall through to pre-flip steering */ }
-                        if (v79bStayParked) {
+                        } catch (Exception ignore) { /* fall through to route steering */ }
+                        if (v79bFrontHold) {
                             for (int i = 0; i < pResults.length; i++) {
                                 String r = pResults[i] == null ? "" : pResults[i].toLowerCase(java.util.Locale.ROOT);
                                 if (r.contains("scarif") || r.contains("orbit")) {
-                                    LOG.warn("V79b FLIP-BACK GUARD: flipped + orbiting Scarif — take orbit option: choices={} -> index {} ('{}')",
+                                    LOG.warn("V79b FRONT FLIP HOLD: unflipped + orbiting Scarif, take orbit option: choices={} -> index {} ('{}')",
                                         java.util.Arrays.asList(pResults), i, pResults[i]);
                                     // TRACE ORACLE V2: route + final-response observation ONLY (Rando-only route).
                                     if (traceOpened) {
                                         TraceSession.recordRoute(TraceRoute.V79B_PARSEC_CHOICE,
-                                            "parsec choice + Verge on table (flip-back orbit option)", null);
+                                            "parsec choice + Verge front at Scarif (hold orbit option)", null);
                                         // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                                         TraceSession.recordEvaluatorLaneNotApplicable(
                                             "direct interceptor V79b: evaluator lane never runs on this route");
@@ -924,14 +930,14 @@ public class RandoCalAi extends HeuristicAiBase {
                                     if (sm.find()) {
                                         try {
                                             if (Integer.parseInt(sm.group(1)) == v79bCurrentParsec.intValue()) {
-                                                LOG.warn("V79b FLIP-BACK GUARD: flipped + orbiting Scarif — staying at parsec {} "
+                                                LOG.warn("V79b FRONT FLIP HOLD: unflipped + orbiting Scarif, staying at parsec {} "
                                                     + "(choices={} -> index {}; NOTE this prompt should be unreachable, "
                                                     + "MoveEvaluator vetoes the move)",
                                                     v79bCurrentParsec, java.util.Arrays.asList(pResults), i);
                                                 // TRACE ORACLE V2: route + final-response observation ONLY (Rando-only route).
                                                 if (traceOpened) {
                                                     TraceSession.recordRoute(TraceRoute.V79B_PARSEC_CHOICE,
-                                                        "parsec choice + Verge on table (flip-back stay-parked)", null);
+                                                        "parsec choice + Verge front at Scarif (stay parked)", null);
                                                     // GATE P0-3: direct interceptor — evaluator-lane facts explicitly n/a.
                                                     TraceSession.recordEvaluatorLaneNotApplicable(
                                                         "direct interceptor V79b: evaluator lane never runs on this route");
@@ -943,7 +949,7 @@ public class RandoCalAi extends HeuristicAiBase {
                                     }
                                 }
                             }
-                            LOG.warn("V79b FLIP-BACK GUARD: flipped + orbiting but current parsec {} not offered in {} — falling through to closest-to-7",
+                            LOG.warn("V79b FRONT FLIP HOLD: unflipped + orbiting but current parsec {} not offered in {}, falling through to closest-to-7",
                                 v79bCurrentParsec, java.util.Arrays.asList(pResults));
                         }
                         int v79bBest = -1, v79bBestDist = Integer.MAX_VALUE, v79bBestParsec = -1;
@@ -2097,6 +2103,32 @@ public class RandoCalAi extends HeuristicAiBase {
                     evalContext.setActionIds(moveIds);
                     evalContext.setActionTexts(
                         moveTexts);
+                }
+            }
+
+            if ("MULTIPLE_CHOICE".equals(
+                    decisionType.name())
+                    && (promptLower.contains(
+                            "choose parsec to move to")
+                        || promptLower.contains(
+                            "choose destination for")
+                            && promptLower.contains("parsec"))) {
+                String[] routeResults = params.get("results");
+                if (routeResults != null
+                        && routeResults.length > 0) {
+                    List<String> routeIds =
+                        new java.util.ArrayList<>();
+                    List<String> routeTexts =
+                        new java.util.ArrayList<>();
+                    for (int i = 0;
+                            i < routeResults.length; i++) {
+                        routeIds.add(String.valueOf(i));
+                        routeTexts.add(
+                            routeResults[i] != null
+                                ? routeResults[i] : "");
+                    }
+                    evalContext.setActionIds(routeIds);
+                    evalContext.setActionTexts(routeTexts);
                 }
             }
 

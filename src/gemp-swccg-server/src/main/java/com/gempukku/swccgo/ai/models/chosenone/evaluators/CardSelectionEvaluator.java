@@ -38,6 +38,8 @@ import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
@@ -908,6 +910,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     ? findExactReservePullCandidate(
                         context, cardId, blueprintId)
                     : null;
+        PhysicalCard setYourCourseSource =
+                readExactSetYourCoursePullSource(context);
+        PhysicalCard setYourCourseCandidate =
+                setYourCourseSource != null
+                    ? findExactReservePullCandidate(
+                        context, cardId, blueprintId)
+                    : null;
         com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer
                 .ObjectiveProgressCandidateRole role =
                 context.getObjectiveAnalyzer()
@@ -929,6 +938,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 context.getGame(),
                                 context.getPlayerId(),
                                 nativeLocationCandidate)));
+        if (setYourCourseCandidate != null) {
+            int sycPriority = context.getObjectiveAnalyzer()
+                    .getSetYourCourseDeathStarSitePullPriority(
+                        context.getGame(), context.getPlayerId(),
+                        setYourCourseCandidate);
+            SetYourCourseObjectivePolicy.Evaluation sycPull =
+                    SetYourCourseObjectivePolicy.scoreDeathStarSitePull(
+                        true, sycPriority > 0, sycPriority == 2);
+            if (sycPull.applies()) {
+                action.addReasoning(
+                    sycPull.reason(), sycPull.delta());
+            }
+        }
         applyPullSelectionPolicy(action,
                 PullSelectionCandidatePolicy
                     .scoreImperialEntanglementsBackSite(
@@ -1065,6 +1087,36 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return exactMassassi || exactEntanglements
                     || exactCountedOperative ? source : null;
         } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private PhysicalCard readExactSetYourCoursePullSource(
+            DecisionContext context) {
+        if (context == null || context.getGame() == null
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !"ARBITRARY_CARDS".equals(context.getDecisionType())
+                || context.getDecisionText() == null
+                || !"choose card to take into hand".equalsIgnoreCase(
+                    context.getDecisionText().trim())
+                || context.getMin() != 1 || context.getMax() != 1) {
+            return null;
+        }
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            return liveAction != null
+                    && context.getObjectiveAnalyzer()
+                        .isSetYourCourseDeathStarSitePullAction(
+                            context.getGame(), context.getPlayerId(),
+                            source, liveAction.getText())
+                    ? source : null;
+        } catch (Exception e) {
             return null;
         }
     }
@@ -1328,6 +1380,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return evaluateCaptureSetupHut(context);
         }
 
+        if (isSetYourCourseClassicSetupLocationDecision(context)) {
+            return evaluateSetYourCourseClassicSetupLocation(context);
+        }
+
+        if (isOnTheVergeOrbitSystemDecision(context)) {
+            return evaluateOnTheVergeOrbitSystem(context);
+        }
+
+        if (isSetYourCourseOrbitSystemDecision(context)) {
+            return evaluateSetYourCourseOrbitSystem(context);
+        }
+
         if (isFirstOrderReignsNavyRouteSelection(
                 context)) {
             return evaluateFirstOrderReignsNavyRouteSelection(
@@ -1557,6 +1621,149 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // Unknown - create neutral scored actions
             return evaluateUnknown(context);
         }
+    }
+
+    private boolean isSetYourCourseClassicSetupLocationDecision(
+            DecisionContext context) {
+        return context != null
+                && context.getPhase() == Phase.PLAY_STARTING_CARDS
+                && "ARBITRARY_CARDS".equals(context.getDecisionType())
+                && context.getDecisionText() != null
+                && "choose location to deploy".equalsIgnoreCase(
+                    context.getDecisionText().trim())
+                && context.getMin() == 1 && context.getMax() == 1
+                && context.getBlueprints() != null
+                && context.getBlueprints().contains("1_281")
+                && context.getBlueprints().contains("209_49")
+                && context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isSetYourCourseClassicSetupLocationChoiceOpen(
+                        context.getGame(), context.getPlayerId());
+    }
+
+    private List<EvaluatedAction> evaluateSetYourCourseClassicSetupLocation(
+            DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            String blueprintId = context.getBlueprints().get(i);
+            boolean alderaan = context.getObjectiveAnalyzer()
+                    .isSetYourCourseClassicSetupAlderaanCandidate(
+                        context.getGame(), context.getPlayerId(),
+                        blueprintId);
+            SetYourCourseObjectivePolicy.Evaluation choice =
+                    SetYourCourseObjectivePolicy
+                        .scoreSetupLocationChoice(true, alderaan);
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.SELECT_CARD, 0.0f,
+                    "Set Your Course setup location " + blueprintId);
+            if (choice.applies()) {
+                action.addReasoning(choice.reason(), choice.delta());
+            }
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    private boolean isSetYourCourseOrbitSystemDecision(
+            DecisionContext context) {
+        return isDeathStarOrbitSystemDecision(context)
+                && context.getObjectiveAnalyzer() != null
+                && (context.getObjectiveAnalyzer()
+                        .getSetYourCourseRouteStage(
+                            context.getGame(), context.getPlayerId())
+                        == SetYourCourseObjectivePolicy.Stage.READY_AT_ONE
+                    || context.getObjectiveAnalyzer()
+                        .getSetYourCourseRouteStage(
+                            context.getGame(), context.getPlayerId())
+                        == SetYourCourseObjectivePolicy.Stage
+                            .RECOVER_AT_TWO_DEEP_SPACE);
+    }
+
+    private boolean isOnTheVergeOrbitSystemDecision(
+            DecisionContext context) {
+        return isDeathStarOrbitSystemDecision(context)
+                && context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isOnTheVergeObjectiveFamily()
+                && !context.getObjectiveAnalyzer().isFlipped();
+    }
+
+    private boolean isDeathStarOrbitSystemDecision(
+            DecisionContext context) {
+        if (context == null || context.getDecisionText() == null) {
+            return false;
+        }
+        String normalized = context.getDecisionText().trim()
+                .toLowerCase(Locale.ROOT).replace(" (v)", "");
+        return "choose system for death star to orbit".equals(normalized);
+    }
+
+    private List<EvaluatedAction> evaluateOnTheVergeOrbitSystem(
+            DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            PhysicalCard candidate = null;
+            try {
+                candidate = context.getGameState().findCardById(
+                        Integer.parseInt(cardId));
+            } catch (Exception ignored) {
+            }
+            boolean scarif = context.getObjectiveAnalyzer()
+                    .isOnTheVergeScarifOrbitCandidate(candidate);
+            MoveVergePolicy.ParsecChoiceEvaluation choice =
+                    MoveVergePolicy.evaluateDestinationChoice(scarif);
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.SELECT_CARD, 0.0f,
+                    candidate != null && candidate.getTitle() != null
+                        ? "Orbit " + candidate.getTitle()
+                        : "Orbit selected system");
+            action.addReasoning(
+                    choice.contribution().reason(),
+                    choice.contribution().delta());
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    private List<EvaluatedAction> evaluateSetYourCourseOrbitSystem(
+            DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            PhysicalCard candidate = null;
+            try {
+                candidate = context.getGameState().findCardById(
+                        Integer.parseInt(cardId));
+            } catch (Exception ignored) {
+            }
+            boolean alderaan = context.getObjectiveAnalyzer()
+                    .isSetYourCourseAlderaanOrbitCandidate(
+                        context.getGame(), context.getPlayerId(),
+                        candidate);
+            SetYourCourseObjectivePolicy.Evaluation choice =
+                    SetYourCourseObjectivePolicy.scoreOrbitSystemChoice(
+                        context.getObjectiveAnalyzer()
+                            .getSetYourCourseRouteStage(
+                                context.getGame(), context.getPlayerId()),
+                        alderaan);
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.SELECT_CARD, 0.0f,
+                    candidate != null && candidate.getTitle() != null
+                        ? "Orbit " + candidate.getTitle()
+                        : "Orbit selected system");
+            if (choice.hardVeto()) {
+                action.hardVeto(choice.reason());
+            } else if (choice.applies()) {
+                action.addReasoning(choice.reason(), choice.delta());
+            }
+            actions.add(action);
+        }
+        return actions;
     }
 
     /**
@@ -5388,6 +5595,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         context.getGame(),
                         context.getPlayerId(),
                         physicalCard);
+        boolean preferredSetYourCourseRouteCard =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isPreferredSetYourCourseForceLossCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
+        boolean setYourCourseMovementForceReserve =
+                context.getGame() != null
+                && context.getPlayerId() != null
+                && physicalCard != null
+                && objectiveAnalyzer
+                    .isSetYourCourseMovementForceLossReserveCandidate(
+                        context.getGame(),
+                        context.getPlayerId(),
+                        physicalCard);
         boolean preferredCountedObjectiveLocation =
                 context.getGame() != null
                 && context.getPlayerId() != null
@@ -5413,6 +5638,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     || preferredShieldRoutePackageCard
                     || preferredFirstOrderReignsRouteCard
                     || preferredMassassiPackageCard
+                    || preferredSetYourCourseRouteCard
+                    || setYourCourseMovementForceReserve
                     || preferredCountedObjectiveLocation
                     || preferredCountedObjectivePresence
                     || candidate.fromHand() && requiredActor;
@@ -5428,6 +5655,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     || preferredShieldRoutePackageCard
                     || preferredFirstOrderReignsRouteCard
                     || preferredMassassiPackageCard
+                    || preferredSetYourCourseRouteCard
+                    || setYourCourseMovementForceReserve
                     || preferredCountedObjectiveLocation
                     || preferredCountedObjectivePresence
                     || requiredActor;

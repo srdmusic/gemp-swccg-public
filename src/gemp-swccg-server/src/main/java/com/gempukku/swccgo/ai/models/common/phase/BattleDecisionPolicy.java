@@ -537,6 +537,20 @@ public final class BattleDecisionPolicy {
                                                     game, playerId,
                                                     captureAnalyzer, null);
                                 }
+                                int phaseMoveForceReserve =
+                                        captureMoveForceReserve;
+                                if (captureAnalyzer != null) {
+                                    phaseMoveForceReserve = Math.max(
+                                        phaseMoveForceReserve,
+                                        captureAnalyzer
+                                            .getFirstOrderReignsCurrentMoveForceReserve(
+                                                game, playerId));
+                                    phaseMoveForceReserve = Math.max(
+                                        phaseMoveForceReserve,
+                                        captureAnalyzer
+                                            .getSetYourCourseNextRouteForceReserve(
+                                                game, playerId));
+                                }
 
                                 if (ourPower > 0 && theirPower > 0) {
                                     foundAnyContestedLocation = true;
@@ -638,22 +652,13 @@ public final class BattleDecisionPolicy {
                                     boolean hardLossLocation = false;
                                     boolean terminalObjectiveHazard = false;
                                     boolean globalObjectiveBlocker = false;
-                                    int objectiveMoveForceReserve = 0;
+                                    int objectiveMoveForceReserve =
+                                            phaseMoveForceReserve;
                                     int availableObjectiveMoveForce = 0;
                                     float battleInitiationCost = 0.0f;
                                     try {
                                         ObjectiveAnalyzer objectiveAnalyzer =
                                                 context.getObjectiveAnalyzer();
-                                        objectiveMoveForceReserve =
-                                                objectiveAnalyzer != null
-                                                ? objectiveAnalyzer
-                                                    .getFirstOrderReignsCurrentMoveForceReserve(
-                                                        game, playerId)
-                                                : 0;
-                                        objectiveMoveForceReserve =
-                                                Math.max(
-                                                    objectiveMoveForceReserve,
-                                                    captureMoveForceReserve);
                                         availableObjectiveMoveForce =
                                                 gameState.getForcePileSize(
                                                     playerId);
@@ -892,7 +897,7 @@ public final class BattleDecisionPolicy {
                                             // Capture objective safety credit.
                                         }
                                     }
-                                    if (captureMoveForceReserve > 0) {
+                                    if (phaseMoveForceReserve > 0) {
                                         try {
                                             float battleInitiationCost =
                                                 game.getModifiersQuerying()
@@ -904,7 +909,7 @@ public final class BattleDecisionPolicy {
                                                 ObjectiveBattlePolicy
                                                     .preserveObjectiveMoveForce(
                                                         actionId,
-                                                        captureMoveForceReserve,
+                                                        phaseMoveForceReserve,
                                                         gameState
                                                             .getForcePileSize(
                                                                 playerId),

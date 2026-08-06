@@ -274,6 +274,55 @@ public class BattleDecisionPolicyTest {
     }
 
     @Test
+    public void setYourCourseBattleCannotSpendTheOnlyHyperspeedForce() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard location = mock(PhysicalCard.class);
+        ObjectiveAnalyzer objectiveAnalyzer = mock(ObjectiveAnalyzer.class);
+
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getOpponent("bot")).thenReturn("opponent");
+        when(gameState.getTopLocations()).thenReturn(List.of(location));
+        when(gameState.getCardsAtLocation(location)).thenReturn(List.of());
+        when(gameState.getAllPermanentCards()).thenReturn(List.of());
+        when(gameState.getForcePileSize("bot")).thenReturn(1);
+        when(location.getCardId()).thenReturn(7);
+        when(location.getTitle()).thenReturn("Test Battleground");
+        when(modifiers.getTotalPowerAtLocation(
+                any(), any(), anyString(), anyBoolean(), anyBoolean()))
+                .thenReturn(8.0f);
+        when(modifiers.getTotalAbilityAtLocation(
+                any(), anyString(), any())).thenReturn(4.0f);
+        when(modifiers.getInitiateBattleCost(
+                gameState, location, "bot", true)).thenReturn(1.0f);
+        when(objectiveAnalyzer.getSetYourCourseNextRouteForceReserve(
+                game, "bot")).thenReturn(1);
+
+        BattleDecisionPolicy.Context base = context(
+                gameState, game, List.of("battle"),
+                List.of("Initiate battle"), List.of("7"),
+                new AtomicInteger());
+        BattleDecisionPolicy.Context context =
+                new DelegatingContext(base) {
+                    @Override
+                    public ObjectiveAnalyzer getObjectiveAnalyzer() {
+                        return objectiveAnalyzer;
+                    }
+                };
+
+        BattleDecisionPolicy.ScoredAction result =
+                BattleDecisionPolicy.evaluate(context).get(0);
+        int reserveVeto = contributionIndexByRule(
+                result.contributions(),
+                ObjectiveBattlePolicy
+                    .OBJECTIVE_MOVE_FORCE_RESERVE_RULE_ID);
+
+        assertTrue(reserveVeto >= 0);
+        assertTrue(result.contributions().get(reserveVeto).hardVeto());
+    }
+
+    @Test
     public void routingMatchesBattleDecisionContract() {
         AtomicInteger predictions = new AtomicInteger();
         assertTrue(BattleDecisionPolicy.canEvaluate(context(

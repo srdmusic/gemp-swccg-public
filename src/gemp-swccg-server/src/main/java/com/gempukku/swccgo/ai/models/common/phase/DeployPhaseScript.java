@@ -276,6 +276,13 @@ public abstract class DeployPhaseScript {
             return steps;
         }
         if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isSetYourCourseDeathStarSitePullAction(
+                        game, playerId, sourceCard, actionText)) {
+            steps.add(Step.LOCATIONS);
+            return steps;
+        }
+        if (objectiveAnalyzer != null
                 && objectiveAnalyzer.isHiddenPathSurvivorRouteAction(
                     game, playerId, sourceCard, actionText)) {
             steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
@@ -439,6 +446,12 @@ public abstract class DeployPhaseScript {
         if (card == null || card.getBlueprint() == null) return null;
         CardCategory cat = card.getBlueprint().getCardCategory();
         if (cat == null) return null;
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isSetYourCourseCompatibleSuperlaserDeployCandidate(
+                        game, playerId, card)) {
+            return Step.OBJECTIVE_ROUTE_ASSETS;
+        }
         if (objectiveAnalyzer != null
                 && (objectiveAnalyzer
                     .isMassassiAttackRunPackageDeployCandidate(

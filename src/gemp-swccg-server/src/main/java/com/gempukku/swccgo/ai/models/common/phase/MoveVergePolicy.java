@@ -21,7 +21,7 @@ public final class MoveVergePolicy {
         TOWARD_SCARIF,
         WRONG_DIRECTION,
         DEFAULT_MOVE,
-        POST_FLIP_HOLD,
+        POST_FLIP_RELEASE,
         PRE_FLIP_HOLD
     }
 
@@ -80,17 +80,17 @@ public final class MoveVergePolicy {
             return Evaluation.none();
         }
 
+        if (flipped) {
+            return new Evaluation(
+                    Branch.POST_FLIP_RELEASE, Contribution.none(), null, "",
+                    false, null);
+        }
+
         if (atScarif) {
-            if (flipped) {
-                return new Evaluation(
-                        Branch.POST_FLIP_HOLD, Contribution.none(), null, "",
-                        true,
-                        "V79b FLIP-BACK GUARD: objective flipped + Death Star orbiting Scarif"
-                                + " — leaving orbit un-satisfies 'Death Star orbiting Scarif'; stay parked");
-            }
             return new Evaluation(
                     Branch.PRE_FLIP_HOLD, Contribution.none(), null, "",
-                    false, null);
+                    true,
+                    "V79 FRONT FLIP HOLD: Death Star must remain orbiting Scarif until Krennic or Tarkin completes the site gate");
         }
 
         String actionLower = displayText != null

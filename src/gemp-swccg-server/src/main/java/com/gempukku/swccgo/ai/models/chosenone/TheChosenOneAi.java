@@ -1957,6 +1957,32 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
             if ("MULTIPLE_CHOICE".equals(
                     decisionType.name())
+                    && (promptLower.contains(
+                            "choose parsec to move to")
+                        || promptLower.contains(
+                            "choose destination for")
+                            && promptLower.contains("parsec"))) {
+                String[] routeResults = params.get("results");
+                if (routeResults != null
+                        && routeResults.length > 0) {
+                    List<String> routeIds =
+                        new java.util.ArrayList<>();
+                    List<String> routeTexts =
+                        new java.util.ArrayList<>();
+                    for (int i = 0;
+                            i < routeResults.length; i++) {
+                        routeIds.add(String.valueOf(i));
+                        routeTexts.add(
+                            routeResults[i] != null
+                                ? routeResults[i] : "");
+                    }
+                    evalContext.setActionIds(routeIds);
+                    evalContext.setActionTexts(routeTexts);
+                }
+            }
+
+            if ("MULTIPLE_CHOICE".equals(
+                    decisionType.name())
                     && "choose an option".equals(
                         promptLower.trim())) {
                 String[] destinyResults =

@@ -3,8 +3,10 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveSideBlueprints;
 import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
 import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
@@ -10261,6 +10263,402 @@ public class ObjectiveAnalyzer {
                 || "226_28_BACK".equals(objectiveBlueprintId));
     }
 
+    public boolean isSetYourCourseObjectiveFamily() {
+        return analyzed && ("111_6".equals(objectiveBlueprintId)
+                || "111_6_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isSetYourCourseClassicSetupLocationChoiceOpen(
+            SwccgGame game, String playerId) {
+        if (!analyzed || isFlipped
+                || !"111_6".equals(objectiveBlueprintId)
+                || game == null || playerId == null
+                || game.getGameState() == null) {
+            return false;
+        }
+        GameState gameState = game.getGameState();
+        return findOwnedSetYourCourseCardInPlay(
+                    gameState, playerId, "2_143") != null
+                && hasAccessibleSetYourCourseCard(
+                    gameState, playerId, "2_130")
+                && (hasAccessibleSetYourCourseCard(
+                        gameState, playerId, "2_161")
+                    || hasAccessibleSetYourCourseCard(
+                        gameState, playerId, "216_19"));
+    }
+
+    public boolean isSetYourCourseClassicSetupAlderaanCandidate(
+            SwccgGame game, String playerId,
+            String candidateBlueprintId) {
+        return "1_281".equals(candidateBlueprintId)
+                && isSetYourCourseClassicSetupLocationChoiceOpen(
+                    game, playerId);
+    }
+
+    public boolean isOnTheVergeObjectiveFamily() {
+        return analyzed && ("216_11".equals(objectiveBlueprintId)
+                || "216_11_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isOnTheVergeObjectiveFront() {
+        return analyzed && !isFlipped
+                && "216_11".equals(objectiveBlueprintId);
+    }
+
+    public boolean isOnTheVergeScarifOrbitCandidate(
+            PhysicalCard candidate) {
+        return analyzed && !isFlipped
+                && "216_11".equals(objectiveBlueprintId)
+                && isNamedSystem(candidate, Title.Scarif)
+                && candidate.getZone() != null
+                && candidate.getZone().isInPlay();
+    }
+
+    public SetYourCourseObjectivePolicy.RouteFacts getSetYourCourseRouteFacts(
+            SwccgGame game, String playerId) {
+        boolean frontActive = analyzed && !isFlipped
+                && "111_6".equals(objectiveBlueprintId);
+        if (!frontActive || game == null || playerId == null
+                || game.getGameState() == null) {
+            return new SetYourCourseObjectivePolicy.RouteFacts(
+                    frontActive, false, false, -1, null,
+                    false, false, false, false, false, false);
+        }
+        GameState gameState = game.getGameState();
+        PhysicalCard deathStar = findOwnedSetYourCourseCardInPlay(
+                gameState, playerId, "2_143");
+        PhysicalCard alderaan = findSetYourCourseSystemOnTable(
+                gameState, Title.Alderaan);
+        boolean classicLaserAttached = deathStar != null
+                && hasExactAttachedCard(gameState, deathStar, "2_161");
+        boolean virtualLaserAttached = deathStar != null
+                && hasExactAttachedCard(gameState, deathStar, "216_19");
+        boolean laserAttached = classicLaserAttached
+                || virtualLaserAttached;
+        boolean classicLaserAccessible = classicLaserAttached
+                || hasAccessibleSetYourCourseCard(
+                    gameState, playerId, "2_161");
+        boolean virtualLaserAccessible = virtualLaserAttached
+                || hasAccessibleSetYourCourseCard(
+                    gameState, playerId, "216_19");
+        boolean laserAccessible = classicLaserAccessible
+                || virtualLaserAccessible;
+        boolean laserInHand = hasExactBlueprint(
+                    gameState.getHand(playerId), "2_161")
+                || hasExactBlueprint(
+                    gameState.getHand(playerId), "216_19");
+        boolean laserDeployableHere = laserAttached
+                || virtualLaserAccessible
+                || deathStar != null && deathStar.getParsec() == 0
+                    && classicLaserAccessible;
+        boolean cpiAccessible = hasAccessibleSetYourCourseCard(
+                gameState, playerId, "2_130");
+        boolean packageSupported = deathStar != null
+                && alderaan != null
+                && laserAccessible
+                && cpiAccessible;
+        return new SetYourCourseObjectivePolicy.RouteFacts(
+                true, packageSupported, deathStar != null,
+                deathStar != null ? deathStar.getParsec() : -1,
+                deathStar != null ? deathStar.getSystemOrbited() : null,
+                laserAccessible, laserInHand, laserAttached,
+                laserDeployableHere, cpiAccessible, alderaan != null);
+    }
+
+    public SetYourCourseObjectivePolicy.Stage getSetYourCourseRouteStage(
+            SwccgGame game, String playerId) {
+        return SetYourCourseObjectivePolicy.classify(
+                getSetYourCourseRouteFacts(game, playerId));
+    }
+
+    public int getSetYourCourseNextRouteForceReserve(
+            SwccgGame game, String playerId) {
+        return SetYourCourseObjectivePolicy.nextRouteForceReserve(
+                getSetYourCourseRouteFacts(game, playerId));
+    }
+
+    public boolean isSetYourCourseClassicDeathStar(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        return isExactOwnedCard(candidate, playerId, "2_143")
+                && candidate.getZone() != null
+                && candidate.getZone().isInPlay()
+                && getSetYourCourseRouteStage(game, playerId)
+                    != SetYourCourseObjectivePolicy.Stage
+                        .INACTIVE_OR_UNSUPPORTED;
+    }
+
+    public boolean isSetYourCourseRouteMoveAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isExactOwnedCard(sourceCard, playerId, "2_143")
+                || actionText == null
+                || !actionText.toLowerCase(Locale.ROOT)
+                    .contains("move using hyperspeed")) {
+            return false;
+        }
+        return SetYourCourseObjectivePolicy.scoreMoveParent(
+                getSetYourCourseRouteStage(game, playerId), true)
+                .mandatory();
+    }
+
+    public boolean isSetYourCourseCompatibleSuperlaserDeployCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        SetYourCourseObjectivePolicy.RouteFacts facts =
+                getSetYourCourseRouteFacts(game, playerId);
+        boolean compatiblePrinting =
+                isExactOwnedCard(candidate, playerId, "216_19")
+                || isExactOwnedCard(candidate, playerId, "2_161")
+                    && facts.deathStarParsec() == 0;
+        return compatiblePrinting
+                && candidate.getZone() == Zone.HAND
+                && getSetYourCourseRouteStage(game, playerId)
+                    == SetYourCourseObjectivePolicy.Stage
+                        .WAITING_FOR_SUPERLASER;
+    }
+
+    public boolean isSetYourCourseClassicCpiAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isExactOwnedCard(sourceCard, playerId, "2_130")
+                && getSetYourCourseRouteStage(game, playerId)
+                    == SetYourCourseObjectivePolicy.Stage.ORBITING_ALDERAAN
+                && actionText != null
+                && actionText.toLowerCase(Locale.ROOT)
+                    .contains("attempt to 'blow away' alderaan");
+    }
+
+    public boolean isSetYourCourseAlderaanOrbitCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        SetYourCourseObjectivePolicy.Stage stage =
+                getSetYourCourseRouteStage(game, playerId);
+        return isNamedSystem(candidate, Title.Alderaan)
+                && candidate.getZone() != null
+                && candidate.getZone().isInPlay()
+                && (stage == SetYourCourseObjectivePolicy.Stage.READY_AT_ONE
+                    || stage == SetYourCourseObjectivePolicy.Stage
+                        .RECOVER_AT_TWO_DEEP_SPACE);
+    }
+
+    public boolean isSetYourCourseDeathStarSitePullAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        SetYourCourseObjectivePolicy.Stage stage =
+                getSetYourCourseRouteStage(game, playerId);
+        return "111_6".equals(objectiveBlueprintId)
+                && !isFlipped
+                && isExactOwnedCard(sourceCard, playerId, "111_6")
+                && "Take card into hand from Reserve Deck".equals(actionText)
+                && hasSetYourCourseDeathStarSitePullCandidate(
+                    game, playerId)
+                && stage != SetYourCourseObjectivePolicy.Stage
+                    .INACTIVE_OR_UNSUPPORTED
+                && stage != SetYourCourseObjectivePolicy.Stage
+                    .BROKEN_OR_UNSUPPORTED;
+    }
+
+    public int getSetYourCourseDeathStarSitePullPriority(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        Zone candidateZone = candidate != null
+                ? candidate.getZone() : null;
+        if (!"111_6".equals(objectiveBlueprintId)
+                || isFlipped || game == null || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || candidateZone != Zone.RESERVE_DECK
+                    && candidateZone != Zone.TOP_OF_RESERVE_DECK
+                || !Filters.Death_Star_site.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)) {
+            return 0;
+        }
+        return exactBlueprint(candidate, "1_283") ? 2 : 1;
+    }
+
+    private boolean hasSetYourCourseDeathStarSitePullCandidate(
+            SwccgGame game, String playerId) {
+        if (game == null || playerId == null
+                || game.getGameState() == null) {
+            return false;
+        }
+        List<PhysicalCard> reserve = game.getGameState()
+                .getCardPile(playerId, Zone.RESERVE_DECK);
+        if (reserve == null) return false;
+        for (PhysicalCard card : reserve) {
+            if (getSetYourCourseDeathStarSitePullPriority(
+                    game, playerId, card) > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isPreferredSetYourCourseForceLossCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!"111_6".equals(objectiveBlueprintId)
+                || isFlipped || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        String protectedRoutePiece =
+                isSetYourCourseCompatibleSuperlaser(candidate)
+                    ? "SUPERLASER"
+                    : exactBlueprint(candidate, "2_130")
+                        ? "2_130"
+                        : exactBlueprint(candidate, "1_283")
+                            ? "1_283" : null;
+        if (protectedRoutePiece == null) return false;
+        SetYourCourseObjectivePolicy.RouteFacts facts =
+                getSetYourCourseRouteFacts(game, playerId);
+        if (!facts.classicPackageSupported()) return false;
+        if ("SUPERLASER".equals(protectedRoutePiece)
+                && facts.compatibleSuperlaserAttached()) {
+            return false;
+        }
+        if ("1_283".equals(protectedRoutePiece)
+                && findSetYourCourseLocationOnTable(
+                    game.getGameState(), "1_283") != null) {
+            return false;
+        }
+        PhysicalCard preferred = null;
+        int preferredRank = Integer.MAX_VALUE;
+        for (PhysicalCard card : objectiveForceLossSurvivors(
+                game.getGameState(), playerId)) {
+            if ("SUPERLASER".equals(protectedRoutePiece)
+                    ? !isSetYourCourseCompatibleSuperlaser(card)
+                    : !exactBlueprint(card, protectedRoutePiece)) {
+                continue;
+            }
+            int rank = setYourCourseForceLossZoneRank(card.getZone());
+            if (preferred == null || rank < preferredRank
+                    || rank == preferredRank
+                        && card.getCardId() < preferred.getCardId()) {
+                preferred = card;
+                preferredRank = rank;
+            }
+        }
+        return candidate == preferred;
+    }
+
+    public boolean isSetYourCourseMovementForceLossReserveCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!"111_6".equals(objectiveBlueprintId)
+                || isFlipped || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || candidate.getZone() != Zone.FORCE_PILE
+                    && candidate.getZone() != Zone.TOP_OF_FORCE_PILE) {
+            return false;
+        }
+        int requiredMoveForce =
+                getSetYourCourseNextRouteForceReserve(game, playerId);
+        return requiredMoveForce > 0
+                && game.getGameState().getForcePileSize(playerId)
+                    <= requiredMoveForce;
+    }
+
+    private PhysicalCard findOwnedSetYourCourseCardInPlay(
+            GameState gameState, String playerId, String blueprintId) {
+        Collection<PhysicalCard> permanents =
+                gameState.getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard card : permanents) {
+            if (isExactOwnedCard(card, playerId, blueprintId)
+                    && card.getZone() != null
+                    && card.getZone().isInPlay()) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    private PhysicalCard findSetYourCourseLocationOnTable(
+            GameState gameState, String blueprintId) {
+        List<PhysicalCard> locations = gameState.getTopLocations();
+        if (locations == null) return null;
+        for (PhysicalCard location : locations) {
+            if (exactBlueprint(location, blueprintId)) return location;
+        }
+        return null;
+    }
+
+    private PhysicalCard findSetYourCourseSystemOnTable(
+            GameState gameState, String title) {
+        List<PhysicalCard> locations = gameState.getTopLocations();
+        if (locations == null) return null;
+        for (PhysicalCard location : locations) {
+            if (isNamedSystem(location, title)) return location;
+        }
+        return null;
+    }
+
+    private boolean isNamedSystem(PhysicalCard card, String title) {
+        return card != null && card.getBlueprint() != null
+                && card.getBlueprint().getCardSubtype()
+                    == CardSubtype.SYSTEM
+                && title.equals(card.getTitle());
+    }
+
+    private boolean hasExactAttachedCard(
+            GameState gameState, PhysicalCard host,
+            String blueprintId) {
+        List<PhysicalCard> attached = gameState.getAttachedCards(host);
+        if (attached == null) return false;
+        for (PhysicalCard card : attached) {
+            if (exactBlueprint(card, blueprintId)) return true;
+        }
+        return false;
+    }
+
+    private boolean isSetYourCourseCompatibleSuperlaser(
+            PhysicalCard card) {
+        return exactBlueprint(card, "2_161")
+                || exactBlueprint(card, "216_19");
+    }
+
+    private boolean hasAccessibleSetYourCourseCard(
+            GameState gameState, String playerId,
+            String blueprintId) {
+        return hasExactBlueprint(
+                objectiveForceLossSurvivors(gameState, playerId),
+                blueprintId);
+    }
+
+    private boolean hasExactBlueprint(
+            Collection<PhysicalCard> cards, String blueprintId) {
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (exactBlueprint(card, blueprintId)) return true;
+        }
+        return false;
+    }
+
+    private boolean isExactOwnedCard(
+            PhysicalCard card, String playerId,
+            String blueprintId) {
+        return card != null && playerId != null
+                && playerId.equals(card.getOwner())
+                && exactBlueprint(card, blueprintId);
+    }
+
+    private boolean exactBlueprint(
+            PhysicalCard card, String blueprintId) {
+        try {
+            return card != null && blueprintId.equals(
+                    card.getBlueprintId(true));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private int setYourCourseForceLossZoneRank(Zone zone) {
+        if (zone == Zone.HAND) return 0;
+        if (zone == Zone.RESERVE_DECK
+                || zone == Zone.TOP_OF_RESERVE_DECK) return 1;
+        return 2;
+    }
+
     public boolean isHiddenPathJabiimRouteAction(
             SwccgGame game, String playerId,
             PhysicalCard sourceCard, String actionText) {
@@ -15906,6 +16304,16 @@ public class ObjectiveAnalyzer {
                 || card == null || blueprint == null || actionText == null) return notes;
         String actionLower = actionText.toLowerCase(Locale.ROOT);
         boolean isCharacter = blueprint.getCardCategory() == CardCategory.CHARACTER;
+
+        SetYourCourseObjectivePolicy.Evaluation sycLaserDeploy =
+                SetYourCourseObjectivePolicy.scoreSuperlaserDeploy(
+                    getSetYourCourseRouteStage(game, playerId),
+                    isSetYourCourseCompatibleSuperlaserDeployCandidate(
+                        game, playerId, card));
+        if (sycLaserDeploy.applies()) {
+            notes.add(new ScoreNote(
+                    sycLaserDeploy.delta(), sycLaserDeploy.reason()));
+        }
 
         if (analyzed && !isFlipped
                 && classifyFirstOrderReignsProgressCandidate(
