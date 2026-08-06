@@ -9984,3 +9984,61 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     FLIP_OBSERVED. Package, byte identity, and fresh-JVM deployment are
     verified; fresh live replay firing remains separate. Nothing was pushed.
     Restore web.jar.pre-thni-c2447a7dc and revert c2447a7dc to remove this seal.
+
+  ==== ISB Operations behavior seal (2026-08-06) ====
+
+    Dark 7_299/7_299_BACK has two native routes: four active ISB agents
+    anywhere on table, ownership unrestricted, or two owner-controlled Rebel
+    Base locations each with an owned active non-undercover ISB agent. An
+    excluded-from-battle agent counts; an undercover or inactive agent does
+    not. Lieutenant Blount occupying Coruscant externally prevents the front
+    flip and forces the back front. The back otherwise flips at zero active
+    agents. Card and engine Java remain unchanged.
+
+    Both public bots compare the alternatives and reserve only the cheapest
+    executable route. Route B accounts for distinct agents and destinations,
+    origin-preserving movement, and a formation-safe favorable battle. Exact
+    completion receives OBJECTIVE.ISB.ROUTE_COMPLETION +8000. Only an exact
+    flip-now deploy releases the existing V176 battle reserve. Blount chase
+    uses the existing +600 movement-parent and +1000 exact-destination bands.
+    Force-loss and battle-forfeit selection preserve still-required agents,
+    including an agent aboard an enclosed vehicle, and the final active agent
+    remains protected on the back.
+
+    The native once-per-draw-phase retrieval receives
+    OBJECTIVE.ISB.RETRIEVE_AGENT +2000. Non-undercover agents are routed to a
+    battleground site for the printed drain payoff. Presence rather than
+    control is required, and the modifier does not multiply per agent. No new
+    numeric V-tag was introduced. Route B proactive deployment remains
+    site-focused although native Rebel Base systems qualify, and Blount chase
+    is limited to a legal one-hop Coruscant landspeed route.
+
+    IsbOperationsObjectiveEngineContractTest passed 20/0/0/0. The focused
+    ISB, control-action, and deploy-siting gate passed 67/0/0/0; the bounded
+    Local Uprising, Hidden Path, regional-counted, and Old Allies ring passed
+    66/0/0/0, for 133/0/0/0 on the frozen snapshot. Diff, JSON, source-law,
+    action-flow, scope, 23 compiled-symbol, and normalized four-evaluator
+    parity checks passed. Independent reviews found no shipment blocker.
+
+    Local behavior commit 03278e49d packaged successfully. All 103 generated
+    class entries from 11 changed production sources byte-match
+    target/classes, the server jar, and web.jar; the embedded playbook also
+    byte-matches. Server jar SHA-256 is
+    85955246451ef9a849294af640f1ec479cab8696eeb807d027057c3c6055476a;
+    candidate, live-host, and running-container web.jar SHA-256 is
+    c151dc71abab6f93f85d632760bf0318492c09ffbdb0828b7d84b63942cafcca;
+    playbook SHA-256 is
+    67c58ec374de9a333e1a99f336adf9168f074489db1cad9e093d50dce4bd4ec9.
+    The prior live jar is preserved as web.jar.pre-isb-03278e49d. The hall was
+    frozen at zero tables and games. The fresh app started at
+    2026-08-06T21:09:01.566726586Z after jar mtime, with restart count zero and
+    Java at PID 1. Health, login, all five gameplay switches, critical live
+    markers, startup logs, and the reopened empty hall passed.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    evaluators, approved objective data, AI tests, and approved audit/history
+    records. No engine Java, card Java, client, deck library, database, or
+    workbook changed. Deterministic unchanged-engine public-bot execution
+    provides FLIP_OBSERVED. Package identity and fresh-JVM deployment are
+    verified; fresh live replay firing remains separate. Nothing was pushed.
+    Restore web.jar.pre-isb-03278e49d and revert 03278e49d to remove this seal.

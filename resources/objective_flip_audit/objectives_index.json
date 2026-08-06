@@ -1,6 +1,6 @@
 {
- "generatedBy": "K-2 Phase A inventory 2026-07-24",
- "baselineHead": "192abf72d",
+ "generatedBy": "K-2 Phase A inventory 2026-07-24; ISB Operations behavior reconciliation 2026-08-06 at 03278e49d",
+ "baselineHead": "03278e49d",
  "rows": [
   {
    "frontBp": "7_135",
@@ -89,7 +89,7 @@
    "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java",
    "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java",
    "hasProfile": true,
-   "loaderEnabled": false,
+   "loaderEnabled": true,
    "profileLabel": "ISB Operations"
   },
   {

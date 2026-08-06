@@ -1,81 +1,198 @@
 {
- "frontBp": "7_299",
- "backBp": "7_299_BACK",
- "side": "DARK",
- "titleFront": "ISB Operations",
- "titleBack": "Empire's Sinister Agents",
- "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java",
- "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java",
- "cacheCheck": "OK",
- "flipToBack": {
-  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
-  "prose": "Flip if 4 ISB agents are on table OR ISB agents control at least 2 Rebel Base locations (control-with).",
-  "expression": {
-   "op": "allOf",
-   "children": [
-    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:74"},
-    {"op": "anyOf", "children": [
-     {"req": "canSpot >=4 cards on table", "filter": "Filters.ISB_agent", "gameConditions": "GameConditions.canSpot(game, self, 4, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.ISB_agent)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:75"},
-     {"req": "controls-with >=2 locations (you control location, with your ISB agent there)", "filter": "location: Filters.Rebel_Base_location; actor: Filters.ISB_agent", "gameConditions": "GameConditions.controlsWith(game, self, playerId, 2, Filters.Rebel_Base_location, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.ISB_agent)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:76"}
-    ]}
-   ]
+  "frontBp": "7_299",
+  "backBp": "7_299_BACK",
+  "side": "DARK",
+  "titleFront": "ISB Operations",
+  "titleBack": "Empire's Sinister Agents",
+  "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java",
+  "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java",
+  "cacheCheck": "OK",
+  "flipToBack": {
+    "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever the native condition holds and Lieutenant Blount does not prevent flipping",
+    "prose": "Flip if four active, spottable ISB agents are anywhere on table, ownership unrestricted, OR the owner controls at least two Rebel Base locations, each with an owned active non-undercover ISB agent. Lieutenant Blount occupying Coruscant externally prevents the flip.",
+    "expression": {
+      "op": "allOf",
+      "children": [
+        {
+          "req": "canBeFlipped",
+          "filter": "self, including external MayNotBeFlippedModifier from Lieutenant Blount",
+          "gameConditions": "GameConditions.canBeFlipped(game, self)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:74"
+        },
+        {
+          "op": "anyOf",
+          "children": [
+            {
+              "req": "canSpot >=4 active cards on table, ownership unrestricted",
+              "filter": "Filters.ISB_agent",
+              "gameConditions": "GameConditions.canSpot(game, self, 4, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.ISB_agent)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:75"
+            },
+            {
+              "req": "controls-with >=2 locations, each controlled by the owner with an owned active non-undercover ISB agent there",
+              "filter": "location: Filters.Rebel_Base_location; actor: Filters.ISB_agent",
+              "gameConditions": "GameConditions.controlsWith(game, self, playerId, 2, Filters.Rebel_Base_location, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.ISB_agent)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:76"
+            }
+          ]
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:69-88",
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_021.java:49-75"
+    ]
   },
-  "citations": [
-   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299.java:69-88"
-  ]
- },
- "flipToFront": {
-  "timing": "RequiredGameTextTriggerAction (singleton) on TriggerConditions.isTableChanged; auto-fires whenever condition holds",
-  "prose": "Back flips to front if no ISB agents are on table (cannot spot even one).",
-  "expression": {
-   "op": "allOf",
-   "children": [
-    {"req": "canBeFlipped", "filter": "self", "gameConditions": "GameConditions.canBeFlipped(game, self)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java:84"},
-    {"op": "not", "children": [
-     {"req": "canSpot >=1 card on table", "filter": "Filters.ISB_agent", "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.ISB_agent)", "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java:85"}
-    ]}
-   ]
+  "flipToFront": {
+    "timing": "The objective's singleton table-change trigger flips back when zero active ISB agents are spottable. Lieutenant Blount also forcibly flips the back when he occupies Coruscant.",
+    "prose": "Back flips to front if no active, spottable ISB agent remains anywhere on table, or through Lieutenant Blount's separate forced-front trigger while he occupies Coruscant.",
+    "expression": {
+      "op": "anyOf",
+      "children": [
+        {
+          "op": "allOf",
+          "children": [
+            {
+              "req": "canBeFlipped",
+              "filter": "self",
+              "gameConditions": "GameConditions.canBeFlipped(game, self)",
+              "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java:84"
+            },
+            {
+              "op": "not",
+              "children": [
+                {
+                  "req": "canSpot >=1 active card on table",
+                  "filter": "Filters.ISB_agent",
+                  "gameConditions": "GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.ISB_agent)",
+                  "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java:85"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "req": "Lieutenant Blount occupies any Coruscant location",
+          "filter": "Filters.Lieutenant_Blount at Filters.Coruscant_location",
+          "gameConditions": "GameConditions.occupiesLocation(game, self, Filters.Coruscant_location)",
+          "citation": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_021.java:61-74"
+        }
+      ]
+    },
+    "citations": [
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java:81-97",
+      "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set9/light/Card9_021.java:58-77"
+    ]
   },
-  "citations": [
-   "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set7/dark/Card7_299_BACK.java:81-97"
-  ]
- },
- "requirementSemantics": [
-  "Front alternative A = COUNT-ON-TABLE (canSpot with count 4), not control or occupy. Undercover ISB agents still spottable; excluded-from-battle included.",
-  "Front alternative B = CONTROL-WITH: you control 2 Rebel Base locations each having an ISB agent there.",
-  "Back flip = ABSENCE: zero spottable ISB agents anywhere (loss of all agents flips you back).",
-  "ISB agent status is objective-granted: both sides add Keyword.ISB_AGENT + Keyword.SPY to your characters with 'ISB'/'Rebel'/'Rebels'/'Rebellion' in lore (KeywordModifier); Filters.ISB_agent keys off that keyword. Card7_299.java:58-66, Card7_299_BACK.java:69-74"
- ],
- "typedIdentities": [
-  "Filters.ISB_agent (Keyword.ISB_AGENT) - flip actor both sides",
-  "Filters.Rebel_Base_location - front flip gate locations (alternative B)",
-  "Filters.and(Filters.your(self), Filters.character, Filters.or(Filters.loreContains(\"ISB\"), Filters.loreContains(\"Rebel\"), Filters.loreContains(\"Rebels\"), Filters.loreContains(\"Rebellion\"))) - who becomes an ISB agent/spy",
-  "Filters.Coruscant_location - setup deploy",
-  "Filters.not(Filters.undercover_spy) - back drain bonus requires non-Undercover agent",
-  "Filters.battleground_site + Filters.sameOrRelatedLocationAs - back drain modifier scopes"
- ],
- "setupAndPullRoutes": [
-  "Setup (front, required): deploy any Coruscant location from Reserve Deck (Filters.Coruscant_location). Card7_299.java:45-55",
-  "Back, once during each of your draw phases: retrieve one ISB agent (RetrieveCardEffect, Filters.ISB_agent). Card7_299_BACK.java:47-62",
-  "No download/tutor of characters on the front; agents must be deployed normally (they ignore location deployment restrictions in their game text via IgnoresLocationDeploymentRestrictionsInGameTextModifier, both sides)."
- ],
- "otherObligations": [
-  "Both sides: your lore-matching characters are ISB agents and spies and may deploy regardless of location deployment restrictions in their game text. Card7_299.java:58-66, Card7_299_BACK.java:65-78",
-  "Back: your Force drains +1 at battleground sites where you have a non-Undercover ISB agent. Card7_299_BACK.java:68,75",
-  "Back: opponent's Force drains -1 at same and related locations of those sites. Card7_299_BACK.java:76",
-  "Strategic: keep at least one ISB agent on table at all times or the objective flips back to front."
- ],
- "seedMismatches": [],
- "profile": {
-  "exists": true,
-  "loaderEnabled": false,
-  "profileGaps": [
-   "flipGateSite is null; true gate (alternative B) is Rebel Base locations (Filters.Rebel_Base_location)",
-   "keyCharacterFilter is null; flip actor on both sides is Filters.ISB_agent (objective-granted keyword)",
-   "the 4-agents-on-table alternative (pure count, no location) has no representation in profile fields",
-   "requiredCardsOnTable empty; back-hold requires >=1 ISB agent on table",
-   "weights empty"
-  ]
- },
- "proofGate": "SOURCE_VERIFIED"
+  "requirementSemantics": [
+    "Front route A is a pure active-card count anywhere on table. It is ownership-unrestricted and has no location gate.",
+    "Front route B is CONTROL-WITH at two Rebel Base locations. Each location must be controlled by the objective owner and have that owner's active non-undercover ISB agent there.",
+    "SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE includes excluded cards but does not make undercover, captive, or otherwise inactive cards spottable.",
+    "Back flip is pure active-agent absence. Losing every spottable agent flips the objective front.",
+    "Lieutenant Blount is external to the native objective OR expression. While he occupies Coruscant, the front cannot flip and the back is forcibly flipped front.",
+    "Back payoff requires a non-undercover ISB agent present at a battleground site. It does not require control and does not multiply per agent."
+  ],
+  "typedIdentities": [
+    "Filters.ISB_agent (Keyword.ISB_AGENT) - flip actor and back hold",
+    "Filters.Rebel_Base_location - Hoth or Yavin 4 systems and related sites for route B",
+    "Filters.and(Filters.your(self), Filters.character, Filters.or(Filters.loreContains(\"ISB\"), Filters.loreContains(\"Rebel\"), Filters.loreContains(\"Rebels\"), Filters.loreContains(\"Rebellion\"))) - objective-granted agent and spy class",
+    "Filters.Coruscant_location - setup location and Lieutenant Blount blocker scope",
+    "Filters.Lieutenant_Blount - external blocker",
+    "Filters.not(Filters.undercover_spy) - route B actor and back payoff requirement",
+    "Filters.battleground_site plus Filters.sameOrRelatedLocationAs - back drain modifier scopes"
+  ],
+  "setupAndPullRoutes": [
+    "Setup: deploy any Coruscant location from Reserve Deck. Card7_299.java:45-55.",
+    "Back, once during each owner draw phase: retrieve one ISB agent from Lost Pile. Card7_299_BACK.java:47-62.",
+    "The front does not tutor characters. Qualifying characters deploy normally but ignore their own location deployment restrictions while the objective is active."
+  ],
+  "otherObligations": [
+    "Both faces continuously grant ISB agent and spy keywords to the owner's lore-matching characters and let them ignore their own location restrictions.",
+    "Back: own Force drain +1 at a battleground site where an owned non-undercover ISB agent is present.",
+    "Back: opponent Force drains -1 at that site and related locations.",
+    "Strategic: preserve one active ISB agent after flipping and remove or neutralize a Coruscant-occupying Lieutenant Blount."
+  ],
+  "contradictionsResolved": [
+    "Route A is anywhere on table, not Coruscant-only.",
+    "Route B includes Hoth and Yavin 4 systems and their related sites, not battleground sites only.",
+    "Route A is ownership-unrestricted; route B's controlsWith helper requires the owner's non-undercover agent at each owned-controlled location.",
+    "Undercover agents are invisible to the flip and hold despite INCLUDE_EXCLUDED_FROM_BATTLE.",
+    "Lieutenant Blount is an external prevent-and-forced-front effect, not another alternative inside the native objective's OR.",
+    "The back drain payoff requires presence, not control, and does not multiply for multiple agents."
+  ],
+  "seedMismatches": [],
+  "profile": {
+    "exists": true,
+    "loaderEnabled": true,
+    "profileGaps": [],
+    "structuredRules": [
+      "preFlip anyOf: four active ISB agents on table, or controlWith at least two Rebel Base locations",
+      "preFlip allOf blocker: zero active Lieutenant Blount cards occupying Coruscant",
+      "postFlip: fewer than one active ISB agent on table triggers flip-back",
+      "postFlip payoff: owned non-undercover ISB agent present at a battleground site"
+    ]
+  },
+  "behaviorProof": {
+    "status": "BEHAVIOR_SEALED",
+    "publicBots": [
+      "RandoCalAi",
+      "TheChosenOneAi"
+    ],
+    "runtimeOwners": [
+      "ObjectiveAnalyzer",
+      "DeployObjectiveSitingPolicy",
+      "ControlActionPolicy",
+      "MoveDestinationPolicy",
+      "mirrored Rando and Chosen One ActionTextEvaluator",
+      "mirrored Rando and Chosen One CardSelectionEvaluator",
+      "mirrored Rando and Chosen One DeployEvaluator",
+      "mirrored Rando and Chosen One MoveEvaluator"
+    ],
+    "missingStateCalculation": [
+      "cheapest executable native route instead of summing both anyOf alternatives",
+      "Route B exact deploy, move, favorable-battle, and Force accounting",
+      "origin preservation when moving a Route B agent",
+      "Lieutenant Blount blocker state and safe one-hop Coruscant chase",
+      "native back-side retrieval",
+      "non-undercover battleground payoff routing"
+    ],
+    "flipPreservation": [
+      "exact route-completing deployment and replacement of stale generic battle reserve",
+      "exact deploy, movement, and battle Force reserves",
+      "real Force-loss retention of still-required route pieces",
+      "battle-forfeit protection for a Route A agent aboard an enclosed vehicle",
+      "last-agent post-flip retention",
+      "native free retrieval and battleground payoff routing"
+    ],
+    "scoring": [
+      "OBJECTIVE.ISB.ROUTE_COMPLETION +8000",
+      "OBJECTIVE.ISB.RETRIEVE_AGENT +2000",
+      "existing Blount chase parent +600 and exact destination +1000"
+    ],
+    "nativeEngineTests": [
+      "IsbOperationsObjectiveEngineContractTest"
+    ],
+    "observed": [
+      "both public bots choose source-exact Route A and Route B completion actions",
+      "unchanged objective Java flips through each native route",
+      "Lieutenant Blount prevents a ready front flip and forces the back front while actively occupying Coruscant",
+      "both public bots reserve and execute a safe one-hop movement toward Blount and can remove him through a formation-safe favorable battle",
+      "exact route payments dominate unrelated Force spending",
+      "real Force loss and battle-forfeit decisions preserve the last required route pieces while expendable alternatives exist",
+      "the unchanged back flips front at zero active agents",
+      "both bots select the native free retrieval and route non-undercover agents to the printed battleground payoff"
+    ],
+    "verification": "IsbOperationsObjectiveEngineContractTest 20/0/0/0; focused ISB, ControlActionPolicy, and DeployObjectiveSitingPolicy gate 67/0/0/0; neighboring Local Uprising, Hidden Path, regional-counted, and Old Allies gate 66/0/0/0; final frozen total 133/0/0/0; diff, JSON, 23 compiled-symbol, source-law, scope, and normalized four-evaluator bot-parity checks passed.",
+    "knownLimits": [
+      "Blount chase is sealed for legal one-hop landspeed movement between Coruscant sites.",
+      "Proactive Route B deployment is site-focused although systems also qualify under native card law.",
+      "Fresh live replay firing is not yet proved.",
+      "The workbook remains research only."
+    ],
+    "localBehaviorCommit": "03278e49d",
+    "artifact": "103 generated class entries from 11 changed production sources byte-match target/classes, the server jar, and web.jar. Server jar SHA-256 85955246451ef9a849294af640f1ec479cab8696eeb807d027057c3c6055476a; live web.jar SHA-256 c151dc71abab6f93f85d632760bf0318492c09ffbdb0828b7d84b63942cafcca; playbook SHA-256 67c58ec374de9a333e1a99f336adf9168f074489db1cad9e093d50dce4bd4ec9.",
+    "deployment": "The authenticated hall was frozen at zero tables and games. Prior THNI jar preserved as web.jar.pre-isb-03278e49d. Fresh app start 2026-08-06T21:09:01.566726586Z, restart count 0, Java PID 1, jar mtime precedes JVM start, host/container/candidate jar hashes match, health, login, operational, all four gameplay settings, and reopened hall returned HTTP 200, critical live markers were present, startup had zero error lines, and the hall remained empty.",
+    "proofCeiling": "Deterministic unchanged-engine execution provides FLIP_OBSERVED. Package identity and fresh-JVM deployment are verified; fresh live replay firing remains separate. Nothing was pushed."
+  },
+  "proofGate": "FLIP_OBSERVED"
 }

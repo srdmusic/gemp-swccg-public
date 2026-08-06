@@ -1,17 +1,17 @@
 {
- "generatedBy": "K-2 Phase A+B merge 2026-07-24; engineClass merge from 33 family dossiers + Codex/evidence-packet results 2026-07-25; TDIGWATT evidence reconciliation 2026-07-26; Galactic Senate behavior reconciliation 2026-07-31 at 4942781ab; Naboo duel behavior reconciliation 2026-07-31 at 1cfeedb39",
- "baselineHead": "192abf72d",
+ "generatedBy": "K-2 Phase A+B merge 2026-07-24; engineClass merge from 33 family dossiers + Codex/evidence-packet results 2026-07-25; TDIGWATT evidence reconciliation 2026-07-26; Galactic Senate behavior reconciliation 2026-07-31 at 4942781ab; Naboo duel behavior reconciliation 2026-07-31 at 1cfeedb39; ISB Operations behavior reconciliation 2026-08-06 at 03278e49d",
+ "baselineHead": "03278e49d",
  "counts": {
   "objectives": 66,
   "ABSENT_NO_PROFILE": 8,
-  "ABSENT_DISABLED": 38,
+  "ABSENT_DISABLED": 37,
   "PARTIAL": 15,
   "WRONG": 1,
-  "COMPLETE": 4,
+  "COMPLETE": 5,
   "engineClass_EXISTING_ENGINE_FIT": 10,
   "engineClass_NEW_PRIMITIVE": 24,
-  "engineClass_PROVEN_BY_CODEX": 16,
-  "engineClass_SMALL_SHARED_EXTENSION": 15,
+  "engineClass_PROVEN_BY_CODEX": 17,
+  "engineClass_SMALL_SHARED_EXTENSION": 14,
   "engineClass_STUB_NA": 1
  },
  "rows": [
@@ -131,15 +131,15 @@
    "frontBp": "7_299",
    "title": "ISB Operations",
    "side": "DARK",
-   "classification": "ABSENT",
-   "subclass": "DISABLED",
-   "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
-   "flipLaw": "Flip if 4 ISB agents are on table OR ISB agents control at least 2 Rebel Base locations (control-with).",
-   "flipBackLaw": "Back flips to front if no ISB agents are on table (cannot spot even one).",
-   "profileGaps": 5,
+   "classification": "COMPLETE",
+   "subclass": "ENABLED",
+   "why": "Loader-enabled source-exact dual-route profile plus Lieutenant Blount blocker, zero-agent back rule, native retrieval, battleground payoff, and deterministic pull/deploy/budget/move/battle/loss/forfeit/flip behavior in both public bots.",
+   "flipLaw": "Flip if 4 active, spottable ISB agents are on table OR owned active non-undercover ISB agents control at least 2 Rebel Base locations. Lieutenant Blount occupying Coruscant externally prevents the flip.",
+   "flipBackLaw": "Back flips to front if no active ISB agents are spottable on table; Lieutenant Blount occupying Coruscant also forcibly flips it front.",
+   "profileGaps": 0,
    "seedMismatches": 0,
-   "engineClass": "SMALL_SHARED_EXTENSION",
-   "engineClassNote": "DEMOTED 2026-07-25 deep packet: route B (controlsWith 2 Rebel_Base_location) UNWIRED, isbFlipLocationCount is dead data; last-agent hold unprotected; double-steer if profile lands without retiring V25 statics; spurious coruscant parser fragment. Fix = 1 resolveFilter key + anyOf profile + retire V29.7 statics, MEDIUM."
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven at 03278e49d by IsbOperationsObjectiveEngineContractTest plus ControlActionPolicyTest and DeployObjectiveSitingPolicyTest: focused 67/0/0/0, neighbor ring 66/0/0/0, frozen total 133/0/0/0, exact mirrored parity."
   },
   {
    "frontBp": "7_300",
