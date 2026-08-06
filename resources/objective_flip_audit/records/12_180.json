@@ -101,7 +101,7 @@
   "opponent counter (both sides): opponent may use 8 Force to place Watto (at Watto's Junkyard) in Used Pile, then YOU choose to retrieve 0-4 Force - permanently threatens the Watto presence leg"
  ],
  "typedIdentities": [
-  "Filters.Watto (persona)",
+  "Filters.Watto (title filter; no Persona.WATTO exists)",
   "Filters.Wattos_Junkyard, Filters.Mos_Espa (site identities)",
   "Filters.presentAt(Filters.Wattos_Junkyard) (presence semantics)",
   "Filters.Tatooine_site (front drain-loss limit)",
@@ -110,7 +110,8 @@
  ],
  "setupAndPullRoutes": [
   "On deploy: deploy Watto's Junkyard and Mos Espa from Reserve Deck [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:62-74]",
-  "No ongoing Reserve Deck pulls on either side; the only recurring engine is the back's once-per-deploy-phase face-down-card gambit (opponent loses 2 and card to Used, or opponent uses 2 and you deploy it free; if free-deploy impossible you lose 2 Force and the card) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:129-195]"
+  "Watto's Junkyard supplies a native once-per-game Watto pull from Reserve Deck; Watto deploys -2 there [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_178.java]",
+  "The recurring back engine is the once-per-deploy-phase face-down-card gambit (opponent loses 2 and card to Used, or opponent uses 2 and you deploy it free; if free-deploy is impossible you lose 2 Force and the card) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java:129-195]"
  ],
  "otherObligations": [
   "Remainder of game (front, after deployment): Watto's Junkyard immune to Revolution [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java:79-85]",
@@ -122,13 +123,45 @@
  "seedMismatches": [],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
-  "profileGaps": [
-   "keyCharacterFilter null: true flip actor Filters.Watto absent from entire profile",
-   "flipGateSite null: true gates Wattos_Junkyard (presence) + Mos_Espa (occupy) exist only as objectiveNamedLocations entries, not wired as flip gates",
-   "requiredCardsOnTable empty: Watto-on-table (present at Junkyard) requirement unrepresented",
-   "no representation of the opponent's 8-Force Watto-removal counter that directly un-flips the objective; weights empty"
-  ]
+  "loaderEnabled": true,
+  "profileGaps": []
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "ownerBehavior": [
+   "exact Watto pull from Watto's Junkyard",
+   "Watto free deployment to the Junkyard",
+   "cheapest legal Mos Espa body and exact destination",
+   "landspeed Force reservation through deploy and battle",
+   "movement of Sebulba rather than Watto",
+   "real Force-loss protection",
+   "native front flip and back flip-back",
+   "safe back-side gambit and native free deployment",
+   "maximum native retrieval after Watto removal"
+  ],
+  "opponentBehavior": [
+   "exact Watto-removal bonus only on 12_180_BACK"
+  ],
+  "scoring": [
+   "OBJECTIVE.NO_MONEY.WATTO_ROUTE +2000",
+   "Mos Espa route body +1600",
+   "exact completion destination +8000",
+   "safe gambit parent +3000 and child +2000",
+   "back-side opponent Watto removal +900"
+  ],
+  "nativeEngineTests": [
+   "NoMoneyNoPartsObjectiveEngineContractTest",
+   "NoMoneyNoPartsObjectivePolicyTest"
+  ],
+  "verification": "No Money contract and pure policy 18/0/0/0; affected policy and mirror ring 112/0/0/0; neighboring objective ring 165/0/0/0; 277 distinct green tests on the production snapshot; two independent reviews, JSON, diff, and normalized four-adapter bot parity passed.",
+  "knownLimits": [
+   "Fresh live replay firing is not yet proved.",
+   "Family-specific battle-forfeit composition is covered by shared retention and parity tests rather than a native No Money battle prompt.",
+   "The workbook remains research only."
+  ],
+  "localBehaviorCommit": "6af893195",
+  "artifact": "105 generated class entries from 14 changed production Java sources byte-match target/classes, the server jar, and web.jar. Server jar SHA-256 a4d006a1eefdecd67ad4ddb706f930a637b151e44408ad2ac6eed88af73a418b; live web.jar SHA-256 89608763ab6031c67eded782072d6fa8a3793dc319d7340ab4f6dac4edfe4acb; playbook SHA-256 ed9fbf1a2a77a4792a54deab529476815d4d2a2c1c18cc428e3e3a087aabdf63.",
+  "deployment": "The authenticated hall was frozen at zero tables and games. Prior ISB jar preserved as web.jar.pre-nmnpnd-6af893195. Fresh app start 2026-08-06T22:45:01.637566337Z, restart count 0, Java PID 1, jar mtime precedes JVM start, host/container/candidate jar hashes match, root, login, operational, all four gameplay settings, and reopened hall returned HTTP 200, live markers were present, startup completed, and the hall remained empty.",
+  "proofCeiling": "Deterministic unchanged-engine public-bot execution provides FLIP_OBSERVED. Package identity and fresh-JVM deployment are verified; fresh live replay firing remains separate. Nothing was pushed."
+ },
+ "proofGate": "FLIP_OBSERVED"
 }

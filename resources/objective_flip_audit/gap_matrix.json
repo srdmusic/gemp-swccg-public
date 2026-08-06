@@ -285,15 +285,15 @@
    "frontBp": "12_180",
    "title": "No Money, No Parts, No Deal!",
    "side": "DARK",
-   "classification": "ABSENT",
-   "subclass": "DISABLED",
-   "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
+   "classification": "COMPLETE",
+   "subclass": "ENABLED",
+   "why": "Loader-enabled source-exact two-leg profile plus native Watto pull, deploy and movement budgeting, Force-loss and post-flip retention, back gambit, opponent Watto counterplay, and deterministic native flip and flip-back behavior in both public bots.",
    "flipLaw": "Flip if Watto is PRESENT AT Watto's Junkyard AND you OCCUPY Mos Espa.",
    "flipBackLaw": "Flips back if Watto NOT present at Watto's Junkyard OR you do NOT occupy Mos Espa (exact negation of the flip law).",
-   "profileGaps": 4,
+   "profileGaps": 0,
    "seedMismatches": 0,
-   "engineClass": "SMALL_SHARED_EXTENSION",
-   "engineClassNote": "multi-leg conjunctive flip gate (Watto@Junkyard AND occupy Mos Espa) + 2 registry keys"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven at 6af893195 by NoMoneyNoPartsObjectiveEngineContractTest and NoMoneyNoPartsObjectivePolicyTest: affected ring 112/0/0/0, neighbor ring 165/0/0/0, 277 distinct green tests, exact mirrored parity."
   },
   {
    "frontBp": "13_46",

@@ -199,7 +199,7 @@
    "frontFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180.java",
    "backFile": "src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set12/dark/Card12_180_BACK.java",
    "hasProfile": true,
-   "loaderEnabled": false,
+   "loaderEnabled": true,
    "profileLabel": "No Money, No Parts, No Deal!"
   },
   {

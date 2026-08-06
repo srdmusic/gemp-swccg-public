@@ -10042,3 +10042,59 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     provides FLIP_OBSERVED. Package identity and fresh-JVM deployment are
     verified; fresh live replay firing remains separate. Nothing was pushed.
     Restore web.jar.pre-isb-03278e49d and revert 03278e49d to remove this seal.
+
+  ==== No Money, No Parts, No Deal! behavior seal (2026-08-06) ====
+
+    Dark 12_180/12_180_BACK flips when Watto is present at Watto's Junkyard
+    and the Dark Side occupies Mos Espa. Either missing leg flips it back.
+    Watto's Junkyard supplies the native Watto pull. Both faces let the
+    opponent use 8 Force to place Watto in Used Pile, after which the owner
+    may retrieve up to 4. The back also owns the face-down-card gambit. Card
+    and engine Java remain unchanged.
+
+    Both public bots take the exact Watto route, deploy him free to the
+    Junkyard, and establish Mos Espa occupation through the cheapest legal
+    body. Sebulba V supplies the canonical free direct deployment. When a body
+    must move from the Junkyard, ordinary deploys and unrelated battles cannot
+    spend its exact landspeed payment. The bots move Sebulba instead of Watto,
+    preserve the two distinct formation legs, and trigger the unchanged native
+    flip. Real Force loss retains the cheapest still-needed Mos Espa body.
+
+    Exact completion receives +8000, the Mos Espa body +1600, and the Watto
+    route +2000. On the back, the gambit parent receives +3000 only with a hand
+    card safe under both native responses; a safe child receives +2000. The
+    opponent's Watto-removal action receives +900 only on the back, then the
+    objective owner chooses the native maximum retrieval of 4. Existing hard
+    affordability and formation-safety rules remain terminal. No numeric V-tag
+    was introduced.
+
+    The final contract has 16 tests and the pure policy has 2. The affected
+    ring passed 112/0/0/0 and the bounded neighboring objective ring passed
+    165/0/0/0, for 277 distinct green tests on the production snapshot. Two
+    independent reviews passed. JSON, diff, and normalized four-adapter bot
+    parity checks passed. The documented pre-existing Counted Operative failure
+    in DeployActionTextSourceParityTest remains unrelated and unchanged.
+
+    Local behavior commit 6af893195 packaged successfully. All 105 generated
+    class entries from 14 changed production Java sources byte-match
+    target/classes, the server jar, and web.jar; the embedded playbook also
+    byte-matches. Server jar SHA-256 is
+    a4d006a1eefdecd67ad4ddb706f930a637b151e44408ad2ac6eed88af73a418b;
+    candidate, live-host, and running-container web.jar SHA-256 is
+    89608763ab6031c67eded782072d6fa8a3793dc319d7340ab4f6dac4edfe4acb;
+    playbook SHA-256 is
+    ed9fbf1a2a77a4792a54deab529476815d4d2a2c1c18cc428e3e3a087aabdf63.
+    The prior ISB jar is preserved as web.jar.pre-nmnpnd-6af893195. The hall
+    was frozen at zero tables and games. The fresh app started at
+    2026-08-06T22:45:01.637566337Z after jar mtime, with restart count zero and
+    Java at PID 1. Root, login, all five gameplay posts, live markers, startup,
+    and the reopened empty hall passed.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    evaluators, approved objective data, AI tests, and approved audit/history
+    records. No engine Java, card Java, client, deck library, database, or
+    workbook changed. Deterministic unchanged-engine public-bot execution
+    provides FLIP_OBSERVED. Package identity and fresh-JVM deployment are
+    verified; fresh live replay firing remains separate. Nothing was pushed.
+    Restore web.jar.pre-nmnpnd-6af893195 and revert 6af893195 to remove this
+    seal.
