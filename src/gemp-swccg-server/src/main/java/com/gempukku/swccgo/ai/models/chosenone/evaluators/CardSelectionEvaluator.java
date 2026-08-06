@@ -1080,11 +1080,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         .IMPERIAL_ENTANGLEMENTS__DOWNLOAD_TATOOINE_BATTLEGROUND_SITE
                     && "Deploy Tatooine battleground site from Reserve Deck"
                         .equals(actionText);
+            boolean exactOldAllies = objective
+                    .isOldAlliesObjectiveFamily()
+                    && actionId == GameTextActionId
+                        .OLD_ALLIES__DOWNLOAD_JAKKU_LOCATION
+                    && "Deploy Jakku location from Reserve Deck"
+                        .equals(actionText);
             boolean exactCountedOperative = objective
                     .isCountedOperativeSiteRouteAction(
                         context.getGame(), context.getPlayerId(),
                         source, actionText);
             return exactMassassi || exactEntanglements
+                    || exactOldAllies
                     || exactCountedOperative ? source : null;
         } catch (Exception ignored) {
             return null;
@@ -1482,6 +1489,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return evaluateObjectiveDockingTransit(context);
         } else if (textLower.contains("move to,")
                    || textLower.contains("where to move")
+                   || textLower.contains("where to take off")
                    || textLower.contains("where to shuttle")
                    || textLower.contains("where to disembark")
                    || (textLower.contains("move") && textLower.contains("to")
@@ -2172,6 +2180,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer
                             objectiveProgressAnalyzer = context.getObjectiveAnalyzer();
                         if (objectiveProgressAnalyzer != null) {
+                            if (objectiveProgressAnalyzer
+                                    .isOldAlliesWrongGroundRouteDestination(
+                                        game, playerId,
+                                        objectiveProgressDeployingCard,
+                                        location)) {
+                                action.hardVeto(
+                                    "OBJECTIVE.OLD_ALLIES.GROUND_ROUTE: keep this body on a Jakku battleground instead of loading it aboard a ship");
+                            }
                             com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment
                                 objectiveProgress = objectiveProgressAnalyzer.assessDeployChild(
                                     game, playerId,
@@ -3861,6 +3877,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 }
                                                 if (fsObj != null
                                                         && fsObj.wouldCompletePreFlipRequirementAt(
+                                                            context.getGame(),
+                                                            context.getPlayerId(),
+                                                            v136DeployingCard,
+                                                            location)) {
+                                                    fsFlipGate = location.getTitle();
+                                                }
+                                                if (fsObj != null
+                                                        && fsObj.isOldAlliesGroundRouteDeployCandidate(
+                                                            context.getGame(),
+                                                            context.getPlayerId(),
+                                                            v136DeployingCard)
+                                                        && fsObj.advancesPreFlipRequirementAt(
                                                             context.getGame(),
                                                             context.getPlayerId(),
                                                             v136DeployingCard,
@@ -8221,6 +8249,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         boolean objectiveFirstOrderDrainPairBreak = false;
                         boolean objectiveTerminalEscapeDestination =
                                 false;
+                        boolean objectiveOldAlliesFalconDestination =
+                                false;
                         if (fsMover != null && fsOrigin != null
                                 && game != null && playerId != null) {
                             try {
@@ -8255,6 +8285,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         .advancesRequiredCardDeployPrerequisiteByMovingTo(
                                                 game, playerId, fsMover,
                                                 location);
+                                objectiveOldAlliesFalconDestination =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    && routeAnalyzer
+                                        .isOldAlliesFalconTakeOffDestination(
+                                            game, playerId, fsMover,
+                                            location);
                                 objectiveNabooDuelFrontRouteDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -8599,6 +8636,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     logger.warn(
                                         "OBJECTIVE ACTOR ROUTE DEST: {} to {} +1000",
                                         fsMover.getTitle(), title);
+                                }
+                                if (objectiveOldAlliesFalconDestination) {
+                                    action.addReasoning(
+                                        "OBJECTIVE OLD ALLIES FALCON ROUTE: take off to Jakku system and complete the space leg",
+                                        1200.0f,
+                                        TraceRuleId.of(
+                                            "MOVE.OBJECTIVE.OLD_ALLIES.FALCON_DESTINATION"),
+                                        TraceDomainId.MOVE,
+                                        TraceOutputKind.ORDERING);
                                 }
                                 MoveDestinationPolicy.Contribution
                                     objectiveRequiredCardEnabler =

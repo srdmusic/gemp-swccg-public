@@ -1733,6 +1733,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                 .getSetYourCourseNextRouteForceReserve(
                                     game, playerId)
                             : 0;
+                    int oldAlliesRouteReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getOldAlliesFutureRouteForceReserve(
+                                    game, playerId, card)
+                            : 0;
                     boolean exactSetYourCourseSuperlaserDeploy =
                         context.getObjectiveAnalyzer() != null
                             && context.getObjectiveAnalyzer()
@@ -2021,6 +2027,25 @@ public class DeployEvaluator extends ActionEvaluator {
                                     < countedOperativeBattleReserve) {
                             action.hardVeto(
                                 "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_RESERVE: preserve the pending winnable battle payment after the formation plan completes");
+                            actions.add(action);
+                            continue;
+                        }
+                    }
+                    if (countedOperativeOrdinaryDeploy
+                            && oldAlliesRouteReserve > 0) {
+                        if (exactNormalDeployPayment == null
+                                && massassiDeployPayment > 0) {
+                            action.hardVeto(
+                                "OBJECTIVE.OLD_ALLIES.ROUTE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the summed Jakku route payments");
+                            actions.add(action);
+                            continue;
+                        }
+                        if (exactNormalDeployPayment != null
+                                && availableForce
+                                    - exactNormalDeployPayment
+                                    < oldAlliesRouteReserve) {
+                            action.hardVeto(
+                                "OBJECTIVE.OLD_ALLIES.ROUTE_FORCE_RESERVE: preserve the remaining system, two-site, move, and battle payments");
                             actions.add(action);
                             continue;
                         }

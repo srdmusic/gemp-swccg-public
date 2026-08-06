@@ -229,6 +229,9 @@ final class PullPolicyAdapter {
                 boolean massassiFrontSiteRoute = objective
                         .isMassassiFrontSiteRouteAction(
                                 game, playerId, source, actionText);
+                boolean oldAlliesFrontLocationRoute = objective
+                        .isOldAlliesFrontLocationRouteAction(
+                                game, playerId, source, actionText);
                 boolean countedOperativeSiteRoute = objective
                         .isCountedOperativeSiteRouteAction(
                                 game, playerId, source, actionText);
@@ -246,6 +249,7 @@ final class PullPolicyAdapter {
                                 objective, source);
                 return firstOrderRoute
                         || massassiFrontSiteRoute
+                        || oldAlliesFrontLocationRoute
                         || imperialEntanglementsBackSiteRoute
                         || countedOperativeSiteRoute
                         || bringHimBeforeMeEmperorRoute;

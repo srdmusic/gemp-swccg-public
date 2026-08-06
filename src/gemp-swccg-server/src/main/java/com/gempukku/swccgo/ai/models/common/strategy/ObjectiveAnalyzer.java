@@ -3359,6 +3359,14 @@ public class ObjectiveAnalyzer {
                 game, playerId, candidate, location)) {
             return true;
         }
+        if (advancesOldAlliesFalconRouteAt(
+                game, playerId, candidate, location)) {
+            return true;
+        }
+        if (advancesOldAlliesGroundRouteAt(
+                game, playerId, candidate, location)) {
+            return true;
+        }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule) || isRuleSatisfied(
                     game, playerId, rule)) {
@@ -4536,7 +4544,8 @@ public class ObjectiveAnalyzer {
                 alternative.includeExcludedFromBattle,
                 alternative.spotOverride);
 
-        if (isCountedOperativeObjectiveFamily()
+        if ((isCountedOperativeObjectiveFamily()
+                    || isOldAlliesObjectiveFamily())
                     && isSelfOccupyCountedFlipBackAlternative(alternative)
                 || isHiddenPathSelfOccupyWithFlipBackAlternative(
                     alternative)) {
@@ -4670,7 +4679,8 @@ public class ObjectiveAnalyzer {
                     || "self".equals(
                         alternative.count.referenceController));
         return opponentControl
-                || isCountedOperativeObjectiveFamily()
+                || (isCountedOperativeObjectiveFamily()
+                    || isOldAlliesObjectiveFamily())
                     && isSelfOccupyCountedFlipBackAlternative(alternative)
                 || isHiddenPathSelfOccupyWithFlipBackAlternative(
                     alternative);
@@ -10129,6 +10139,7 @@ public class ObjectiveAnalyzer {
                     || "301_2".equals(objectiveBlueprintId)
                     || "111_4".equals(objectiveBlueprintId)
                     || "201_39".equals(objectiveBlueprintId)
+                    || "204_32".equals(objectiveBlueprintId)
                     || "7_137".equals(objectiveBlueprintId)
                     || "7_298".equals(objectiveBlueprintId)
                     || "226_28".equals(objectiveBlueprintId))
@@ -10172,7 +10183,7 @@ public class ObjectiveAnalyzer {
                 return false;
             }
             List<PhysicalCard> reserve = game.getGameState()
-                    .getCardPile(playerId, Zone.RESERVE_DECK);
+                    .getReserveDeck(playerId);
             if (reserve == null) return false;
             for (PhysicalCard card : reserve) {
                 if (isNativeObjectiveLocationRouteCandidate(
@@ -10222,7 +10233,7 @@ public class ObjectiveAnalyzer {
                             game.getGameState(), playerId));
             }
             List<PhysicalCard> reserve = game.getGameState()
-                    .getCardPile(playerId, Zone.RESERVE_DECK);
+                    .getReserveDeck(playerId);
             if (reserve == null) return false;
             for (PhysicalCard card : reserve) {
                 if (classifyPreFlipProgressCandidate(
@@ -10261,6 +10272,11 @@ public class ObjectiveAnalyzer {
     public boolean isHiddenPathObjectiveFamily() {
         return analyzed && ("226_28".equals(objectiveBlueprintId)
                 || "226_28_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isOldAlliesObjectiveFamily() {
+        return analyzed && ("204_32".equals(objectiveBlueprintId)
+                || "204_32_BACK".equals(objectiveBlueprintId));
     }
 
     public boolean isSetYourCourseObjectiveFamily() {
@@ -11491,6 +11507,7 @@ public class ObjectiveAnalyzer {
             PhysicalCard sourceCard, PhysicalCard candidate) {
         if ((!isMassassiBaseOperationsFamily()
                     && !isImperialEntanglementsFamily()
+                    && !isOldAlliesObjectiveFamily()
                     && !isCountedOperativeObjectiveFamily()
                     && !isHiddenPathObjectiveFamily())
                 || isFlipped && !isImperialEntanglementsFamily()
@@ -11567,6 +11584,8 @@ public class ObjectiveAnalyzer {
         com.gempukku.swccgo.filters.Filter printedFilter =
                 isMassassiBaseOperationsFamily()
                     ? Filters.Yavin_4_site
+                    : isOldAlliesObjectiveFamily()
+                    ? Filters.Jakku_battleground_site
                     : Filters.Tatooine_site;
         com.gempukku.swccgo.filters.Filter specialLocationConditions =
                 isImperialEntanglementsFamily()
@@ -11717,6 +11736,21 @@ public class ObjectiveAnalyzer {
                     game, playerId, sourceCard)
                 && actionText != null
                 && "deploy yavin 4 site from reserve deck"
+                    .equals(actionText.trim().toLowerCase(Locale.ROOT))
+                && hasObjectiveLocationRouteCandidateInReserve(
+                    game, playerId);
+    }
+
+    public boolean isOldAlliesFrontLocationRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isOldAlliesObjectiveFamily() && !isFlipped
+                && game != null && playerId != null
+                && sourceCard != null
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && actionText != null
+                && "deploy jakku location from reserve deck"
                     .equals(actionText.trim().toLowerCase(Locale.ROOT))
                 && hasObjectiveLocationRouteCandidateInReserve(
                     game, playerId);
@@ -11998,6 +12032,1043 @@ public class ObjectiveAnalyzer {
         return bestReserve;
     }
 
+    public record OldAlliesRouteReserve(
+            String ruleId,
+            boolean executable,
+            boolean candidateUsed,
+            int candidatePayment,
+            int remainingDeployForce,
+            int nextMoveForce,
+            int nextBattleForce) {
+        public int futureForce() {
+            return remainingDeployForce
+                    + nextMoveForce + nextBattleForce;
+        }
+    }
+
+    private static final class OldAlliesRoutePlan {
+        private final String ruleId;
+        private final Set<Integer> usedCards;
+        private final Set<Integer> battleLocations;
+        private final boolean candidateUsed;
+        private final int candidatePayment;
+        private final int deployForce;
+        private final int moveForce;
+        private final int battleForce;
+
+        private OldAlliesRoutePlan(
+                String ruleId, Set<Integer> usedCards,
+                Set<Integer> battleLocations,
+                boolean candidateUsed, int candidatePayment,
+                int deployForce, int moveForce, int battleForce) {
+            this.ruleId = ruleId;
+            this.usedCards = usedCards;
+            this.battleLocations = battleLocations;
+            this.candidateUsed = candidateUsed;
+            this.candidatePayment = candidatePayment;
+            this.deployForce = deployForce;
+            this.moveForce = moveForce;
+            this.battleForce = battleForce;
+        }
+
+        private static OldAlliesRoutePlan empty(String ruleId) {
+            return new OldAlliesRoutePlan(
+                    ruleId, new HashSet<>(), new HashSet<>(),
+                    false, 0, 0, 0, 0);
+        }
+
+        private int futureForce() {
+            return deployForce + moveForce + battleForce;
+        }
+    }
+
+    /**
+     * Builds each cross-paired Old Allies branch as one executable plan. A
+     * physical card and destination may be used once, and deploy, move, and
+     * battle payments never leak between the two OR branches.
+     */
+    public OldAlliesRouteReserve assessOldAlliesFutureRoute(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!isOldAlliesObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return new OldAlliesRouteReserve(
+                    null, false, false, 0, 0, 0, 0);
+        }
+        OldAlliesRoutePlan best = findBestOldAlliesRoutePlan(
+                game, playerId, deployingCandidate);
+        if (best == null) {
+            return new OldAlliesRouteReserve(
+                    null, false, false, 0, 0, 0, 0);
+        }
+        return new OldAlliesRouteReserve(
+                best.ruleId, true, best.candidateUsed,
+                best.candidatePayment, best.deployForce,
+                best.moveForce, best.battleForce);
+    }
+
+    private OldAlliesRoutePlan findBestOldAlliesRoutePlan(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!isOldAlliesObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        List<OldAlliesRoutePlan> completeRoutes = new ArrayList<>();
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            List<OldAlliesRoutePlan> branch = new ArrayList<>();
+            branch.add(OldAlliesRoutePlan.empty(rule.id));
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (!isPlainSelfPresenceAlternative(alternative)
+                        || alternative.count == null
+                        || alternative.count.value == null) {
+                    branch.clear();
+                    break;
+                }
+                List<OldAlliesRoutePlan> alternatives =
+                        oldAlliesAlternativePlans(
+                            game, playerId, deployingCandidate,
+                            rule.id, alternative);
+                branch = mergeOldAlliesRoutePlans(
+                        branch, alternatives);
+                if (branch.isEmpty()) break;
+            }
+            completeRoutes.addAll(branch);
+        }
+        List<OldAlliesRoutePlan> candidateRoutes =
+                deployingCandidate != null
+                    && completeRoutes.stream().anyMatch(
+                        plan -> plan.candidateUsed)
+                    ? completeRoutes.stream()
+                        .filter(plan -> plan.candidateUsed)
+                        .toList()
+                    : completeRoutes;
+        return candidateRoutes.stream()
+                .min(oldAlliesPlanComparator())
+                .orElse(null);
+    }
+
+    private List<OldAlliesRoutePlan> oldAlliesAlternativePlans(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate, String ruleId,
+            FlipLocationAlternative alternative) {
+        int missing = Math.max(0,
+                expectedCount(game, playerId, alternative.count)
+                - countOldAlliesAlternativeMatches(
+                    game, playerId, alternative));
+        if (missing == 0) {
+            return List.of(OldAlliesRoutePlan.empty(ruleId));
+        }
+        List<PhysicalCard> destinations = new ArrayList<>();
+        Map<Integer, List<OldAlliesRoutePlan>> options = new HashMap<>();
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)
+                    || oldAlliesRelationSatisfiedAt(
+                        game, playerId, location, alternative)) {
+                continue;
+            }
+            List<OldAlliesRoutePlan> locationOptions =
+                    oldAlliesLocationContributionPlans(
+                        game, playerId, deployingCandidate,
+                        ruleId, alternative, location);
+            if (!locationOptions.isEmpty()) {
+                destinations.add(location);
+                options.put(location.getPermanentCardId(),
+                        locationOptions);
+            }
+        }
+        List<OldAlliesRoutePlan> plans = new ArrayList<>();
+        collectOldAlliesAlternativePlans(
+                destinations, options, 0, missing,
+                OldAlliesRoutePlan.empty(ruleId), plans);
+        return trimOldAlliesPlans(plans);
+    }
+
+    private List<OldAlliesRoutePlan> oldAlliesLocationContributionPlans(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate, String ruleId,
+            FlipLocationAlternative alternative,
+            PhysicalCard destination) {
+        List<OldAlliesRoutePlan> plans = new ArrayList<>();
+        String opponent = game.getGameState().getOpponent(playerId);
+        boolean selfOccupies = oldAlliesRelationSatisfiedAt(
+                game, playerId, destination,
+                oldAlliesOccupyAlternative(alternative));
+        boolean opponentOccupies = opponent != null
+                && game.getModifiersQuerying().occupiesLocation(
+                    game.getGameState(), destination, opponent,
+                    SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE);
+
+        if ("control".equals(alternative.relation)
+                && selfOccupies && opponentOccupies) {
+            Integer battleCost = oldAlliesSafeBattleCostAt(
+                    game, playerId, destination);
+            if (battleCost != null) {
+                plans.add(new OldAlliesRoutePlan(
+                        ruleId, new HashSet<>(),
+                        new HashSet<>(Set.of(
+                            destination.getPermanentCardId())),
+                        false, 0, 0, 0, battleCost));
+            }
+            return plans;
+        }
+
+        if ("control".equals(alternative.relation)
+                && opponentOccupies) {
+            return plans;
+        }
+
+        if (Filters.Jakku_system.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    destination)
+                && hasExecutableOldAlliesFalconDeparture(
+                    game, playerId)) {
+            addOldAlliesFalconPilotPlans(
+                    game, playerId, deployingCandidate,
+                    ruleId, destination, plans);
+            if (!plans.isEmpty()) {
+                return trimOldAlliesPlans(plans);
+            }
+        }
+
+        if (deployingCandidate != null
+                && deployingCandidate.getZone() == Zone.HAND) {
+            Integer payment = oldAlliesDirectDeployCostAt(
+                    game, playerId, deployingCandidate,
+                    destination, alternative);
+            if (payment != null) {
+                plans.add(oldAlliesCardPlan(
+                        ruleId, deployingCandidate,
+                        true, payment, 0, 0));
+            }
+        }
+        for (PhysicalCard card : game.getGameState().getHand(playerId)) {
+            if (card == null || card == deployingCandidate) continue;
+            Integer payment = oldAlliesDirectDeployCostAt(
+                    game, playerId, card,
+                    destination, alternative);
+            if (payment != null) {
+                plans.add(oldAlliesCardPlan(
+                        ruleId, card, false, 0,
+                        payment, 0));
+            }
+        }
+
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents != null) {
+            for (PhysicalCard mover : permanents) {
+                if (mover == null
+                        || !playerId.equals(mover.getOwner())
+                        || mover.getZone() == null
+                        || !mover.getZone().isInPlay()
+                        || !isActiveForSpot(game, mover, true)
+                        || !candidateWouldSatisfyAlternativeAt(
+                            game, playerId, mover,
+                            destination, alternative)) {
+                    continue;
+                }
+                PhysicalCard origin = game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(
+                            game.getGameState(), mover);
+                if (origin == null || samePhysicalLocation(
+                            origin, destination)
+                        || Filters.Jakku_system.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), destination)
+                            && Filters.site.accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), origin)
+                        || isPreFlipPlainPresenceRequirementLocation(
+                            game, playerId, origin)
+                            && isSolePresenceSourceAtRequiredLocation(
+                                game, playerId, mover, origin)
+                        || hasExecutableOldAlliesFalconDeparture(
+                            game, playerId)
+                            && Filters.Niima_Outpost_Shipyard.accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), origin)
+                        || FormationSafety.vetoMoveDestination(
+                            game, game.getGameState(), playerId,
+                            mover, destination) != null
+                        || FormationSafety.vetoMoveOrigin(
+                            game, game.getGameState(), playerId,
+                            mover, origin) != null) {
+                    continue;
+                }
+                Integer moveCost = oldAlliesMoveCost(
+                        game, playerId, mover,
+                        origin, destination);
+                if (moveCost != null) {
+                    plans.add(oldAlliesCardPlan(
+                            ruleId, mover, false, 0,
+                            0, moveCost));
+                }
+            }
+        }
+
+        return trimOldAlliesPlans(plans);
+    }
+
+    private Integer oldAlliesDirectDeployCostAt(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard destination,
+            FlipLocationAlternative alternative) {
+        if (candidate == null || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())
+                || !candidateWouldSatisfyAlternativeAt(
+                    game, playerId, candidate,
+                    destination, alternative)) {
+            return null;
+        }
+        try {
+            if (!Filters.deployableToLocation(
+                    candidate, Filters.sameCardId(destination),
+                    true, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)) {
+                return null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return requiredCardDeployCostAt(
+                game, candidate, destination);
+    }
+
+    private OldAlliesRoutePlan oldAlliesCardPlan(
+            String ruleId, PhysicalCard card,
+            boolean candidateUsed, int candidatePayment,
+            int deployForce, int moveForce) {
+        return new OldAlliesRoutePlan(
+                ruleId,
+                new HashSet<>(Set.of(card.getPermanentCardId())),
+                new HashSet<>(), candidateUsed,
+                candidatePayment, deployForce, moveForce, 0);
+    }
+
+    private PhysicalCard findOldAlliesSetupFalcon(
+            SwccgGame game, String playerId) {
+        if (!isOldAlliesObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard card : permanents) {
+            if (card == null || !playerId.equals(card.getOwner())
+                    || card.getZone() == null
+                    || !card.getZone().isInPlay()
+                    || !isActiveForSpot(game, card, false)
+                    || !Filters.and(
+                        Icon.EPISODE_VII, Filters.Falcon,
+                        Filters.starship, Filters.landed)
+                        .accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), card);
+            if (location != null
+                    && Filters.Niima_Outpost_Shipyard.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    private PhysicalCard findOldAlliesJakkuSystem(
+            SwccgGame game) {
+        if (game == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (Filters.Jakku_system.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), location)) {
+                return location;
+            }
+        }
+        return null;
+    }
+
+    private boolean oldAlliesSystemOccupied(
+            SwccgGame game, String playerId) {
+        PhysicalCard system = findOldAlliesJakkuSystem(game);
+        return system != null
+                && game.getModifiersQuerying().occupiesLocation(
+                    game.getGameState(), system, playerId,
+                    SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE);
+    }
+
+    private boolean canOldAlliesFalconTakeOffTo(
+            SwccgGame game, String playerId,
+            PhysicalCard falcon, PhysicalCard system) {
+        if (game == null || playerId == null
+                || falcon == null || system == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            return Filters.canTakeOffToLocation(
+                    playerId, falcon, false,
+                    false, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), system);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean hasExecutableOldAlliesFalconDeparture(
+            SwccgGame game, String playerId) {
+        PhysicalCard falcon = findOldAlliesSetupFalcon(
+                game, playerId);
+        PhysicalCard system = findOldAlliesJakkuSystem(game);
+        if (falcon == null || system == null) return false;
+        PhysicalCard origin = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                    game.getGameState(), falcon);
+        if (origin == null || game.getModifiersQuerying()
+                .mayNotTakeOffFromLocationToLocation(
+                    game.getGameState(), falcon,
+                    origin, system, false)) {
+            return false;
+        }
+        if (canOldAlliesFalconTakeOffTo(
+                game, playerId, falcon, system)) {
+            return true;
+        }
+        for (PhysicalCard card
+                : game.getGameState().getHand(playerId)) {
+            if (isOldAlliesFalconPilotDeployCandidate(
+                    game, playerId, card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isOldAlliesFalconPilotDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isOldAlliesObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard falcon = findOldAlliesSetupFalcon(
+                game, playerId);
+        if (falcon == null || canOldAlliesFalconTakeOffTo(
+                game, playerId, falcon,
+                findOldAlliesJakkuSystem(game))
+                || !isLegalProspectivePilotForHost(
+                    game, playerId, falcon, candidate)) {
+            return false;
+        }
+        try {
+            return Filters.deployableToTarget(
+                    candidate, Filters.sameCardId(falcon),
+                    true, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean advancesOldAlliesFalconRouteAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        PhysicalCard falcon = findOldAlliesSetupFalcon(
+                game, playerId);
+        if (falcon == null || destination != falcon
+                || !isOldAlliesFalconPilotDeployCandidate(
+                    game, playerId, candidate)) {
+            return false;
+        }
+        OldAlliesRoutePlan route = findBestOldAlliesRoutePlan(
+                game, playerId, null);
+        return route != null
+                && route.usedCards.contains(
+                    falcon.getPermanentCardId())
+                && route.usedCards.contains(
+                    candidate.getPermanentCardId());
+    }
+
+    public boolean isOldAlliesFalconTakeOffDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard mover, PhysicalCard destination) {
+        if (!isOldAlliesObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || mover == null || destination == null
+                || !playerId.equals(mover.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !Filters.and(
+                        Icon.EPISODE_VII, Filters.Falcon,
+                        Filters.starship, Filters.landed)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), mover)
+                || !Filters.Jakku_system.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), destination)) {
+            return false;
+        }
+        PhysicalCard origin = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                    game.getGameState(), mover);
+        if (origin == null
+                || !Filters.Niima_Outpost_Shipyard.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), origin)) {
+            return false;
+        }
+        return isOldAlliesSelectedFalconDeparture(
+                game, playerId, mover);
+    }
+
+    public boolean isOldAlliesSelectedFalconDeparture(
+            SwccgGame game, String playerId,
+            PhysicalCard mover) {
+        PhysicalCard falcon = findOldAlliesSetupFalcon(
+                game, playerId);
+        PhysicalCard system = findOldAlliesJakkuSystem(game);
+        if (falcon == null || mover != falcon || system == null
+                || oldAlliesSystemOccupied(game, playerId)) {
+            return false;
+        }
+        OldAlliesRoutePlan route = findBestOldAlliesRoutePlan(
+                game, playerId, null);
+        return route != null
+                && route.usedCards.contains(
+                    mover.getPermanentCardId())
+                && canOldAlliesFalconTakeOffTo(
+                    game, playerId, mover, system);
+    }
+
+    public boolean shouldHoldOldAlliesFalconAtNiima(
+            SwccgGame game, String playerId,
+            PhysicalCard mover) {
+        return isOldAlliesObjectiveFamily() && !isFlipped
+                && mover != null
+                && mover == findOldAlliesSetupFalcon(
+                    game, playerId)
+                && !isOldAlliesSelectedFalconDeparture(
+                    game, playerId, mover);
+    }
+
+    public boolean isOldAlliesRouteDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (candidate == null || candidate.getZone() != Zone.HAND) {
+            return false;
+        }
+        OldAlliesRoutePlan route = findBestOldAlliesRoutePlan(
+                game, playerId, null);
+        return route != null && route.usedCards.contains(
+                candidate.getPermanentCardId());
+    }
+
+    public boolean isOldAlliesGroundRouteDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isOldAlliesObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || activeFlipLocationRules == null) {
+            return false;
+        }
+        if (!isOldAlliesRouteDeployCandidate(
+                game, playerId, candidate)) {
+            return false;
+        }
+        if (isOldAlliesFalconPilotDeployCandidate(
+                game, playerId, candidate)) {
+            return false;
+        }
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (advancesOldAlliesGroundRouteAt(
+                    game, playerId, candidate, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean advancesOldAlliesGroundRouteAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard location) {
+        if (!isOldAlliesObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null || location == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || activeFlipLocationRules == null
+                || !isOldAlliesRouteDeployCandidate(
+                    game, playerId, candidate)
+                || isOldAlliesFalconPilotDeployCandidate(
+                    game, playerId, candidate)) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)) continue;
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (!"Jakku_battleground_site".equals(
+                            alternative.locationFilterKey)) {
+                    continue;
+                }
+                if (countOldAlliesAlternativeMatches(
+                            game, playerId, alternative)
+                        >= expectedCount(
+                            game, playerId, alternative.count)) {
+                    continue;
+                }
+                if (locationMatchesAlternative(
+                            game.getGameState(), game, playerId,
+                            location, alternative)
+                        && !oldAlliesRelationSatisfiedAt(
+                            game, playerId, location, alternative)
+                        && candidateWouldSatisfyAlternativeAt(
+                            game, playerId, candidate,
+                            location, alternative)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean isOldAlliesWrongGroundRouteDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        if (!isOldAlliesGroundRouteDeployCandidate(
+                    game, playerId, candidate)
+                || destination == null
+                || destination.getBlueprint() == null) {
+            return false;
+        }
+        CardCategory category = destination.getBlueprint()
+                .getCardCategory();
+        return category == CardCategory.STARSHIP
+                || category == CardCategory.VEHICLE;
+    }
+
+    private void addOldAlliesFalconPilotPlans(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate, String ruleId,
+            PhysicalCard system,
+            List<OldAlliesRoutePlan> plans) {
+        PhysicalCard falcon = findOldAlliesSetupFalcon(
+                game, playerId);
+        if (falcon == null) {
+            return;
+        }
+        PhysicalCard falconLocation = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                    game.getGameState(), falcon);
+        if (falconLocation == null
+                || !Filters.Niima_Outpost_Shipyard.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    falconLocation)
+                || game.getModifiersQuerying()
+                    .mayNotTakeOffFromLocationToLocation(
+                        game.getGameState(), falcon,
+                        falconLocation, system, false)) {
+            return;
+        }
+        int takeOffCost;
+        try {
+            takeOffCost = (int) Math.ceil(Math.max(0.0f,
+                    game.getModifiersQuerying().getTakeOffCost(
+                        game.getGameState(), falcon,
+                        falconLocation, system, false, 0.0f)));
+        } catch (Exception e) {
+            return;
+        }
+        if (canOldAlliesFalconTakeOffTo(
+                game, playerId, falcon, system)) {
+            Set<Integer> routeCards = new HashSet<>();
+            routeCards.add(falcon.getPermanentCardId());
+            routeCards.addAll(oldAlliesAssignedPilotIds(
+                    game, playerId, falcon));
+            plans.add(new OldAlliesRoutePlan(
+                    ruleId, routeCards, new HashSet<>(),
+                    false, 0, 0, takeOffCost, 0));
+            return;
+        }
+        if (deployingCandidate != null
+                && isOldAlliesFalconPilotDeployCandidate(
+                    game, playerId, deployingCandidate)) {
+            Integer payment = requiredCardDeployCostAt(
+                    game, deployingCandidate, falcon);
+            if (payment != null) {
+                Set<Integer> routeCards = new HashSet<>(Set.of(
+                        falcon.getPermanentCardId(),
+                        deployingCandidate.getPermanentCardId()));
+                plans.add(new OldAlliesRoutePlan(
+                        ruleId, routeCards,
+                        new HashSet<>(), true, payment,
+                        0, takeOffCost, 0));
+            }
+        }
+        for (PhysicalCard pilot : game.getGameState().getHand(playerId)) {
+            if (pilot == null || pilot == deployingCandidate
+                    || !isOldAlliesFalconPilotDeployCandidate(
+                        game, playerId, pilot)) {
+                continue;
+            }
+            Integer payment = requiredCardDeployCostAt(
+                    game, pilot, falcon);
+            if (payment != null) {
+                Set<Integer> routeCards = new HashSet<>(Set.of(
+                        falcon.getPermanentCardId(),
+                        pilot.getPermanentCardId()));
+                plans.add(new OldAlliesRoutePlan(
+                        ruleId, routeCards,
+                        new HashSet<>(), false, 0,
+                        payment, takeOffCost, 0));
+            }
+        }
+    }
+
+    private int countOldAlliesAlternativeMatches(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative alternative) {
+        int count = 0;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)
+                    && oldAlliesRelationSatisfiedAt(
+                        game, playerId, location, alternative)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private FlipLocationAlternative oldAlliesOccupyAlternative(
+            FlipLocationAlternative source) {
+        if (source == null || "occupy".equals(source.relation)) {
+            return source;
+        }
+        FlipLocationAlternative occupy = new FlipLocationAlternative();
+        occupy.relation = "occupy";
+        occupy.controller = source.controller;
+        occupy.locationFilterKey = source.locationFilterKey;
+        occupy.locationFragments = source.locationFragments;
+        occupy.count = source.count;
+        occupy.includeExcludedFromBattle =
+                source.includeExcludedFromBattle;
+        occupy.spotOverride = source.spotOverride;
+        return occupy;
+    }
+
+    private boolean oldAlliesRelationSatisfiedAt(
+            SwccgGame game, String playerId, PhysicalCard location,
+            FlipLocationAlternative alternative) {
+        boolean satisfied = relationSatisfiedAt(
+                game, playerId, playerId, location,
+                alternative.relation,
+                alternative.actorFilterKey,
+                alternative.includeExcludedFromBattle,
+                alternative.spotOverride);
+        if (!satisfied
+                || !Filters.Niima_Outpost_Shipyard.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    location)
+                || oldAlliesSystemOccupied(game, playerId)
+                || !hasExecutableOldAlliesFalconDeparture(
+                    game, playerId)) {
+            return satisfied;
+        }
+        PhysicalCard falcon = findOldAlliesSetupFalcon(
+                game, playerId);
+        if (falcon == null || !samePhysicalLocation(
+                game.getModifiersQuerying().getLocationThatCardIsAt(
+                    game.getGameState(), falcon), location)) {
+            return satisfied;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card == null || card == falcon
+                    || !playerId.equals(card.getOwner())
+                    || card.getZone() == null
+                    || !card.getZone().isInPlay()
+                    || !isActiveForSpot(
+                        game, card,
+                        alternative.includeExcludedFromBattle)
+                    || oldAlliesAttachedToFalcon(card, falcon)
+                    || !candidateProvidesPresence(game, card)) {
+                continue;
+            }
+            PhysicalCard cardLocation = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        game.getGameState(), card);
+            if (samePhysicalLocation(cardLocation, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean oldAlliesAttachedToFalcon(
+            PhysicalCard card, PhysicalCard falcon) {
+        PhysicalCard host = card != null ? card.getAttachedTo() : null;
+        while (host != null) {
+            if (host == falcon) return true;
+            host = host.getAttachedTo();
+        }
+        return false;
+    }
+
+    private Set<Integer> oldAlliesAssignedPilotIds(
+            SwccgGame game, String playerId, PhysicalCard falcon) {
+        Set<Integer> pilotIds = new HashSet<>();
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return pilotIds;
+        for (PhysicalCard card : permanents) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && game.getModifiersQuerying().getIsPilotOf(
+                        game.getGameState(), card) == falcon) {
+                pilotIds.add(card.getPermanentCardId());
+            }
+        }
+        return pilotIds;
+    }
+
+    private Integer oldAlliesSafeBattleCostAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        String opponent = game.getGameState().getOpponent(playerId);
+        if (opponent == null
+                || FormationSafety.vetoInitiateBattle(
+                    game, game.getGameState(), playerId,
+                    location) != null) {
+            return null;
+        }
+        float ourPower = game.getModifiersQuerying()
+                .getTotalPowerAtLocation(
+                    game.getGameState(), location,
+                    playerId, false, false);
+        float theirPower = game.getModifiersQuerying()
+                .getTotalPowerAtLocation(
+                    game.getGameState(), location,
+                    opponent, false, false);
+        if (ourPower <= theirPower) return null;
+        try {
+            float cost = game.getModifiersQuerying()
+                    .getInitiateBattleCost(
+                        game.getGameState(), location,
+                        playerId, true);
+            return (int) Math.ceil(Math.max(0.0f, cost));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void collectOldAlliesAlternativePlans(
+            List<PhysicalCard> destinations,
+            Map<Integer, List<OldAlliesRoutePlan>> options,
+            int index, int remaining,
+            OldAlliesRoutePlan current,
+            List<OldAlliesRoutePlan> out) {
+        if (remaining == 0) {
+            out.add(current);
+            return;
+        }
+        if (index >= destinations.size()
+                || destinations.size() - index < remaining) {
+            return;
+        }
+        collectOldAlliesAlternativePlans(
+                destinations, options, index + 1,
+                remaining, current, out);
+        PhysicalCard destination = destinations.get(index);
+        for (OldAlliesRoutePlan choice : options.getOrDefault(
+                destination.getPermanentCardId(), List.of())) {
+            OldAlliesRoutePlan merged = mergeOldAlliesRoutePlan(
+                    current, choice);
+            if (merged != null) {
+                collectOldAlliesAlternativePlans(
+                        destinations, options, index + 1,
+                        remaining - 1, merged, out);
+            }
+        }
+    }
+
+    private List<OldAlliesRoutePlan> mergeOldAlliesRoutePlans(
+            List<OldAlliesRoutePlan> left,
+            List<OldAlliesRoutePlan> right) {
+        List<OldAlliesRoutePlan> merged = new ArrayList<>();
+        for (OldAlliesRoutePlan first : left) {
+            for (OldAlliesRoutePlan second : right) {
+                OldAlliesRoutePlan plan = mergeOldAlliesRoutePlan(
+                        first, second);
+                if (plan != null) merged.add(plan);
+            }
+        }
+        return trimOldAlliesPlans(merged);
+    }
+
+    private OldAlliesRoutePlan mergeOldAlliesRoutePlan(
+            OldAlliesRoutePlan first,
+            OldAlliesRoutePlan second) {
+        if (!Collections.disjoint(
+                    first.usedCards, second.usedCards)
+                || !Collections.disjoint(
+                    first.battleLocations,
+                    second.battleLocations)) {
+            return null;
+        }
+        Set<Integer> usedCards = new HashSet<>(first.usedCards);
+        usedCards.addAll(second.usedCards);
+        Set<Integer> battleLocations =
+                new HashSet<>(first.battleLocations);
+        battleLocations.addAll(second.battleLocations);
+        return new OldAlliesRoutePlan(
+                first.ruleId, usedCards, battleLocations,
+                first.candidateUsed || second.candidateUsed,
+                first.candidatePayment + second.candidatePayment,
+                first.deployForce + second.deployForce,
+                first.moveForce + second.moveForce,
+                first.battleForce + second.battleForce);
+    }
+
+    private List<OldAlliesRoutePlan> trimOldAlliesPlans(
+            List<OldAlliesRoutePlan> plans) {
+        plans.sort(oldAlliesPlanComparator());
+        return plans;
+    }
+
+    private Comparator<OldAlliesRoutePlan> oldAlliesPlanComparator() {
+        return Comparator
+                .comparingInt((OldAlliesRoutePlan plan) ->
+                    plan.candidatePayment + plan.futureForce())
+                .thenComparingInt(plan -> plan.deployForce)
+                .thenComparingInt(plan -> plan.moveForce)
+                .thenComparingInt(plan -> plan.battleForce)
+                .thenComparing(plan -> plan.ruleId)
+                .thenComparing(this::oldAlliesPlanSignature);
+    }
+
+    private String oldAlliesPlanSignature(
+            OldAlliesRoutePlan plan) {
+        List<Integer> cardIds = new ArrayList<>(plan.usedCards);
+        List<Integer> battleIds =
+                new ArrayList<>(plan.battleLocations);
+        Collections.sort(cardIds);
+        Collections.sort(battleIds);
+        return cardIds + ":" + battleIds;
+    }
+
+    public int getOldAlliesFutureRouteForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        OldAlliesRouteReserve reserve = assessOldAlliesFutureRoute(
+                game, playerId, deployingCandidate);
+        return reserve.executable() ? reserve.futureForce() : 0;
+    }
+
+    public int getOldAlliesCurrentMoveForceReserve(
+            SwccgGame game, String playerId) {
+        OldAlliesRouteReserve reserve = assessOldAlliesFutureRoute(
+                game, playerId, null);
+        return reserve.executable() ? reserve.nextMoveForce() : 0;
+    }
+
+    private Integer oldAlliesMoveCost(
+            SwccgGame game, String playerId, PhysicalCard mover,
+            PhysicalCard origin, PhysicalCard destination) {
+        int cheapest = Integer.MAX_VALUE;
+        try {
+            if (Filters.canMoveToUsingLandspeed(
+                    playerId, mover, false, false,
+                    false, 0.0f, null).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), destination)) {
+                float cost = game.getModifiersQuerying()
+                        .getMoveUsingLandspeedCost(
+                            game.getGameState(), mover,
+                            origin, destination, false, 0.0f);
+                cheapest = Math.min(cheapest,
+                        (int) Math.ceil(Math.max(0.0f, cost)));
+            }
+        } catch (Exception ignored) { }
+        try {
+            if (Filters.canMoveToUsingHyperspeed(
+                    playerId, mover, false,
+                    false, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), destination)) {
+                float cost = game.getModifiersQuerying()
+                        .getMoveUsingHyperspeedCost(
+                            game.getGameState(), mover,
+                            origin, destination, false, 0.0f);
+                cheapest = Math.min(cheapest,
+                        (int) Math.ceil(Math.max(0.0f, cost)));
+            }
+        } catch (Exception ignored) { }
+        try {
+            if (Filters.canTakeOffToLocation(
+                    playerId, mover, false,
+                    false, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), destination)) {
+                float cost = game.getModifiersQuerying().getTakeOffCost(
+                        game.getGameState(), mover,
+                        origin, destination, false, 0.0f);
+                cheapest = Math.min(cheapest,
+                        (int) Math.ceil(Math.max(0.0f, cost)));
+            }
+        } catch (Exception ignored) { }
+        return cheapest == Integer.MAX_VALUE ? null : cheapest;
+    }
+
+    public int getOldAlliesCurrentBattleForceReserve(
+            SwccgGame game, String playerId) {
+        OldAlliesRouteReserve reserve = assessOldAlliesFutureRoute(
+                game, playerId, null);
+        return reserve.executable() ? reserve.nextBattleForce() : 0;
+    }
+
     /**
      * Preserve the cheapest exact landspeed payment that creates a new
      * operative formation without breaking one at the origin. A hand card
@@ -12174,7 +13245,8 @@ public class ObjectiveAnalyzer {
     public boolean isPreferredCountedObjectiveLocationForceLossCandidate(
             SwccgGame game, String playerId, PhysicalCard candidate) {
         if ((!isMassassiBaseOperationsFamily()
-                    && !isImperialEntanglementsFamily())
+                    && !isImperialEntanglementsFamily()
+                    && !isOldAlliesObjectiveFamily())
                 || isFlipped || game == null || playerId == null
                 || candidate == null || activeFlipLocationRules == null
                 || !playerId.equals(candidate.getOwner())) {
@@ -12237,7 +13309,8 @@ public class ObjectiveAnalyzer {
     public boolean isPreferredCountedObjectivePresenceForceLossCandidate(
             SwccgGame game, String playerId, PhysicalCard candidate) {
         if ((!isMassassiBaseOperationsFamily()
-                    && !isImperialEntanglementsFamily())
+                    && !isImperialEntanglementsFamily()
+                    && !isOldAlliesObjectiveFamily())
                 || isFlipped || game == null || playerId == null
                 || candidate == null || candidate.getZone() != Zone.HAND
                 || !playerId.equals(candidate.getOwner())
@@ -12245,6 +13318,12 @@ public class ObjectiveAnalyzer {
                 || game.getGameState() == null
                 || game.getModifiersQuerying() == null) {
             return false;
+        }
+        if (isOldAlliesObjectiveFamily()) {
+            OldAlliesRoutePlan route = findBestOldAlliesRoutePlan(
+                    game, playerId, null);
+            return route != null && route.usedCards.contains(
+                    candidate.getPermanentCardId());
         }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)) continue;
@@ -13865,6 +14944,10 @@ public class ObjectiveAnalyzer {
         if (shieldRouteRole != FlipGateFormationRole.NONE) {
             return shieldRouteRole;
         }
+        if (isOldAlliesFalconRoutePieceIfRemoved(
+                game, playerId, candidate)) {
+            return FlipGateFormationRole.LAST_REQUIRED_ACTOR;
+        }
         FlipGateFormationRole runtimeActorRole =
                 classifyRuntimeActorIfRemoved(
                         game, playerId, candidate);
@@ -13944,6 +15027,64 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return FlipGateFormationRole.NONE;
+    }
+
+    private boolean isOldAlliesFalconRoutePieceIfRemoved(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isOldAlliesObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null || candidate.getZone() == null
+                || !candidate.getZone().isInPlay()
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard falcon = Filters.and(
+                    Icon.EPISODE_VII, Filters.Falcon)
+                .accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)
+                    ? candidate
+                    : game.getModifiersQuerying().getIsPilotOf(
+                        game.getGameState(), candidate);
+        if (falcon == null || !playerId.equals(falcon.getOwner())
+                || !Filters.and(Icon.EPISODE_VII, Filters.Falcon)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), falcon)) {
+            return false;
+        }
+        OldAlliesRoutePlan route = findBestOldAlliesRoutePlan(
+                game, playerId, null);
+        if (route == null || !route.usedCards.contains(
+                falcon.getPermanentCardId())) {
+            return false;
+        }
+        PhysicalCard location = game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                    game.getGameState(), falcon);
+        boolean onRoute = location != null
+                && (Filters.Niima_Outpost_Shipyard.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)
+                    || Filters.Jakku_system.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location));
+        if (!onRoute || candidate == falcon) return onRoute;
+        if (!route.usedCards.contains(
+                candidate.getPermanentCardId())) {
+            return false;
+        }
+        if (game.getModifiersQuerying().hasPermanentPilot(
+                game.getGameState(), falcon)) {
+            return false;
+        }
+        Set<Integer> pilotIds = oldAlliesAssignedPilotIds(
+                game, playerId, falcon);
+        return pilotIds.size() == 1
+                && pilotIds.contains(
+                    candidate.getPermanentCardId());
     }
 
     private FlipGateFormationRole
@@ -16358,6 +17499,14 @@ public class ObjectiveAnalyzer {
                     "OBJECTIVE MASSASSI ATTACK RUN PACKAGE: deploy '"
                             + card.getTitle()
                             + "' before unrelated cards"));
+        }
+        if (isOldAlliesRouteDeployCandidate(
+                game, playerId, card)) {
+            notes.add(new ScoreNote(
+                    1000.0f,
+                    "OBJECTIVE OLD ALLIES ROUTE: deploy '"
+                            + card.getTitle()
+                            + "' as part of the funded Jakku flip route"));
         }
         if (analyzed && !isFlipped && isCharacter
                 && hasFlipGateActorRequirement()) {

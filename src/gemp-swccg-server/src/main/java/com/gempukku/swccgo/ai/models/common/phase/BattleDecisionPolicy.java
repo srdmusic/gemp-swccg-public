@@ -550,6 +550,11 @@ public final class BattleDecisionPolicy {
                                         captureAnalyzer
                                             .getSetYourCourseNextRouteForceReserve(
                                                 game, playerId));
+                                    phaseMoveForceReserve = Math.max(
+                                        phaseMoveForceReserve,
+                                        captureAnalyzer
+                                            .getOldAlliesCurrentMoveForceReserve(
+                                                game, playerId));
                                 }
 
                                 if (ourPower > 0 && theirPower > 0) {

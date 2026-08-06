@@ -1339,6 +1339,35 @@ public class MoveEvaluator extends ActionEvaluator {
                     // A power gap greater than six remains retreatable.
                     try {
                         var gateAnalyzer = context.getObjectiveAnalyzer();
+                        boolean holdOldAlliesFalcon = gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && actionLower.contains("take off")
+                                && gateAnalyzer
+                                    .shouldHoldOldAlliesFalconAtNiima(
+                                        game, playerId, cardToMove);
+                        if (holdOldAlliesFalcon) {
+                            String opponent = gameState.getOpponent(playerId);
+                            float friendlyPower = game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                            gameState, currentLocation,
+                                            playerId, false, false);
+                            float opponentPower = game.getModifiersQuerying()
+                                    .getTotalPowerAtLocation(
+                                            gameState, currentLocation,
+                                            opponent, false, false)
+                                    + oppWeaponBonusAt(
+                                            gameState, currentLocation,
+                                            opponent);
+                            boolean retreatable = opponentPower
+                                    > friendlyPower
+                                        + MoveObjectiveGateHoldPolicy
+                                            .RETREATABLE_POWER_GAP;
+                            if (!retreatable) {
+                                ladderVetoHard = true;
+                                ladderVetoHardReason =
+                                    "OLD ALLIES: keep the setup Falcon at Niima unless it is the selected route to empty Jakku space";
+                            }
+                        }
                         boolean activeRequiredControl =
                                 gateAnalyzer != null
                                 && gateAnalyzer.isAnalyzed()
