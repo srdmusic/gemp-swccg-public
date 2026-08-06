@@ -9798,3 +9798,70 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Package, byte identity, and fresh-JVM deployment are verified; fresh live
     replay firing remains separate. Nothing was pushed. Restore
     web.jar.pre-thp-a9bcfbbbb and revert a9bcfbbbb to remove only this seal.
+
+  ==== Set Your Course For Alderaan behavior seal (2026-08-06) ====
+
+    Set Your Course For Alderaan 111_6 starts the Death Star system, Alderaan
+    or Jedha City, and Docking Bay 327. The classic native route needs
+    Alderaan, a CPI-compatible Superlaser, and classic Commence Primary
+    Ignition 2_130. The front flips only when Alderaan is blown away. The back
+    does not flip by its own text and is placed out of play if the Death Star
+    is blown away. An Inkling is a separate temporary external flip route.
+    Card and engine Java remain unchanged.
+
+    When the classic package is accessible, public Rando and Chosen One choose
+    Alderaan over Jedha City at setup, use the exact Objective pull and
+    top-of-Reserve child to prefer Central Core, attach a compatible Superlaser,
+    and move the Death Star from parsec 0 to 1 to 2. They choose orbit instead
+    of deep space, choose Alderaan over a decoy, select exact classic CPI,
+    execute the unchanged epic event, blow away Alderaan, and observe the
+    native objective flip. CPI (V) does not masquerade as this route.
+
+    Deploy, battle, Battle Order-taxed control, and Force-loss decisions retain
+    the final movement payment and physical Superlaser, CPI, and Central Core
+    package while expendable alternatives exist. Converted Alderaan remains
+    the source-true system target through typed title identity. On the back,
+    Death Star hard-loss defense is phase-gated and recognizes Attack Run on
+    table at its native Trench location.
+
+    Exact package decisions use semantic OBJECTIVE.SET_YOUR_COURSE identities
+    at +12000. Wrong parsec, deep-space delay at parsec 2, a non-Alderaan
+    orbit, movement before arming, leaving Alderaan orbit, and spending the
+    final required movement Force are terminally blocked. Exact face and
+    package gates leave unsupported Set Your Course decks neutral.
+
+    On The Verge compatibility coverage also recognizes converted Scarif,
+    reserves movement Force only on its exact front, and releases deploy,
+    parent-move, and child-choice biases after its native flip. Its unchanged
+    engine route still executes parsec 4 to 6 to 7, orbits Scarif, and flips.
+    This regression does not count as an On The Verge behavior seal.
+
+    The final six-suite gate passed 48/0/0/0. It includes 9 Set Your Course
+    engine tests, 5 policy tests, the On The Verge route regression, 15 movement
+    policy tests, 11 mirror/source-parity tests, and 7 battle-reserve tests.
+    JSON, diff, normalized bot parity, and two independent blocker reviews
+    passed. K-2 received the final review packet.
+
+    Local behavior commit c0a9370c4 packaged successfully. All 85 generated
+    class entries from 15 changed production sources byte-match target/classes,
+    the server jar, and web.jar; the embedded playbook also byte-matches.
+    Server jar SHA-256 is
+    bd29fa7642e1ba4482c01ae28f0483fd10f6f79d7f7b56d76e0019c80bb27a38;
+    candidate, live-host, and running-container web.jar SHA-256 is
+    e77dbb1d3cbbc36c0149924377e769df8d909aeec573dbc35cc43ac3a6a5c8b4;
+    playbook SHA-256 is
+    40543e3940294cc104bf99e4ca395b5e40b6496eadc1c6644f1eb4ecff76c1ef.
+    The prior live jar is preserved as web.jar.pre-syc-c0a9370c4. The hall was
+    frozen at zero tables and games. The fresh app started at
+    2026-08-06T08:00:00.971690177Z after jar mtime, with restart count zero and
+    Java at PID 1. Health, login, all gameplay-switch posts, and the reopened
+    hall returned 200. Startup completed without a material runtime error and
+    the hall remained empty.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    adapters, approved objective data, AI tests, and approved audit/history
+    records. No engine, card Java, client, deck library, database, or workbook
+    changed. Deterministic unchanged-engine public-bot execution provides
+    FLIP_OBSERVED. Package, byte identity, and fresh-JVM deployment are
+    verified; live replay firing remains separate. Nothing was pushed. Restore
+    web.jar.pre-syc-c0a9370c4 and revert c0a9370c4 to remove this seal.

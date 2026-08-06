@@ -9,7 +9,7 @@
   "cacheCheck": "OK",
   "flipToBack": {
     "timing": "Required trigger on blown-away completion (event timing, not standing state; no isTableChanged/canBeFlipped guard)",
-    "prose": "Flips when Alderaan (system) is 'blown away' - i.e., the Commence Primary Ignition epic event completes against Alderaan. Nothing else flips this card.",
+    "prose": "Natively flips when Alderaan (system) is 'blown away' - i.e., the classic Commence Primary Ignition epic event completes against Alderaan. An Inkling Of Its Destructive Potential supplies a separate temporary external flip route and flips this objective back at end of turn.",
     "expression": {
       "req": "timing trigger: Alderaan system blown-away last step",
       "filter": "Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Alderaan, true))",
@@ -67,13 +67,36 @@
   "seedMismatches": [],
   "profile": {
     "exists": true,
-    "loaderEnabled": false,
+    "loaderEnabled": true,
     "profileGaps": [
-      "flipGateSite null and nothing represents the true gate: an EVENT (Alderaan system 'blown away' via Commence Primary Ignition), which requires the Superlaser/CPI epic-event pipeline, not any control/occupy state.",
-      "flipGateCardIds empty; Alderaan system (1_281, listed in objectiveNamedLocations) is not wired as the gate target, and Commence Primary Ignition / Superlaser prerequisites are absent from pullableCards/requiredCardsOnTable.",
-      "Back hard-lose (Death Star system blown away => objective out of play) is not wired, though the machinery EXISTS and is Endor-proven: hardLossLocationRules (trigger 'blownAwayLastStep' / outcome 'objectiveOutOfPlay') -> isObjectiveHardLossLocation/isObjectiveHardLossDefenseLocation (ObjectiveAnalyzer.java:5955-6040) -> battle-defense bias BattleDecisionPolicy.java:641; SYCFA lacks (a) a profile hardLossLocationRules entry, (b) loaderEnabled=true (hydration gated, ObjectiveAnalyzer.java:7848/7896), and (c) a Death_Star_system key in resolveLocationFilter (registry ObjectiveAnalyzer.java:8072-8113 has no such case; unknown key fails closed).",
+      "The native front flip remains deliberately absent from flipLocationRules because it is an event pipeline (Alderaan blown away by classic Commence Primary Ignition), not a standing control/occupy/presence condition. Shared SetYourCourseObjectivePolicy and exact ObjectiveAnalyzer facts own the executable route.",
       "No representation of the front's own-drain cancellation at Death Star sites / no-drain-at-Alderaan restrictions that shape pre-flip play."
     ]
   },
-  "proofGate": "SOURCE_VERIFIED"
+  "behaviorProof": {
+    "status": "BEHAVIOR_SEALED",
+    "publicBots": [
+      "RandoCalAi",
+      "TheChosenOneAi"
+    ],
+    "nativeEngineTest": "SetYourCourseObjectiveEngineContractTest",
+    "compatibilityRegression": "OnTheVergeObjectiveRouteEngineContractTest",
+    "observed": [
+      "classic setup chooses Alderaan over Jedha City when the CPI route is available",
+      "objective pull and top-of-Reserve child choose Central Core",
+      "compatible Superlaser deployment precedes movement",
+      "deploy, battle, control, and Force-loss choices preserve the exact next movement payment and route assets",
+      "Death Star follows parsec 0 to 1 to 2, chooses orbit, and selects Alderaan over a decoy system",
+      "a converted Light Side Alderaan remains the source-true orbit and blow-away target",
+      "classic Commence Primary Ignition blows away Alderaan and the unchanged objective flips natively",
+      "back-side Death Star blown-away hard-loss defense is active only after the native flip and recognizes Attack Run deployed at the Trench",
+      "On The Verge routing recognizes converted Scarif, pursues Scarif only on its front, then releases its deploy reserve, parent movement, and child choice after its native flip; this is compatibility regression coverage, not an On The Verge behavior seal"
+    ],
+    "verification": "Focused six-suite gate 48/0/0/0; JSON, diff, normalized bot mirroring, and two independent blocker reviews passed.",
+    "localBehaviorCommit": "c0a9370c4",
+    "artifact": "85 generated class entries from 15 production sources byte-match target/classes, server jar, and web.jar. Server jar SHA-256 bd29fa7642e1ba4482c01ae28f0483fd10f6f79d7f7b56d76e0019c80bb27a38; live web.jar SHA-256 e77dbb1d3cbbc36c0149924377e769df8d909aeec573dbc35cc43ac3a6a5c8b4; playbook SHA-256 40543e3940294cc104bf99e4ca395b5e40b6496eadc1c6644f1eb4ecff76c1ef.",
+    "deployment": "The authenticated hall was frozen at zero tables and games. Prior Hidden Path jar preserved as web.jar.pre-syc-c0a9370c4. Fresh app start 2026-08-06T08:00:00.971690177Z, restart count 0, Java PID 1, host/container jar hashes identical, all gameplay switch posts HTTP 200, startup complete, hall reopened empty.",
+    "proofCeiling": "Deterministic unchanged-engine and public-bot decision proof. Fresh deployed replay firing remains separate. Nothing was pushed."
+  },
+  "proofGate": "FLIP_OBSERVED"
 }
