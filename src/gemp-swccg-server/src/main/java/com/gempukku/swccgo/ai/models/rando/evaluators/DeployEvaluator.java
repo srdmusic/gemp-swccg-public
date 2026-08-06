@@ -29,6 +29,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFacts;
@@ -1776,6 +1777,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                 .getShieldMainGeneratorRouteMoveForceReserve(
                                     game, playerId)
                             : 0;
+                    int noMoneyMoveReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getNoMoneyNoPartsCurrentMoveForceReserve(
+                                    game, playerId, card)
+                            : 0;
                     int countedOperativeMoveReserve =
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
@@ -2019,6 +2026,30 @@ public class DeployEvaluator extends ActionEvaluator {
                     boolean countedOperativeOrdinaryDeploy =
                         !reservePull
                         && "deploy".equals(actionLower.trim());
+                    PolicyResult noMoneyMoveBudget =
+                        NoMoneyNoPartsObjectivePolicy
+                            .preserveMoveForceForOrdinaryDeploy(
+                                actionId,
+                                countedOperativeOrdinaryDeploy,
+                                noMoneyMoveReserve,
+                                availableForce,
+                                exactNormalDeployPayment,
+                                massassiDeployPayment);
+                    PolicyContributionLedger noMoneyMoveBudgetLedger =
+                        new PolicyContributionLedger(
+                            (decisionId == null || decisionId.isBlank()
+                                ? "deploy-no-money-move-budget"
+                                : decisionId
+                                    + "-deploy-no-money-move-budget")
+                                + "-" + actionId);
+                    noMoneyMoveBudgetLedger.register(
+                        noMoneyMoveBudget);
+                    PolicyOperationAdapter.apply(
+                        action, noMoneyMoveBudgetLedger);
+                    if (!noMoneyMoveBudget.operations().isEmpty()) {
+                        actions.add(action);
+                        continue;
+                    }
                     if (countedOperativeOrdinaryDeploy
                             && countedOperativeMoveReserve > 0) {
                         if (exactNormalDeployPayment == null

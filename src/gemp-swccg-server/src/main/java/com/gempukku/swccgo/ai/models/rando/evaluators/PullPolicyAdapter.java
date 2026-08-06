@@ -235,6 +235,9 @@ final class PullPolicyAdapter {
                 boolean countedOperativeSiteRoute = objective
                         .isCountedOperativeSiteRouteAction(
                                 game, playerId, source, actionText);
+                boolean noMoneyWattoRoute = objective
+                        .isNoMoneyNoPartsWattoPullAction(
+                                game, playerId, source, actionText);
                 boolean bringHimBeforeMeEmperorRoute =
                         CaptureObjectiveFacts.objectiveKind(objective)
                             == CaptureObjectivePolicy.ObjectiveKind.BHBM
@@ -252,6 +255,7 @@ final class PullPolicyAdapter {
                         || oldAlliesFrontLocationRoute
                         || imperialEntanglementsBackSiteRoute
                         || countedOperativeSiteRoute
+                        || noMoneyWattoRoute
                         || bringHimBeforeMeEmperorRoute;
             }
 
@@ -260,6 +264,16 @@ final class PullPolicyAdapter {
                     SwccgGame game, String playerId,
                     PhysicalCard source, String actionText) {
                 return objective.isCountedOperativeSiteRouteAction(
+                            game, playerId, source, actionText)
+                        || objective.isNoMoneyNoPartsWattoPullAction(
+                            game, playerId, source, actionText);
+            }
+
+            @Override
+            public boolean objectivePullFormationExempt(
+                    SwccgGame game, String playerId,
+                    PhysicalCard source, String actionText) {
+                return objective.isNoMoneyNoPartsWattoPullAction(
                         game, playerId, source, actionText);
             }
         };

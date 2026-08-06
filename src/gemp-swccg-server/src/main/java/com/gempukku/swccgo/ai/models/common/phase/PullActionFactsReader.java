@@ -111,6 +111,12 @@ public final class PullActionFactsReader {
                 PhysicalCard source, String actionText) {
             return false;
         }
+
+        default boolean objectivePullFormationExempt(
+                SwccgGame game, String playerId,
+                PhysicalCard source, String actionText) {
+            return false;
+        }
     }
 
     public interface LateView {
@@ -445,7 +451,8 @@ public final class PullActionFactsReader {
             keyCharacter = KeyCharacter.none();
         }
         formation = formation(
-                source, sourceText, targets, gameState, context, oracle);
+                source, text, sourceText, targets,
+                gameState, context, oracle);
 
         return buildParent(actionId, text, reserveSize, "",
                 memoryValidation, sourceValidation, sourceTitle,
@@ -1061,6 +1068,7 @@ public final class PullActionFactsReader {
 
     private static FormationAssessment formation(
             PhysicalCard source,
+            String actionText,
             String sourceText,
             List<String> targets,
             GameState gameState,
@@ -1095,6 +1103,14 @@ public final class PullActionFactsReader {
 
         boolean flipPlan = false;
         ObjectiveView objective = context.objective();
+        if (objective != null
+                && objective.objectivePullFormationExempt(
+                    context.game(), context.playerId(),
+                    source, actionText)) {
+            return new FormationAssessment(
+                    PullActionFacts.FormationState.FLIP_EXEMPT,
+                    pulled.getTitle());
+        }
         if (objective != null && objective.isAnalyzed() && !objective.isFlipped()
                 && objective.flipConditionText() != null) {
             try {

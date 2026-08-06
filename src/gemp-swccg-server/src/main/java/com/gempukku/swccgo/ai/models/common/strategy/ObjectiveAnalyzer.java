@@ -415,6 +415,12 @@ public class ObjectiveAnalyzer {
 
     public boolean isObjectiveRelevantLocation(String locationTitle) {
         if (!analyzed || locationTitle == null) return false;
+        if (isNoMoneyNoPartsObjectiveFamily()) {
+            Boolean structuredMatch = exactStructuredTitleMatch(
+                    locationTitle.toLowerCase(Locale.ROOT),
+                    "preFlip", "flip");
+            if (Boolean.TRUE.equals(structuredMatch)) return true;
+        }
         if (hasPreFlipRuntimeActorRule()) {
             return false;
         }
@@ -4089,6 +4095,16 @@ public class ObjectiveAnalyzer {
                 && retentionRisk.inScope()) {
             return retentionRisk.requiresProtection();
         }
+        if (isNoMoneyNoPartsObjectiveFamily() && isFlipped
+                && game != null && game.getGameState() != null
+                && game.getModifiersQuerying() != null
+                && Filters.Wattos_Junkyard.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), location)
+                && hasNoMoneyNoPartsWattoAtJunkyardAfterMove(
+                    game, location, null)) {
+            return true;
+        }
         if (hasStructuredFlipBackLocationRules()) {
             PostFlipLocationRisk risk = assessPostFlipLocationRisk(
                     game, playerId, location);
@@ -4675,7 +4691,8 @@ public class ObjectiveAnalyzer {
                 alternative.spotOverride);
 
         if ((isCountedOperativeObjectiveFamily()
-                    || isOldAlliesObjectiveFamily())
+                    || isOldAlliesObjectiveFamily()
+                    || isNoMoneyNoPartsObjectiveFamily())
                     && isSelfOccupyCountedFlipBackAlternative(alternative)
                 || isHiddenPathSelfOccupyWithFlipBackAlternative(
                     alternative)) {
@@ -4810,7 +4827,8 @@ public class ObjectiveAnalyzer {
                         alternative.count.referenceController));
         return opponentControl
                 || (isCountedOperativeObjectiveFamily()
-                    || isOldAlliesObjectiveFamily())
+                    || isOldAlliesObjectiveFamily()
+                    || isNoMoneyNoPartsObjectiveFamily())
                     && isSelfOccupyCountedFlipBackAlternative(alternative)
                 || isHiddenPathSelfOccupyWithFlipBackAlternative(
                     alternative);
@@ -7747,7 +7765,8 @@ public class ObjectiveAnalyzer {
                 || "Theed_Palace_Throne_Room".equals(key)
                 || "Naboo_system".equals(key)
                 || "Galactic_Senate".equals(key)
-                || "Wattos_Junkyard".equals(key);
+                || "Wattos_Junkyard".equals(key)
+                || "Mos_Espa".equals(key);
     }
 
     // Loader-extension step 3b (2026-07-10): FILTER-based objective-relevance. Returns true if the location
@@ -7768,6 +7787,15 @@ public class ObjectiveAnalyzer {
                 && game != null && playerId != null
                 && isCountedOperativeFormationLocation(
                     game, playerId, loc)) {
+            return true;
+        }
+        if (isNoMoneyNoPartsObjectiveFamily()
+                && game != null
+                && Filters.or(
+                        Filters.Wattos_Junkyard,
+                        Filters.Mos_Espa).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), loc)) {
             return true;
         }
         if (hasPreFlipRuntimeActorRule()) return false;
@@ -10417,6 +10445,93 @@ public class ObjectiveAnalyzer {
                 || "204_32_BACK".equals(objectiveBlueprintId));
     }
 
+    public boolean isNoMoneyNoPartsObjectiveFamily() {
+        return analyzed && ("12_180".equals(objectiveBlueprintId)
+                || "12_180_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isNoMoneyNoPartsWattoPullAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isNoMoneyNoPartsObjectiveFamily() && !isFlipped
+                && game != null && game.getGameState() != null
+                && playerId != null && sourceCard != null
+                && playerId.equals(sourceCard.getOwner())
+                && sourceCard.getZone() != null
+                && sourceCard.getZone().isInPlay()
+                && "12_178".equals(sourceCard.getBlueprintId(true))
+                && actionText != null
+                && "deploy watto from reserve deck".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT));
+    }
+
+    public boolean isNoMoneyNoPartsBackGambitAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isNoMoneyNoPartsObjectiveFamily() && isFlipped
+                && game != null && playerId != null
+                && sourceCard != null
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "12_180_BACK".equals(
+                    sourceCard.getBlueprintId(
+                        game.getGameState(), false))
+                && actionText != null
+                && "place card face down on side of table".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT));
+    }
+
+    public boolean isNoMoneyNoPartsBackGambitSelection(
+            SwccgGame game, String playerId, String decisionText) {
+        return isNoMoneyNoPartsObjectiveFamily() && isFlipped
+                && game != null && game.getGameState() != null
+                && playerId != null && decisionText != null
+                && "choose card to place face down on side of table".equals(
+                    decisionText.trim().toLowerCase(Locale.ROOT));
+    }
+
+    public boolean hasSafeNoMoneyNoPartsBackGambitCandidate(
+            SwccgGame game, String playerId) {
+        if (!isNoMoneyNoPartsObjectiveFamily() || !isFlipped
+                || game == null || game.getGameState() == null
+                || playerId == null) {
+            return false;
+        }
+        for (PhysicalCard card
+                : game.getGameState().getHand(playerId)) {
+            if (isSafeNoMoneyNoPartsBackGambitCandidate(
+                    game, playerId, card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isSafeNoMoneyNoPartsBackGambitCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!isNoMoneyNoPartsObjectiveFamily() || !isFlipped
+                || game == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || playerId == null || candidate == null
+                || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        String opponent = game.getGameState().getOpponent(playerId);
+        if (opponent == null
+                || game.getModifiersQuerying().getForceAvailableToUse(
+                        game.getGameState(), opponent) < 2) {
+            return true;
+        }
+        PhysicalCard objective = findOurObjective(
+                game.getGameState(), playerId);
+        return objective != null
+                && Filters.deployable(
+                    objective, null, true, 0).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+    }
+
     public boolean isTheyHaveNoIdeaObjectiveFamily() {
         return analyzed && ("209_29".equals(objectiveBlueprintId)
                 || "209_29_BACK".equals(objectiveBlueprintId));
@@ -12760,7 +12875,8 @@ public class ObjectiveAnalyzer {
                     game, playerId, deployingCandidate);
         }
         if (!isMassassiBaseOperationsFamily()
-                && !isImperialEntanglementsFamily()) {
+                && !isImperialEntanglementsFamily()
+                && !isNoMoneyNoPartsObjectiveFamily()) {
             return 0;
         }
         int bestReserve = 0;
@@ -13854,6 +13970,179 @@ public class ObjectiveAnalyzer {
         return reserve.executable() ? reserve.nextBattleForce() : 0;
     }
 
+    public int getNoMoneyNoPartsCurrentMoveForceReserve(
+            SwccgGame game, String playerId) {
+        return getNoMoneyNoPartsCurrentMoveForceReserve(
+                game, playerId, null);
+    }
+
+    /**
+     * Preserves the cheapest exact landspeed payment that completes the
+     * No Money front-side formation. The reserve is live only while Watto is
+     * present at the Junkyard, Mos Espa is still unoccupied, and a non-Watto
+     * presence source can safely move there without taking the qualifying
+     * Watto along. A hand card that can directly occupy Mos Espa may spend the
+     * Force because it completes the same leg instead of distracting from it.
+     */
+    public int getNoMoneyNoPartsCurrentMoveForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!isNoMoneyNoPartsObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard junkyard = null;
+            PhysicalCard mosEspa = null;
+            List<PhysicalCard> locations =
+                    gameState.getLocationsInOrder();
+            if (locations == null) return 0;
+            for (PhysicalCard location : locations) {
+                if (location == null) continue;
+                if (junkyard == null
+                        && Filters.Wattos_Junkyard.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), location)) {
+                    junkyard = location;
+                }
+                if (mosEspa == null
+                        && Filters.Mos_Espa.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), location)) {
+                    mosEspa = location;
+                }
+            }
+            if (junkyard == null || mosEspa == null
+                    || !hasNoMoneyNoPartsWattoAtJunkyardAfterMove(
+                        game, junkyard, null)
+                    || hasOwnedActivePresenceAt(
+                        game, playerId, mosEspa)) {
+                return 0;
+            }
+            if (deployingCandidate != null
+                    && deployingCandidate.getZone() == Zone.HAND
+                    && playerId.equals(
+                        deployingCandidate.getOwner())
+                    && candidateProvidesPresence(
+                        game, deployingCandidate)
+                    && Filters.deployableToLocation(
+                        deployingCandidate,
+                        Filters.sameCardId(mosEspa),
+                        false, 0.0f).accepts(
+                            gameState,
+                            game.getModifiersQuerying(),
+                            deployingCandidate)) {
+                return 0;
+            }
+
+            int cheapest = Integer.MAX_VALUE;
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (permanents == null) return 0;
+            for (PhysicalCard mover : permanents) {
+                if (mover == null
+                        || !playerId.equals(mover.getOwner())
+                        || mover.getZone() == null
+                        || !mover.getZone().isInPlay()
+                        || !isActiveForSpot(game, mover, true)
+                        || Filters.Watto.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), mover)
+                        || !candidateProvidesPresence(game, mover)) {
+                    continue;
+                }
+                PhysicalCard origin = presenceContributionLocation(
+                        game, mover);
+                if (origin == null
+                        || samePhysicalLocation(origin, mosEspa)
+                        || !hasNoMoneyNoPartsWattoAtJunkyardAfterMove(
+                            game, junkyard, mover)
+                        || !Filters.canMoveToUsingLandspeed(
+                            playerId, mover, false, false,
+                            false, 0.0f, null).accepts(
+                                gameState,
+                                game.getModifiersQuerying(), mosEspa)
+                        || FormationSafety.vetoMoveDestination(
+                            game, gameState, playerId,
+                            mover, mosEspa) != null
+                        || FormationSafety.vetoMoveOrigin(
+                            game, gameState, playerId,
+                            mover, origin) != null) {
+                    continue;
+                }
+                float exact = game.getModifiersQuerying()
+                        .getMoveUsingLandspeedCost(
+                            gameState, mover, origin, mosEspa,
+                            false, 0.0f);
+                if (Float.isFinite(exact)) {
+                    cheapest = Math.min(
+                            cheapest,
+                            Math.max(0,
+                                (int) Math.ceil(exact)));
+                }
+            }
+            return cheapest == Integer.MAX_VALUE
+                    ? 0 : cheapest;
+        } catch (Exception e) {
+            LOG.debug("No Money move Force reserve unavailable: {}",
+                    e.getMessage());
+            return 0;
+        }
+    }
+
+    private boolean hasNoMoneyNoPartsWattoAtJunkyardAfterMove(
+            SwccgGame game, PhysicalCard junkyard,
+            PhysicalCard movedRoot) {
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card == null
+                    || belongsToRemovedGroup(
+                        card, movedRoot, null)
+                    || !isActiveForSpot(game, card, true)
+                    || !Filters.Watto.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        game.getGameState(), card);
+            if (samePhysicalLocation(location, junkyard)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasOwnedActivePresenceAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card == null
+                    || !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(game, card, true)
+                    || !candidateProvidesPresence(game, card)) {
+                continue;
+            }
+            PhysicalCard cardLocation = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        game.getGameState(), card);
+            if (samePhysicalLocation(
+                    cardLocation, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Preserve the cheapest exact landspeed payment that creates a new
      * operative formation without breaking one at the origin. A hand card
@@ -14401,6 +14690,7 @@ public class ObjectiveAnalyzer {
         if ((!isMassassiBaseOperationsFamily()
                     && !isImperialEntanglementsFamily()
                     && !isOldAlliesObjectiveFamily()
+                    && !isNoMoneyNoPartsObjectiveFamily()
                     && !isISBOperations)
                 || isFlipped || game == null || playerId == null
                 || candidate == null || candidate.getZone() != Zone.HAND
@@ -18446,6 +18736,8 @@ public class ObjectiveAnalyzer {
                         com.gempukku.swccgo.filters.Filters.Watto,
                         com.gempukku.swccgo.filters.Filters.presentAt(
                                 com.gempukku.swccgo.filters.Filters.Wattos_Junkyard));
+            case "Watto":
+                return com.gempukku.swccgo.filters.Filters.Watto;
             // Batch Nine (2026-07-27): QMC front Lando/Lobot alternative.
             case "Lando_or_Lobot": {
                 com.gempukku.swccgo.filters.Filter landoOrLobot =
@@ -18988,6 +19280,15 @@ public class ObjectiveAnalyzer {
                     "OBJECTIVE OLD ALLIES ROUTE: deploy '"
                             + card.getTitle()
                             + "' as part of the funded Jakku flip route"));
+        }
+        if (isNoMoneyNoPartsObjectiveFamily() && !isFlipped
+                && isPreferredCountedObjectivePresenceForceLossCandidate(
+                    game, playerId, card)) {
+            notes.add(new ScoreNote(
+                    1600.0f,
+                    "OBJECTIVE NO MONEY MOS ESPA ROUTE: deploy '"
+                            + card.getTitle()
+                            + "' as the cheapest legal Mos Espa occupier"));
         }
         if (analyzed && !isFlipped && isCharacter
                 && hasFlipGateActorRequirement()) {

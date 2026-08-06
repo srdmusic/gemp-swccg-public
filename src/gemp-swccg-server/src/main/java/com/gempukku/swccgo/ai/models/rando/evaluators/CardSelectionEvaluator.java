@@ -32,6 +32,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NabooDuelObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
@@ -2305,7 +2306,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         (objectiveProgressAnalyzer
                                             .isMassassiBaseOperationsFamily()
                                                 || objectiveProgressAnalyzer
-                                                    .isImperialEntanglementsFamily())
+                                                    .isImperialEntanglementsFamily()
+                                                || objectiveProgressAnalyzer
+                                                    .isNoMoneyNoPartsObjectiveFamily())
                                             && objectiveProgressAnalyzer
                                                 .wouldCompletePreFlipRequirementAt(
                                                     game, playerId,
@@ -10752,6 +10755,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         String textLower = context.getDecisionText() != null ? context.getDecisionText().toLowerCase(Locale.ROOT) : "";
         boolean isLossDecision = textLower.contains("lose") || textLower.contains("lost") ||
                                  textLower.contains("place in") || textLower.contains("put on");
+        boolean exactNoMoneyGambitSelection =
+                context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isNoMoneyNoPartsBackGambitSelection(
+                        game, context.getPlayerId(),
+                        context.getDecisionText());
+        boolean safeNoMoneyGambitAlternative =
+                exactNoMoneyGambitSelection
+                && context.getObjectiveAnalyzer()
+                    .hasSafeNoMoneyNoPartsBackGambitCandidate(
+                        game, context.getPlayerId());
 
         logger.info("🔍 evaluateUnknown: {} cards, {} blueprints, {} testingTexts for '{}' (loss={})",
                    cardIds != null ? cardIds.size() : 0,
@@ -10770,12 +10784,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // LOOK UP CARD NAME FROM BLUEPRINT LIBRARY - this PROVES we can identify cards!
             String cardTitle = null;
             SwccgCardBlueprint blueprint = null;
+            PhysicalCard physicalCandidate = null;
 
             // Method 1: For regular cardIds, look up the card in game state
             if (gameState != null && cardId != null && !cardId.startsWith("temp")) {
                 try {
                     PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
                     if (card != null) {
+                        physicalCandidate = card;
                         cardTitle = card.getTitle();
                         blueprint = card.getBlueprint();
                         logger.info("✅ CARD LOOKUP[{}]: cardId={} -> '{}'", i, cardId, cardTitle);
@@ -10840,6 +10856,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             action.setCardName(cardTitle);
             if (blueprintId != null) {
                 action.setBlueprintId(blueprintId);
+            }
+
+            PolicyContributionLedger noMoneyGambitLedger =
+                    new PolicyContributionLedger(
+                        "no-money-gambit-card-" + cardId);
+            boolean safeNoMoneyGambitCandidate =
+                    exactNoMoneyGambitSelection
+                    && context.getObjectiveAnalyzer()
+                        .isSafeNoMoneyNoPartsBackGambitCandidate(
+                            game, context.getPlayerId(),
+                            physicalCandidate);
+            noMoneyGambitLedger.register(
+                    NoMoneyNoPartsObjectivePolicy
+                        .scoreBackGambitCandidate(
+                            cardId,
+                            exactNoMoneyGambitSelection,
+                            safeNoMoneyGambitCandidate,
+                            safeNoMoneyGambitAlternative));
+            PolicyOperationAdapter.apply(
+                    action, noMoneyGambitLedger);
+            if (exactNoMoneyGambitSelection
+                    && !safeNoMoneyGambitCandidate
+                    && safeNoMoneyGambitAlternative) {
+                actions.add(action);
+                continue;
             }
 
             PullDeployCandidatePolicy.Evaluation pullCandidate =

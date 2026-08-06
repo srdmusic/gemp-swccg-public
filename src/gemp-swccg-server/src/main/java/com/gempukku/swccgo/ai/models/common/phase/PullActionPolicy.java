@@ -158,6 +158,21 @@ public final class PullActionPolicy {
                     : List.of());
     }
 
+    public static PolicyResult scoreNoMoneyNoPartsWattoRoute(
+            String actionId, boolean routeReady) {
+        Objects.requireNonNull(actionId, "actionId");
+        return new PolicyResult(
+                PRODUCER,
+                routeReady
+                    ? List.of(add(
+                        actionId,
+                        "OBJECTIVE.NO_MONEY.WATTO_ROUTE",
+                        TraceOutputKind.BANDED,
+                        2000.0f,
+                        "NO MONEY: use Watto's Junkyard's exact free Watto route before unrelated deploys"))
+                    : List.of());
+    }
+
     public static Evaluation evaluateParent(PullActionFacts.Parent facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>();

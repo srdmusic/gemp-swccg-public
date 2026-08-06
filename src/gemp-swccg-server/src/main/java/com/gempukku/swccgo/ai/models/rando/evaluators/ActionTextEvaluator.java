@@ -29,6 +29,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MassassiObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NabooDuelObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveHardLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
@@ -232,6 +233,18 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     && exactDeployAnalyzer
                         .isSetYourCourseRouteMoveAction(
                             game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean exactNoMoneyBackGambit =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isNoMoneyNoPartsBackGambitAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean exactNoMoneyOpponentWattoRemoval =
+                    NoMoneyNoPartsObjectivePolicy
+                        .isExactOpponentWattoRemovalAction(
+                            game,
+                            context.getPlayerId(),
                             actionSource, actionText);
             boolean exactSetYourCourseCpi =
                     exactDeployAnalyzer != null
@@ -2118,7 +2131,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             || textLower.startsWith("play a card ");
                         boolean locationFirstExempt = isLocationSearch || isAmsdAction
                             || isReservePull || isDeployEntry
-                            || firstOrderReignsNavyRoute;
+                            || firstOrderReignsNavyRoute
+                            || exactNoMoneyBackGambit;
                         DeploySequencingPolicy.Evaluation locationFirst =
                             DeploySequencingPolicy.locationsFirstNonDeploy(
                                 actionId, true, locationFirstExempt);
@@ -5115,6 +5129,31 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // battleground. This is THE action that flips the Hidden Path objective.
             // Previously scored 0.0 ("Unknown action type") while landspeed (which goes
             // backward to Safehouse) got +9999 from V53b. FIXES Issue #C from peaceful-pike.
+            else if (exactNoMoneyBackGambit) {
+                PolicyContributionLedger noMoneyGambitLedger =
+                    new PolicyContributionLedger(
+                        "no-money-back-gambit-parent-" + actionId);
+                noMoneyGambitLedger.register(
+                    NoMoneyNoPartsObjectivePolicy
+                        .scoreBackGambitParent(
+                            actionId, true,
+                            exactDeployAnalyzer
+                                .hasSafeNoMoneyNoPartsBackGambitCandidate(
+                                    game, context.getPlayerId())));
+                PolicyOperationAdapter.apply(
+                    action, noMoneyGambitLedger);
+            }
+            else if (exactNoMoneyOpponentWattoRemoval) {
+                PolicyContributionLedger noMoneyRemovalLedger =
+                    new PolicyContributionLedger(
+                        "no-money-opponent-watto-removal-" + actionId);
+                noMoneyRemovalLedger.register(
+                    NoMoneyNoPartsObjectivePolicy
+                        .scoreOpponentWattoRemoval(
+                            actionId, true));
+                PolicyOperationAdapter.apply(
+                    action, noMoneyRemovalLedger);
+            }
             else if (MoveTransitPolicy.isPositiveHiddenPathTransitAction(
                     textLower)) {
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer hpTransit =
@@ -5164,6 +5203,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         PullPolicyAdapter.readParent(
                                 context, actionId, actionText, cardId));
                 pullLedger.register(pull.result());
+                pullLedger.register(
+                        PullActionPolicy.scoreNoMoneyNoPartsWattoRoute(
+                                actionId,
+                                context.getObjectiveAnalyzer() != null
+                                    && context.getObjectiveAnalyzer()
+                                        .isNoMoneyNoPartsWattoPullAction(
+                                            game,
+                                            context.getPlayerId(),
+                                            actionSource,
+                                            actionText)));
                 PolicyOperationAdapter.apply(action, pullLedger);
             }
 

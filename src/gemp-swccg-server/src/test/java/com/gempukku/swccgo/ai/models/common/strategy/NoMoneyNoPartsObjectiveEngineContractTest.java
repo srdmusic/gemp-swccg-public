@@ -1,16 +1,24 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
+import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
+import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.PhysicalCardImpl;
+import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -63,6 +71,13 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
                 }},
                 new HashMap<>() {{
                     put("watto", "11_65");
+                    put("wattoTwo", "11_66");
+                    put("televan", "12_120");
+                    put("sebulba", "211_6");
+                    put("gunner", "3_88");
+                    put("blendin", "5_103");
+                    put("tie", "1_304");
+                    put("system", "12_175");
                 }},
                 24,
                 24,
@@ -74,6 +89,144 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
                 StartingSetup.NoDSShields,
                 VirtualTableScenario.Open
         );
+    }
+
+    private void keepOnlyDarkHandCards(
+            VirtualTableScenario scn, PhysicalCard... keep) {
+        var protectedCards = java.util.Set.of(keep);
+        var toReserve = new ArrayList<PhysicalCardImpl>();
+        for (PhysicalCard card : scn.gameState().getHand(
+                VirtualTableScenario.DS)) {
+            if (card instanceof PhysicalCardImpl physical
+                    && !protectedCards.contains(card)) {
+                toReserve.add(physical);
+            }
+        }
+        for (PhysicalCardImpl card : toReserve) {
+            scn.MoveCardsToBottomOfDSReserveDeck(card);
+        }
+    }
+
+    private void keepExactlyDarkForce(
+            VirtualTableScenario scn, int amount) {
+        while (scn.GetDSForcePileCount() > amount) {
+            scn.MoveCardsToTopOfDSUsedPile(
+                    scn.GetTopOfDSForcePile());
+        }
+        while (scn.GetDSForcePileCount() < amount) {
+            scn.MoveCardsToTopOfDSForcePile(
+                    scn.GetTopOfDSReserveDeck());
+        }
+        assertEquals(amount, scn.GetDSForcePileCount());
+    }
+
+    private void keepExactlyLightForce(
+            VirtualTableScenario scn, int amount) {
+        while (scn.GetLSForcePileCount() > amount) {
+            scn.MoveCardsToTopOfLSUsedPile(
+                    scn.GetTopOfLSForcePile());
+        }
+        while (scn.GetLSForcePileCount() < amount) {
+            scn.MoveCardsToTopOfLSForcePile(
+                    scn.GetTopOfLSReserveDeck());
+        }
+        assertEquals(amount, scn.GetLSForcePileCount());
+    }
+
+    private record PublicBots(
+            com.gempukku.swccgo.ai.models.rando.RandoCalAi rando,
+            com.gempukku.swccgo.ai.models.chosenone.TheChosenOneAi chosen) {
+        private static PublicBots forGame(VirtualTableScenario scn) {
+            var rando = new com.gempukku.swccgo.ai.models.rando
+                    .RandoCalAi();
+            var chosen = new com.gempukku.swccgo.ai.models.chosenone
+                    .TheChosenOneAi();
+            rando.setGame(scn.game());
+            chosen.setGame(scn.game());
+            return new PublicBots(rando, chosen);
+        }
+
+        private String decideBoth(VirtualTableScenario scn) {
+            AwaitingDecision decision = scn.GetAwaitingDecision(
+                    VirtualTableScenario.DS);
+            assertNotNull("Dark Side must own the bot decision", decision);
+            String randoResponse = rando.decide(
+                    VirtualTableScenario.DS,
+                    decision, scn.gameState());
+            String chosenResponse = chosen.decide(
+                    VirtualTableScenario.DS,
+                    decision, scn.gameState());
+            assertEquals("Rando and Chosen One must match",
+                    randoResponse, chosenResponse);
+            return randoResponse;
+        }
+
+        private String decideLightBoth(VirtualTableScenario scn) {
+            AwaitingDecision decision = scn.GetAwaitingDecision(
+                    VirtualTableScenario.LS);
+            assertNotNull("Light Side must own the bot decision", decision);
+            String randoResponse = rando.decide(
+                    VirtualTableScenario.LS,
+                    decision, scn.gameState());
+            String chosenResponse = chosen.decide(
+                    VirtualTableScenario.LS,
+                    decision, scn.gameState());
+            assertEquals("Rando and Chosen One must match",
+                    randoResponse, chosenResponse);
+            return randoResponse;
+        }
+    }
+
+    private PhysicalCard selectedPhysicalCard(
+            VirtualTableScenario scn,
+            AwaitingDecision decision, String response) {
+        PhysicalCard selected = AiActionSourceProvenance
+                .selectedActionSource(decision, response);
+        if (selected != null) return selected;
+        try {
+            return scn.gameState().findCardById(
+                    Integer.parseInt(response));
+        } catch (NumberFormatException ignored) {
+            if (response != null && response.startsWith("temp")) {
+                try {
+                    int index = Integer.parseInt(response.substring(4));
+                    var reserve = scn.gameState().getReserveDeck(
+                            VirtualTableScenario.DS);
+                    String[] blueprints = decision.getDecisionParameters()
+                            .get("blueprintId");
+                    if (index >= 0 && index < reserve.size()
+                            && blueprints != null
+                            && index < blueprints.length) {
+                        PhysicalCard candidate = reserve.get(index);
+                        if (candidate != null
+                                && blueprints[index].equals(
+                                    candidate.getBlueprintId(true))) {
+                            return candidate;
+                        }
+                    }
+                } catch (NumberFormatException ignoredTempId) {
+                    return null;
+                }
+            }
+            return null;
+        }
+    }
+
+    private void flipWithFormation(
+            VirtualTableScenario scn,
+            PhysicalCardImpl watto, PhysicalCardImpl occupier) {
+        var pulse = scn.GetDSFiller(6);
+        scn.MoveCardsToDSHand(pulse);
+        scn.StartGame();
+        scn.MoveCardsToLocation(scn.GetDSCard("junkyard"), watto);
+        scn.MoveCardsToLocation(scn.GetDSCard("mosEspa"), occupier);
+        scn.DSActivateForceCheat(8);
+        scn.SkipToDSTurn(Phase.DEPLOY);
+        scn.DSDeployCardAndPassResponses(
+                pulse, scn.GetLSStartingLocation());
+        assertTrue("The source-defined two-leg formation must flip",
+                scn.GetDSCard("objective").isFlipped());
+        scn.MoveOutOfPlay(pulse);
     }
 
     @Test
@@ -252,5 +405,614 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
                 postFlip.size());
         assertFalse("With both legs held the flip-back condition is unmet",
                 postFlip.get(0).conditionSatisfied());
+    }
+
+    @Test
+    public void nmnpndWattoInHandIsTypedRuntimeActorForTheJunkyard() {
+        var scn = noMoneyScenario();
+        var watto = scn.GetDSCard("watto");
+        var junkyard = scn.GetDSCard("junkyard");
+
+        scn.MoveCardsToDSHand(watto);
+        scn.StartGame();
+        keepOnlyDarkHandCards(scn, watto);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.strategy
+                .ObjectiveAnalyzer();
+        rando.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        chosen.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+
+        assertTrue(rando.isNoMoneyNoPartsObjectiveFamily());
+        assertEquals(ObjectiveAnalyzer.ObjectiveProgressCandidateRole
+                        .REQUIRED_ACTOR,
+                rando.classifyPreFlipProgressCandidate(
+                    scn.game(), VirtualTableScenario.DS, watto));
+        assertTrue(rando.advancesPreFlipActorAtRuntimeLocation(
+                scn.game(), VirtualTableScenario.DS, watto, junkyard));
+        assertEquals(
+                rando.classifyPreFlipProgressCandidate(
+                        scn.game(), VirtualTableScenario.DS, watto),
+                chosen.classifyPreFlipProgressCandidate(
+                        scn.game(), VirtualTableScenario.DS, watto));
+        assertEquals(
+                rando.advancesPreFlipActorAtRuntimeLocation(
+                        scn.game(), VirtualTableScenario.DS,
+                        watto, junkyard),
+                chosen.advancesPreFlipActorAtRuntimeLocation(
+                        scn.game(), VirtualTableScenario.DS,
+                        watto, junkyard));
+    }
+
+    @Test
+    public void nmnpndCheapestMosEspaBodyIsFundedAndProtectedInHand() {
+        var scn = noMoneyScenario();
+        var gunner = scn.GetDSCard("gunner");
+        var blendin = scn.GetDSCard("blendin");
+
+        scn.MoveCardsToDSHand(gunner, blendin);
+        scn.StartGame();
+        keepOnlyDarkHandCards(scn, gunner, blendin);
+        scn.DSActivateForceCheat(2);
+        scn.SkipToDSTurn(Phase.DEPLOY);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.strategy
+                .ObjectiveAnalyzer();
+        rando.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        chosen.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+
+        assertEquals("One Force funds the cheapest legal Mos Espa body",
+                1, rando.getCountedObjectivePresenceForceReserve(
+                        scn.game(), VirtualTableScenario.DS, null));
+        assertTrue(rando
+                .isPreferredCountedObjectivePresenceForceLossCandidate(
+                        scn.game(), VirtualTableScenario.DS, gunner));
+        assertFalse("Cloud City-only Blendin cannot occupy Mos Espa",
+                rando.isPreferredCountedObjectivePresenceForceLossCandidate(
+                        scn.game(), VirtualTableScenario.DS, blendin));
+        assertEquals(
+                rando.getCountedObjectivePresenceForceReserve(
+                        scn.game(), VirtualTableScenario.DS, null),
+                chosen.getCountedObjectivePresenceForceReserve(
+                        scn.game(), VirtualTableScenario.DS, null));
+        assertEquals(
+                rando.isPreferredCountedObjectivePresenceForceLossCandidate(
+                        scn.game(), VirtualTableScenario.DS, gunner),
+                chosen.isPreferredCountedObjectivePresenceForceLossCandidate(
+                        scn.game(), VirtualTableScenario.DS, gunner));
+    }
+
+    @Test
+    public void nmnpndPostFlipBothExactLegsAreRetentionAnchors() {
+        var scn = noMoneyScenario();
+        var junkyard = scn.GetDSCard("junkyard");
+        var mosEspa = scn.GetDSCard("mosEspa");
+        var watto = scn.GetDSCard("watto");
+        var televan = scn.GetDSCard("televan");
+
+        flipWithFormation(scn, watto, televan);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.strategy
+                .ObjectiveAnalyzer();
+        rando.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        chosen.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+
+        assertEquals(ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_REQUIRED_ON_TABLE_ACTOR,
+                rando.classifyGateFormationPieceIfRemoved(
+                        scn.game(), VirtualTableScenario.DS, watto));
+        assertEquals(ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_FLIP_BACK_BLOCKER,
+                rando.classifyGateFormationPieceIfRemoved(
+                        scn.game(), VirtualTableScenario.DS, televan));
+        assertTrue(rando.wouldDepartureTriggerFlipBack(
+                scn.game(), VirtualTableScenario.DS, watto));
+        assertTrue(rando.wouldDepartureTriggerFlipBack(
+                scn.game(), VirtualTableScenario.DS, televan));
+        assertTrue("The Watto site itself must be a typed retention location",
+                rando.isFlipBackProtectionLocation(
+                        junkyard, scn.game(), VirtualTableScenario.DS));
+        assertTrue("Mos Espa is the other exact retention location",
+                rando.isFlipBackProtectionLocation(
+                        mosEspa, scn.game(), VirtualTableScenario.DS));
+        assertEquals(
+                rando.classifyGateFormationPieceIfRemoved(
+                        scn.game(), VirtualTableScenario.DS, watto),
+                chosen.classifyGateFormationPieceIfRemoved(
+                        scn.game(), VirtualTableScenario.DS, watto));
+        assertEquals(
+                rando.classifyGateFormationPieceIfRemoved(
+                        scn.game(), VirtualTableScenario.DS, televan),
+                chosen.classifyGateFormationPieceIfRemoved(
+                        scn.game(), VirtualTableScenario.DS, televan));
+        assertEquals(
+                rando.isFlipBackProtectionLocation(
+                        junkyard, scn.game(), VirtualTableScenario.DS),
+                chosen.isFlipBackProtectionLocation(
+                        junkyard, scn.game(), VirtualTableScenario.DS));
+    }
+
+    @Test
+    public void nmnpndPublicBotsPullWattoDeploySebulbaAndNativelyFlip() {
+        var scn = noMoneyScenario();
+        var objective = scn.GetDSCard("objective");
+        var junkyard = scn.GetDSCard("junkyard");
+        var mosEspa = scn.GetDSCard("mosEspa");
+        var watto = scn.GetDSCard("watto");
+        var sebulba = scn.GetDSCard("sebulba");
+
+        scn.MoveCardsToDSHand(sebulba);
+        scn.MoveCardsToBottomOfDSReserveDeck(watto);
+        scn.StartGame();
+        keepOnlyDarkHandCards(scn, sebulba);
+        scn.SkipToDSTurn(Phase.DEPLOY);
+        keepExactlyDarkForce(scn, 0);
+        assertEquals("Watto's printed deploy 2 is reduced to 0 at the Junkyard",
+                0.0f,
+                scn.game().getModifiersQuerying().getDeployCost(
+                    scn.gameState(), junkyard, watto, junkyard,
+                    false, null, false, 0.0f,
+                    null, false),
+                0.0f);
+
+        var bots = PublicBots.forGame(scn);
+        boolean pulledWatto = false;
+        boolean deployedSebulba = false;
+        PhysicalCard pulledWattoCard = null;
+        for (int routeStep = 0; routeStep < 2; routeStep++) {
+            AwaitingDecision parent = scn.GetAwaitingDecision(
+                    VirtualTableScenario.DS);
+            assertNotNull("Dark Side route action missing; current="
+                            + (scn.GetCurrentDecision() != null
+                                ? scn.GetCurrentDecision().getText() : "none")
+                            + "; deciding=" + scn.GetDecidingPlayer(),
+                    parent);
+            String selectedAction = bots.decideBoth(scn);
+            PhysicalCard selectedSource = AiActionSourceProvenance
+                    .selectedActionSource(parent, selectedAction);
+            assertTrue("The bot must spend this action on Watto or Sebulba, not "
+                            + (selectedSource != null
+                                ? selectedSource.getTitle() : selectedAction)
+                            + "; decision=" + parent.getText()
+                            + "; parameters="
+                            + parent.getDecisionParameters().entrySet()
+                                .stream()
+                                .map(entry -> entry.getKey() + "="
+                                    + java.util.Arrays.toString(
+                                        entry.getValue()))
+                                .toList(),
+                    selectedSource == junkyard || selectedSource == sebulba);
+            scn.DSDecided(selectedAction);
+
+            AwaitingDecision child = scn.GetAwaitingDecision(
+                    VirtualTableScenario.DS);
+            assertNotNull(child);
+            String childResponse = bots.decideBoth(scn);
+            PhysicalCard selectedCard = selectedPhysicalCard(
+                    scn, child, childResponse);
+            if (selectedSource == junkyard) {
+                assertNotNull("The native Junkyard action must resolve one Watto",
+                        selectedCard);
+                assertTrue("The native Junkyard action must select a Watto printing",
+                        com.gempukku.swccgo.filters.Filters.Watto.accepts(
+                            scn.gameState(),
+                            scn.game().getModifiersQuerying(),
+                            selectedCard));
+                pulledWattoCard = selectedCard;
+                pulledWatto = true;
+            } else {
+                assertTrue("The exact Watto route must precede the Mos Espa body; parent="
+                                + parent.getDecisionParameters().entrySet()
+                                    .stream()
+                                    .map(entry -> entry.getKey() + "="
+                                        + java.util.Arrays.toString(
+                                            entry.getValue()))
+                                    .toList(),
+                        pulledWatto);
+                assertSame("Watto must already be present at the Junkyard",
+                        junkyard,
+                        scn.game().getModifiersQuerying()
+                            .getLocationThatCardIsPresentAt(
+                                scn.gameState(), pulledWattoCard));
+                var analyzer = new com.gempukku.swccgo.ai.models.rando
+                        .strategy.ObjectiveAnalyzer();
+                analyzer.analyze(scn.game(), VirtualTableScenario.DS,
+                        Side.DARK);
+                assertTrue("Sebulba at Mos Espa must be the final native flip leg",
+                        analyzer.wouldCompletePreFlipRequirementAt(
+                            scn.game(), VirtualTableScenario.DS,
+                            sebulba, mosEspa));
+                assertSame("Sebulba must deploy to exact Mos Espa; response="
+                                + childResponse + "; decision="
+                                + child.getText() + "; parameters="
+                                + child.getDecisionParameters().entrySet()
+                                    .stream()
+                                    .map(entry -> entry.getKey() + "="
+                                        + java.util.Arrays.toString(
+                                            entry.getValue()))
+                                    .toList(),
+                        mosEspa, selectedCard);
+                deployedSebulba = true;
+            }
+            scn.DSDecided(childResponse);
+            scn.PassAllResponses();
+            if (routeStep == 0) {
+                assertFalse("One leg alone must leave the objective front up",
+                        objective.isFlipped());
+                if (scn.GetAwaitingDecision(
+                        VirtualTableScenario.LS) != null) {
+                    scn.LSPass();
+                }
+            }
+        }
+
+        assertTrue(pulledWatto);
+        assertTrue(deployedSebulba);
+        assertSame(junkyard,
+                scn.game().getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        scn.gameState(), pulledWattoCard));
+        assertSame(mosEspa,
+                scn.game().getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        scn.gameState(), sebulba));
+        assertEquals("Both source-defined deployments are free",
+                0, scn.GetDSForcePileCount());
+        assertTrue("The unchanged objective Java must perform the flip",
+                objective.isFlipped());
+    }
+
+    @Test
+    public void nmnpndPublicBotsMoveSebulbaNotWattoAndNativelyFlip() {
+        var scn = noMoneyScenario();
+        var objective = scn.GetDSCard("objective");
+        var junkyard = scn.GetDSCard("junkyard");
+        var mosEspa = scn.GetDSCard("mosEspa");
+        var watto = scn.GetDSCard("watto");
+        var sebulba = scn.GetDSCard("sebulba");
+
+        scn.StartGame();
+        scn.MoveCardsToLocation(junkyard, watto, sebulba);
+        scn.DSActivateForceCheat(1);
+        scn.SkipToDSTurn(Phase.MOVE);
+        keepExactlyDarkForce(scn, 1);
+
+        String wattoMove = scn.GetCardActionId(
+                VirtualTableScenario.DS, watto,
+                "Move using landspeed");
+        String sebulbaMove = scn.GetCardActionId(
+                VirtualTableScenario.DS, sebulba,
+                "Move using landspeed");
+        assertNotNull(wattoMove);
+        assertNotNull(sebulbaMove);
+
+        var bots = PublicBots.forGame(scn);
+        assertEquals("Move Sebulba and preserve Watto at the Junkyard",
+                sebulbaMove, bots.decideBoth(scn));
+        scn.DSDecided(sebulbaMove);
+        assertEquals("The move must finish at exact Mos Espa",
+                Integer.toString(mosEspa.getCardId()),
+                bots.decideBoth(scn));
+        scn.DSDecided(Integer.toString(mosEspa.getCardId()));
+        scn.PassAllResponses();
+
+        assertSame(junkyard,
+                scn.game().getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        scn.gameState(), watto));
+        assertSame(mosEspa,
+                scn.game().getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        scn.gameState(), sebulba));
+        assertEquals(0, scn.GetDSForcePileCount());
+        assertTrue("The unchanged objective Java must flip after the move",
+                objective.isFlipped());
+    }
+
+    @Test
+    public void nmnpndAnalyzerReservesOnlyTheExecutableMosEspaMove() {
+        var scn = noMoneyScenario();
+        var junkyard = scn.GetDSCard("junkyard");
+        var mosEspa = scn.GetDSCard("mosEspa");
+        var watto = scn.GetDSCard("watto");
+        var sebulba = scn.GetDSCard("sebulba");
+        var gunner = scn.GetDSCard("gunner");
+
+        scn.MoveCardsToDSHand(gunner);
+        scn.StartGame();
+        scn.MoveCardsToLocation(junkyard, watto, sebulba);
+        keepOnlyDarkHandCards(scn, gunner);
+        scn.DSActivateForceCheat(1);
+        scn.SkipToDSTurn(Phase.DEPLOY);
+        keepExactlyDarkForce(scn, 1);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.strategy
+                .ObjectiveAnalyzer();
+        rando.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        chosen.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+
+        assertEquals("One Force must fund Sebulba's exact Mos Espa move",
+                1, rando.getNoMoneyNoPartsCurrentMoveForceReserve(
+                        scn.game(), VirtualTableScenario.DS));
+        assertEquals("A direct Mos Espa occupier replaces the move",
+                0, rando.getNoMoneyNoPartsCurrentMoveForceReserve(
+                        scn.game(), VirtualTableScenario.DS, gunner));
+        assertEquals(
+                rando.getNoMoneyNoPartsCurrentMoveForceReserve(
+                        scn.game(), VirtualTableScenario.DS),
+                chosen.getNoMoneyNoPartsCurrentMoveForceReserve(
+                        scn.game(), VirtualTableScenario.DS));
+
+        scn.MoveCardsToLocation(mosEspa, sebulba);
+        assertEquals("No reserve remains after Mos Espa is occupied",
+                0, rando.getNoMoneyNoPartsCurrentMoveForceReserve(
+                        scn.game(), VirtualTableScenario.DS));
+    }
+
+    @Test
+    public void nmnpndPublicBotsPreserveDeployAndBattleForceThenMoveAndFlip() {
+        var scn = noMoneyScenario();
+        var objective = scn.GetDSCard("objective");
+        var junkyard = scn.GetDSCard("junkyard");
+        var mosEspa = scn.GetDSCard("mosEspa");
+        var system = scn.GetDSCard("system");
+        var watto = scn.GetDSCard("watto");
+        var sebulba = scn.GetDSCard("sebulba");
+        var tie = scn.GetDSCard("tie");
+        var battleSite = scn.GetLSStartingLocation();
+
+        scn.MoveCardsToDSHand(tie);
+        scn.StartGame();
+        scn.MoveLocationToTable(system);
+        scn.MoveCardsToLocation(junkyard, watto, sebulba);
+        scn.MoveCardsToLocation(
+                battleSite,
+                scn.GetDSFiller(1),
+                scn.GetDSFiller(2),
+                scn.GetDSFiller(3),
+                scn.GetDSFiller(4),
+                scn.GetLSFiller(1));
+        keepOnlyDarkHandCards(scn, tie);
+        scn.DSActivateForceCheat(1);
+        scn.SkipToDSTurn(Phase.DEPLOY);
+        keepExactlyDarkForce(scn, 1);
+
+        String tieDeploy = scn.GetCardActionId(
+                VirtualTableScenario.DS, tie, "Deploy");
+        assertNotNull("The unrelated one-Force TIE deploy must be offered",
+                tieDeploy);
+        var bots = PublicBots.forGame(scn);
+        assertEquals("The final move payment must beat the unrelated deploy",
+                "", bots.decideBoth(scn));
+        scn.DSPass();
+        assertTrue(scn.AwaitingLSDeployPhaseActions());
+        scn.LSPass();
+
+        assertTrue(scn.AwaitingDSBattlePhaseActions());
+        String battle = scn.GetCardActionId(
+                VirtualTableScenario.DS, battleSite,
+                "Initiate battle");
+        assertNotNull("A favorable unrelated battle must be available",
+                battle);
+        assertEquals("The final move payment must also beat the unrelated battle",
+                "", bots.decideBoth(scn));
+        scn.DSPass();
+        assertTrue(scn.AwaitingLSBattlePhaseActions());
+        scn.LSPass();
+
+        assertTrue(scn.AwaitingDSMovePhaseActions());
+        assertEquals(1, scn.GetDSForcePileCount());
+        String sebulbaMove = scn.GetCardActionId(
+                VirtualTableScenario.DS, sebulba,
+                "Move using landspeed");
+        assertNotNull(sebulbaMove);
+        assertEquals(sebulbaMove, bots.decideBoth(scn));
+        scn.DSDecided(sebulbaMove);
+        assertEquals(Integer.toString(mosEspa.getCardId()),
+                bots.decideBoth(scn));
+        scn.DSDecided(Integer.toString(mosEspa.getCardId()));
+        scn.PassAllResponses();
+
+        assertEquals(0, scn.GetDSForcePileCount());
+        assertSame(junkyard,
+                scn.game().getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        scn.gameState(), watto));
+        assertSame(mosEspa,
+                scn.game().getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        scn.gameState(), sebulba));
+        assertTrue("The unchanged objective Java must flip after the funded move",
+                objective.isFlipped());
+    }
+
+    @Test
+    public void nmnpndRealForceLossPreservesTheCheapestMosEspaBody() {
+        var scn = noMoneyScenario();
+        var gunner = scn.GetDSCard("gunner");
+        var tie = scn.GetDSCard("tie");
+
+        scn.MoveCardsToDSHand(gunner, tie);
+        scn.StartGame();
+        scn.MoveCardsToLocation(
+                scn.GetLSStartingLocation(),
+                scn.GetLSFiller(1));
+        scn.MoveCardsToDSHand(gunner, tie);
+        keepOnlyDarkHandCards(scn, gunner, tie);
+        scn.LSActivateForceCheat(4);
+        scn.SkipToLSTurn(Phase.CONTROL);
+
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertTrue("The sole cheapest Mos Espa body must be loss-protected",
+                analyzer.isPreferredCountedObjectivePresenceForceLossCandidate(
+                        scn.game(), VirtualTableScenario.DS, gunner));
+
+        scn.LSForceDrainAt(scn.GetLSStartingLocation());
+        scn.PassAllResponses();
+        assertTrue("The real drain must open Dark Side Force loss",
+                scn.DSDecisionAvailable("Choose Force to lose"));
+        AwaitingDecision decision = scn.GetAwaitingDecision(
+                VirtualTableScenario.DS);
+        var offered = java.util.Arrays.asList(
+                decision.getDecisionParameters().get("cardId"));
+        assertTrue(offered.contains(
+                Integer.toString(gunner.getCardId())));
+        assertTrue(offered.contains(
+                Integer.toString(tie.getCardId())));
+
+        String loss = PublicBots.forGame(scn).decideBoth(scn);
+        assertFalse("The public bots must not lose the sole cheap Mos Espa body; selected="
+                        + loss,
+                Integer.toString(gunner.getCardId()).equals(loss));
+        scn.DSDecided(loss);
+        scn.PassAllResponses();
+
+        assertEquals(Zone.HAND, gunner.getZone());
+    }
+
+    @Test
+    public void nmnpndBackGambitUsesADeployableCardAndNativeOpponentChoice() {
+        var scn = noMoneyScenario();
+        var objective = scn.GetDSCard("objective");
+        var watto = scn.GetDSCard("watto");
+        var duplicateWatto = scn.GetDSCard("wattoTwo");
+        var televan = scn.GetDSCard("televan");
+        var gunner = scn.GetDSCard("gunner");
+        var tie = scn.GetDSCard("tie");
+
+        flipWithFormation(scn, watto, televan);
+        scn.MoveCardsToDSHand(duplicateWatto, gunner, tie);
+        keepOnlyDarkHandCards(scn, duplicateWatto, gunner, tie);
+        keepExactlyDarkForce(scn, 1);
+        keepExactlyLightForce(scn, 2);
+        if (scn.GetAwaitingDecision(VirtualTableScenario.LS) != null) {
+            scn.LSPass();
+        }
+
+        var bots = PublicBots.forGame(scn);
+        AwaitingDecision parent = scn.GetAwaitingDecision(
+                VirtualTableScenario.DS);
+        String gambit = scn.GetCardActionId(
+                VirtualTableScenario.DS, objective,
+                "Place card face down on side of table");
+        String gunnerDeploy = scn.GetCardActionId(
+                VirtualTableScenario.DS, gunner, "Deploy");
+        assertNotNull(gambit);
+        assertNotNull(gunnerDeploy);
+        String parentChoice = bots.decideBoth(scn);
+        PhysicalCard parentChoiceSource = AiActionSourceProvenance
+                .selectedActionSource(parent, parentChoice);
+        assertEquals("The safe back-side gambit must beat the ordinary deploy; selected="
+                        + (parentChoiceSource != null
+                            ? parentChoiceSource.getTitle() : parentChoice)
+                        + "; parameters="
+                        + parent.getDecisionParameters().entrySet()
+                            .stream()
+                            .map(entry -> entry.getKey() + "="
+                                + java.util.Arrays.toString(
+                                    entry.getValue()))
+                            .toList(),
+                gambit, parentChoice);
+        scn.DSDecided(gambit);
+
+        AwaitingDecision cardChoice = scn.GetAwaitingDecision(
+                VirtualTableScenario.DS);
+        assertNotNull(cardChoice);
+        String selectedCard = bots.decideBoth(scn);
+        assertEquals("The gambit must choose the only card deployable after either response",
+                Integer.toString(gunner.getCardId()), selectedCard);
+        scn.DSDecided(selectedCard);
+
+        AwaitingDecision response = scn.GetAwaitingDecision(
+                VirtualTableScenario.LS);
+        assertNotNull(response);
+        int lightUsedBefore = scn.GetLSUsedPileCount();
+        int lightLostBefore = scn.GetLSLostPileCount();
+        assertEquals("Native Light Side evaluation should use, not lose, two Force",
+                "1", bots.decideLightBoth(scn));
+        scn.LSDecided("1");
+        scn.PassAllResponses();
+
+        AwaitingDecision destination = scn.GetAwaitingDecision(
+                VirtualTableScenario.DS);
+        assertNotNull("The free Gunner deploy must request a destination",
+                destination);
+        scn.DSDecided(bots.decideBoth(scn));
+        scn.PassAllResponses();
+
+        assertTrue(gunner.getZone().isInPlay());
+        assertEquals("The gambit spends no Dark Side Force",
+                1, scn.GetDSForcePileCount());
+        assertEquals("Using two Force moves exactly two Light cards to Used",
+                lightUsedBefore + 2, scn.GetLSUsedPileCount());
+        assertEquals("The native use branch causes no Light Side life loss",
+                lightLostBefore, scn.GetLSLostPileCount());
+        assertTrue("Both retention legs remain live after the gambit",
+                objective.isFlipped());
+    }
+
+    @Test
+    public void nmnpndOpponentWattoRemovalBonusDoesNotFireOnTheFront() {
+        var scn = noMoneyScenario();
+        var objective = scn.GetDSCard("objective");
+
+        scn.StartGame();
+
+        assertFalse(NoMoneyNoPartsObjectivePolicy
+                .isExactOpponentWattoRemovalAction(
+                    scn.game(), VirtualTableScenario.LS,
+                    objective, "Place Watto in Used Pile"));
+    }
+
+    @Test
+    public void nmnpndOpponentPublicBotsRemoveWattoOnlyFromTheBackAndRetrieveMax() {
+        var scn = noMoneyScenario();
+        var objective = scn.GetDSCard("objective");
+        var watto = scn.GetDSCard("watto");
+        var televan = scn.GetDSCard("televan");
+
+        flipWithFormation(scn, watto, televan);
+        scn.MoveCardsToTopOfDSLostPile(
+                scn.GetDSFiller(10),
+                scn.GetDSFiller(11),
+                scn.GetDSFiller(12),
+                scn.GetDSFiller(13));
+        scn.SkipToLSTurn(Phase.DEPLOY);
+        keepExactlyLightForce(scn, 8);
+
+        var bots = PublicBots.forGame(scn);
+        String removal = scn.GetCardActionId(
+                VirtualTableScenario.LS, objective,
+                "Place Watto in Used Pile");
+        assertNotNull(removal);
+        assertEquals("The exact back-side counter must beat Pass",
+                removal, bots.decideLightBoth(scn));
+        scn.LSDecided(removal);
+
+        assertEquals(Integer.toString(watto.getCardId()),
+                bots.decideLightBoth(scn));
+        scn.LSDecided(Integer.toString(watto.getCardId()));
+        scn.PassAllResponses();
+
+        assertEquals("The native retrieval decision must choose the maximum",
+                "4", bots.decideBoth(scn));
+        scn.DSDecided("4");
+        scn.PassAllResponses();
+
+        assertEquals(0, scn.GetLSForcePileCount());
+        assertEquals(Zone.USED_PILE, watto.getZone());
+        assertEquals("Removing Watto must trigger the unchanged flip-back law",
+                false, objective.isFlipped());
+        assertEquals("Four retrieved Force leave the Lost Pile",
+                0, scn.GetDSLostPileCount());
     }
 }

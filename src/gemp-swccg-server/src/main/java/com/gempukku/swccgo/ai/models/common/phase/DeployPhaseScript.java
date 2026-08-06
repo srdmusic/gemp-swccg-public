@@ -310,6 +310,28 @@ public abstract class DeployPhaseScript {
             steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
             return steps;
         }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isNoMoneyNoPartsWattoPullAction(
+                        game, playerId,
+                        sourceCard, actionText)) {
+            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isNoMoneyNoPartsBackGambitAction(
+                        game, playerId,
+                        sourceCard, actionText)) {
+            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+            return steps;
+        }
+        if (NoMoneyNoPartsObjectivePolicy
+                .isExactOpponentWattoRemovalAction(
+                    game, playerId, sourceCard, actionText)) {
+            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+            return steps;
+        }
 
         // EXCLUDE pulls that go INTO HAND / pile, not to table — these are not
         // deploy-step actions. The narrow exception is an upload that fetches a

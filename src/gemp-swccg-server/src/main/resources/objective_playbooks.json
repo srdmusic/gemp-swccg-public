@@ -5875,7 +5875,7 @@
       "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
-      "keyCharacterFilter": null,
+      "keyCharacterFilter": "Watto",
       "keySiteFilter": null,
       "weights": {},
       "frontBp": "12_180",
@@ -5959,9 +5959,9 @@
           "mode": "allOf",
           "alternatives": [
             {
-              "relation": "onTable",
+              "relation": "presentAt",
               "controller": "any",
-              "actorFilterKey": "Watto_present_at_Wattos_Junkyard",
+              "actorFilterKey": "Watto",
               "locationFilterKey": "Wattos_Junkyard",
               "locationFragments": [
                 "watto's junkyard"
@@ -5971,7 +5971,7 @@
                 "value": 1
               },
               "includeExcludedFromBattle": true,
-              "scoreRole": "flipProgress",
+              "scoreRole": "actorToLocation",
               "sourceText": "leg 1: spot Watto PRESENT AT Watto's Junkyard (Card12_180.java L163). Filters.Watto is a TITLE filter, not a persona (no Persona.WATTO exists; printings 11_65 and 11_66 both match). presentAt, not at: the opponent's 8-Force Watto-removal counter uses the strictly wider at() and can bin a Watto the flip gate cannot see. Ownership-free spot."
             },
             {
