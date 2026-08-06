@@ -144,6 +144,7 @@ public class RandoCalAi extends HeuristicAiBase {
     private String lastPendingDeployType = null;  // Track pending deploy for confirmation
     private Integer pendingMovePhysicalCardId;
     private Integer pendingMoveActionSourcePermanentCardId;
+    private Integer pendingHiddenPathCorridorDestinationPermanentCardId;
     private Integer pendingTdigwattLandoPermanentCardId;
     private Integer pendingTdigwattActionSourcePermanentCardId;
     private Integer pendingTdigwattDestinationPermanentCardId;
@@ -1308,13 +1309,92 @@ public class RandoCalAi extends HeuristicAiBase {
             AwaitingDecision parentDecision) {
         if (context == null || selected == null
                 || context.getPhase() != Phase.MOVE
-                || context.getDecisionType() == null
-                || !context.getDecisionType()
-                    .contains("ACTION_CHOICE")) {
+                || context.getDecisionType() == null) {
+            return;
+        }
+        String normalizedPrompt = context.getDecisionText() != null
+                ? context.getDecisionText().trim()
+                    .toLowerCase(Locale.ROOT)
+                : "";
+        PhysicalCard pendingMoveSource = findCardByPermanentId(
+                context.getGameState(),
+                pendingMoveActionSourcePermanentCardId);
+        boolean hiddenPathCorridorChild =
+                "CARD_SELECTION".equals(
+                    context.getDecisionType())
+                && pendingMoveSource != null
+                && context.getPlayerId().equals(
+                    pendingMoveSource.getOwner())
+                && "226_23".equals(
+                    pendingMoveSource.getBlueprintId(true))
+                && (normalizedPrompt.startsWith(
+                        "choose card to move from")
+                    || normalizedPrompt.startsWith(
+                        "choose card to move to"));
+        if (hiddenPathCorridorChild) {
+            PhysicalCard selectedCard = null;
+            try {
+                selectedCard = context.getGameState() != null
+                        ? context.getGameState().findCardById(
+                            Integer.parseInt(
+                                selected.getActionId()))
+                        : null;
+            } catch (NumberFormatException ignored) {
+            }
+            if (selectedCard == null
+                    || selectedCard.getBlueprint() == null
+                    || selectedCard.getBlueprint()
+                        .getCardCategory()
+                        != CardCategory.LOCATION) {
+                pendingMoveActionSourcePermanentCardId = null;
+                pendingHiddenPathCorridorDestinationPermanentCardId = null;
+            } else if (normalizedPrompt.equals(
+                    "choose card to move to")
+                    || normalizedPrompt.startsWith(
+                        "choose card to move to,")) {
+                pendingHiddenPathCorridorDestinationPermanentCardId =
+                        selectedCard.getPermanentCardId();
+            } else if (normalizedPrompt.equals(
+                    "choose card to move from")
+                    || normalizedPrompt.startsWith(
+                        "choose card to move from,")) {
+                pendingHiddenPathCorridorDestinationPermanentCardId = null;
+            }
+            return;
+        }
+        if ("CARD_SELECTION".equals(
+                    context.getDecisionType())
+                && context.getDecisionText() != null
+                && context.getDecisionText().trim()
+                    .toLowerCase(Locale.ROOT)
+                    .startsWith("choose jedi to relocate")
+                && context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isHiddenPathObjectiveFamily()
+                && context.getObjectiveAnalyzer().isFlipped()) {
+            pendingMovePhysicalCardId = null;
+            try {
+                PhysicalCard selectedJedi =
+                        context.getGameState() != null
+                            ? context.getGameState().findCardById(
+                                Integer.parseInt(
+                                    selected.getActionId()))
+                            : null;
+                if (selectedJedi != null) {
+                    pendingMovePhysicalCardId =
+                            selectedJedi.getCardId();
+                }
+            } catch (NumberFormatException ignored) {
+            }
             return;
         }
         pendingMovePhysicalCardId = null;
         pendingMoveActionSourcePermanentCardId = null;
+        pendingHiddenPathCorridorDestinationPermanentCardId = null;
+        if (!context.getDecisionType()
+                .contains("ACTION_CHOICE")) {
+            return;
+        }
         int index = context.getActionIds().indexOf(
                 selected.getActionId());
         if (index < 0
@@ -1326,6 +1406,40 @@ public class RandoCalAi extends HeuristicAiBase {
                 context.getActionTexts().get(index);
         String actionTextLower = actionText != null
                 ? actionText.toLowerCase(Locale.ROOT) : "";
+        PhysicalCard actionSource =
+                AiActionSourceProvenance
+                    .selectedActionSource(
+                        parentDecision,
+                        selected.getActionId());
+        boolean exactHiddenPathRelocation =
+                context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isHiddenPathBackRelocateAction(
+                        currentGame, context.getPlayerId(),
+                        actionSource, actionText);
+        if (exactHiddenPathRelocation) {
+            pendingMoveActionSourcePermanentCardId =
+                    actionSource.getPermanentCardId();
+            return;
+        }
+        boolean exactHiddenPathCorridor =
+                context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isHiddenPathObjectiveFamily()
+                && !context.getObjectiveAnalyzer().isFlipped()
+                && actionSource != null
+                && context.getPlayerId().equals(
+                    actionSource.getOwner())
+                && "226_23".equals(
+                    actionSource.getBlueprintId(true))
+                && "Move Jedi Survivor here to a site"
+                    .equals(actionText);
+        if (exactHiddenPathCorridor) {
+            pendingMoveActionSourcePermanentCardId =
+                    actionSource.getPermanentCardId();
+            pendingHiddenPathCorridorDestinationPermanentCardId = null;
+            return;
+        }
         if (!actionTextLower.contains("move using landspeed")
                 && !actionTextLower.contains("move using hyperspeed")
                 && !actionTextLower.contains("embark")
@@ -1344,11 +1458,6 @@ public class RandoCalAi extends HeuristicAiBase {
                 pendingMovePhysicalCardId =
                         attachedCard.getCardId();
             }
-            PhysicalCard actionSource =
-                    AiActionSourceProvenance
-                        .selectedActionSource(
-                            parentDecision,
-                            selected.getActionId());
             if (actionSource != null) {
                 pendingMoveActionSourcePermanentCardId =
                         actionSource.getPermanentCardId();
@@ -1710,6 +1819,26 @@ public class RandoCalAi extends HeuristicAiBase {
                 clearPendingTdigwattLandoMove();
             }
         }
+        boolean hiddenPathRelocationMoverChild =
+                "CARD_SELECTION".equals(decisionType.name())
+                && promptLower.trim().startsWith(
+                    "choose jedi to relocate");
+        PhysicalCard pendingMoveActionSource =
+                findCardByPermanentId(
+                    gameState,
+                    pendingMoveActionSourcePermanentCardId);
+        boolean hiddenPathCorridorChild =
+                "CARD_SELECTION".equals(decisionType.name())
+                && pendingMoveActionSource != null
+                && playerId.equals(
+                    pendingMoveActionSource.getOwner())
+                && "226_23".equals(
+                    pendingMoveActionSource
+                        .getBlueprintId(true))
+                && (promptLower.trim().startsWith(
+                        "choose card to move from")
+                    || promptLower.trim().startsWith(
+                        "choose card to move to"));
         if (pendingMovePhysicalCardId != null
                 || pendingMoveActionSourcePermanentCardId != null) {
             if ("CARD_SELECTION".equals(
@@ -1721,7 +1850,12 @@ public class RandoCalAi extends HeuristicAiBase {
                         || promptLower.contains(
                             "choose where to disembark")
                         || promptLower.contains(
-                            "choose where to shuttle"))) {
+                            "choose where to shuttle")
+                        || promptLower.trim().startsWith(
+                            "choose jedi to relocate")
+                        || promptLower.trim().startsWith(
+                            "choose site to relocate ")
+                        || hiddenPathCorridorChild)) {
                 if (pendingMovePhysicalCardId != null) {
                     evalContext.setExtra(
                         MovePhysicalCardResolver
@@ -1735,12 +1869,25 @@ public class RandoCalAi extends HeuristicAiBase {
                             .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA,
                         pendingMoveActionSourcePermanentCardId);
                 }
+                if (hiddenPathCorridorChild
+                        && pendingHiddenPathCorridorDestinationPermanentCardId
+                            != null) {
+                    evalContext.setExtra(
+                        com.gempukku.swccgo.ai.models.common.strategy
+                            .ObjectiveAnalyzer
+                            .HIDDEN_PATH_CORRIDOR_DESTINATION_PERMANENT_CARD_ID_EXTRA,
+                        pendingHiddenPathCorridorDestinationPermanentCardId);
+                }
             }
             // The selected top-level movement action's next decision owns this
             // provenance. If the expected child is absent or unreadable, fail
             // open instead of leaking the physical card into a later move.
             pendingMovePhysicalCardId = null;
-            pendingMoveActionSourcePermanentCardId = null;
+            if (!hiddenPathRelocationMoverChild
+                    && !hiddenPathCorridorChild) {
+                pendingMoveActionSourcePermanentCardId = null;
+                pendingHiddenPathCorridorDestinationPermanentCardId = null;
+            }
         }
         PhysicalCard pendingDeployActionSource =
                 findCardByPermanentId(

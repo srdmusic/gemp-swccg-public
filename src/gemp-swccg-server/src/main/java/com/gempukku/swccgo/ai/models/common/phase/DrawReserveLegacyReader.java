@@ -1,13 +1,12 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.strategy.ForceReserveService;
-import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.state.GameState;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
-import java.util.function.BooleanSupplier;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 /** V194: shared AI read boundary feeding the pure DRAW reserve assessment. */
@@ -20,7 +19,7 @@ public final class DrawReserveLegacyReader {
                                 String playerId,
                                 int turnNumber,
                                 Supplier<ForceReserveService.Facts> reserveFacts,
-                                BooleanSupplier hiddenPathUnflipped,
+                                IntSupplier hiddenPathTransitReserve,
                                 Logger logger) {
         try {
             int contestedCount = 0;
@@ -61,27 +60,14 @@ public final class DrawReserveLegacyReader {
                     maintenanceCost);
 
             try {
-                if (hiddenPathUnflipped.getAsBoolean()) {
-                    int corridorCharacters = 0;
-                    for (PhysicalCard loc : gameState.getLocationsInOrder()) {
-                        if (loc == null || loc.getTitle() == null
-                                || !loc.getTitle().toLowerCase(java.util.Locale.ROOT)
-                                        .contains("underground corridor")) {
-                            continue;
-                        }
-                        for (PhysicalCard card : gameState.getCardsAtLocation(loc)) {
-                            if (card != null && playerId.equals(card.getOwner())
-                                    && card.getBlueprint() != null
-                                    && card.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                corridorCharacters++;
-                            }
-                        }
-                    }
-                    if (corridorCharacters > 0) {
-                        assessment = assessment.plusCorridorCharacters(corridorCharacters);
-                        logger.warn("V67z TRANSIT RESERVE: {} Jedi at Underground Corridor — reserve +{} Force for the move-phase transit off Mapuzo",
-                                corridorCharacters, corridorCharacters);
-                    }
+                int transitReserve = Math.max(
+                        0, hiddenPathTransitReserve.getAsInt());
+                if (transitReserve > 0) {
+                    assessment = assessment
+                            .plusHiddenPathTransitReserve(
+                                transitReserve);
+                    logger.warn("V67z TRANSIT RESERVE: reserve +{} Force for legal Underground Corridor exits still needed to flip Hidden Path",
+                            transitReserve);
                 }
             } catch (Exception e) {
                 logger.debug("V67z transit-reserve error: {}", e.getMessage());

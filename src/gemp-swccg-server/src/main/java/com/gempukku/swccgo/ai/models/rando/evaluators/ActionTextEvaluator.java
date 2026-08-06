@@ -220,7 +220,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .isShieldMainGeneratorPriorityCannonDeployAction(
                             game, context.getPlayerId(),
                             actionSource, actionText);
+            boolean exactHiddenPathJabiimRoute =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isHiddenPathJabiimRouteAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
             if (!exactShieldCannonDeploy
+                    && !exactHiddenPathJabiimRoute
                     && (blocked.contains(actionId)
                         || blocked.contains(actionText))) {
                 // V167 (Steve, 2026-06): NEVER hard-veto a phase-fundamental action.
@@ -4613,10 +4620,31 @@ public class ActionTextEvaluator extends ActionEvaluator {
             else if (actionText.contains("Disembark") || actionText.contains("Relocate") ||
                      actionText.contains("Transfer")) {
                 action.setActionType(ActionType.MOVE);
-                MoveTransitPolicy.Contribution residualTransfer =
-                    MoveTransitPolicy.residualTransfer();
-                action.addReasoning(
-                    residualTransfer.reason(), residualTransfer.delta());
+                boolean exactHiddenPathRelocation =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isHiddenPathBackRelocateAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+                if (exactHiddenPathRelocation) {
+                    boolean useful = exactDeployAnalyzer
+                        .hasUsefulHiddenPathRelocation(
+                            game, context.getPlayerId());
+                    if (useful) {
+                        action.addReasoning(
+                            "HIDDEN PATH RELOCATE: advance the two-battleground payoff without breaking the two-site hold",
+                            5000.0f);
+                    } else {
+                        action.hardVeto(
+                            "HIDDEN PATH RELOCATE: no hold-safe battleground progress, preserve 2 Force");
+                    }
+                } else {
+                    MoveTransitPolicy.Contribution residualTransfer =
+                        MoveTransitPolicy.residualTransfer();
+                    action.addReasoning(
+                        residualTransfer.reason(),
+                        residualTransfer.delta());
+                }
             }
 
             // ========== Ship-dock ==========
@@ -4972,14 +5000,25 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     textLower)) {
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer hpTransit =
                     context.getObjectiveAnalyzer();
-                boolean onHiddenPath = hpTransit != null && hpTransit.isAnalyzed()
-                    && hpTransit.getObjectiveTitle() != null
-                    && hpTransit.getObjectiveTitle().toLowerCase(Locale.ROOT).contains("hidden path");
+                boolean exactFrontRoute = hpTransit != null
+                    && hpTransit.isHiddenPathObjectiveFamily()
+                    && !hpTransit.isFlipped()
+                    && actionSource != null
+                    && "226_23".equals(
+                        actionSource.getBlueprintId(true))
+                    && "Move Jedi Survivor here to a site"
+                        .equals(actionText);
+                boolean productive = exactFrontRoute
+                    && hpTransit.hasUsefulHiddenPathCorridorTransit(
+                        game, context.getPlayerId());
                 MoveTransitPolicy.Contribution v60Transit =
-                    MoveTransitPolicy.positiveHiddenPathTransit(onHiddenPath);
+                    MoveTransitPolicy.positiveHiddenPathTransit(productive);
                 action.addReasoning(v60Transit.reason(), v60Transit.delta());
-                if (onHiddenPath) {
+                if (productive) {
                     logger.warn("V60 HIDDEN PATH TRANSIT: '{}' — +20000 (R4 band; CORRECT outward move, unlike landspeed)", actionText);
+                } else if (exactFrontRoute) {
+                    action.hardVeto(
+                        "HIDDEN PATH TRANSIT: no formation-safe distinct-site advance is available");
                 }
             }
 

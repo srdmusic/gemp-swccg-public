@@ -321,40 +321,22 @@ public class DeployEvaluator extends ActionEvaluator {
             }
         }
 
-        // === V67z DEPLOY TRANSIT RESERVE (Steve, 2026-06): deploy-phase twin of the
-        // DrawEvaluator V67z reserve. On Hidden Path (unflipped), each Jedi staged at
-        // Mapuzo: Underground Corridor needs 1 Force in the MOVE phase to transit off
-        // Mapuzo to a non-Mapuzo site (the objective's flip condition). V67z reserves it
-        // in the DRAW phase, but DEPLOY runs before MOVE and was spending all Force on
-        // Jedi Survivor / Jabiim deploys — the move phase had ~0 Force, so Rando never
-        // transited and the objective never flipped (HIDDEN PATH CHARGE replay). Hold it
-        // back here too (mirror of V48/V79). Capped at 3 (you only need ~2 transits to
-        // flip; don't over-starve deploys).
+        // === V67z DEPLOY TRANSIT RESERVE (Steve, 2026-06): exact Hidden Path
+        // Corridor exits still needed for the two-site flip gate. The shared
+        // analyzer mirrors the physical action: Jedi Survivor, active at the
+        // exact Corridor, not already moved, and a legal unfilled destination.
         int v67zTransitReserve = 0;
         if (vaderCheckGs != null) {
             try {
                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v67zObj =
                     context.getObjectiveAnalyzer();
-                if (v67zObj != null && v67zObj.isAnalyzed() && !v67zObj.isFlipped()
-                        && v67zObj.getObjectiveTitle() != null
-                        && v67zObj.getObjectiveTitle().toLowerCase(Locale.ROOT).contains("hidden path")) {
-                    String v67zPid = context.getPlayerId();
-                    int v67zCorridorJedi = 0;
-                    for (PhysicalCard v67zLoc : vaderCheckGs.getLocationsInOrder()) {
-                        if (v67zLoc == null || v67zLoc.getTitle() == null
-                                || !v67zLoc.getTitle().toLowerCase(Locale.ROOT).contains("underground corridor")) continue;
-                        for (PhysicalCard v67zC : vaderCheckGs.getCardsAtLocation(v67zLoc)) {
-                            if (v67zC != null && v67zPid.equals(v67zC.getOwner())
-                                    && v67zC.getBlueprint() != null
-                                    && v67zC.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                v67zCorridorJedi++;
-                            }
-                        }
-                    }
-                    if (v67zCorridorJedi > 0) {
-                        v67zTransitReserve = Math.min(v67zCorridorJedi, 3);
-                        LOG.warn("V67z DEPLOY TRANSIT RESERVE: {} Jedi at Underground Corridor — hold {} Force in deploy for the move-phase transit off Mapuzo",
-                            v67zCorridorJedi, v67zTransitReserve);
+                if (v67zObj != null) {
+                    v67zTransitReserve = v67zObj
+                        .getHiddenPathMoveForceReserve(
+                            context.getGame(), context.getPlayerId());
+                    if (v67zTransitReserve > 0) {
+                        LOG.warn("V67z HIDDEN PATH MOVE RESERVE: hold {} Force for the exact safe route that advances the current face",
+                            v67zTransitReserve);
                     }
                 }
             } catch (Exception e) { LOG.debug("V67z deploy transit-reserve error: {}", e.getMessage()); }
@@ -620,7 +602,14 @@ public class DeployEvaluator extends ActionEvaluator {
                     && deployObjectiveAnalyzer
                         .isShieldBlizzardFourWarriorDeployActionSource(
                             game, playerId, deployActionSource, actionText);
+            boolean exactHiddenPathJabiimRoute =
+                    deployObjectiveAnalyzer != null
+                    && deployObjectiveAnalyzer
+                        .isHiddenPathJabiimRouteAction(
+                            game, playerId,
+                            deployActionSource, actionText);
             boolean blockedResponse = !exactShieldCannonDeploy
+                    && !exactHiddenPathJabiimRoute
                     && v159DeployBlocked != null
                     && !v159DeployBlocked.isEmpty()
                     && (v159DeployBlocked.contains(actionId)
@@ -651,6 +640,16 @@ public class DeployEvaluator extends ActionEvaluator {
                 actions.add(action);
                 continue;
             }
+            if (deployObjectiveAnalyzer != null
+                    && deployObjectiveAnalyzer
+                        .wouldHiddenPathRouteActionConsumeTransitReserve(
+                            game, playerId, deployActionSource,
+                            actionText, availableForce)) {
+                action.hardVeto(
+                    "OBJECTIVE.HIDDEN_PATH.TRANSIT_FORCE_RESERVE: preserve the exact Force needed for ready Underground Corridor exits");
+                actions.add(action);
+                continue;
+            }
             if (exactShieldFreeWarrior) {
                 // The action deploys a warrior for free. Blizzard 4 is only
                 // the source, so none of its own deploy or maintenance facts
@@ -665,6 +664,16 @@ public class DeployEvaluator extends ActionEvaluator {
                             deployActionSource, actionText)) {
                 action.hardVeto(
                     "OBJECTIVE.COUNTED_OPERATIVE.SITE_ROUTE_EXHAUSTED: the three-site route is complete or no legal battleground candidate remains");
+                actions.add(action);
+                continue;
+            }
+            if (deployObjectiveAnalyzer != null
+                    && deployObjectiveAnalyzer
+                        .isExhaustedHiddenPathJabiimRouteAction(
+                            game, playerId,
+                            deployActionSource, actionText)) {
+                action.hardVeto(
+                    "OBJECTIVE.HIDDEN_PATH.JABIIM_ROUTE_EXHAUSTED: no legal Jabiim location remains in Reserve Deck");
                 actions.add(action);
                 continue;
             }

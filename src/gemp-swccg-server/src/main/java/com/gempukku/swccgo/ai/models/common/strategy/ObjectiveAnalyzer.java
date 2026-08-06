@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveSideBlueprints;
 import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
@@ -61,6 +62,8 @@ public class ObjectiveAnalyzer {
             "objectiveDockingTransitSourceCardId";
     public static final String DOCKING_TRANSIT_DESTINATION_CARD_ID_EXTRA =
             "objectiveDockingTransitDestinationCardId";
+    public static final String HIDDEN_PATH_CORRIDOR_DESTINATION_PERMANENT_CARD_ID_EXTRA =
+            "hiddenPathCorridorDestinationPermanentCardId";
     public static final String OBJECTIVE_DEPLOYING_CARD_ID_EXTRA =
             "objectiveDeployingPhysicalCardId";
     private static final String FIRST_ORDER_NAVY_BLUEPRINT_ID =
@@ -3778,15 +3781,21 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
-    private static boolean isActorToRuntimeLocationAlternative(
+    private boolean isActorToRuntimeLocationAlternative(
             FlipLocationAlternative alternative) {
         return alternative != null
                 && (isActorAtRelation(alternative)
                     || "controlWith".equals(
-                        alternative.relation))
+                        alternative.relation)
+                    || isHiddenPathObjectiveFamily()
+                        && "occupyWith".equals(
+                            alternative.relation))
                 && ("actorToLocation".equals(alternative.scoreRole)
                     || isCountedOperativeFormationAlternative(
-                        alternative))
+                        alternative)
+                    || isHiddenPathObjectiveFamily()
+                        && "flipProgress".equals(
+                            alternative.scoreRole))
                 && alternative.actorFilterKey != null
                 && alternative.locationFilterKey != null
                 && alternative.count != null
@@ -4114,9 +4123,7 @@ public class ObjectiveAnalyzer {
                     .getLocationThatCardIsPresentAt(gameState, mover);
             PostFlipLocationRisk risk = assessPostFlipLocationRisk(
                     game, playerId, location);
-            if (!risk.applies() || !risk.inScope() || risk.flipBackNow()
-                    || !isSolePresenceSourceAtLocation(
-                            game, playerId, mover, location)) {
+            if (!risk.applies() || !risk.inScope() || risk.flipBackNow()) {
                 return false;
             }
 
@@ -4124,6 +4131,22 @@ public class ObjectiveAnalyzer {
                     findSupportedPostFlipAlternative(
                             game, playerId, location);
             if (alternative == null) return false;
+            if (isHiddenPathSelfOccupyWithFlipBackAlternative(
+                    alternative)) {
+                com.gempukku.swccgo.filters.Filter actorFilter =
+                        resolveFilter(alternative.actorFilterKey);
+                return risk.criticalIfSelfControlLost()
+                        && removedGroupContainsMatchingActor(
+                            game, playerId, location,
+                            alternative, mover, null, actorFilter)
+                        && !hasOtherMatchingActorOutsideRemovedGroup(
+                            game, playerId, location,
+                            alternative, mover, null);
+            }
+            if (!isSolePresenceSourceAtLocation(
+                    game, playerId, mover, location)) {
+                return false;
+            }
             String opponent = gameState.getOpponent(playerId);
             if (opponent == null) return false;
             Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
@@ -4512,7 +4535,9 @@ public class ObjectiveAnalyzer {
                 alternative.spotOverride);
 
         if (isCountedOperativeObjectiveFamily()
-                && isSelfOccupyCountedFlipBackAlternative(alternative)) {
+                    && isSelfOccupyCountedFlipBackAlternative(alternative)
+                || isHiddenPathSelfOccupyWithFlipBackAlternative(
+                    alternative)) {
             int required = expectedCount(
                     game, playerId, alternative.count);
             String comparator = alternative.count.comparator;
@@ -4644,7 +4669,9 @@ public class ObjectiveAnalyzer {
                         alternative.count.referenceController));
         return opponentControl
                 || isCountedOperativeObjectiveFamily()
-                    && isSelfOccupyCountedFlipBackAlternative(alternative);
+                    && isSelfOccupyCountedFlipBackAlternative(alternative)
+                || isHiddenPathSelfOccupyWithFlipBackAlternative(
+                    alternative);
     }
 
     private static boolean isSelfOccupyCountedFlipBackAlternative(
@@ -4652,6 +4679,21 @@ public class ObjectiveAnalyzer {
         return alternative != null
                 && "occupy".equals(alternative.relation)
                 && "self".equals(alternative.controller)
+                && alternative.count != null
+                && alternative.count.value != null
+                && ("<".equals(alternative.count.comparator)
+                    || "<=".equals(alternative.count.comparator));
+    }
+
+    private boolean isHiddenPathSelfOccupyWithFlipBackAlternative(
+            FlipLocationAlternative alternative) {
+        return isHiddenPathObjectiveFamily()
+                && alternative != null
+                && "occupyWith".equals(alternative.relation)
+                && "self".equals(alternative.controller)
+                && "Jedi".equals(alternative.actorFilterKey)
+                && "non_Mapuzo_site".equals(
+                    alternative.locationFilterKey)
                 && alternative.count != null
                 && alternative.count.value != null
                 && ("<".equals(alternative.count.comparator)
@@ -7231,6 +7273,15 @@ public class ObjectiveAnalyzer {
                             gameState, location, controller, overrides)
                     : game.getModifiersQuerying().occupiesLocation(
                             gameState, location, controller, overrides);
+            if (isHiddenPathObjectiveFamily()
+                    && "occupyWith".equals(relation)
+                    && "Jedi".equals(actorFilterKey)) {
+                return relationSatisfied
+                        && hasOwnedActiveJediAt(
+                            game, controller, location, null,
+                            Boolean.TRUE.equals(
+                                includeExcludedFromBattle));
+            }
             return relationSatisfied && hasMatchingActorAtLocation(
                     game, controller, location, actorFilterKey,
                     includeExcludedFromBattle, true);
@@ -10077,10 +10128,12 @@ public class ObjectiveAnalyzer {
                     || "111_4".equals(objectiveBlueprintId)
                     || "201_39".equals(objectiveBlueprintId)
                     || "7_137".equals(objectiveBlueprintId)
-                    || "7_298".equals(objectiveBlueprintId))
+                    || "7_298".equals(objectiveBlueprintId)
+                    || "226_28".equals(objectiveBlueprintId))
                     || isFlipped
                     && (isImperialEntanglementsFamily()
-                        || isCountedOperativeObjectiveFamily()));
+                        || isCountedOperativeObjectiveFamily()
+                        || isHiddenPathObjectiveFamily()));
     }
 
     public boolean hasObjectiveLocationRouteCandidateInReserve(
@@ -10097,6 +10150,18 @@ public class ObjectiveAnalyzer {
             SwccgGame game, String playerId,
             PhysicalCard sourceCard) {
         if (!usesObjectiveLocationPullSequence()) return false;
+        if (isHiddenPathObjectiveFamily()) {
+            List<PhysicalCard> reserve = game.getGameState()
+                    .getReserveDeck(playerId);
+            if (reserve == null) return false;
+            for (PhysicalCard card : reserve) {
+                if (isNativeObjectiveLocationRouteCandidate(
+                        game, playerId, sourceCard, card)) {
+                    return true;
+                }
+            }
+            return false;
+        }
         if (isCountedOperativeObjectiveFamily()) {
             int routeSiteTarget = getCountedOperativeRouteSiteTarget();
             if (routeSiteTarget <= 0) return false;
@@ -10189,6 +10254,651 @@ public class ObjectiveAnalyzer {
                 || "7_137_BACK".equals(objectiveBlueprintId)
                 || "7_298".equals(objectiveBlueprintId)
                 || "7_298_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isHiddenPathObjectiveFamily() {
+        return analyzed && ("226_28".equals(objectiveBlueprintId)
+                || "226_28_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isHiddenPathJabiimRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isHiddenPathObjectiveFamily()
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "Deploy a Jabiim location".equals(actionText);
+    }
+
+    public boolean isExhaustedHiddenPathJabiimRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isHiddenPathJabiimRouteAction(
+                    game, playerId, sourceCard, actionText)
+                && !hasObjectiveLocationRouteCandidateInReserve(
+                    game, playerId, sourceCard);
+    }
+
+    public boolean isHiddenPathHolocronAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return "226_28".equals(objectiveBlueprintId)
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "Deploy a holocron from Reserve Deck".equals(
+                    actionText);
+    }
+
+    public boolean isHiddenPathSurvivorRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return "226_28".equals(objectiveBlueprintId)
+                && !isFlipped
+                && isHiddenPathStackedSurvivorDeployAction(
+                    game, playerId, sourceCard, actionText);
+    }
+
+    public boolean isHiddenPathStackedSurvivorDeployAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isHiddenPathObjectiveFamily()
+                || game == null || playerId == null
+                || sourceCard == null
+                || !playerId.equals(sourceCard.getOwner())
+                || !"Deploy a Jedi Survivor stacked here".equals(
+                    actionText)) {
+            return false;
+        }
+        try {
+            return "226_14".equals(
+                    sourceCard.getBlueprintId(true));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isHiddenPathBackRelocateAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isHiddenPathObjectiveFamily() && isFlipped
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "Relocate a Jedi".equals(actionText);
+    }
+
+    public record HiddenPathRelocationAssessment(
+            boolean applies,
+            boolean legal,
+            boolean preservesHold,
+            int holdSitesAfter,
+            int battlegroundSitesBefore,
+            int battlegroundSitesAfter) {
+        private static HiddenPathRelocationAssessment none() {
+            return new HiddenPathRelocationAssessment(
+                    false, false, false, 0, 0, 0);
+        }
+
+        public int battlegroundGain() {
+            return battlegroundSitesAfter
+                    - battlegroundSitesBefore;
+        }
+    }
+
+    /**
+     * Simulates the back-side relocation before the bot commits its two Force.
+     * The mover is removed from its origin and added at the destination, so a
+     * lone Jedi may not collapse two qualifying hold sites into one.
+     */
+    public HiddenPathRelocationAssessment assessHiddenPathRelocation(
+            SwccgGame game, String playerId,
+            PhysicalCard mover, PhysicalCard destination) {
+        if (!isHiddenPathObjectiveFamily() || !isFlipped
+                || game == null || playerId == null
+                || mover == null || destination == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return HiddenPathRelocationAssessment.none();
+        }
+        try {
+            GameState gameState = game.getGameState();
+            if (!playerId.equals(mover.getOwner())
+                    || mover.isUndercover()
+                    || !isActiveForSpot(game, mover, true)
+                    || !Filters.Jedi.accepts(
+                        gameState, game.getModifiersQuerying(), mover)
+                    || !Filters.hasNotPerformedRegularMove.accepts(
+                        gameState, game.getModifiersQuerying(), mover)) {
+                return new HiddenPathRelocationAssessment(
+                        true, false, false, 0, 0, 0);
+            }
+            PhysicalCard origin = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        gameState, mover);
+            if (origin == null
+                    || samePhysicalLocation(origin, destination)) {
+                return new HiddenPathRelocationAssessment(
+                        true, false, false, 0, 0, 0);
+            }
+
+            boolean originBattleground = Filters.battleground_site
+                    .accepts(gameState, game.getModifiersQuerying(), origin);
+            boolean originJabiim = Filters.Jabiim_site
+                    .accepts(gameState, game.getModifiersQuerying(), origin);
+            boolean destinationBattleground = Filters.battleground_site
+                    .accepts(
+                        gameState, game.getModifiersQuerying(), destination);
+            boolean destinationJabiim = Filters.Jabiim_site
+                    .accepts(
+                        gameState, game.getModifiersQuerying(), destination);
+            boolean routeMatchesCardText =
+                    originBattleground && destinationJabiim
+                    || originJabiim && destinationBattleground;
+            boolean legal = routeMatchesCardText
+                    && Filters.locationCanBeRelocatedTo(
+                        mover, true, 0).accepts(
+                            gameState,
+                            game.getModifiersQuerying(), destination);
+            if (!legal) {
+                return new HiddenPathRelocationAssessment(
+                        true, false, false, 0, 0, 0);
+            }
+
+            int holdSitesAfter = 0;
+            int battlegroundSitesBefore = 0;
+            int battlegroundSitesAfter = 0;
+            List<PhysicalCard> locations = gameState.getTopLocations();
+            if (locations == null) {
+                return new HiddenPathRelocationAssessment(
+                        true, true, false, 0, 0, 0);
+            }
+            for (PhysicalCard location : locations) {
+                if (location == null) continue;
+                boolean battleground = Filters.battleground_site
+                        .accepts(
+                            gameState,
+                            game.getModifiersQuerying(), location);
+                boolean holdOccupiedAfter = hasOwnedActiveJediAt(
+                        game, playerId, location, mover, true)
+                        || samePhysicalLocation(
+                            location, destination);
+                boolean battlegroundOccupiedBefore =
+                        hasOwnedActiveJediAt(
+                            game, playerId, location, null, false);
+                boolean battlegroundOccupiedAfter =
+                        hasOwnedActiveJediAt(
+                            game, playerId, location, mover, false)
+                        || samePhysicalLocation(location, destination)
+                            && isActiveForSpot(game, mover, false);
+                if (isHiddenPathHoldLocation(
+                        game, playerId, location)
+                        && holdOccupiedAfter) {
+                    holdSitesAfter++;
+                }
+                if (battleground && battlegroundOccupiedBefore) {
+                    battlegroundSitesBefore++;
+                }
+                if (battleground && battlegroundOccupiedAfter) {
+                    battlegroundSitesAfter++;
+                }
+            }
+            return new HiddenPathRelocationAssessment(
+                    true, true, holdSitesAfter >= 2,
+                    holdSitesAfter, battlegroundSitesBefore,
+                    battlegroundSitesAfter);
+        } catch (Exception e) {
+            LOG.debug("Hidden Path relocation assessment failed: {}",
+                    e.getMessage());
+            return HiddenPathRelocationAssessment.none();
+        }
+    }
+
+    /** Integer.MIN_VALUE means the mover has no legal hold-safe route. */
+    public int getBestHiddenPathRelocationBattlegroundGain(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (game == null || game.getGameState() == null) {
+            return Integer.MIN_VALUE;
+        }
+        int best = Integer.MIN_VALUE;
+        List<PhysicalCard> locations =
+                game.getGameState().getTopLocations();
+        if (locations == null) return best;
+        for (PhysicalCard destination : locations) {
+            HiddenPathRelocationAssessment assessment =
+                    assessHiddenPathRelocation(
+                        game, playerId, mover, destination);
+            if (assessment.legal()
+                    && assessment.preservesHold()
+                    && assessment.battlegroundSitesBefore() < 2
+                    && isHiddenPathRelocationFormationSafe(
+                        game, playerId, mover, destination)) {
+                best = Math.max(
+                        best, assessment.battlegroundGain());
+            }
+        }
+        return best;
+    }
+
+    public boolean hasUsefulHiddenPathRelocation(
+            SwccgGame game, String playerId) {
+        if (!isHiddenPathObjectiveFamily() || !isFlipped
+                || game == null || game.getGameState() == null) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (getBestHiddenPathRelocationBattlegroundGain(
+                    game, playerId, card) > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isHiddenPathRelocationFormationSafe(
+            SwccgGame game, String playerId,
+            PhysicalCard mover, PhysicalCard destination) {
+        if (game == null || playerId == null || mover == null
+                || destination == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard origin = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(gameState, mover);
+            return origin != null
+                    && FormationSafety.vetoMoveDestination(
+                        game, gameState, playerId,
+                        mover, destination) == null
+                    && FormationSafety.vetoMoveOrigin(
+                        game, gameState, playerId,
+                        mover, origin) == null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Exact V67z reserve for the Hidden Path's Underground Corridor action.
+     * The card action can move only an active Jedi Survivor that has not made
+     * a regular move, and each such move costs one Force. Reserve only the
+     * exits that can currently add distinct non-Mapuzo Jedi sites toward the
+     * two-site flip gate.
+     */
+    public int getHiddenPathCorridorTransitForceReserve(
+            SwccgGame game, String playerId) {
+        if (!"226_28".equals(objectiveBlueprintId)
+                || isFlipped || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            List<PhysicalCard> locations =
+                    gameState.getLocationsInOrder();
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (locations == null || permanents == null) return 0;
+
+            PhysicalCard corridor = null;
+            int occupiedHoldSites = 0;
+            Set<Integer> occupiedLocationIds = new HashSet<>();
+            for (PhysicalCard location : locations) {
+                if (location == null) continue;
+                if ("226_23".equals(location.getBlueprintId(true))) {
+                    corridor = location;
+                }
+                if (hasHiddenPathJediAt(
+                        game, playerId, location, null)) {
+                    occupiedHoldSites++;
+                    occupiedLocationIds.add(
+                            location.getPermanentCardId());
+                }
+            }
+            int sitesStillNeeded = Math.max(
+                    0, 2 - occupiedHoldSites);
+            if (corridor == null || sitesStillNeeded == 0) return 0;
+
+            Collection<PhysicalCard> survivors =
+                    Filters.filterActive(
+                        game, null,
+                        SpotOverride.INCLUDE_UNDERCOVER,
+                        Filters.and(
+                            Filters.owner(playerId),
+                            Filters.Jedi_Survivor,
+                            Filters.hasNotPerformedRegularMove,
+                            Filters.here(corridor)));
+            if (survivors == null || survivors.isEmpty()) return 0;
+
+            Set<Integer> legalUnfilledDestinationIds =
+                    new HashSet<>();
+            Set<Integer> legalSurvivorIds =
+                    new HashSet<>();
+            for (PhysicalCard destination : locations) {
+                if (destination == null
+                        || occupiedLocationIds.contains(
+                            destination.getPermanentCardId())
+                        || !isHiddenPathHoldLocation(
+                            game, playerId, destination)
+                        || !Filters.or(
+                                Filters.Jabiim_site,
+                                Filters.and(
+                                    Filters.opponents(playerId),
+                                    Filters.battleground_site))
+                            .accepts(
+                                gameState,
+                                game.getModifiersQuerying(),
+                                destination)) {
+                    continue;
+                }
+                for (PhysicalCard survivor : survivors) {
+                    if (Filters.canMoveToUsingLocationText(
+                            survivor, true, 1.0f, 0.0f)
+                            .accepts(
+                                gameState,
+                                game.getModifiersQuerying(), destination)
+                            && isHiddenPathCorridorTransitFormationSafe(
+                                game, playerId,
+                                survivor, destination)) {
+                        legalUnfilledDestinationIds.add(
+                                destination.getPermanentCardId());
+                        legalSurvivorIds.add(
+                                survivor.getPermanentCardId());
+                    }
+                }
+            }
+            return Math.min(
+                    sitesStillNeeded,
+                    Math.min(
+                        legalSurvivorIds.size(),
+                        legalUnfilledDestinationIds.size()));
+        } catch (Exception e) {
+            LOG.debug(
+                    "Hidden Path Corridor transit reserve unavailable: {}",
+                    e.getMessage());
+            return 0;
+        }
+    }
+
+    public boolean isHiddenPathCorridorTransitFormationSafe(
+            SwccgGame game, String playerId,
+            PhysicalCard survivor, PhysicalCard destination) {
+        if (!"226_28".equals(objectiveBlueprintId)
+                || isFlipped || game == null || playerId == null
+                || survivor == null || destination == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !isHiddenPathCorridorTransitCandidate(
+                    game, playerId, survivor)) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            if (!Filters.canMoveToUsingLocationText(
+                        survivor, true, 1.0f, 0.0f)
+                    .accepts(
+                        gameState,
+                        game.getModifiersQuerying(), destination)) {
+                return false;
+            }
+            PhysicalCard origin = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(gameState, survivor);
+            String opponent = gameState.getOpponent(playerId);
+            float nonSpyOpponentPower = 0.0f;
+            if (opponent != null) {
+                for (PhysicalCard card :
+                        gameState.getCardsAtLocation(destination)) {
+                    if (card == null || card.isUndercover()
+                            || !opponent.equals(card.getOwner())
+                            || card.getBlueprint() == null
+                            || !card.getBlueprint()
+                                .hasPowerAttribute()) {
+                        continue;
+                    }
+                    Float power = card.getBlueprint().getPower();
+                    if (power != null) {
+                        nonSpyOpponentPower += power;
+                    }
+                }
+            }
+            float ourPower = game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(
+                        gameState, destination,
+                        playerId, false, false);
+            return origin != null
+                    && !MoveDestinationPolicy
+                        .hiddenPathPreFlipSuicide(
+                            true, destination.getTitle(),
+                            nonSpyOpponentPower, ourPower)
+                        .applies()
+                    && FormationSafety.vetoMoveDestination(
+                        game, gameState, playerId,
+                        survivor, destination) == null
+                    && FormationSafety.vetoMoveOrigin(
+                        game, gameState, playerId,
+                        survivor, origin) == null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean hasFormationSafeHiddenPathCorridorTransitTo(
+            SwccgGame game, String playerId,
+            PhysicalCard destination) {
+        if (!"226_28".equals(objectiveBlueprintId)
+                || isFlipped || game == null || playerId == null
+                || destination == null
+                || game.getGameState() == null) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard survivor : permanents) {
+            if (isHiddenPathCorridorTransitFormationSafe(
+                    game, playerId, survivor, destination)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasUsefulHiddenPathCorridorTransit(
+            SwccgGame game, String playerId) {
+        return getHiddenPathCorridorTransitForceReserve(
+                game, playerId) > 0;
+    }
+
+    public int getHiddenPathBackRelocationForceReserve(
+            SwccgGame game, String playerId) {
+        return hasUsefulHiddenPathRelocation(game, playerId)
+                ? 2 : 0;
+    }
+
+    public int getHiddenPathMoveForceReserve(
+            SwccgGame game, String playerId) {
+        return Math.max(
+                getHiddenPathCorridorTransitForceReserve(
+                    game, playerId),
+                getHiddenPathBackRelocationForceReserve(
+                    game, playerId));
+    }
+
+    /** Exact parent-action payment hidden by the objective/effect source. */
+    public int getHiddenPathRouteActionForcePayment(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (isHiddenPathHolocronAction(
+                game, playerId, sourceCard, actionText)) {
+            return 2;
+        }
+        if (isHiddenPathStackedSurvivorDeployAction(
+                game, playerId, sourceCard, actionText)) {
+            return isFlipped ? 7 : 3;
+        }
+        if (isHiddenPathBackRelocateAction(
+                game, playerId, sourceCard, actionText)) {
+            return 2;
+        }
+        return 0;
+    }
+
+    public boolean wouldHiddenPathRouteActionConsumeTransitReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText,
+            int availableForce) {
+        int payment = getHiddenPathRouteActionForcePayment(
+                game, playerId, sourceCard, actionText);
+        int reserve = getHiddenPathMoveForceReserve(
+                game, playerId);
+        return payment > 0 && reserve > 0
+                && availableForce - payment < reserve;
+    }
+
+    public boolean isHiddenPathCorridorTransitCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isHiddenPathObjectiveFamily()
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            if (!isActiveForSpot(game, candidate, true)
+                    || !Filters.Jedi_Survivor.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    || !Filters.hasNotPerformedRegularMove.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)) {
+                return false;
+            }
+            PhysicalCard location = game.getModifiersQuerying()
+                    .getLocationThatCardIsPresentAt(
+                        game.getGameState(), candidate);
+            return location != null
+                    && "226_23".equals(
+                        location.getBlueprintId(true));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isHiddenPathFlipSite(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        return isHiddenPathObjectiveFamily()
+                && isHiddenPathHoldLocation(
+                    game, playerId, location);
+    }
+
+    public boolean advancesHiddenPathDistinctHoldSiteByMovingTo(
+            SwccgGame game, String playerId,
+            PhysicalCard mover, PhysicalCard destination) {
+        return "226_28".equals(objectiveBlueprintId)
+                && !isFlipped
+                && advancesPreFlipActorAtRuntimeLocation(
+                    game, playerId, mover, destination)
+                && classifyGateFormationPieceIfRemoved(
+                    game, playerId, mover)
+                    != FlipGateFormationRole.LAST_REQUIRED_ACTOR;
+    }
+
+    public boolean isHiddenPathJediHoldSiteOccupied(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        return isHiddenPathObjectiveFamily()
+                && hasHiddenPathJediAt(
+                    game, playerId, location, null);
+    }
+
+    private boolean isHiddenPathHoldLocation(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        if (game == null || playerId == null || location == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter filter =
+                resolveLocationFilter(
+                    "non_Mapuzo_site", playerId);
+        return filter != null && filter.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(), location);
+    }
+
+    private boolean hasHiddenPathJediAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location,
+            PhysicalCard ignoredJedi) {
+        if (!isHiddenPathHoldLocation(
+                game, playerId, location)) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card == null || card == ignoredJedi
+                    || !playerId.equals(card.getOwner())
+                    || card.isUndercover()
+                    || !isActiveForSpot(game, card, true)
+                    || !Filters.Jedi.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard actorLocation =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            game.getGameState(), card);
+            if (samePhysicalLocation(
+                    actorLocation, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasOwnedActiveJediAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location,
+            PhysicalCard ignoredJedi,
+            boolean includeExcludedFromBattle) {
+        if (game == null || playerId == null || location == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card == null || card == ignoredJedi
+                    || !playerId.equals(card.getOwner())
+                    || card.isUndercover()
+                    || !isActiveForSpot(
+                        game, card, includeExcludedFromBattle)
+                    || !Filters.Jedi.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard actorLocation = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), card);
+            if (samePhysicalLocation(actorLocation, location)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -10383,9 +11093,11 @@ public class ObjectiveAnalyzer {
             PhysicalCard sourceCard, PhysicalCard candidate) {
         if ((!isMassassiBaseOperationsFamily()
                     && !isImperialEntanglementsFamily()
-                    && !isCountedOperativeObjectiveFamily())
+                    && !isCountedOperativeObjectiveFamily()
+                    && !isHiddenPathObjectiveFamily())
                 || isFlipped && !isImperialEntanglementsFamily()
                     && !isCountedOperativeObjectiveFamily()
+                    && !isHiddenPathObjectiveFamily()
                 || game == null || playerId == null
                 || candidate == null
                 || !playerId.equals(candidate.getOwner())
@@ -10440,6 +11152,19 @@ public class ObjectiveAnalyzer {
                         Filters.battleground, false, 0.0f).accepts(
                         game.getGameState(),
                         game.getModifiersQuerying(), candidate);
+        }
+        if (isHiddenPathObjectiveFamily()) {
+            return sourceCard != null
+                    && isExactCurrentObjectiveSourceCard(
+                        game, playerId, sourceCard)
+                    && Filters.Jabiim_location.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    && Filters.deployable(
+                        objectiveCard, null,
+                        false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate);
         }
         com.gempukku.swccgo.filters.Filter printedFilter =
                 isMassassiBaseOperationsFamily()

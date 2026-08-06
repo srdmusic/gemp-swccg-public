@@ -182,11 +182,11 @@ public class DrawEvaluator extends ActionEvaluator {
                 context::getForceReserveFacts,
                 () -> {
                     ObjectiveAnalyzer objective = context.getObjectiveAnalyzer();
-                    return objective != null && objective.isAnalyzed()
-                            && !objective.isFlipped()
-                            && objective.getObjectiveTitle() != null
-                            && objective.getObjectiveTitle().toLowerCase(Locale.ROOT)
-                                    .contains("hidden path");
+                    return objective != null
+                            ? objective
+                                .getHiddenPathMoveForceReserve(
+                                    game, playerId)
+                            : 0;
                 }, logger);
     }
 

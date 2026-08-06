@@ -31,9 +31,21 @@ public class MoveObjectiveConsolidationPolicyTest {
         MoveObjectiveConsolidationPolicy.Contribution empty =
                 MoveObjectiveConsolidationPolicy.hiddenPathSplit(
                         true, true, true, 0, "Jabiim");
+        MoveObjectiveConsolidationPolicy.Contribution plainSite =
+                MoveObjectiveConsolidationPolicy.hiddenPathSplit(
+                        true, true, true, 0,
+                        "Jabiim: Path Operations Center");
+        MoveObjectiveConsolidationPolicy.Contribution zeroNetMove =
+                MoveObjectiveConsolidationPolicy.hiddenPathSplit(
+                        true, true, false, 0,
+                        "Another non-Mapuzo site");
 
         assertEquals(-500.0f, occupied.delta(), 0.0f);
         assertEquals(200.0f, empty.delta(), 0.0f);
+        assertEquals("The source flip law accepts a non-battleground site",
+                200.0f, plainSite.delta(), 0.0f);
+        assertFalse("Moving the sole held Jedi to an empty site makes no net progress",
+                zeroNetMove.applies());
         assertFalse(MoveObjectiveConsolidationPolicy.hiddenPathSplit(
                 true, false, true, 0, "Mapuzo").applies());
         assertFalse(MoveObjectiveConsolidationPolicy.hiddenPathSplit(

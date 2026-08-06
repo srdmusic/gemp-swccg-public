@@ -4001,8 +4001,42 @@
       "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [],
-      "startingEffects": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "226_21"
+          ],
+          "titleFragments": [
+            "mapuzo: mining village"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "226_22"
+          ],
+          "titleFragments": [
+            "mapuzo: safehouse"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "226_23"
+          ],
+          "titleFragments": [
+            "mapuzo: underground corridor"
+          ]
+        }
+      ],
+      "startingEffects": [
+        {
+          "blueprintIds": [
+            "226_14"
+          ],
+          "titleFragments": [
+            "fallen order"
+          ]
+        }
+      ],
       "startingInterrupts": [],
       "keyCharacterFilter": null,
       "keySiteFilter": null,
@@ -4122,7 +4156,7 @@
               },
               "includeExcludedFromBattle": true,
               "scoreRole": "flipProgress",
-              "sourceText": "single leg: your Jedi OCCUPY two non-Mapuzo sites (Card226_028.java L151) - occupiesWith count 2, presence not control, owner's Jedi only, undercover excluded, IEFB. Jedi is the COMPUTED class (LIGHT character ability >= 6), wider than the three Jedi_Survivor keyword holders (226_18/226_24/226_26; Obi-Wan 226_24 sits exactly on the 6 boundary); Fallen Order resets survivor cost/power/forfeit but NOT ability. Battleground NOT required - plain non-Mapuzo sites count (V62's battleground-only steer is narrower than the law). The objective's own sites (all three Mapuzo) never count. Known post-flip cliff recorded: Filters.The_Hidden_Path is a TITLE match, so every Fallen Order hiddenPathOnTable modifier (Safehouse-only deploy, free landspeed, cost/power/forfeit=3) switches OFF at the flip. Eleven live title-gated strategy consumers (V52b/V53b/V60/V62/V64/V67aa/V67n/V67z) remain - they encode movement/budget/safety the schema cannot express; overlap with generic flip steering recorded, not retired."
+              "sourceText": "single leg: your Jedi OCCUPY two non-Mapuzo sites (Card226_028.java L151) - occupiesWith count 2, presence not control, owner's Jedi only, undercover excluded, IEFB. Jedi is the COMPUTED class (LIGHT character ability >= 6), wider than the three Jedi_Survivor keyword holders (226_18/226_24/226_26; Obi-Wan 226_24 sits exactly on the 6 boundary); Fallen Order resets survivor cost/power/forfeit but NOT ability. Battleground NOT required - V62 now steers to every legal non-Mapuzo site using the computed Jedi fact. The objective's own three Mapuzo sites never count toward the flip. Exact route behavior separately keys the current front face, physical objective/Fallen Order/Corridor source, action text, Jedi Survivor keyword, unmoved state, affordability, distinct-site progress, V67aa, and Formation Safety. Filters.The_Hidden_Path is a TITLE match, so Fallen Order's Safehouse-only deploy, free landspeed, and cost/power/forfeit reset switch OFF at the flip; a stacked Survivor then costs printed 8 minus the back Objective's 1."
             }
           ]
         },
@@ -4144,7 +4178,7 @@
               },
               "includeExcludedFromBattle": true,
               "scoreRole": "stayFlipped",
-              "sourceText": "flip-back when your Jedi no longer occupy two non-Mapuzo sites (Card226_028_BACK.java L124) - the EXACT negation of the front call, same filters, same count, expressed as < 2 because the schema has no not-node. The back's end-of-opponent's-turn Force-loss rider uses a DIFFERENT filter (battleground_site, Mapuzo battlegrounds count, no spot override) and its timing/payoff are not schema-expressible - recorded, unmodeled. No hard-loss on either side."
+              "sourceText": "flip-back when your Jedi no longer occupy two non-Mapuzo sites (Card226_028_BACK.java L124) - the EXACT negation of the front call, same filters, same count, expressed as < 2 because the schema has no not-node. The back's end-of-opponent's-turn Force-loss rider uses a DIFFERENT filter (battleground_site, Mapuzo battlegrounds count, no spot override). Its timing is not schema-expressible, but behavior now reserves and selects the exact 2-Force relocation only when a legal formation-safe route preserves two non-Mapuzo Jedi sites and raises the Jedi battleground count from below two; Mapuzo may supply the payoff battleground only when the non-Mapuzo hold survives. Native contract proof observes the unchanged end-turn loss of exactly 1 Force. No hard-loss on either side."
             }
           ]
         }

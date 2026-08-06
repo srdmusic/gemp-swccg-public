@@ -18,7 +18,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BooleanSupplier;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +36,7 @@ public class DrawReserveLegacyReaderTest {
         RecordingGameState state = state(List.of(contested))
                 .cardsAt(contested, card(PLAYER, null), card(OPPONENT, null));
 
-        int reserve = calculate(state, 4, facts(true, true, true, 2, true), false);
+        int reserve = calculate(state, 4, facts(true, true, true, 2, true), 0);
 
         assertEquals(9, reserve);
     }
@@ -49,100 +49,88 @@ public class DrawReserveLegacyReaderTest {
                 .cardsAt(first, card(PLAYER, null), card(OPPONENT, null))
                 .cardsAt(second, card(PLAYER, null), card(OPPONENT, null));
 
-        int reserve = calculate(state, 1, facts(false, false, false, 0, false), false);
+        int reserve = calculate(state, 1, facts(false, false, false, 0, false), 0);
 
         assertEquals(1, reserve);
     }
 
     @Test
-    public void corridorCountsEveryFriendlyCharacterAfterBaseCap() {
-        PhysicalCard firstCorridor = location("Mapuzo: Underground Corridor");
-        PhysicalCard street = location("Mapuzo: Streets");
-        PhysicalCard secondCorridor = location("Underground Corridor: Exit");
-        RecordingGameState state = state(List.of(firstCorridor, street, secondCorridor))
-                .cardsAt(firstCorridor,
-                        card(PLAYER, CardCategory.CHARACTER),
-                        card(PLAYER, CardCategory.CHARACTER),
-                        card(PLAYER, CardCategory.VEHICLE),
-                        card(OPPONENT, CardCategory.CHARACTER))
-                .cardsAt(street, card(PLAYER, CardCategory.CHARACTER))
-                .cardsAt(secondCorridor,
-                        card(PLAYER, CardCategory.CHARACTER),
-                        card(PLAYER, CardCategory.CHARACTER),
-                        card(PLAYER, null));
+    public void exactHiddenPathTransitReserveIsAddedAfterBaseCap() {
+        PhysicalCard site = location("Ordinary Site");
+        RecordingGameState state = state(List.of(site));
 
-        int reserve = calculate(state, 1, facts(false, false, false, 20, false), true);
+        int reserve = calculate(
+                state, 1,
+                facts(false, false, false, 20, false), 4);
 
         assertEquals(14, reserve);
-        assertEquals(2, state.locationReadCount);
+        assertEquals(1, state.locationReadCount);
     }
 
     @Test
-    public void hiddenPathReadsLocationsAgainAndUsesEachReadOrder() {
+    public void exactTransitSupplierDoesNotRescanLocations() {
         PhysicalCard first = location("First Scan A");
         PhysicalCard second = location("First Scan B");
-        PhysicalCard corridorB = location("Underground Corridor B");
-        PhysicalCard corridorA = location("Underground Corridor A");
-        RecordingGameState state = state(
-                List.of(first, second),
-                List.of(corridorB, corridorA))
-                .cardsAt(corridorB, card(PLAYER, CardCategory.CHARACTER))
-                .cardsAt(corridorA, card(PLAYER, CardCategory.CHARACTER));
+        RecordingGameState state = state(List.of(first, second));
 
-        int reserve = calculate(state, 1, facts(false, false, false, 0, false), true);
+        int reserve = calculate(
+                state, 1,
+                facts(false, false, false, 0, false), 2);
 
         assertEquals(2, reserve);
-        assertEquals(2, state.locationReadCount);
+        assertEquals(1, state.locationReadCount);
         assertEquals(List.of(
                 "First Scan A",
-                "First Scan B",
-                "Underground Corridor B",
-                "Underground Corridor A"), state.cardsAtLocationOrder);
+                "First Scan B"), state.cardsAtLocationOrder);
     }
 
     @Test
-    public void corridorExceptionPreservesCappedBase() {
+    public void transitSupplierExceptionPreservesCappedBase() {
         PhysicalCard site = location("Ordinary Site");
-        RecordingGameState state = state(List.of(site)).failOnLocationRead(2);
+        RecordingGameState state = state(List.of(site));
 
-        int reserve = calculate(state, 1, facts(false, false, false, 20, false), true);
+        int reserve = DrawReserveLegacyReader.calculate(
+                state, PLAYER, 1,
+                () -> facts(false, false, false, 20, false),
+                () -> { throw new IllegalStateException("transit read failed"); },
+                LOGGER);
 
         assertEquals(10, reserve);
-        assertEquals(2, state.locationReadCount);
+        assertEquals(1, state.locationReadCount);
     }
 
     @Test
     public void outerExceptionReturnsFallbackOne() {
         RecordingGameState state = state(List.of()).failOnLocationRead(1);
         AtomicBoolean factsRead = new AtomicBoolean();
-        AtomicBoolean hiddenPathRead = new AtomicBoolean();
+        AtomicBoolean transitRead = new AtomicBoolean();
         Supplier<ForceReserveService.Facts> reserveFacts = () -> {
             factsRead.set(true);
             return facts(false, false, false, 0, false);
         };
-        BooleanSupplier hiddenPath = () -> {
-            hiddenPathRead.set(true);
-            return true;
+        IntSupplier transit = () -> {
+            transitRead.set(true);
+            return 2;
         };
 
         int reserve = DrawReserveLegacyReader.calculate(
-                state, PLAYER, 1, reserveFacts, hiddenPath, LOGGER);
+                state, PLAYER, 1, reserveFacts, transit, LOGGER);
 
         assertEquals(1, reserve);
         assertFalse(factsRead.get());
-        assertFalse(hiddenPathRead.get());
+        assertFalse(transitRead.get());
     }
 
     private static int calculate(RecordingGameState state,
                                  int turnNumber,
                                  ForceReserveService.Facts reserveFacts,
-                                 boolean hiddenPathUnflipped) {
+                                 int hiddenPathTransitReserve) {
         return DrawReserveLegacyReader.calculate(
                 state,
                 PLAYER,
                 turnNumber,
                 () -> reserveFacts,
-                () -> hiddenPathUnflipped,
+                () -> hiddenPathTransitReserve,
                 LOGGER);
     }
 

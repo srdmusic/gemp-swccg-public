@@ -93,12 +93,11 @@ public final class MoveObjectiveConsolidationPolicy {
     public static Contribution hiddenPathSplit(
             boolean hiddenPathPreFlip,
             boolean nonMapuzoDestination,
-            boolean battlegroundDestination,
+            boolean advancesDistinctHoldSite,
             int friendlyJediAtDestination,
             String destinationTitle) {
         if (!hiddenPathPreFlip
-                || !nonMapuzoDestination
-                || !battlegroundDestination) {
+                || !nonMapuzoDestination) {
             return Contribution.none();
         }
         if (friendlyJediAtDestination >= 1) {
@@ -106,14 +105,17 @@ public final class MoveObjectiveConsolidationPolicy {
                     true,
                     "V62 SPLIT SITE: Already have " + friendlyJediAtDestination
                             + " Jedi at " + destinationTitle
-                            + " — move 2nd Jedi to a DIFFERENT battleground to flip Hidden Path!",
+                            + ": move 2nd Jedi to a DIFFERENT non-Mapuzo site to flip Hidden Path!",
                     -500.0f,
                     false);
+        }
+        if (!advancesDistinctHoldSite) {
+            return Contribution.none();
         }
         return new Contribution(
                 true,
                 "V62 SPLIT SITE: No friendly Jedi at " + destinationTitle
-                        + " yet — great split-site target for Hidden Path flip!",
+                        + " yet, great non-Mapuzo split-site target for Hidden Path flip!",
                 200.0f,
                 false);
     }

@@ -1408,6 +1408,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return evaluateCaptureVirtualHutMove(context);
         } else if (isHuntDownCastleMoveDecision(context)) {
             return evaluateHuntDownCastleMove(context);
+        } else if (isHiddenPathRelocationMoverDecision(context)) {
+            return evaluateHiddenPathRelocationMover(context);
+        } else if (isHiddenPathRelocationDestinationDecision(context)) {
+            return evaluateHiddenPathRelocationDestination(context);
+        } else if (isHiddenPathCorridorTransitDecision(context)) {
+            return evaluateHiddenPathCorridorTransit(context);
         } else if (isObjectiveDockingTransitDecision(context)) {
             return evaluateObjectiveDockingTransit(context);
         } else if (textLower.contains("move to,")
@@ -2459,21 +2465,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             // matched "Ahsoka Tano With Lightsabers", "Obi-Wan With Lightsaber",
                             // "Luke With Lightsaber", etc. — those are Jedi but NOT Jedi
                             // Survivors and CAN'T transit off Mapuzo via Underground Corridor).
-                            // Authoritative test: game text contains the literal phrase
-                            // "Jedi Survivor" (the keyword that lets Underground Corridor's
-                            // transit action target the card).
+                            // Authoritative test: the physical blueprint carries the
+                            // Jedi Survivor keyword used by Underground Corridor's filter.
                             // FIXES xxhj3qwhxzmhrdym replay: Ahsoka Tano With Lightsabers
                             // deployed to Mapuzo: Mining Village and got stuck.
                             boolean isJediSurvivor = false;
                             if (deployingBlueprintId != null) {
                                 try {
                                     SwccgCardBlueprint deployBp = getBlueprintFromId(context, deployingBlueprintId);
-                                    if (deployBp != null) {
-                                        String gt = deployBp.getGameText();
-                                        if (gt != null && gt.toLowerCase(java.util.Locale.ROOT).contains("jedi survivor")) {
-                                            isJediSurvivor = true;
-                                        }
-                                    }
+                                    isJediSurvivor = deployBp != null
+                                        && deployBp.hasKeyword(
+                                            com.gempukku.swccgo.common.Keyword.JEDI_SURVIVOR);
                                 } catch (Exception e) { /* ignore */ }
                             }
 
@@ -6759,6 +6761,354 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
     }
 
+    private boolean isHiddenPathCorridorTransitDecision(
+            DecisionContext context) {
+        if (context == null || context.getDecisionText() == null
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !context.getObjectiveAnalyzer()
+                    .isHiddenPathObjectiveFamily()
+                || context.getObjectiveAnalyzer().isFlipped()) {
+            return false;
+        }
+        String decision = context.getDecisionText().trim();
+        String normalizedDecision = decision.toLowerCase(Locale.ROOT);
+        if (!normalizedDecision.startsWith("choose card to move from")
+                && !normalizedDecision.startsWith(
+                    "choose card to move to")) {
+            return false;
+        }
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            String liveText = liveAction != null
+                    ? liveAction.getText() : null;
+            if (source != null
+                    && "226_23".equals(source.getBlueprintId(true))
+                    && "Move Jedi Survivor here to a site"
+                        .equals(liveText)) {
+                return true;
+            }
+        } catch (Exception e) {
+            // Fall through to the final-child provenance check.
+        }
+        return hasExactHiddenPathCorridorSource(context);
+    }
+
+    private boolean isHiddenPathRelocationMoverDecision(
+            DecisionContext context) {
+        return context != null
+                && context.getDecisionText() != null
+                && context.getDecisionText().trim()
+                    .toLowerCase(Locale.ROOT)
+                    .startsWith("choose jedi to relocate")
+                && context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isHiddenPathObjectiveFamily()
+                && context.getObjectiveAnalyzer().isFlipped()
+                && hasExactHiddenPathRelocationSource(context);
+    }
+
+    private boolean isHiddenPathRelocationDestinationDecision(
+            DecisionContext context) {
+        return context != null
+                && context.getDecisionText() != null
+                && context.getDecisionText().trim()
+                    .toLowerCase(Locale.ROOT)
+                    .startsWith("choose site to relocate ")
+                && context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isHiddenPathObjectiveFamily()
+                && context.getObjectiveAnalyzer().isFlipped()
+                && hasExactHiddenPathRelocationSource(context)
+                && movePhysicalCardId(context) != null;
+    }
+
+    private boolean hasExactHiddenPathRelocationSource(
+            DecisionContext context) {
+        if (context == null || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null) {
+            return false;
+        }
+        Integer sourcePermanentId = integerExtra(
+                context,
+                BhbmForceDripUrgencyFactsReader
+                    .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA);
+        if (sourcePermanentId == null) return false;
+        for (PhysicalCard card
+                : context.getGameState().getAllPermanentCards()) {
+            if (card != null
+                    && card.getPermanentCardId()
+                        == sourcePermanentId) {
+                return context.getObjectiveAnalyzer()
+                    .isHiddenPathBackRelocateAction(
+                        context.getGame(), context.getPlayerId(),
+                        card, "Relocate a Jedi");
+            }
+        }
+        return false;
+    }
+
+    private boolean hasExactHiddenPathCorridorSource(
+            DecisionContext context) {
+        if (context == null || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !context.getObjectiveAnalyzer()
+                    .isHiddenPathObjectiveFamily()
+                || context.getObjectiveAnalyzer().isFlipped()) {
+            return false;
+        }
+        Integer sourcePermanentId = integerExtra(
+                context,
+                BhbmForceDripUrgencyFactsReader
+                    .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA);
+        if (sourcePermanentId == null) return false;
+        for (PhysicalCard card
+                : context.getGameState().getAllPermanentCards()) {
+            if (card != null
+                    && card.getPermanentCardId()
+                        == sourcePermanentId) {
+                return context.getPlayerId().equals(
+                            card.getOwner())
+                        && "226_23".equals(
+                            card.getBlueprintId(true));
+            }
+        }
+        return false;
+    }
+
+    private List<EvaluatedAction> evaluateHiddenPathRelocationMover(
+            DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        GameState gameState = context.getGameState();
+        var analyzer = context.getObjectiveAnalyzer();
+        boolean hasImprovingMover = false;
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            try {
+                PhysicalCard candidate = gameState.findCardById(
+                        Integer.parseInt(context.getCardIds().get(i)));
+                hasImprovingMover |= analyzer
+                        .getBestHiddenPathRelocationBattlegroundGain(
+                            context.getGame(), context.getPlayerId(),
+                            candidate) > 0;
+            } catch (Exception ignored) {
+            }
+        }
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            PhysicalCard candidate = null;
+            try {
+                candidate = gameState.findCardById(
+                        Integer.parseInt(cardId));
+            } catch (Exception ignored) {
+            }
+            int gain = analyzer
+                    .getBestHiddenPathRelocationBattlegroundGain(
+                        context.getGame(), context.getPlayerId(), candidate);
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.MOVE, 0.0f,
+                    "Choose Hidden Path Jedi to relocate");
+            if (gain == Integer.MIN_VALUE) {
+                action.hardVeto(
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_HOLD: no legal destination preserves two Jedi sites");
+            } else if (gain > 0) {
+                action.addReasoning(
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_PAYOFF: this Jedi can add a battleground hold",
+                    5000.0f);
+            } else if (hasImprovingMover) {
+                action.hardVeto(
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_PAYOFF: use the Jedi that advances the battleground pair");
+            } else {
+                action.addReasoning(
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_SAFE: preserve the two-site hold",
+                    gain == 0 ? 200.0f : -1000.0f);
+            }
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    private List<EvaluatedAction> evaluateHiddenPathRelocationDestination(
+            DecisionContext context) {
+        List<EvaluatedAction> actions = evaluateMoveDestination(context);
+        GameState gameState = context.getGameState();
+        PhysicalCard mover = gameState.findCardById(
+                movePhysicalCardId(context));
+        var analyzer = context.getObjectiveAnalyzer();
+        boolean hasImprovingDestination = false;
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            try {
+                PhysicalCard destination = gameState.findCardById(
+                        Integer.parseInt(context.getCardIds().get(i)));
+                var assessment = analyzer.assessHiddenPathRelocation(
+                        context.getGame(), context.getPlayerId(),
+                        mover, destination);
+                hasImprovingDestination |= assessment.legal()
+                        && assessment.preservesHold()
+                        && assessment.battlegroundGain() > 0;
+            } catch (Exception ignored) {
+            }
+        }
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            PhysicalCard destination = null;
+            try {
+                destination = gameState.findCardById(
+                        Integer.parseInt(cardId));
+            } catch (Exception ignored) {
+            }
+            var assessment = analyzer.assessHiddenPathRelocation(
+                    context.getGame(), context.getPlayerId(),
+                    mover, destination);
+            EvaluatedAction action = actions.get(i);
+            if (!assessment.legal()
+                    || !assessment.preservesHold()) {
+                action.hardVeto(
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_HOLD: moving here would break the two-site hold");
+            } else if (assessment.battlegroundGain() > 0) {
+                action.addReasoning(
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_PAYOFF: preserve the objective and add a Jedi battleground",
+                    5000.0f);
+            } else if (hasImprovingDestination) {
+                action.hardVeto(
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_PAYOFF: preserve the offered battleground advance");
+            } else {
+                action.addReasoning(
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_SAFE: preserve the two-site hold",
+                    assessment.battlegroundGain() == 0
+                        ? 200.0f : -1000.0f);
+            }
+        }
+        return actions;
+    }
+
+    private List<EvaluatedAction> evaluateHiddenPathCorridorTransit(
+            DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        GameState gameState = context.getGameState();
+        var analyzer = context.getObjectiveAnalyzer();
+        String decision = context.getDecisionText().trim();
+        String normalizedDecision = decision.toLowerCase(Locale.ROOT);
+        boolean chooseOrigin = normalizedDecision.equals(
+                    "choose card to move from")
+                || normalizedDecision.startsWith(
+                    "choose card to move from,");
+        boolean chooseDestination = normalizedDecision.equals(
+                    "choose card to move to")
+                || normalizedDecision.startsWith(
+                    "choose card to move to,");
+        PhysicalCard selectedDestination = null;
+        if (!chooseOrigin && !chooseDestination) {
+            Integer destinationPermanentId = integerExtra(
+                    context,
+                    com.gempukku.swccgo.ai.models.common.strategy
+                        .ObjectiveAnalyzer
+                        .HIDDEN_PATH_CORRIDOR_DESTINATION_PERMANENT_CARD_ID_EXTRA);
+            if (destinationPermanentId != null) {
+                selectedDestination = gameState.findCardByPermanentId(
+                        destinationPermanentId);
+            }
+            if (selectedDestination == null) {
+                selectedDestination = resolveCastleFinalDestination(
+                        gameState, decision);
+            }
+        }
+        boolean hasEmptyFlipDestination = false;
+        if (chooseDestination) {
+            for (int i = 0; i < context.getCardIds().size(); i++) {
+                if (!isCardSelectable(context, i)) continue;
+                try {
+                    PhysicalCard candidate = gameState.findCardById(
+                            Integer.parseInt(context.getCardIds().get(i)));
+                    if (analyzer.isHiddenPathFlipSite(
+                                context.getGame(), context.getPlayerId(),
+                                candidate)
+                            && !analyzer.isHiddenPathJediHoldSiteOccupied(
+                                context.getGame(), context.getPlayerId(),
+                                candidate)
+                            && analyzer
+                                .hasFormationSafeHiddenPathCorridorTransitTo(
+                                    context.getGame(),
+                                    context.getPlayerId(), candidate)) {
+                        hasEmptyFlipDestination = true;
+                        break;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            PhysicalCard candidate = null;
+            try {
+                candidate = gameState.findCardById(
+                        Integer.parseInt(cardId));
+            } catch (Exception ignored) {
+            }
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.MOVE, 0.0f,
+                    "Hidden Path Corridor transit child");
+            if (chooseOrigin) {
+                if (candidate != null
+                        && "226_23".equals(
+                            candidate.getBlueprintId(true))) {
+                    action.addReasoning(
+                        "OBJECTIVE.HIDDEN_PATH.CORRIDOR_ORIGIN: use the physical Underground Corridor",
+                        20000.0f);
+                }
+            } else if (chooseDestination) {
+                boolean flipSite = analyzer.isHiddenPathFlipSite(
+                        context.getGame(), context.getPlayerId(), candidate);
+                boolean occupied = flipSite
+                        && analyzer.isHiddenPathJediHoldSiteOccupied(
+                            context.getGame(), context.getPlayerId(),
+                            candidate);
+                boolean safe = analyzer
+                        .hasFormationSafeHiddenPathCorridorTransitTo(
+                            context.getGame(), context.getPlayerId(),
+                            candidate);
+                if (!safe) {
+                    action.hardVeto(
+                        "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SAFETY: no eligible Survivor can use this route without breaking formation safety");
+                } else if (flipSite && !occupied) {
+                    action.addReasoning(
+                        "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SPLIT: add a distinct non-Mapuzo Jedi site",
+                        20000.0f);
+                } else if (hasEmptyFlipDestination) {
+                    action.hardVeto(
+                        "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SPLIT: preserve the offered distinct-site advance");
+                }
+            } else if (analyzer.isHiddenPathCorridorTransitCandidate(
+                    context.getGame(), context.getPlayerId(), candidate)) {
+                if (selectedDestination == null) {
+                    action.hardVeto(
+                        "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SAFETY: selected destination provenance is unavailable");
+                } else if (!analyzer
+                        .isHiddenPathCorridorTransitFormationSafe(
+                            context.getGame(), context.getPlayerId(),
+                            candidate, selectedDestination)) {
+                    action.hardVeto(
+                        "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SAFETY: this Survivor is unsafe for the selected destination");
+                } else {
+                    action.addReasoning(
+                        "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SURVIVOR: complete the selected paid exit",
+                        20000.0f);
+                }
+            }
+            actions.add(action);
+        }
+        return actions;
+    }
+
     private List<EvaluatedAction> evaluateCaptureVirtualHutMove(
             DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
@@ -8597,10 +8947,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         }
 
                         // === V62 HIDDEN PATH SPLIT-SITE ===
-                        // Hidden Path flips when we have 2 Jedi Survivors at 2 DIFFERENT
-                        // battleground/opponent sites outside Mapuzo. If we've already
-                        // placed a Jedi at one non-Mapuzo battleground, the 2nd Jedi must
-                        // go to a DIFFERENT battleground to trigger the flip. Moving both
+                        // Hidden Path flips when our Jedi occupy 2 DIFFERENT non-Mapuzo
+                        // sites. A battleground is not required. If one site already has
+                        // a Jedi, the 2nd Jedi must go to a DIFFERENT qualifying site. Moving both
                         // to the same site wastes a turn (no flip progress).
                         // FIXES fmz03bjz79k61img replay: Rando moved Kelleran + Quinlan
                         // from Corridor to the same Malachor: Sith Temple Upper Chamber,
@@ -8609,48 +8958,53 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v62Obj =
                                 context.getObjectiveAnalyzer();
                             boolean onHiddenPath = v62Obj != null && v62Obj.isAnalyzed()
-                                && v62Obj.getObjectiveTitle() != null
-                                && v62Obj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("hidden path")
+                                && v62Obj.isHiddenPathObjectiveFamily()
                                 && !v62Obj.isFlipped();
-                            if (onHiddenPath && game != null && gameState != null && title != null
-                                && !title.toLowerCase(java.util.Locale.ROOT).contains("mapuzo")) {
+                            if (onHiddenPath && game != null && gameState != null
+                                    && location != null
+                                    && fsMover != null
+                                    && Filters.and(Filters.site,
+                                        Filters.not(Filters.Mapuzo_location))
+                                        .accepts(gameState,
+                                            game.getModifiersQuerying(),
+                                            location)) {
                                 try {
-                                    boolean isBGDest = game.getModifiersQuerying().isBattleground(gameState, location, null);
-                                    if (isBGDest) {
-                                        // Count our OWN Jedi Survivors already at this destination
+                                    boolean exactOwnedJediMover =
+                                        v62Obj.qualifiesPreFlipRuntimeActorAtLocation(
+                                            game, playerId, fsMover,
+                                            location);
+                                    if (exactOwnedJediMover) {
                                         int ourJediHere = 0;
-                                        java.util.List<PhysicalCard> hereCards = gameState.getCardsAtLocation(location);
+                                        java.util.List<PhysicalCard> hereCards =
+                                            gameState.getCardsAtLocation(location);
                                         if (hereCards != null) {
                                             for (PhysicalCard hc : hereCards) {
-                                                if (hc != null && playerId.equals(hc.getOwner())
-                                                    && hc.getBlueprint() != null
-                                                    && hc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                                    String hcText = hc.getBlueprint().getGameText();
-                                                    String hcTitle = hc.getTitle() != null
-                                                        ? hc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                                                    boolean isJediSurv = (hcText != null
-                                                            && hcText.toLowerCase(java.util.Locale.ROOT).contains("jedi survivor"))
-                                                        || hcTitle.contains("obi-wan") || hcTitle.contains("kelleran")
-                                                        || hcTitle.contains("quinlan") || hcTitle.contains("ahsoka")
-                                                        || hcTitle.contains("cal kestis") || hcTitle.contains("cere");
-                                                    if (isJediSurv) ourJediHere++;
+                                                if (hc != null
+                                                        && v62Obj.qualifiesPreFlipRuntimeActorAtLocation(
+                                                            game, playerId, hc,
+                                                            location)) {
+                                                    ourJediHere++;
                                                 }
                                             }
                                         }
                                         MoveObjectiveConsolidationPolicy.Contribution hiddenPathSplit =
                                             MoveObjectiveConsolidationPolicy.hiddenPathSplit(
-                                                onHiddenPath, true, isBGDest,
+                                                onHiddenPath, true,
+                                                v62Obj.advancesHiddenPathDistinctHoldSiteByMovingTo(
+                                                    game, playerId, fsMover,
+                                                    location),
                                                 ourJediHere, title);
-                                        action.addReasoning(
-                                            hiddenPathSplit.reason(),
-                                            hiddenPathSplit.delta());
-                                        if (ourJediHere >= 1) {
-                                            logger.warn("V62 SPLIT SITE: {} has {} friendly Jedi — penalize duplicate dest (-500)",
-                                                title, ourJediHere);
-                                        } else {
-                                            // Empty BG outside Mapuzo — ideal split-site destination
-                                            logger.info("V62 SPLIT SITE: {} is ideal split-site for Hidden Path (+200)",
-                                                title);
+                                        if (hiddenPathSplit.applies()) {
+                                            action.addReasoning(
+                                                hiddenPathSplit.reason(),
+                                                hiddenPathSplit.delta());
+                                            if (ourJediHere >= 1) {
+                                                logger.warn("V62 SPLIT SITE: {} has {} friendly Jedi, penalize duplicate dest (-500)",
+                                                    title, ourJediHere);
+                                            } else {
+                                                logger.info("V62 SPLIT SITE: {} is ideal non-Mapuzo site for Hidden Path (+200)",
+                                                    title);
+                                            }
                                         }
                                     }
                                 } catch (Exception e) { /* ignore */ }

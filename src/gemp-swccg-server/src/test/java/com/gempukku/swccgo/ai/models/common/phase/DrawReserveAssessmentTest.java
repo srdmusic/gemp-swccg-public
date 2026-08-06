@@ -24,7 +24,7 @@ public class DrawReserveAssessmentTest {
                 true, true, true, true, true, true, 20);
 
         assertEquals(10, capped.forceToReserve());
-        assertEquals(14, capped.plusCorridorCharacters(4).forceToReserve());
+        assertEquals(14, capped.plusHiddenPathTransitReserve(4).forceToReserve());
     }
 
     @Test
@@ -37,7 +37,7 @@ public class DrawReserveAssessmentTest {
         DrawReserveAssessment assessment = new DrawReserveAssessment(Integer.MAX_VALUE);
 
         assertEquals(Integer.MIN_VALUE,
-                assessment.plusCorridorCharacters(1).forceToReserve());
+                assessment.plusHiddenPathTransitReserve(1).forceToReserve());
     }
 
     private static int reserve(boolean drawTheirFire,

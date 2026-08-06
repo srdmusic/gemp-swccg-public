@@ -74,6 +74,12 @@ public class MoveTransitSourceParityTest {
         assertTrue(move.contains(
                 "V25 Shuttle without defensive need"));
         assertTrue(move.contains(
+                "hpMoveAnalyzer.isHiddenPathObjectiveFamily()"));
+        assertTrue(move.contains(
+                "!hpMoveAnalyzer.isFlipped()"));
+        assertTrue(move.contains(
+                "Keyword.JEDI_SURVIVOR"));
+        assertFalse(move.contains(
                 "hpMoveAnalyzer != null && hpMoveAnalyzer.isAnalyzed()"));
         assertTrue(move.contains(
                 "hiddenPath.contribution().reason()"));

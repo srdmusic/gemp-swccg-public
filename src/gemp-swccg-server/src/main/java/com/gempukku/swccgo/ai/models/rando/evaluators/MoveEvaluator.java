@@ -2843,7 +2843,14 @@ public class MoveEvaluator extends ActionEvaluator {
             {
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer hpMoveAnalyzer =
                     context.getObjectiveAnalyzer();
-                if (hpMoveAnalyzer != null && hpMoveAnalyzer.isAnalyzed()) {
+                boolean exactFrontSurvivor = hpMoveAnalyzer != null
+                    && hpMoveAnalyzer.isHiddenPathObjectiveFamily()
+                    && !hpMoveAnalyzer.isFlipped()
+                    && cardToMove != null
+                    && cardToMove.getBlueprint() != null
+                    && cardToMove.getBlueprint().hasKeyword(
+                        com.gempukku.swccgo.common.Keyword.JEDI_SURVIVOR);
+                if (exactFrontSurvivor) {
                     // V60 FIX: Corridor landspeed stays vetoed; positive transit remains in ActionTextEvaluator.
                     MoveTransitPolicy.HiddenPathTransit hiddenPath =
                         MoveTransitPolicy.hiddenPathTransit(

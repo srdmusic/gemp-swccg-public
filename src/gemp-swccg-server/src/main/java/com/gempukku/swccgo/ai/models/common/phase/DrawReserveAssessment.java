@@ -33,8 +33,9 @@ public record DrawReserveAssessment(int forceToReserve) {
         return new DrawReserveAssessment(Math.min(10, reserve));
     }
 
-    /** Corridor transit Force is mandatory and therefore added after the base cap. */
-    public DrawReserveAssessment plusCorridorCharacters(int corridorCharacters) {
-        return new DrawReserveAssessment(forceToReserve + corridorCharacters);
+    /** Hidden Path transit Force is mandatory and added after the base cap. */
+    public DrawReserveAssessment plusHiddenPathTransitReserve(
+            int transitReserve) {
+        return new DrawReserveAssessment(forceToReserve + transitReserve);
     }
 }

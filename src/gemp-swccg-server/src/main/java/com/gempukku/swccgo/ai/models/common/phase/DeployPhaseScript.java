@@ -265,6 +265,29 @@ public abstract class DeployPhaseScript {
                     .hasObjectiveLocationRouteCandidateInReserve(
                         game, playerId, sourceCard);
         if (objectiveAnalyzer != null
+                && objectiveAnalyzer.isHiddenPathJabiimRouteAction(
+                    game, playerId, sourceCard, actionText)) {
+            if (objectiveAnalyzer
+                    .isExhaustedHiddenPathJabiimRouteAction(
+                        game, playerId, sourceCard, actionText)) {
+                return steps;
+            }
+            steps.add(Step.LOCATIONS);
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer.isHiddenPathSurvivorRouteAction(
+                    game, playerId, sourceCard, actionText)) {
+            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer.isHiddenPathHolocronAction(
+                    game, playerId, sourceCard, actionText)) {
+            steps.add(Step.DEVICES);
+            return steps;
+        }
+        if (objectiveAnalyzer != null
                 && objectiveAnalyzer
                     .isFirstOrderReignsNavyRouteAction(
                         game, playerId,
