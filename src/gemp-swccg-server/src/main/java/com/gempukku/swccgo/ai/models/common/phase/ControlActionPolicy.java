@@ -50,6 +50,16 @@ public final class ControlActionPolicy {
     }
 
     public static PolicyResult retrieve(String actionId, int lostPileSize) {
+        return retrieve(actionId, lostPileSize, false);
+    }
+
+    public static PolicyResult retrieve(String actionId, int lostPileSize,
+                                        boolean exactIsbAgentRetrieval) {
+        if (exactIsbAgentRetrieval) {
+            return one(actionId, "OBJECTIVE.ISB.RETRIEVE_AGENT",
+                    TraceOutputKind.BANDED, 2000.0f,
+                    "ISB OBJECTIVE: Free native agent retrieval before drawing");
+        }
         return lostPileSize > 15
                 ? one(actionId, "CONTROL-retrieve",
                 TraceOutputKind.ORDERING, 30.0f,

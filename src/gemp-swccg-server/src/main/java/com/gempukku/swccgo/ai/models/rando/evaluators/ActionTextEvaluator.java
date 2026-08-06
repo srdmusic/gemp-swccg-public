@@ -4781,8 +4781,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Retrieve Force ==========
             else if (textLower.contains("retrieve") || actionText.contains("Place out of play to retrieve")) {
                 int lostPileSize = gameState != null ? gameState.getLostPile(context.getPlayerId()).size() : 0;
+                boolean exactIsbAgentRetrieval =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isISBBackAgentRetrievalAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
                 controlLedger.register(ControlActionPolicy.retrieve(
-                        actionId, lostPileSize));
+                        actionId, lostPileSize,
+                        exactIsbAgentRetrieval));
                 PolicyOperationAdapter.apply(action, controlLedger);
             }
 

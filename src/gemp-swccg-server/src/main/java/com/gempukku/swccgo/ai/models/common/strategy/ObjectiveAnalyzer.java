@@ -859,6 +859,14 @@ public class ObjectiveAnalyzer {
                     if ("onTable".equals(alternative.relation)) {
                         com.gempukku.swccgo.filters.Filter onTableFilter =
                                 resolveFilter(alternative.actorFilterKey);
+                        if (isISBOperations
+                                && "ISB_agent".equals(
+                                    alternative.actorFilterKey)
+                                && isPreferredIsbOnTableAgentCandidate(
+                                    game, playerId, candidate)) {
+                            return ObjectiveProgressCandidateRole
+                                    .REQUIRED_ON_TABLE_CARD;
+                        }
                         if (onTableFilter != null
                                 && playerId.equals(candidate.getOwner())
                                 && onTableFilter.accepts(
@@ -3367,6 +3375,11 @@ public class ObjectiveAnalyzer {
                 game, playerId, candidate, location)) {
             return true;
         }
+        if (isISBOperations
+                && isPreferredIsbOnTableAgentCandidate(
+                    game, playerId, candidate)) {
+            return true;
+        }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule) || isRuleSatisfied(
                     game, playerId, rule)) {
@@ -3568,6 +3581,22 @@ public class ObjectiveAnalyzer {
             }
         }
         return false;
+    }
+
+    /** An ISB Route A agent remains on table after a landspeed move. */
+    public boolean preservesIsbOnTableRouteAgentByMoving(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (!analyzed || !isISBOperations || isFlipped
+                || game == null || playerId == null
+                || mover == null || mover.getZone() == null
+                || !mover.getZone().isInPlay()) {
+            return false;
+        }
+        FlipLocationAlternative routeA =
+                findIsbOnTableAgentAlternative();
+        return routeA != null
+                && candidateMatchesOnTableAlternative(
+                    game, playerId, mover, routeA);
     }
 
     /**
@@ -7069,9 +7098,17 @@ public class ObjectiveAnalyzer {
         com.gempukku.swccgo.filters.Filter actorFilter =
                 resolveFilter(alternative.actorFilterKey);
         if (alternative.actorFilterKey != null) {
-            if (actorFilter == null || !actorFilter.accepts(
-                    game.getGameState(), game.getModifiersQuerying(),
-                    candidate)) {
+            boolean prospectiveIsbAgent =
+                    isIsbRebelBaseAgentAlternative(alternative)
+                    && (candidate.getZone() == null
+                        || !candidate.getZone().isInPlay())
+                    && !candidate.isUndercover()
+                    && isIsbLoreAgentCandidate(
+                        game, playerId, candidate);
+            if (!prospectiveIsbAgent
+                    && (actorFilter == null || !actorFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate))) {
                 return false;
             }
         }
@@ -11990,6 +12027,94 @@ public class ObjectiveAnalyzer {
         return 0;
     }
 
+    public int getIsbRebelBaseBattleForceReserve(
+            SwccgGame game, String playerId) {
+        return getIsbRebelBaseBattleForceReserve(
+                game, playerId, null);
+    }
+
+    public int getIsbRebelBaseBattleForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        FlipLocationAlternative alternative =
+                findIsbRebelBaseAgentAlternative();
+        if (alternative == null || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        if (deployingCandidate != null
+                && isIsbFlipCompletionDeployCandidate(
+                    game, playerId, deployingCandidate)) {
+            return 0;
+        }
+        String opponent = game.getGameState().getOpponent(playerId);
+        if (opponent == null) return 0;
+        int required = expectedCount(
+                game, playerId, alternative.count);
+        int qualified = countAlternativeMatches(
+                game, playerId, playerId, alternative);
+        if (qualified >= required) return 0;
+
+        int cheapest = Integer.MAX_VALUE;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)
+                    || relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride)
+                    || !hasMatchingActorAtLocation(
+                        game, playerId, location,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle, true)
+                    || qualified + 1 < required
+                    || !com.gempukku.swccgo.cards.GameConditions
+                        .canInitiateBattleAtLocation(
+                            playerId, game, location,
+                            false, true)
+                    || FormationSafety.vetoInitiateBattle(
+                        game, game.getGameState(), playerId,
+                        location) != null) {
+                continue;
+            }
+            boolean opponentPresent = false;
+            for (PhysicalCard card
+                    : game.getGameState().getCardsAtLocation(location)) {
+                if (card != null
+                        && opponent.equals(card.getOwner())
+                        && !card.isUndercover()) {
+                    opponentPresent = true;
+                    break;
+                }
+            }
+            if (!opponentPresent) continue;
+            float ourPower = game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(
+                        game.getGameState(), location,
+                        playerId, false, false);
+            float theirPower = game.getModifiersQuerying()
+                    .getTotalPowerAtLocation(
+                        game.getGameState(), location,
+                        opponent, false, false);
+            if (ourPower <= theirPower) continue;
+            try {
+                float cost = game.getModifiersQuerying()
+                        .getInitiateBattleCost(
+                            game.getGameState(), location,
+                            playerId, true);
+                cheapest = Math.min(cheapest,
+                        Math.max(0, (int) Math.ceil(cost)));
+            } catch (Exception ignored) {
+            }
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
     private boolean isCountedOperativeChosenPlanetSite(
             SwccgGame game, PhysicalCard location,
             boolean requireBattleground) {
@@ -12383,6 +12508,35 @@ public class ObjectiveAnalyzer {
                     game, playerId);
     }
 
+    public boolean isISBBackAgentRetrievalAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!analyzed || !isISBOperations || !isFlipped
+                || game == null || playerId == null
+                || sourceCard == null
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                || actionText == null
+                || !"retrieve an isb agent".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT))
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> lostPile =
+                game.getGameState().getLostPile(playerId);
+        if (lostPile == null) return false;
+        for (PhysicalCard card : lostPile) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && Filters.ISB_agent.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isExactCurrentObjectiveSourceCard(
             SwccgGame game, String playerId,
             PhysicalCard sourceCard) {
@@ -12599,6 +12753,10 @@ public class ObjectiveAnalyzer {
         }
         if (hasCountedOperativeFormationRule()) {
             return getCountedOperativeFormationForceReserve(
+                    game, playerId, deployingCandidate);
+        }
+        if (isISBOperations) {
+            return getIsbOnTableAgentForceReserve(
                     game, playerId, deployingCandidate);
         }
         if (!isMassassiBaseOperationsFamily()
@@ -13758,6 +13916,311 @@ public class ObjectiveAnalyzer {
         return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
     }
 
+    public int getIsbRebelBaseMoveForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!isISBOperations || isFlipped || game == null
+                || playerId == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        if (deployingCandidate != null
+                && isIsbFlipCompletionDeployCandidate(
+                    game, playerId, deployingCandidate)) {
+            return 0;
+        }
+        FlipLocationAlternative alternative =
+                findIsbRebelBaseAgentAlternative();
+        if (alternative == null) return 0;
+        int blockerChaseReserve =
+                getIsbBlountBlockerChaseMoveForceReserve(
+                        game, playerId);
+        if (blockerChaseReserve > 0) {
+            return blockerChaseReserve;
+        }
+        int required = expectedCount(
+                game, playerId, alternative.count);
+        int qualified = countAlternativeMatches(
+                game, playerId, playerId, alternative);
+        if (qualified + 1 < required) return 0;
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (permanents == null || locations == null) return 0;
+
+        int cheapest = Integer.MAX_VALUE;
+        try {
+            for (PhysicalCard mover : permanents) {
+                if (mover == null
+                        || !playerId.equals(mover.getOwner())
+                        || mover.isUndercover()
+                        || mover.getZone() == null
+                        || !mover.getZone().isInPlay()
+                        || !isActiveForSpot(game, mover, true)
+                        || !isIsbLoreAgentCandidate(
+                            game, playerId, mover)) {
+                    continue;
+                }
+                PhysicalCard origin = presenceContributionLocation(
+                        game, mover);
+                if (origin == null) continue;
+                boolean originQualifies = locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        origin, alternative)
+                        && relationSatisfiedAt(
+                            game, playerId, playerId, origin,
+                            alternative.relation,
+                            alternative.actorFilterKey,
+                            alternative.includeExcludedFromBattle,
+                            alternative.spotOverride);
+                if (originQualifies
+                        && !hasOtherMatchingActorAtLocation(
+                            game, playerId, origin,
+                            alternative, mover)) {
+                    continue;
+                }
+                for (PhysicalCard destination : locations) {
+                    if (!advancesPreFlipActorAtRuntimeLocation(
+                                game, playerId, mover, destination)
+                            || !isSafePreFlipRuntimeActorLandspeedDestination(
+                                game, playerId, mover, destination)) {
+                        continue;
+                    }
+                    float exact = game.getModifiersQuerying()
+                            .getMoveUsingLandspeedCost(
+                                game.getGameState(), mover,
+                                origin, destination, false, 0.0f);
+                    cheapest = Math.min(cheapest,
+                            Math.max(0, (int) Math.ceil(exact)));
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("ISB Rebel Base move Force reserve failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
+    /** Exact ISB actor route to the Coruscant site holding Blount. */
+    public boolean isIsbBlountBlockerChaseActorAt(
+            SwccgGame game, String playerId, PhysicalCard mover,
+            PhysicalCard destination) {
+        if (!analyzed || !isISBOperations || isFlipped
+                || game == null || playerId == null
+                || mover == null || destination == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || mover.getZone() == null
+                || !mover.getZone().isInPlay()
+                || mover.isUndercover()
+                || !isActiveForSpot(game, mover, true)
+                || !isIsbLoreAgentCandidate(
+                    game, playerId, mover)
+                || !isPreFlipGlobalBlockerAt(
+                    game, playerId, destination)) {
+            return false;
+        }
+        PhysicalCard origin = presenceContributionLocation(
+                game, mover);
+        if (origin == null
+                || samePhysicalLocation(origin, destination)) {
+            return false;
+        }
+        FlipLocationAlternative routeB =
+                findIsbRebelBaseAgentAlternative();
+        boolean originQualifies = routeB != null
+                && locationMatchesAlternative(
+                    game.getGameState(), game, playerId,
+                    origin, routeB)
+                && relationSatisfiedAt(
+                    game, playerId, playerId, origin,
+                    routeB.relation,
+                    routeB.actorFilterKey,
+                    routeB.includeExcludedFromBattle,
+                    routeB.spotOverride);
+        return !originQualifies
+                || hasOtherMatchingActorAtLocation(
+                    game, playerId, origin, routeB, mover);
+    }
+
+    public boolean isSafeIsbBlountBlockerLandspeedDestination(
+            SwccgGame game, String playerId, PhysicalCard mover,
+            PhysicalCard destination) {
+        if (!isIsbBlountBlockerChaseActorAt(
+                    game, playerId, mover, destination)) {
+            return false;
+        }
+        try {
+            PhysicalCard origin = presenceContributionLocation(
+                    game, mover);
+            return origin != null
+                    && Filters.canMoveToUsingLandspeed(
+                        playerId, mover,
+                        false, false, false, 0.0f, null)
+                        .accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            destination)
+                    && FormationSafety.vetoMoveDestination(
+                        game, game.getGameState(), playerId,
+                        mover, destination) == null
+                    && FormationSafety.vetoMoveOrigin(
+                        game, game.getGameState(), playerId,
+                        mover, origin) == null;
+        } catch (Exception e) {
+            LOG.debug("ISB Blount chase destination failed: {}",
+                    e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean hasSafeIsbBlountBlockerLandspeedDestination(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (game == null || game.getGameState() == null) return false;
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return false;
+        for (PhysicalCard destination : locations) {
+            if (isSafeIsbBlountBlockerLandspeedDestination(
+                    game, playerId, mover, destination)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int getIsbBlountBlockerChaseMoveForceReserve(
+            SwccgGame game, String playerId) {
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (permanents == null || locations == null) return 0;
+        int cheapest = Integer.MAX_VALUE;
+        try {
+            for (PhysicalCard mover : permanents) {
+                PhysicalCard origin = presenceContributionLocation(
+                        game, mover);
+                if (origin == null) continue;
+                for (PhysicalCard destination : locations) {
+                    if (!isSafeIsbBlountBlockerLandspeedDestination(
+                                game, playerId, mover,
+                                destination)) {
+                        continue;
+                    }
+                    float exact = game.getModifiersQuerying()
+                            .getMoveUsingLandspeedCost(
+                                game.getGameState(), mover,
+                                origin, destination, false, 0.0f);
+                    cheapest = Math.min(
+                            cheapest,
+                            Math.max(0, (int) Math.ceil(exact)));
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("ISB Blount chase Force reserve failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
+    public boolean isIsbRebelBaseRouteCompletionDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        FlipLocationAlternative alternative =
+                findIsbRebelBaseAgentAlternative();
+        if (alternative == null || candidate == null
+                || candidate.getZone() != Zone.HAND
+                || hasUnmetIsbBlountBlocker(game, playerId)
+                || cheapestIsbRebelBaseAgentDeployCost(
+                    game, playerId, candidate, alternative) == null) {
+            return false;
+        }
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (advancesAlternativeAt(
+                        game, playerId, candidate,
+                        location, alternative)
+                    && alternativeSatisfiedAfterCandidate(
+                        game, playerId, alternative)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isIsbFlipCompletionDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isISBOperations || candidate == null
+                || candidate.getZone() != Zone.HAND
+                || hasUnmetIsbBlountBlocker(game, playerId)) {
+            return false;
+        }
+        FlipLocationAlternative onTable =
+                findIsbOnTableAgentAlternative();
+        boolean completesOnTable = onTable != null
+                && wouldCompleteIsbOnTableRouteWithCandidate(
+                    game, playerId, candidate)
+                && cheapestIsbOnTableAgentDeployCost(
+                    game, playerId, candidate, onTable) != null;
+        return completesOnTable
+                || isIsbRebelBaseRouteCompletionDeployCandidate(
+                    game, playerId, candidate);
+    }
+
+    public boolean wouldCompleteIsbPreFlipRequirementAt(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard location) {
+        return isISBOperations
+                && !hasUnmetIsbBlountBlocker(game, playerId)
+                && (wouldCompleteIsbOnTableRouteWithCandidate(
+                        game, playerId, candidate)
+                    || wouldCompletePreFlipRequirementAt(
+                        game, playerId, candidate, location));
+    }
+
+    private boolean wouldCompleteIsbOnTableRouteWithCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        FlipLocationAlternative alternative =
+                findIsbOnTableAgentAlternative();
+        if (alternative == null || candidate == null
+                || candidate.getZone() != null
+                    && candidate.getZone().isInPlay()
+                || !isIsbLoreAgentCandidate(
+                    game, playerId, candidate)) {
+            return false;
+        }
+        String controller = resolveController(
+                game.getGameState(), playerId,
+                alternative.controller);
+        int current = countAlternativeMatches(
+                game, playerId, controller, alternative);
+        int required = expectedCount(
+                game, playerId, alternative.count);
+        return current < required && current + 1 >= required;
+    }
+
+    private boolean hasUnmetIsbBlountBlocker(
+            SwccgGame game, String playerId) {
+        if (!isISBOperations || game == null || playerId == null
+                || activeFlipLocationRules == null) {
+            return false;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule != null
+                    && "isbo-front-lieutenant-blount-absent"
+                        .equals(rule.id)) {
+                return !isRuleSatisfied(game, playerId, rule);
+            }
+        }
+        return false;
+    }
+
     private int getCountedOperativeFormationForceReserve(
             SwccgGame game, String playerId,
             PhysicalCard deployingCandidate) {
@@ -13937,7 +14400,8 @@ public class ObjectiveAnalyzer {
             SwccgGame game, String playerId, PhysicalCard candidate) {
         if ((!isMassassiBaseOperationsFamily()
                     && !isImperialEntanglementsFamily()
-                    && !isOldAlliesObjectiveFamily())
+                    && !isOldAlliesObjectiveFamily()
+                    && !isISBOperations)
                 || isFlipped || game == null || playerId == null
                 || candidate == null || candidate.getZone() != Zone.HAND
                 || !playerId.equals(candidate.getOwner())
@@ -13951,6 +14415,10 @@ public class ObjectiveAnalyzer {
                     game, playerId, null);
             return route != null && route.usedCards.contains(
                     candidate.getPermanentCardId());
+        }
+        if (isISBOperations) {
+            return isPreferredIsbDeployRouteCandidate(
+                    game, playerId, candidate);
         }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)) continue;
@@ -13991,6 +14459,376 @@ public class ObjectiveAnalyzer {
             }
         }
         return false;
+    }
+
+    private int getIsbOnTableAgentForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        IsbDeployRouteReserve routeA = isbOnTableRouteReserve(
+                game, playerId, deployingCandidate);
+        IsbDeployRouteReserve routeB = isbRebelBaseRouteReserve(
+                game, playerId, deployingCandidate);
+        if (routeA.satisfied() || routeB.satisfied()) return 0;
+        int cheapestExecutable = Integer.MAX_VALUE;
+        if (routeA.executable()) {
+            cheapestExecutable = Math.min(
+                    cheapestExecutable, routeA.cost());
+        }
+        if (routeB.executable()) {
+            cheapestExecutable = Math.min(
+                    cheapestExecutable, routeB.cost());
+        }
+        if (cheapestExecutable != Integer.MAX_VALUE) {
+            return cheapestExecutable;
+        }
+        int cheapestProgress = Integer.MAX_VALUE;
+        if (routeA.cost() > 0) {
+            cheapestProgress = Math.min(
+                    cheapestProgress, routeA.cost());
+        }
+        if (routeB.cost() > 0) {
+            cheapestProgress = Math.min(
+                    cheapestProgress, routeB.cost());
+        }
+        return cheapestProgress != Integer.MAX_VALUE
+                ? cheapestProgress : 0;
+    }
+
+    private record IsbDeployRouteReserve(
+            boolean satisfied, boolean executable, int cost,
+            Set<Integer> usedCards) {
+        private static IsbDeployRouteReserve unavailable() {
+            return new IsbDeployRouteReserve(
+                    false, false, 0, Set.of());
+        }
+    }
+
+    private IsbDeployRouteReserve isbOnTableRouteReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        FlipLocationAlternative alternative =
+                findIsbOnTableAgentAlternative();
+        if (alternative == null) {
+            return IsbDeployRouteReserve.unavailable();
+        }
+        String controller = resolveController(
+                game.getGameState(), playerId,
+                alternative.controller);
+        int missing = Math.max(0,
+                expectedCount(game, playerId, alternative.count)
+                - countAlternativeMatches(
+                    game, playerId, controller, alternative));
+        if (missing == 0) {
+            return new IsbDeployRouteReserve(
+                    true, true, 0, Set.of());
+        }
+        if (deployingCandidate != null
+                && cheapestIsbOnTableAgentDeployCost(
+                    game, playerId, deployingCandidate,
+                    alternative) != null) {
+            missing--;
+        }
+        if (missing <= 0) {
+            return new IsbDeployRouteReserve(
+                    false, true, 0, Set.of());
+        }
+        Map<PhysicalCard, Integer> costs = new HashMap<>();
+        for (PhysicalCard card : game.getGameState().getHand(playerId)) {
+            if (card == null || card == deployingCandidate) continue;
+            Integer cost = cheapestIsbOnTableAgentDeployCost(
+                    game, playerId, card, alternative);
+            if (cost != null) costs.put(card, cost);
+        }
+        List<PhysicalCard> candidates = new ArrayList<>(costs.keySet());
+        candidates.sort(Comparator
+                .comparingInt((PhysicalCard card) -> costs.get(card))
+                .thenComparingInt(PhysicalCard::getPermanentCardId));
+        int funded = Math.min(missing, costs.size());
+        int reserve = 0;
+        Set<Integer> usedCards = new LinkedHashSet<>();
+        for (int i = 0; i < funded; i++) {
+            PhysicalCard card = candidates.get(i);
+            reserve += costs.get(card);
+            usedCards.add(card.getPermanentCardId());
+        }
+        return new IsbDeployRouteReserve(
+                false, funded == missing, reserve,
+                Set.copyOf(usedCards));
+    }
+
+    private IsbDeployRouteReserve isbRebelBaseRouteReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        FlipLocationAlternative alternative =
+                findIsbRebelBaseAgentAlternative();
+        if (alternative == null) {
+            return IsbDeployRouteReserve.unavailable();
+        }
+        int missing = Math.max(0,
+                expectedCount(game, playerId, alternative.count)
+                - countAlternativeMatches(
+                    game, playerId, playerId, alternative));
+        if (missing == 0) {
+            return new IsbDeployRouteReserve(
+                    true, true, 0, Set.of());
+        }
+        int openDestinations = countIsbRebelBaseDeployDestinations(
+                game, playerId, alternative);
+        if (deployingCandidate != null
+                && cheapestIsbRebelBaseAgentDeployCost(
+                    game, playerId, deployingCandidate,
+                    alternative) != null
+                && openDestinations > 0) {
+            missing--;
+            openDestinations--;
+        }
+        if (missing <= 0) {
+            return new IsbDeployRouteReserve(
+                    false, true, 0, Set.of());
+        }
+        Map<PhysicalCard, Integer> costs = new HashMap<>();
+        for (PhysicalCard card : game.getGameState().getHand(playerId)) {
+            if (card == null || card == deployingCandidate) continue;
+            Integer cost = cheapestIsbRebelBaseAgentDeployCost(
+                    game, playerId, card, alternative);
+            if (cost != null) costs.put(card, cost);
+        }
+        List<PhysicalCard> candidates = new ArrayList<>(costs.keySet());
+        candidates.sort(Comparator
+                .comparingInt((PhysicalCard card) -> costs.get(card))
+                .thenComparingInt(PhysicalCard::getPermanentCardId));
+        int funded = Math.min(
+                missing, Math.min(openDestinations, costs.size()));
+        int reserve = 0;
+        Set<Integer> usedCards = new LinkedHashSet<>();
+        for (int i = 0; i < funded; i++) {
+            PhysicalCard card = candidates.get(i);
+            reserve += costs.get(card);
+            usedCards.add(card.getPermanentCardId());
+        }
+        return new IsbDeployRouteReserve(
+                false, funded == missing, reserve,
+                Set.copyOf(usedCards));
+    }
+
+    private boolean isPreferredIsbOnTableAgentCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        return candidate != null
+                && isbOnTableRouteReserve(
+                    game, playerId, null).usedCards().contains(
+                        candidate.getPermanentCardId());
+    }
+
+    private boolean isPreferredIsbDeployRouteCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (candidate == null) return false;
+        IsbDeployRouteReserve routeA = isbOnTableRouteReserve(
+                game, playerId, null);
+        IsbDeployRouteReserve routeB = isbRebelBaseRouteReserve(
+                game, playerId, null);
+        if (routeA.satisfied() || routeB.satisfied()) return false;
+
+        List<IsbDeployRouteReserve> executable = new ArrayList<>();
+        if (routeA.executable()) executable.add(routeA);
+        if (routeB.executable()) executable.add(routeB);
+        List<IsbDeployRouteReserve> routes = executable.isEmpty()
+                ? List.of(routeA, routeB) : executable;
+        IsbDeployRouteReserve preferred = routes.stream()
+                .filter(route -> !route.usedCards().isEmpty())
+                .min(Comparator
+                        .comparingInt(IsbDeployRouteReserve::cost)
+                        .thenComparingInt(route ->
+                            route.usedCards().size()))
+                .orElse(IsbDeployRouteReserve.unavailable());
+        return preferred.usedCards().contains(
+                candidate.getPermanentCardId());
+    }
+
+    private FlipLocationAlternative findIsbOnTableAgentAlternative() {
+        if (!isISBOperations || isFlipped
+                || activeFlipLocationRules == null) {
+            return null;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative
+                    : rule.alternatives) {
+                if (alternative != null
+                        && "onTable".equals(alternative.relation)
+                        && "ISB_agent".equals(
+                            alternative.actorFilterKey)
+                        && alternative.count != null
+                        && alternative.count.value != null
+                        && alternative.count.value > 0
+                        && !isUpperBound(alternative.count)) {
+                    return alternative;
+                }
+            }
+        }
+        return null;
+    }
+
+    private FlipLocationAlternative findIsbRebelBaseAgentAlternative() {
+        if (!isISBOperations || isFlipped
+                || activeFlipLocationRules == null) {
+            return null;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative
+                    : rule.alternatives) {
+                if (isIsbRebelBaseAgentAlternative(alternative)
+                        && alternative.count != null
+                        && alternative.count.value != null
+                        && alternative.count.value > 0
+                        && !isUpperBound(alternative.count)) {
+                    return alternative;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean isIsbRebelBaseAgentAlternative(
+            FlipLocationAlternative alternative) {
+        return isISBOperations && alternative != null
+                && "controlWith".equals(alternative.relation)
+                && "self".equals(alternative.controller)
+                && "non_undercover_ISB_agent".equals(
+                    alternative.actorFilterKey)
+                && "Rebel_Base_location".equals(
+                    alternative.locationFilterKey);
+    }
+
+    private int countIsbRebelBaseDeployDestinations(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative alternative) {
+        int count = 0;
+        String opponent = game.getGameState().getOpponent(playerId);
+        Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
+                resolveSpotOverride(
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride);
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!Filters.site.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)
+                    || !locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)
+                    || relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride)
+                    || opponent != null
+                        && game.getModifiersQuerying().occupiesLocation(
+                            game.getGameState(), location,
+                            opponent, overrides)) {
+                continue;
+            }
+            count++;
+        }
+        return count;
+    }
+
+    private Integer cheapestIsbRebelBaseAgentDeployCost(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            FlipLocationAlternative alternative) {
+        if (candidate == null || alternative == null
+                || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())
+                || !isIsbLoreAgentCandidate(
+                    game, playerId, candidate)
+                || !candidateProvidesPresence(game, candidate)) {
+            return null;
+        }
+        Integer cheapest = null;
+        String opponent = game.getGameState().getOpponent(playerId);
+        Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
+                resolveSpotOverride(
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride);
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!Filters.site.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)
+                    || !locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)
+                    || relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride)
+                    || opponent != null
+                        && game.getModifiersQuerying().occupiesLocation(
+                            game.getGameState(), location,
+                            opponent, overrides)) {
+                continue;
+            }
+            Integer cost = requiredCardDeployCostAt(
+                    game, candidate, location);
+            if (cost != null
+                    && (cheapest == null || cost < cheapest)) {
+                cheapest = cost;
+            }
+        }
+        return cheapest;
+    }
+
+    private Integer cheapestIsbOnTableAgentDeployCost(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            FlipLocationAlternative alternative) {
+        if (candidate == null || alternative == null
+                || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())
+                || !isIsbLoreAgentCandidate(
+                    game, playerId, candidate)) {
+            return null;
+        }
+        Integer cheapest = null;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!Filters.site.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), location)) {
+                continue;
+            }
+            Integer cost = requiredCardDeployCostAt(
+                    game, candidate, location);
+            if (cost != null && (cheapest == null || cost < cheapest)) {
+                cheapest = cost;
+            }
+        }
+        return cheapest;
+    }
+
+    private boolean isIsbLoreAgentCandidate(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        return isISBOperations && game != null && playerId != null
+                && candidate != null
+                && playerId.equals(candidate.getOwner())
+                && Filters.and(
+                    Filters.character,
+                    Filters.or(
+                        Filters.loreContains("ISB"),
+                        Filters.loreContains("Rebel"),
+                        Filters.loreContains("Rebels"),
+                        Filters.loreContains("Rebellion")))
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
     }
 
     private int countOpenCountedObjectiveDestinations(
@@ -16063,7 +16901,6 @@ public class ObjectiveAnalyzer {
             }
             PhysicalCard location = game.getModifiersQuerying()
                     .getLocationThatCardIsPresentAt(gameState, candidate);
-            if (location == null) return FlipGateFormationRole.NONE;
 
             ruleLoop:
             for (FlipLocationRule rule : activeFlipLocationRules) {
@@ -16075,15 +16912,23 @@ public class ObjectiveAnalyzer {
                             || alternative.count == null
                             || alternative.count.value == null
                             || alternative.count.value <= 1
-                            || !locationMatchesAlternative(
+                            || (!"onTable".equals(alternative.relation)
+                                && !locationMatchesAlternative(
                                     gameState, game, playerId,
-                                    location, alternative)) {
+                                    location, alternative))) {
                         continue;
                     }
                     int required = expectedCount(
                             game, playerId, alternative.count);
+                    String countedController = "onTable".equals(
+                            alternative.relation)
+                            ? resolveController(
+                                gameState, playerId,
+                                alternative.controller)
+                            : playerId;
                     int qualified = countAlternativeMatches(
-                            game, playerId, playerId, alternative);
+                            game, playerId,
+                            countedController, alternative);
                     if (qualified <= 0 || qualified > required
                             || (!"onTable".equals(
                                     alternative.relation)
@@ -17569,6 +18414,14 @@ public class ObjectiveAnalyzer {
                         .matchingOperativeToRenegadePlanet;
             case "ISB_agent":
                 return com.gempukku.swccgo.filters.Filters.ISB_agent;
+            case "Lieutenant_Blount":
+                return com.gempukku.swccgo.filters.Filters.Lieutenant_Blount;
+            case "non_undercover_ISB_agent":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.ISB_agent,
+                        com.gempukku.swccgo.filters.Filters.not(
+                            com.gempukku.swccgo.filters.Filters
+                                .undercover_spy));
             // Batch Eighteen (2026-07-27): Profit pair actors. Han legs are
             // ownership-free spots (canSpot has no side); on(Tatooine) is
             // presence-on-planet (excludes the system location), never
@@ -17634,6 +18487,7 @@ public class ObjectiveAnalyzer {
             case "Endor_location":               return com.gempukku.swccgo.filters.Filters.Endor_location;
             case "Endor_system":                 return com.gempukku.swccgo.filters.Filters.Endor_system;
             case "Endor_site":                   return com.gempukku.swccgo.filters.Filters.Endor_site;
+            case "Coruscant_location":           return com.gempukku.swccgo.filters.Filters.Coruscant_location;
             case "Dyer_Ominous_Rumors_protection_location":
                 return com.gempukku.swccgo.filters.Filters.or(
                     com.gempukku.swccgo.filters.Filters.Bunker,

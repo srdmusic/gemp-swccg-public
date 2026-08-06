@@ -2237,6 +2237,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer
                             objectiveProgressAnalyzer = context.getObjectiveAnalyzer();
+                        boolean exactIsbRouteCompletion = false;
                         if (objectiveProgressAnalyzer != null) {
                             if (objectiveProgressAnalyzer
                                     .isOldAlliesWrongGroundRouteDestination(
@@ -2266,6 +2267,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 game, playerId,
                                                 objectiveProgressDeployingCard,
                                                 location);
+                            exactIsbRouteCompletion =
+                                    objectiveProgressAnalyzer
+                                        .isISBOperations()
+                                    && objectiveProgressAnalyzer
+                                        .wouldCompleteIsbPreFlipRequirementAt(
+                                            game, playerId,
+                                            objectiveProgressDeployingCard,
+                                            location);
                             applyDeploySitingPolicy(action,
                                 DeployObjectiveSitingPolicy
                                     .scoreCountedObjectiveProgress(
@@ -2307,6 +2316,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     .scoreActorRuntimeLocation(
                                         action.getActionId(),
                                         actorLocationProgress));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreIsbRouteCompletion(
+                                        action.getActionId(),
+                                        exactIsbRouteCompletion));
                             applyDeploySitingPolicy(action,
                                 DeployObjectiveSitingPolicy
                                     .scoreRequiredOnTableCard(
@@ -2815,7 +2829,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     plannedDeployInstruction, deploymentPlanSnapshot);
                             boolean plannedTargetBlocked = plannedTargetSpyBlocked
                                 || plannedTargetFormationBlocked;
-                            if (!isPlannedTarget || !plannedTargetBlocked) {
+                            if ((!isPlannedTarget || !plannedTargetBlocked)
+                                    && !exactIsbRouteCompletion) {
                                 applyDeployPlanDestinationPolicy(action,
                                     DeployPlanPolicy.evaluateDestinationTarget(
                                         new DeployPlanPolicy.DestinationTargetFacts(
@@ -8434,12 +8449,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         .qualifiesPreFlipRuntimeActorAtLocation(
                                             game, playerId, fsMover,
                                             location);
+                                boolean exactIsbBlockerChase =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    && routeAnalyzer
+                                        .isSafeIsbBlountBlockerLandspeedDestination(
+                                            game, playerId, fsMover,
+                                            location);
                                 boolean objectiveBlockerChaseDestination =
                                     !objectiveActorLocationDestination
-                                    && preservesRuntimeActor
-                                    && routeAnalyzer
-                                        .isPreFlipGlobalBlockerAt(
-                                            game, playerId, location);
+                                    && (preservesRuntimeActor
+                                        && routeAnalyzer
+                                            .isPreFlipGlobalBlockerAt(
+                                                game, playerId, location)
+                                        || exactIsbBlockerChase);
                                 var moverFormationRole =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -8612,7 +8635,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 fsMover, location)
                                         || routeAnalyzer
                                             .hasCountedOperativeFormationRule()
-                                            && preservesRuntimeActor;
+                                            && preservesRuntimeActor
+                                        || routeAnalyzer
+                                            .preservesIsbOnTableRouteAgentByMoving(
+                                                game, playerId,
+                                                fsMover);
                                     var countedDestinationHold =
                                         MoveObjectiveGateHoldPolicy
                                             .evaluateCountedFormation(
@@ -8688,7 +8715,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 .ObjectiveAnalyzer
                                                 .FlipGateFormationRole
                                                 .LAST_REQUIRED_ACTOR
-                                        && !preservesRuntimeActor) {
+                                        && !preservesRuntimeActor
+                                        && !exactIsbBlockerChase) {
                                     String opponent =
                                         gameState.getOpponent(playerId);
                                     float friendlyPower =

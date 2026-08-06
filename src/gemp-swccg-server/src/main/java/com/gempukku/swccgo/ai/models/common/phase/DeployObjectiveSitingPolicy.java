@@ -157,6 +157,19 @@ public final class DeployObjectiveSitingPolicy {
                         "Deploy the required actor to a live qualifying objective location"));
     }
 
+    public static PolicyResult scoreIsbRouteCompletion(
+            String actionId, boolean completesIsbRoute) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!completesIsbRoute) {
+            return new PolicyResult(
+                    "DEPLOY_ISB_ROUTE_COMPLETION_POLICY", List.of());
+        }
+        return single("DEPLOY_ISB_ROUTE_COMPLETION_POLICY",
+                add(actionId, "OBJECTIVE.ISB.ROUTE_COMPLETION",
+                        TraceOutputKind.BANDED, 8000.0f,
+                        "Deploy the ISB agent here to complete the current flip route now"));
+    }
+
     public static PolicyResult scoreRequiredOnTableCard(
             String actionId,
             ObjectiveProgressAssessment.Outcome outcome) {

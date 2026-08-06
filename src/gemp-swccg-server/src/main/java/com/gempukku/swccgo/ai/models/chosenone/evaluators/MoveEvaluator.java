@@ -750,6 +750,10 @@ public class MoveEvaluator extends ActionEvaluator {
                                     && routeAnalyzer
                                         .isPreFlipGlobalBlockerAt(
                                             game, playerId,
+                                            routeDestination)
+                                    || routeAnalyzer
+                                        .isIsbBlountBlockerChaseActorAt(
+                                            game, playerId, cardToMove,
                                             routeDestination);
                             boolean requiredEnablerHop = routeAnalyzer
                                     .advancesRequiredCardDeployPrerequisiteByMovingTo(
@@ -1555,7 +1559,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                         && gateAnalyzer
                                             .hasSafePreFlipRuntimeActorLandspeedDestination(
                                                 game, playerId,
-                                                cardToMove));
+                                                cardToMove)
+                                    || gateAnalyzer
+                                        .preservesIsbOnTableRouteAgentByMoving(
+                                            game, playerId,
+                                            cardToMove));
                         MoveObjectiveGateHoldPolicy.Evaluation countedHold =
                                 MoveObjectiveGateHoldPolicy
                                     .evaluateCountedFormation(
@@ -1613,7 +1621,14 @@ public class MoveEvaluator extends ActionEvaluator {
                                 && gateAnalyzer
                                     .hasSafePreFlipRuntimeActorLandspeedDestination(
                                         game, playerId,
-                                        cardToMove);
+                                        cardToMove)
+                                || activeRuntimeActor
+                                    && actionLower.contains(
+                                        "move using landspeed")
+                                    && gateAnalyzer
+                                        .hasSafeIsbBlountBlockerLandspeedDestination(
+                                            game, playerId,
+                                            cardToMove);
                         MoveObjectiveGateHoldPolicy.Evaluation runtimeHold =
                                 MoveObjectiveGateHoldPolicy
                                     .evaluateRuntimeActorFormation(

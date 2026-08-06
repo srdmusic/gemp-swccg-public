@@ -728,6 +728,14 @@ public class DeployEvaluator extends ActionEvaluator {
             } catch (Exception sequencingError) {
                 LOG.debug("V176 error: {}", sequencingError.getMessage());
             }
+            if (winnableBattle != null
+                    && context.getObjectiveAnalyzer() != null
+                    && context.getObjectiveAnalyzer()
+                        .isIsbFlipCompletionDeployCandidate(
+                            context.getGame(), context.getPlayerId(),
+                            deployActionSource)) {
+                winnableBattle = null;
+            }
             DeploySequencingPolicy.Evaluation envelope = DeploySequencingPolicy.phaseEnvelope(
                     actionId, hand != null ? hand.size() : 0, availableForce,
                     context.getForcePileSize(), endangered, winnableBattle);
@@ -1780,6 +1788,18 @@ public class DeployEvaluator extends ActionEvaluator {
                                 .getCountedOperativeBattleForceReserve(
                                     game, playerId)
                             : 0;
+                    int isbRebelBaseMoveReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getIsbRebelBaseMoveForceReserve(
+                                    game, playerId, card)
+                            : 0;
+                    int isbRebelBaseBattleReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getIsbRebelBaseBattleForceReserve(
+                                    game, playerId, card)
+                            : 0;
                     DeployPlanPolicy.Evaluation planEvaluation = DeployPlanPolicy.evaluate(
                         new DeployPlanPolicy.Facts(
                             actionId, plan != null,
@@ -2033,6 +2053,44 @@ public class DeployEvaluator extends ActionEvaluator {
                                     < countedOperativeBattleReserve) {
                             action.hardVeto(
                                 "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_RESERVE: preserve the pending winnable battle payment after the formation plan completes");
+                            actions.add(action);
+                            continue;
+                        }
+                    }
+                    if (countedOperativeOrdinaryDeploy
+                            && isbRebelBaseMoveReserve > 0) {
+                        if (exactNormalDeployPayment == null
+                                && massassiDeployPayment > 0) {
+                            action.hardVeto(
+                                "OBJECTIVE.ISB.REBEL_BASE_MOVE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the exact route move payment");
+                            actions.add(action);
+                            continue;
+                        }
+                        if (exactNormalDeployPayment != null
+                                && availableForce
+                                    - exactNormalDeployPayment
+                                    < isbRebelBaseMoveReserve) {
+                            action.hardVeto(
+                                "OBJECTIVE.ISB.REBEL_BASE_MOVE_FORCE_RESERVE: preserve the exact safe landspeed payment that completes the second Rebel Base location");
+                            actions.add(action);
+                            continue;
+                        }
+                    }
+                    if (countedOperativeOrdinaryDeploy
+                            && isbRebelBaseBattleReserve > 0) {
+                        if (exactNormalDeployPayment == null
+                                && massassiDeployPayment > 0) {
+                            action.hardVeto(
+                                "OBJECTIVE.ISB.REBEL_BASE_BATTLE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the exact route battle payment");
+                            actions.add(action);
+                            continue;
+                        }
+                        if (exactNormalDeployPayment != null
+                                && availableForce
+                                    - exactNormalDeployPayment
+                                    < isbRebelBaseBattleReserve) {
+                            action.hardVeto(
+                                "OBJECTIVE.ISB.REBEL_BASE_BATTLE_FORCE_RESERVE: preserve the exact winnable battle payment that completes the second Rebel Base location");
                             actions.add(action);
                             continue;
                         }

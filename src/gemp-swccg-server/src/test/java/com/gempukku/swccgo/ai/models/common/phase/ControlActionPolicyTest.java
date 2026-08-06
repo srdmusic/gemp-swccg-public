@@ -52,6 +52,14 @@ public class ControlActionPolicyTest {
     }
 
     @Test
+    public void exactIsbAgentRetrievalDominatesTheGenericPileBoundary() {
+        assertOperation(ControlActionPolicy.retrieve("A", 1, true),
+                "OBJECTIVE.ISB.RETRIEVE_AGENT",
+                TraceOutputKind.BANDED, 2000.0f,
+                "ISB OBJECTIVE: Free native agent retrieval before drawing");
+    }
+
+    @Test
     public void fixedUtilityArmsKeepExactAdditiveScores() {
         assertOperation(ControlActionPolicy.makeOpponentLose("A"),
                 "CONTROL-make-opponent-lose", TraceOutputKind.ORDERING,

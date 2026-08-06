@@ -188,6 +188,20 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
+    public void isbRouteCompletionDominatesLegacyReinforcementOnlyAtCompletion() {
+        PolicyOperation completion = DeployObjectiveSitingPolicy
+                .scoreIsbRouteCompletion("a", true)
+                .operations().get(0);
+        PolicyResult neutral = DeployObjectiveSitingPolicy
+                .scoreIsbRouteCompletion("a", false);
+
+        assertOperation(completion,
+                "OBJECTIVE.ISB.ROUTE_COMPLETION", 8000.0f);
+        assertTrue(completion.delta() > 3000.0f);
+        assertTrue(neutral.operations().isEmpty());
+    }
+
+    @Test
     public void terminalObjectiveExposureIsAnExactHardVeto() {
         PolicyResult blocked =
                 DeployObjectiveSitingPolicy

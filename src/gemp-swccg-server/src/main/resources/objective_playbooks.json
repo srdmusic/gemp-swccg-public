@@ -4869,7 +4869,7 @@
             {
               "relation": "controlWith",
               "controller": "self",
-              "actorFilterKey": "ISB_agent",
+              "actorFilterKey": "non_undercover_ISB_agent",
               "locationFilterKey": "Rebel_Base_location",
               "locationFragments": [],
               "count": {
@@ -4877,8 +4877,30 @@
                 "value": 2
               },
               "includeExcludedFromBattle": true,
-              "scoreRole": "flipProgress",
+              "scoreRole": "actorToLocation",
               "sourceText": "route B: control two Rebel Base locations each WITH an ISB agent (Card7_299.java L76). Rebel_Base_location = partOfSystem(Yavin 4) OR partOfSystem(Hoth) - a computed membership filter matching systems AND all their sites, battleground or not, regardless of who deployed them. The engine injects owner + not-undercover around the bare ISB_agent (ControlsWithCondition L102/L110)."
+            }
+          ]
+        },
+        {
+          "id": "isbo-front-lieutenant-blount-absent",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "opponent",
+              "actorFilterKey": "Lieutenant_Blount",
+              "locationFilterKey": "Coruscant_location",
+              "locationFragments": [],
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "includeExcludedFromBattle": false,
+              "scoreRole": "globalBlockerAbsent",
+              "sourceText": "external blocker: while Lieutenant Blount occupies any Coruscant location, Card9_021 prevents ISB Operations from flipping and forcibly flips Empire's Sinister Agents back. This separate allOf rule preserves the objective's internal route A OR route B law."
             }
           ]
         },
@@ -4900,6 +4922,28 @@
               "includeExcludedFromBattle": true,
               "scoreRole": "stayFlipped",
               "sourceText": "flip-back when NO ISB agent can be spotted anywhere (Card7_299_BACK.java L85) - pure absence, no location, no ownership. The back re-grants the agent keyword so agents keep counting post-flip. No hard-loss handler on either side."
+            }
+          ]
+        },
+        {
+          "id": "isbo-back-agent-battleground-payoff",
+          "phase": "postFlip",
+          "purpose": "payoff",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "presentAt",
+              "controller": "self",
+              "actorFilterKey": "non_undercover_ISB_agent",
+              "locationFilterKey": "battleground_site",
+              "locationFragments": [],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "includeExcludedFromBattle": false,
+              "scoreRole": "postFlipPrimary",
+              "sourceText": "back payoff: each battleground site where your non-undercover ISB agent is present adds 1 to your Force drains there and subtracts 1 from the opponent's Force drains there and at related locations (Card7_299_BACK.java L69-L75). Control is not required, and multiple agents at one site do not multiply the modifier."
             }
           ]
         }
