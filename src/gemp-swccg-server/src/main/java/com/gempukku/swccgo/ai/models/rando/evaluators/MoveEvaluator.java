@@ -1230,7 +1230,10 @@ public class MoveEvaluator extends ActionEvaluator {
                         try {
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v47Analyzer =
                                 context.getObjectiveAnalyzer();
+                            // V47 SCOPED 2026-08-07 (m01674): TDIGWATT-family only — the text-scan
+                            // predicate alone also matched the LIGHT CC objectives (QMC/CITC).
                             if (v47Analyzer != null && v47Analyzer.isAnalyzed()
+                                    && v47Analyzer.isTdigwatt()
                                     && v47Analyzer.needsBespinSystemPresence()) {
                                 v47ObjectiveWantsLandoHere = v47Analyzer.isFlipped()
                                     ? v47Analyzer.isFlipBackProtectionLocation(currentLoc.getTitle())

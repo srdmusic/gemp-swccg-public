@@ -10112,7 +10112,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 && moveDecisionText.contains("lando")) {
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer moveObjAnalyzer =
                                 context.getObjectiveAnalyzer();
+                            // V47 SCOPED 2026-08-07 (m01674): needsBespinSystemPresence() is a raw
+                            // "bespin"/"cloud city" text scan and also fires for the LIGHT Cloud City
+                            // objectives (QMC 109_4, CITC 301_2), where pinning Lando fought their own
+                            // flip legs. The stay-lock is TDIGWATT's design — gate on the family flag.
+                            // boolean bespinPresenceObjective = moveObjAnalyzer != null
+                            //     && moveObjAnalyzer.needsBespinSystemPresence();
                             boolean bespinPresenceObjective = moveObjAnalyzer != null
+                                && moveObjAnalyzer.isTdigwatt()
                                 && moveObjAnalyzer.needsBespinSystemPresence();
                             MoveLandoStayPolicy.Contribution landoStay =
                                 MoveLandoStayPolicy.destinationStay(
