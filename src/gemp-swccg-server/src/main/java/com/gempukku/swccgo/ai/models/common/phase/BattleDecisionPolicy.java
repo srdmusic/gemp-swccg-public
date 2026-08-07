@@ -87,6 +87,114 @@ public final class BattleDecisionPolicy {
         }
     }
 
+    @FunctionalInterface
+    public interface Predictor {
+        Prediction predict(int myPower, int myDestinyDraws,
+                           int opponentPower, int opponentDestinyDraws);
+    }
+
+    public record PredictionGate(
+            Prediction prediction,
+            BattleInitiationPolicy.PredictionDecision decision,
+            int myPower,
+            int myDestinyDraws,
+            int opponentPower,
+            int opponentDestinyDraws) {
+        public boolean safe() {
+            return decision != null
+                    && decision.branch()
+                        == BattleInitiationPolicy.PredictionBranch.NONE;
+        }
+    }
+
+    /**
+     * Reads the same location facts used by the live V76 battle gate, then
+     * delegates the actual prediction to the owning public bot.
+     */
+    public static PredictionGate predictionGateAtLocation(
+            SwccgGame game, GameState gameState, String playerId,
+            PhysicalCard location, Predictor predictor) {
+        if (game == null || gameState == null || playerId == null
+                || location == null || predictor == null) {
+            return null;
+        }
+        String opponentId = gameState.getOpponent(playerId);
+        if (opponentId == null) return null;
+
+        float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                gameState, location, playerId, false, false);
+        float opponentPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                gameState, location, opponentId, false, false);
+        float weaponBonus = 0f;
+        float opponentWeaponBonus = 0f;
+        int ourCharacters = 0;
+        int opponentCharacters = 0;
+        boolean vaderPresent = false;
+        List<PhysicalCard> cardsHere = gameState.getCardsAtLocation(location);
+        if (cardsHere != null) {
+            for (PhysicalCard card : cardsHere) {
+                if (card == null || card.getBlueprint() == null
+                        || card.getBlueprint().getCardCategory()
+                            != com.gempukku.swccgo.common.CardCategory.CHARACTER) {
+                    continue;
+                }
+                if (playerId.equals(card.getOwner())) {
+                    ourCharacters++;
+                    weaponBonus += BattleWeaponProfile
+                            .assess(game, gameState, card).bonus();
+                    vaderPresent |= Filters.Vader.accepts(game, card);
+                } else if (opponentId.equals(card.getOwner())) {
+                    opponentCharacters++;
+                    opponentWeaponBonus += BattleWeaponProfile
+                            .assess(game, gameState, card).bonus();
+                }
+            }
+        }
+        if (vaderPresent) {
+            List<PhysicalCard> hand = gameState.getHand(playerId);
+            if (hand != null) {
+                for (PhysicalCard card : hand) {
+                    if (card != null && card.getTitle() != null
+                            && card.getTitle().toLowerCase(Locale.ROOT)
+                                .contains("i have you now")) {
+                        weaponBonus += 3f;
+                        break;
+                    }
+                }
+            }
+        }
+
+        int myDraws = Math.max(1, Math.min(4, ourCharacters));
+        int opponentDraws = Math.max(1, Math.min(4, opponentCharacters));
+        int effectiveOurPower = (int) (ourPower + weaponBonus);
+        int effectiveOpponentPower =
+                (int) (opponentPower + opponentWeaponBonus);
+        Prediction outcome = predictor.predict(
+                effectiveOurPower, myDraws,
+                effectiveOpponentPower, opponentDraws);
+        BattleInitiationPolicy.PredictionDecision decision =
+                BattleInitiationPolicy.prediction(
+                        location.getTitle(),
+                        outcome.winProbability,
+                        outcome.expectedDamageTaken);
+        return new PredictionGate(
+                outcome, decision,
+                effectiveOurPower, myDraws,
+                effectiveOpponentPower, opponentDraws);
+    }
+
+    public static boolean isPredictorSafeAtLocation(
+            SwccgGame game, GameState gameState, String playerId,
+            PhysicalCard location, Predictor predictor) {
+        try {
+            PredictionGate gate = predictionGateAtLocation(
+                    game, gameState, playerId, location, predictor);
+            return gate != null && gate.safe();
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
     public record Contribution(String reason, float delta, boolean hardVeto,
                                TraceRuleId ruleArmId, TraceDomainId domainId,
                                TraceOutputKind outputKind) {
@@ -602,41 +710,31 @@ public final class BattleDecisionPolicy {
                                     // exists with 311 lines of simulation logic but was never
                                     // wired into BattleEvaluator. This wiring closes the gap.
                                     try {
-                                        // Estimate destiny draws per side: count chars with ability >= 1
-                                        // at the location, capped between 1 and 4 (typical SWCCG range).
-                                        int myDraws = 1, oppDraws = 1;
-                                        try {
-                                            int myCh = 0, oppCh = 0;
-                                            for (PhysicalCard c : cardsHere) {
-                                                if (c == null || c.getBlueprint() == null) continue;
-                                                if (c.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-                                                if (playerId.equals(c.getOwner())) myCh++;
-                                                else if (opponentId.equals(c.getOwner())) oppCh++;
-                                            }
-                                            myDraws = Math.max(1, Math.min(4, myCh));
-                                            oppDraws = Math.max(1, Math.min(4, oppCh));
-                                        } catch (Exception e) { /* use defaults */ }
+                                        PredictionGate predictionGate =
+                                            predictionGateAtLocation(
+                                                game, gameState, playerId,
+                                                targetLocation,
+                                                context::predictBattle);
+                                        if (predictionGate == null) {
+                                            throw new IllegalStateException(
+                                                "missing battle prediction facts");
+                                        }
+                                        Prediction v76Outcome =
+                                            predictionGate.prediction();
 
-                                        // V76 ADJUSTED 2026-07-10: opponent side weapon-adjusted (was raw).
-                                        Prediction v76Outcome = context.predictBattle(
-                                            (int) (ourPower + weaponBonus), myDraws,
-                                            (int) (theirPower + oppWeaponBonus), oppDraws);
-
-                                        logger.warn("V76 BATTLE PREDICT at {}: winRate={} avgDamageTaken={} avgDamageDealt={} (myPow={}+wb{} draws={} vs oppPow={} draws={})",
+                                        logger.warn("V76 BATTLE PREDICT at {}: winRate={} avgDamageTaken={} avgDamageDealt={} (myPow={} draws={} vs oppPow={} draws={})",
                                             targetLocation.getTitle(),
                                             String.format("%.2f", v76Outcome.winProbability),
                                             String.format("%.1f", v76Outcome.expectedDamageTaken),
                                             String.format("%.1f", v76Outcome.expectedDamageDealt),
-                                            (int) ourPower, (int) weaponBonus, myDraws,
-                                            (int) theirPower, oppDraws);
+                                            predictionGate.myPower(),
+                                            predictionGate.myDestinyDraws(),
+                                            predictionGate.opponentPower(),
+                                            predictionGate.opponentDestinyDraws());
 
                                         BattleInitiationPolicy.PredictionDecision prediction =
-                                            BattleInitiationPolicy.prediction(
-                                                targetLocation.getTitle(),
-                                                v76Outcome.winProbability,
-                                                v76Outcome.expectedDamageTaken);
-                                        predictorSafe = prediction.branch()
-                                                == BattleInitiationPolicy.PredictionBranch.NONE;
+                                            predictionGate.decision();
+                                        predictorSafe = predictionGate.safe();
                                         action.apply(prediction.contribution());
                                         if (prediction.branch()
                                             == BattleInitiationPolicy.PredictionBranch.PROBABLE_DEFEAT) {

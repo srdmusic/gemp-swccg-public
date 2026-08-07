@@ -25,6 +25,7 @@ import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -3427,6 +3428,11 @@ public class ObjectiveAnalyzer {
                 || activeFlipLocationRules == null) {
             return false;
         }
+        PhysicalCard routeLocation =
+                isIWantThatMapObjectiveFamily()
+                    ? iWantThatMapRouteLocation(game, location)
+                    : location;
+        if (routeLocation == null) return false;
         if (advancesFirstOrderReignsChaseShipRouteAt(
                 game, playerId, candidate, location)) {
             return true;
@@ -3462,15 +3468,19 @@ public class ObjectiveAnalyzer {
             }
             for (FlipLocationAlternative alternative : rule.alternatives) {
                 if (isActorToRuntimeLocationAlternative(alternative)
-                        && (advancesAlternativeAt(
+                        && (isIWantThatMapObjectiveFamily()
+                            ? iWantThatMapCandidateAddsQualifiedBattleground(
                                 game, playerId, candidate,
-                                location, alternative)
+                                routeLocation, alternative)
+                            : advancesAlternativeAt(
+                                game, playerId, candidate,
+                                routeLocation, alternative)
                             || isAgentsOfBlackSunObjectiveFamily()
                                 && !isFlipLocationAlternativeSatisfied(
                                     game, playerId, alternative)
                                 && movedGroupCanSatisfyAlternativeAt(
                                     game, playerId, candidate,
-                                    location, alternative,
+                                    routeLocation, alternative,
                                     resolveFilter(
                                         alternative.actorFilterKey)))) {
                     return true;
@@ -3537,6 +3547,11 @@ public class ObjectiveAnalyzer {
             return true;
         }
         GameState gameState = game.getGameState();
+        PhysicalCard routeLocation =
+                isIWantThatMapObjectiveFamily()
+                    ? iWantThatMapRouteLocation(game, location)
+                    : location;
+        if (routeLocation == null) return false;
         if (isRalltiirOperationsFamily()) {
             for (FlipLocationRule rule : activeFlipLocationRules) {
                 if (!isActivePreFlipRule(rule)) continue;
@@ -3580,7 +3595,7 @@ public class ObjectiveAnalyzer {
                 if (!isActorToRuntimeLocationAlternative(alternative)
                         || !locationMatchesAlternative(
                                 gameState, game, playerId,
-                                location, alternative)) {
+                                routeLocation, alternative)) {
                     continue;
                 }
                 String controller = resolveController(
@@ -3610,16 +3625,76 @@ public class ObjectiveAnalyzer {
                         && (actorFilter.accepts(
                                 gameState,
                                 game.getModifiersQuerying(), candidate)
-                            || isAgentsOfBlackSunObjectiveFamily()
+                            || (isAgentsOfBlackSunObjectiveFamily()
+                                || isIWantThatMapObjectiveFamily())
                                 && movedGroupCanSatisfyAlternativeAt(
                                     game, playerId, candidate,
-                                    location, alternative,
+                                    routeLocation, alternative,
                                     actorFilter))) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    private boolean iWantThatMapCandidateAddsQualifiedBattleground(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination,
+            FlipLocationAlternative alternative) {
+        if (!isIWantThatMapObjectiveFamily()
+                || !locationMatchesAlternative(
+                    game.getGameState(), game, playerId,
+                    destination, alternative)
+                || isFlipLocationAlternativeSatisfied(
+                    game, playerId, alternative)) {
+            return false;
+        }
+        com.gempukku.swccgo.filters.Filter actorFilter =
+                resolveFilter(alternative.actorFilterKey);
+        boolean destinationQualifies = advancesAlternativeAt(
+                game, playerId, candidate, destination, alternative)
+                || movedGroupCanSatisfyAlternativeAt(
+                    game, playerId, candidate, destination,
+                    alternative, actorFilter);
+        if (!destinationQualifies
+                || candidate.getZone() == null
+                || !candidate.getZone().isInPlay()) {
+            return destinationQualifies;
+        }
+        PhysicalCard origin = actorLocationForAlternative(
+                game, candidate, alternative);
+        if (origin == null || samePhysicalLocation(origin, destination)
+                || !locationMatchesAlternative(
+                    game.getGameState(), game, playerId,
+                    origin, alternative)
+                || !relationSatisfiedAt(
+                    game, playerId, playerId, origin,
+                    alternative.relation,
+                    alternative.actorFilterKey,
+                    alternative.includeExcludedFromBattle,
+                    alternative.spotOverride)) {
+            return true;
+        }
+        return hasOtherMatchingActorOutsideRemovedGroup(
+                game, playerId, origin, alternative,
+                candidate, null);
+    }
+
+    private PhysicalCard iWantThatMapRouteLocation(
+            SwccgGame game, PhysicalCard destination) {
+        if (game == null || destination == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        SwccgCardBlueprint blueprint = destination.getBlueprint();
+        if (blueprint != null
+                && blueprint.getCardCategory() == CardCategory.LOCATION) {
+            return destination;
+        }
+        return game.getModifiersQuerying().getLocationThatCardIsAt(
+                game.getGameState(), destination);
     }
 
     public boolean isSafePreFlipRuntimeActorLandspeedDestination(
@@ -3899,6 +3974,8 @@ public class ObjectiveAnalyzer {
                 Filters.canParticipateInBattleAt(location, playerId);
         for (PhysicalCard card : permanents) {
             if (card == null
+                    || controller == null
+                        && playerId.equals(card.getOwner())
                     || controller != null
                         && !controller.equals(card.getOwner())
                     || !isActiveForSpot(
@@ -4597,6 +4674,10 @@ public class ObjectiveAnalyzer {
                 return wouldTheyHaveNoIdeaDepartureTriggerFlipBack(
                         game, playerId, mover);
             }
+            if (isIWantThatMapObjectiveFamily()) {
+                return wouldIWantThatMapDepartureTriggerFlipBack(
+                        game, playerId, mover);
+            }
             // A location-scoped on-table actor stops matching when it leaves
             // that location. Global on-table actors, such as Vader for Hunt
             // Down, remain valid after ordinary movement.
@@ -4751,6 +4832,88 @@ public class ObjectiveAnalyzer {
         return new TheyHaveNoIdeaBackState(
                 occupiedLocationIds.size(),
                 validRogueOneException);
+    }
+
+    private boolean wouldIWantThatMapDepartureTriggerFlipBack(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (!isIWantThatMapObjectiveFamily() || !isFlipped
+                || mover == null || !playerId.equals(mover.getOwner())
+                || mover.getZone() == null || !mover.getZone().isInPlay()
+                || hasIWantThatMapResistanceAgentAtBattlegroundSite(
+                    game)) {
+            return false;
+        }
+        int current = countIWantThatMapOccupiedBattlegroundsAfterRemoval(
+                game, playerId, null);
+        return current >= 2
+                && countIWantThatMapOccupiedBattlegroundsAfterRemoval(
+                    game, playerId, mover) < 2;
+    }
+
+    private int countIWantThatMapOccupiedBattlegroundsAfterRemoval(
+            SwccgGame game, String playerId,
+            PhysicalCard removedRoot) {
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (locations == null || cards == null) return 0;
+
+        int occupied = 0;
+        for (PhysicalCard location : locations) {
+            if (location == null || !Filters.battleground.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), location)) {
+                continue;
+            }
+            for (PhysicalCard card : cards) {
+                if (card == null || !playerId.equals(card.getOwner())
+                        || !isActiveForSpot(game, card, true)
+                        || !candidateProvidesPresenceOutsideRemovedGroup(
+                            game, card, removedRoot, null)) {
+                    continue;
+                }
+                if (samePhysicalLocation(
+                        iWantThatMapPresenceContributionLocation(
+                            game, card),
+                        location)) {
+                    occupied++;
+                    break;
+                }
+            }
+        }
+        return occupied;
+    }
+
+    private boolean hasIWantThatMapResistanceAgentAtBattlegroundSite(
+            SwccgGame game) {
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (locations == null || cards == null) return false;
+        for (PhysicalCard location : locations) {
+            if (location == null || !Filters.battleground_site.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), location)) {
+                continue;
+            }
+            for (PhysicalCard card : cards) {
+                if (card == null || !isActiveForSpot(game, card, true)
+                        || !Filters.Resistance_Agent.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)) {
+                    continue;
+                }
+                PhysicalCard actorLocation = game.getModifiersQuerying()
+                        .getLocationThatCardIsPresentAt(
+                            game.getGameState(), card);
+                if (samePhysicalLocation(actorLocation, location)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -5120,7 +5283,8 @@ public class ObjectiveAnalyzer {
 
         if ((isCountedOperativeObjectiveFamily()
                     || isOldAlliesObjectiveFamily()
-                    || isNoMoneyNoPartsObjectiveFamily())
+                    || isNoMoneyNoPartsObjectiveFamily()
+                    || isIWantThatMapObjectiveFamily())
                     && isSelfOccupyCountedFlipBackAlternative(alternative)
                 || isHiddenPathSelfOccupyWithFlipBackAlternative(
                     alternative)) {
@@ -5257,7 +5421,8 @@ public class ObjectiveAnalyzer {
         return opponentControl
                 || (isCountedOperativeObjectiveFamily()
                     || isOldAlliesObjectiveFamily()
-                    || isNoMoneyNoPartsObjectiveFamily())
+                    || isNoMoneyNoPartsObjectiveFamily()
+                    || isIWantThatMapObjectiveFamily())
                     && isSelfOccupyCountedFlipBackAlternative(alternative)
                 || isHiddenPathSelfOccupyWithFlipBackAlternative(
                     alternative);
@@ -7472,6 +7637,7 @@ public class ObjectiveAnalyzer {
             PhysicalCard location,
             FlipLocationAlternative alternative) {
         if (alternative == null || alternative.count == null
+                || isUpperBound(alternative.count)
                 || alternative.count.value == null
                 || alternative.count.value <= 0
                 || alternative.actorFilterKey == null
@@ -8227,19 +8393,21 @@ public class ObjectiveAnalyzer {
                             game.getModifiersQuerying(), loc)) {
             return true;
         }
+        if (isIWantThatMapObjectiveFamily() && game != null) {
+            try {
+                if (game.getModifiersQuerying()
+                        .isBattleground(game.getGameState(), loc, null)) {
+                    return true;
+                }
+            } catch (Exception ignored) {
+                // An unresolved modifier state must not invent relevance.
+            }
+        }
         if (hasPreFlipRuntimeActorRule()) return false;
         if (loc.getTitle() != null && isObjectiveRelevantLocation(loc.getTitle())) return true;
         if (game == null) return false;
         GameState gs = game.getGameState();
         if (gs == null) return false;
-        // V296: I Want That Map's live flip geography is any battleground. The
-        // named Starkiller Base system is only a turn-0 setup choice and must
-        // not make that non-battleground system a preferred deploy target.
-        if (isWantThatMap) {
-            try {
-                if (game.getModifiersQuerying().isBattleground(gs, loc, null)) return true;
-            } catch (Exception ignored) { /* fail closed */ }
-        }
         if (activeFlipLocationRules != null) {
             for (FlipLocationRule rule : activeFlipLocationRules) {
                 if (rule == null || rule.alternatives == null
@@ -10987,7 +11155,8 @@ public class ObjectiveAnalyzer {
                     || "301_4".equals(objectiveBlueprintId)
                     || "7_137".equals(objectiveBlueprintId)
                     || "7_298".equals(objectiveBlueprintId)
-                    || "226_28".equals(objectiveBlueprintId))
+                    || "226_28".equals(objectiveBlueprintId)
+                    || "208_57".equals(objectiveBlueprintId))
                     || isFlipped
                     && (isImperialEntanglementsFamily()
                         || isCountedOperativeObjectiveFamily()
@@ -11008,6 +11177,10 @@ public class ObjectiveAnalyzer {
             SwccgGame game, String playerId,
             PhysicalCard sourceCard) {
         if (!usesObjectiveLocationPullSequence()) return false;
+        if (isIWantThatMapObjectiveFamily()) {
+            return hasIWantThatMapBattlegroundRouteCandidateInReserve(
+                    game, playerId, sourceCard);
+        }
         if (isHiddenPathObjectiveFamily()) {
             List<PhysicalCard> reserve = game.getGameState()
                     .getReserveDeck(playerId);
@@ -11087,6 +11260,20 @@ public class ObjectiveAnalyzer {
             return false;
         }
         try {
+            if (isIWantThatMapObjectiveFamily()) {
+                Collection<PhysicalCard> permanents =
+                        game.getGameState().getAllPermanentCards();
+                if (permanents == null) return false;
+                for (PhysicalCard source : permanents) {
+                    if (isIWantThatMapRouteSource(source, playerId)
+                            && isActiveForSpot(game, source, true)
+                            && hasIWantThatMapBattlegroundRouteCandidateInReserve(
+                                game, playerId, source)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
             if (isCountedOperativeObjectiveFamily()) {
                 return hasObjectiveLocationRouteCandidateInReserve(
                         game, playerId,
@@ -11164,6 +11351,473 @@ public class ObjectiveAnalyzer {
     public boolean isAgentsOfBlackSunObjectiveFamily() {
         return analyzed && ("10_29".equals(objectiveBlueprintId)
                 || "10_29_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isIWantThatMapObjectiveFamily() {
+        return analyzed && ("208_57".equals(objectiveBlueprintId)
+                || "208_57_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isIWantThatMapSelfLosingDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isIWantThatMapObjectiveFamily()
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        if (Filters.and(
+                    Filters.Dark_Jedi,
+                    Filters.not(Icon.EPISODE_VII))
+                .accepts(game.getGameState(),
+                    game.getModifiersQuerying(), candidate)) {
+            return true;
+        }
+        PhysicalCard iWillFinish = Filters.findFirstActive(
+                game, candidate,
+                Filters.and(
+                    Filters.owner(playerId),
+                    Filters.I_Will_Finish_What_You_Started));
+        return iWillFinish != null
+                && Filters.or(
+                    Filters.Vader,
+                    Filters.hasPermanentPilot(Filters.Vader))
+                .accepts(game.getGameState(),
+                    game.getModifiersQuerying(), candidate);
+    }
+
+    public boolean isIWantThatMapSelfBlockingResistanceAgentAt(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        if (!isIWantThatMapObjectiveFamily()
+                || game == null || playerId == null
+                || candidate == null || destination == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !Filters.Resistance_Agent.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)) {
+            return false;
+        }
+        PhysicalCard routeLocation =
+                iWantThatMapRouteLocation(game, destination);
+        return routeLocation != null
+                && Filters.battleground_site.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), routeLocation);
+    }
+
+    public boolean isIWantThatMapBattlegroundRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isIWantThatMapObjectiveFamily() || isFlipped
+                || !isIWantThatMapRouteSource(sourceCard, playerId)
+                || actionText == null) {
+            return false;
+        }
+        String blueprintId = sourceCard.getBlueprintId(true);
+        String expectedText = isIWantThatMapStarkillerSource(blueprintId)
+                ? "deploy battleground from reserve deck"
+                : "deploy location from reserve deck";
+        return expectedText.equals(
+                    actionText.trim().toLowerCase(Locale.ROOT))
+                && hasIWantThatMapBattlegroundRouteCandidateInReserve(
+                    game, playerId, sourceCard);
+    }
+
+    public boolean isExhaustedIWantThatMapBattlegroundRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isIWantThatMapObjectiveFamily() || isFlipped
+                || !isIWantThatMapRouteSource(sourceCard, playerId)
+                || actionText == null) {
+            return false;
+        }
+        String blueprintId = sourceCard.getBlueprintId(true);
+        String expectedText = isIWantThatMapStarkillerSource(blueprintId)
+                ? "deploy battleground from reserve deck"
+                : "deploy location from reserve deck";
+        return expectedText.equals(
+                    actionText.trim().toLowerCase(Locale.ROOT))
+                && !hasIWantThatMapBattlegroundRouteCandidateInReserve(
+                    game, playerId, sourceCard);
+    }
+
+    public boolean hasIWantThatMapBattlegroundRouteCandidateInReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        if (!isIWantThatMapObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || !isIWantThatMapRouteSource(sourceCard, playerId)
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || countIWantThatMapQualifiedBattlegroundsAfterRemoval(
+                    game, playerId, null) >= 2) {
+            return false;
+        }
+        List<PhysicalCard> reserve =
+                game.getGameState().getReserveDeck(playerId);
+        if (reserve == null) return false;
+        for (PhysicalCard candidate : reserve) {
+            if (isIWantThatMapNativeBattlegroundRouteCandidate(
+                    game, playerId, sourceCard, candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isIWantThatMapNativeBattlegroundRouteCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
+        if (!isIWantThatMapObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || !isIWantThatMapRouteSource(sourceCard, playerId)
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || countIWantThatMapQualifiedBattlegroundsAfterRemoval(
+                    game, playerId, null) >= 2
+                || !Filters.battleground.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)) {
+            return false;
+        }
+        String blueprintId = sourceCard.getBlueprintId(true);
+        if (isIWantThatMapStarkillerSource(blueprintId)) {
+            return Filters.Starkiller_Base_location.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate);
+        }
+        return Filters.or(Filters.Jakku_location, Filters.Kijimi_location)
+                .accepts(game.getGameState(),
+                    game.getModifiersQuerying(), candidate);
+    }
+
+    private boolean isIWantThatMapRouteSource(
+            PhysicalCard sourceCard, String playerId) {
+        if (sourceCard == null || playerId == null
+                || !playerId.equals(sourceCard.getOwner())
+                || sourceCard.getZone() == null
+                || !sourceCard.getZone().isInPlay()) {
+            return false;
+        }
+        String blueprintId = sourceCard.getBlueprintId(true);
+        return isIWantThatMapStarkillerSource(blueprintId)
+                || "214_12".equals(blueprintId)
+                || "214_012".equals(blueprintId);
+    }
+
+    private static boolean isIWantThatMapStarkillerSource(
+            String blueprintId) {
+        return "208_51".equals(blueprintId)
+                || "208_051".equals(blueprintId);
+    }
+
+    /**
+     * Exact current-turn Force still needed for an executable I Want That Map
+     * actor move/deploy and a safe battle against its declared blocker.
+     */
+    public int getIWantThatMapCurrentRouteForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate,
+            Predicate<PhysicalCard> predictorSafeBattle) {
+        if (!isIWantThatMapObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        int qualifiedBattlegrounds =
+                countIWantThatMapQualifiedBattlegroundsAfterRemoval(
+                        game, playerId, null);
+        IWantThatMapBlockerBattleRoute blockerBattleRoute =
+                selectIWantThatMapBlockerBattleRoute(
+                        game, playerId, predictorSafeBattle);
+        int blockerBattleReserve = blockerBattleRoute != null
+                ? blockerBattleRoute.forceCost() : 0;
+        boolean blockerBattleCompletesSecondBattleground =
+                qualifiedBattlegrounds == 1
+                    && blockerBattleRoute != null
+                    && isIWantThatMapCompletingBlockerBattle(
+                        game, playerId,
+                        blockerBattleRoute.location());
+        int actorReserve = 0;
+        if (qualifiedBattlegrounds < 2
+                && !blockerBattleCompletesSecondBattleground
+                && (deployingCandidate == null
+                    || !hasIWantThatMapLegalDeployDestination(
+                        game, playerId, deployingCandidate))) {
+            int deploy = getIWantThatMapCheapestActorDeployReserve(
+                    game, playerId);
+            int move = getIWantThatMapCheapestActorMoveReserve(
+                    game, playerId);
+            if (deploy > 0 && move > 0) {
+                actorReserve = Math.min(deploy, move);
+            } else {
+                actorReserve = Math.max(deploy, move);
+            }
+        }
+        return actorReserve + blockerBattleReserve;
+    }
+
+    private int getIWantThatMapCheapestActorDeployReserve(
+            SwccgGame game, String playerId) {
+        List<PhysicalCard> hand =
+                game.getGameState().getHand(playerId);
+        if (hand == null) return 0;
+        int cheapest = Integer.MAX_VALUE;
+        for (PhysicalCard candidate : hand) {
+            if (!hasIWantThatMapLegalDeployDestination(
+                        game, playerId, candidate)
+                    || isIWantThatMapSelfLosingDeployCandidate(
+                        game, playerId, candidate)) {
+                continue;
+            }
+            try {
+                float cost = game.getModifiersQuerying()
+                        .getDeployCost(
+                            game.getGameState(), candidate);
+                if (Float.isFinite(cost)) {
+                    cheapest = Math.min(
+                            cheapest,
+                            Math.max(0, (int) Math.ceil(cost)));
+                }
+            } catch (Exception ignored) {
+                // An unknown payment cannot establish an executable reserve.
+            }
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
+    private boolean hasIWantThatMapLegalDeployDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (candidate == null
+                || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())
+                || !Filters.First_Order_character.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate)) {
+            return false;
+        }
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations != null) {
+            for (PhysicalCard location : locations) {
+                if (location != null
+                        && advancesPreFlipActorAtRuntimeLocation(
+                            game, playerId, candidate, location)
+                        && !isIWantThatMapSelfBlockingResistanceAgentAt(
+                            game, playerId, candidate, location)
+                        && Filters.deployableToLocation(
+                            candidate,
+                            Filters.sameCardId(location),
+                            false, 0.0f).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), candidate)) {
+                    return true;
+                }
+            }
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard target : permanents) {
+            if (target == null
+                    || target.getZone() == null
+                    || !target.getZone().isInPlay()
+                    || !playerId.equals(target.getOwner())
+                    || !Filters.or(Filters.starship, Filters.vehicle)
+                        .accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), target)
+                    || !advancesPreFlipActorAtRuntimeLocation(
+                        game, playerId, candidate, target)
+                    || !Filters.deployableToTarget(
+                        candidate, Filters.sameCardId(target),
+                        false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate)) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private int getIWantThatMapCheapestActorMoveReserve(
+            SwccgGame game, String playerId) {
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (permanents == null || locations == null) return 0;
+        int cheapest = Integer.MAX_VALUE;
+        for (PhysicalCard mover : permanents) {
+            if (mover == null || !playerId.equals(mover.getOwner())
+                    || mover.getZone() == null
+                    || !mover.getZone().isInPlay()
+                    || !isActiveForSpot(game, mover, true)) {
+                continue;
+            }
+            PhysicalCard origin = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                            game.getGameState(), mover);
+            if (origin == null) continue;
+            for (PhysicalCard destination : locations) {
+                if (destination == null
+                        || samePhysicalLocation(origin, destination)
+                        || !advancesPreFlipActorAtRuntimeLocation(
+                            game, playerId, mover, destination)
+                        || FormationSafety.vetoMoveDestination(
+                            game, game.getGameState(), playerId,
+                            mover, destination) != null
+                        || FormationSafety.vetoMoveOrigin(
+                            game, game.getGameState(), playerId,
+                            mover, origin) != null) {
+                    continue;
+                }
+                try {
+                    float cost;
+                    if (Filters.starship.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), mover)) {
+                        if (!Filters.canMoveToUsingHyperspeed(
+                                playerId, mover,
+                                false, true, 0.0f).accepts(
+                                    game.getGameState(),
+                                    game.getModifiersQuerying(),
+                                    destination)) {
+                            continue;
+                        }
+                        cost = game.getModifiersQuerying()
+                                .getMoveUsingHyperspeedCost(
+                                    game.getGameState(), mover,
+                                    origin, destination,
+                                    false, 0.0f);
+                    } else {
+                        if (!Filters.canMoveToUsingLandspeed(
+                                playerId, mover, false,
+                                false, false, 0.0f, null).accepts(
+                                    game.getGameState(),
+                                    game.getModifiersQuerying(),
+                                    destination)) {
+                            continue;
+                        }
+                        cost = game.getModifiersQuerying()
+                                .getMoveUsingLandspeedCost(
+                                    game.getGameState(), mover,
+                                    origin, destination,
+                                    false, 0.0f);
+                    }
+                    if (Float.isFinite(cost)) {
+                        cheapest = Math.min(
+                                cheapest,
+                                Math.max(0, (int) Math.ceil(cost)));
+                    }
+                } catch (Exception ignored) {
+                    // Only a proven legal payment creates a reserve.
+                }
+            }
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
+    private record IWantThatMapBlockerBattleRoute(
+            PhysicalCard location, int forceCost) {
+    }
+
+    private IWantThatMapBlockerBattleRoute
+            selectIWantThatMapBlockerBattleRoute(
+            SwccgGame game, String playerId,
+            Predicate<PhysicalCard> predictorSafeBattle) {
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        if (locations == null) return null;
+        int cheapest = Integer.MAX_VALUE;
+        PhysicalCard selected = null;
+        for (PhysicalCard location : locations) {
+            if (location == null
+                    || !isPreFlipBattleRemovableGlobalBlockerAt(
+                        game, playerId, location)
+                    || !com.gempukku.swccgo.cards.GameConditions
+                        .canInitiateBattleAtLocation(
+                            playerId, game, location,
+                            false, true)
+                    || FormationSafety.vetoInitiateBattle(
+                        game, game.getGameState(), playerId,
+                        location) != null) {
+                continue;
+            }
+            try {
+                float cost = game.getModifiersQuerying()
+                        .getInitiateBattleCost(
+                            game.getGameState(), location,
+                            playerId, true);
+                if (Float.isFinite(cost)) {
+                    int roundedCost = Math.max(
+                            0, (int) Math.ceil(cost));
+                    if (roundedCost < cheapest) {
+                        cheapest = roundedCost;
+                        selected = location;
+                    }
+                }
+            } catch (Exception ignored) {
+                // Only a proven safe battle creates a reserve.
+            }
+        }
+        if (selected == null || predictorSafeBattle == null) {
+            return null;
+        }
+        try {
+            if (!predictorSafeBattle.test(selected)) {
+                return null;
+            }
+        } catch (Exception ignored) {
+            return null;
+        }
+        return new IWantThatMapBlockerBattleRoute(
+                selected, cheapest);
+    }
+
+    private boolean isIWantThatMapCompletingBlockerBattle(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        return location != null
+                && isPreFlipBattleRemovableGlobalBlockerAt(
+                    game, playerId, location)
+                && hasIWantThatMapPresenceAfterRemovalAt(
+                    game, playerId, location, null)
+                && hasIWantThatMapActorAfterRemovalAt(
+                    game, playerId, location, null);
+    }
+
+    public boolean isIWantThatMapBackInterruptAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isIWantThatMapObjectiveFamily() || !isFlipped
+                || game == null || playerId == null
+                || sourceCard == null || actionText == null
+                || !playerId.equals(sourceCard.getOwner())
+                || sourceCard.getZone() == null
+                || !sourceCard.getZone().isInPlay()
+                || !("Stack Interrupt from Lost Pile".equals(actionText)
+                    || "Play stacked Interrupt".equals(actionText))) {
+            return false;
+        }
+        PhysicalCard objective = findOurObjective(
+                game.getGameState(), playerId);
+        return objective != null
+                && (objective == sourceCard
+                    || objective.getPermanentCardId() > 0
+                        && objective.getPermanentCardId()
+                            == sourceCard.getPermanentCardId());
     }
 
     /**
@@ -14411,7 +15065,8 @@ public class ObjectiveAnalyzer {
                     && !isOldAlliesObjectiveFamily()
                     && !isCountedOperativeObjectiveFamily()
                     && !isHiddenPathObjectiveFamily()
-                    && !isTwinSunsObjectiveFamily())
+                    && !isTwinSunsObjectiveFamily()
+                    && !isIWantThatMapObjectiveFamily())
                 || isFlipped && !isImperialEntanglementsFamily()
                     && !isCountedOperativeObjectiveFamily()
                     && !isHiddenPathObjectiveFamily()
@@ -14427,6 +15082,10 @@ public class ObjectiveAnalyzer {
         if (objectiveCard == null
                 || !isCurrentObjectiveSourceCard(objectiveCard)) {
             return false;
+        }
+        if (isIWantThatMapObjectiveFamily()) {
+            return isIWantThatMapNativeBattlegroundRouteCandidate(
+                    game, playerId, sourceCard, candidate);
         }
         if (isCountedOperativeObjectiveFamily()) {
             int routeSiteTarget = getCountedOperativeRouteSiteTarget();
@@ -19433,6 +20092,12 @@ public class ObjectiveAnalyzer {
         if (ralltiirImperialRole != FlipGateFormationRole.NONE) {
             return ralltiirImperialRole;
         }
+        FlipGateFormationRole iWantThatMapRole =
+                classifyIWantThatMapFormationPieceIfRemoved(
+                        game, playerId, candidate);
+        if (iWantThatMapRole != FlipGateFormationRole.NONE) {
+            return iWantThatMapRole;
+        }
         FlipGateFormationRole runtimeActorRole =
                 classifyRuntimeActorIfRemoved(
                         game, playerId, candidate);
@@ -19856,6 +20521,147 @@ public class ObjectiveAnalyzer {
                     e.getMessage());
         }
         return FlipGateFormationRole.NONE;
+    }
+
+    private FlipGateFormationRole
+            classifyIWantThatMapFormationPieceIfRemoved(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate) {
+        if (!isIWantThatMapObjectiveFamily() || isFlipped
+                || candidate.getZone() == null
+                || !candidate.getZone().isInPlay()) {
+            return FlipGateFormationRole.NONE;
+        }
+        int current =
+                countIWantThatMapQualifiedBattlegroundsAfterRemoval(
+                        game, playerId, null);
+        if (current <= 0 || current > 2) {
+            return FlipGateFormationRole.NONE;
+        }
+        int after =
+                countIWantThatMapQualifiedBattlegroundsAfterRemoval(
+                        game, playerId, candidate);
+        if (after >= current) {
+            return FlipGateFormationRole.NONE;
+        }
+        return removedGroupContainsIWantThatMapActor(
+                    game, playerId, candidate)
+                ? FlipGateFormationRole.LAST_REQUIRED_ACTOR
+                : FlipGateFormationRole.LAST_REQUIRED_BUDDY;
+    }
+
+    private int countIWantThatMapQualifiedBattlegroundsAfterRemoval(
+            SwccgGame game, String playerId,
+            PhysicalCard removedRoot) {
+        List<PhysicalCard> locations =
+                game.getGameState().getLocationsInOrder();
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (locations == null || cards == null) return 0;
+
+        int qualified = 0;
+        for (PhysicalCard location : locations) {
+            if (location == null || !Filters.battleground.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)
+                    || !game.getModifiersQuerying().controlsLocation(
+                        game.getGameState(), location, playerId,
+                        SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)
+                    || !hasIWantThatMapPresenceAfterRemovalAt(
+                        game, playerId, location, removedRoot)
+                    || !hasIWantThatMapActorAfterRemovalAt(
+                        game, playerId, location, removedRoot)) {
+                continue;
+            }
+            qualified++;
+        }
+        return qualified;
+    }
+
+    private boolean hasIWantThatMapPresenceAfterRemovalAt(
+            SwccgGame game, String playerId, PhysicalCard location,
+            PhysicalCard removedRoot) {
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card == null || !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(game, card, true)
+                    || !candidateProvidesPresenceOutsideRemovedGroup(
+                        game, card, removedRoot, null)) {
+                continue;
+            }
+            if (samePhysicalLocation(
+                    iWantThatMapPresenceContributionLocation(
+                        game, card), location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private PhysicalCard iWantThatMapPresenceContributionLocation(
+            SwccgGame game, PhysicalCard candidate) {
+        PhysicalCard presentAt = game.getModifiersQuerying()
+                .getLocationThatCardIsPresentAt(
+                        game.getGameState(), candidate);
+        if (presentAt != null) return presentAt;
+
+        SwccgCardBlueprint blueprint = candidate.getBlueprint();
+        CardCategory category = blueprint != null
+                ? blueprint.getCardCategory() : null;
+        if (category == CardCategory.STARSHIP
+                || category == CardCategory.VEHICLE) {
+            return game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                            game.getGameState(), candidate);
+        }
+        return null;
+    }
+
+    private boolean hasIWantThatMapActorAfterRemovalAt(
+            SwccgGame game, String playerId, PhysicalCard location,
+            PhysicalCard removedRoot) {
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (card == null || belongsToRemovedGroup(
+                        card, removedRoot, null)
+                    || !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(game, card, true)
+                    || !Filters.First_Order_character.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            PhysicalCard actorLocation = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                            game.getGameState(), card);
+            if (samePhysicalLocation(actorLocation, location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean removedGroupContainsIWantThatMapActor(
+            SwccgGame game, String playerId,
+            PhysicalCard removedRoot) {
+        Collection<PhysicalCard> cards =
+                game.getGameState().getAllPermanentCards();
+        if (cards == null) return false;
+        for (PhysicalCard card : cards) {
+            if (belongsToRemovedGroup(card, removedRoot, null)
+                    && playerId.equals(card.getOwner())
+                    && isActiveForSpot(game, card, true)
+                    && Filters.First_Order_character.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean wouldRemovalTriggerOnTableFlipBack(
@@ -21336,6 +22142,10 @@ public class ObjectiveAnalyzer {
                 return com.gempukku.swccgo.filters.Filters.Scarif_battleground_site;
             case "Vader":             return com.gempukku.swccgo.filters.Filters.Vader;
             case "Kylo":              return com.gempukku.swccgo.filters.Filters.Kylo;
+            case "First_Order_character":
+                return com.gempukku.swccgo.filters.Filters.First_Order_character;
+            case "Resistance_Agent":
+                return com.gempukku.swccgo.filters.Filters.Resistance_Agent;
             case "Tracked_Fleet":
                 return com.gempukku.swccgo.filters.Filters.Tracked_Fleet;
             case "Supremacy":

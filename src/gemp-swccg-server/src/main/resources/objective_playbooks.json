@@ -7195,6 +7195,7 @@
     },
     {
       "label": "I Want That Map",
+      "loaderEnabled": true,
       "blueprintIds": [
         "208_57",
         "208_57_BACK"
@@ -7204,8 +7205,12 @@
         "and now you'll give it to me"
       ],
       "locationFragments": [],
-      "requiredCardsOnTable": [],
-      "pullableCards": [],
+      "requiredCardsOnTable": [
+        "i will finish what you started"
+      ],
+      "pullableCards": [
+        "the first order was just the beginning"
+      ],
       "flipGateSite": null,
       "flipGateCardIds": [],
       "startingLocations": [],
@@ -7214,6 +7219,75 @@
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "i-want-that-map-front",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "battleground",
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "actorFilterKey": "First_Order_character",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "actorToLocation",
+              "sourceText": "Owner's First Order characters control two battlegrounds; cards excluded from battle still count."
+            },
+            {
+              "relation": "presentAt",
+              "controller": "any",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "Resistance_Agent",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "globalBlockerAbsent",
+              "sourceText": "No Resistance Agent owned by either player may be present at any battleground site; cards excluded from battle still block."
+            }
+          ]
+        },
+        {
+          "id": "i-want-that-map-back",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "occupy",
+              "controller": "self",
+              "locationFilterKey": "battleground",
+              "count": {
+                "comparator": "<",
+                "value": 2
+              },
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "Flip back when owner occupies fewer than two battlegrounds; First Order characters and control are no longer required."
+            },
+            {
+              "relation": "presentAt",
+              "controller": "any",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Resistance_Agent",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "globalBlockerPresent",
+              "sourceText": "Flip back when a Resistance Agent owned by either player is present at any battleground site."
+            }
+          ]
+        }
+      ],
       "frontBp": "208_57",
       "backBp": "208_57_BACK",
       "abbreviation": "IWTM",

@@ -9,6 +9,7 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.CardKnowledge;
 import com.gempukku.swccgo.ai.models.common.phase.BhbmSetupPayoffFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.BattleDecisionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.CaptureDeployBudgetFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DeployBudgetPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
@@ -641,6 +642,15 @@ public class DeployEvaluator extends ActionEvaluator {
             }
             if (deployObjectiveAnalyzer != null
                     && deployObjectiveAnalyzer
+                        .isIWantThatMapSelfLosingDeployCandidate(
+                            game, playerId, deployActionSource)) {
+                action.hardVeto(
+                    "OBJECTIVE.I_WANT_THAT_MAP.SELF_LOSS: this card would be made lost immediately by the objective package");
+                actions.add(action);
+                continue;
+            }
+            if (deployObjectiveAnalyzer != null
+                    && deployObjectiveAnalyzer
                         .wouldHiddenPathRouteActionConsumeTransitReserve(
                             game, playerId, deployActionSource,
                             actionText, availableForce)) {
@@ -673,6 +683,16 @@ public class DeployEvaluator extends ActionEvaluator {
                             deployActionSource, actionText)) {
                 action.hardVeto(
                     "OBJECTIVE.HIDDEN_PATH.JABIIM_ROUTE_EXHAUSTED: no legal Jabiim location remains in Reserve Deck");
+                actions.add(action);
+                continue;
+            }
+            if (deployObjectiveAnalyzer != null
+                    && deployObjectiveAnalyzer
+                        .isExhaustedIWantThatMapBattlegroundRouteAction(
+                            game, playerId,
+                            deployActionSource, actionText)) {
+                action.hardVeto(
+                    "OBJECTIVE.I_WANT_THAT_MAP.BATTLEGROUND_ROUTE_EXHAUSTED: two usable battlegrounds are already on table or this source has no legal candidate");
                 actions.add(action);
                 continue;
             }
@@ -1804,6 +1824,34 @@ public class DeployEvaluator extends ActionEvaluator {
                                 .getAgentsOfBlackSunCurrentMoveForceReserve(
                                     game, playerId, card)
                             : 0;
+                    int iWantThatMapRouteReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getIWantThatMapCurrentRouteForceReserve(
+                                    game, playerId, card,
+                                    location -> BattleDecisionPolicy
+                                        .isPredictorSafeAtLocation(
+                                            game, gameState, playerId,
+                                            location,
+                                            (myPower, myDraws,
+                                                    opponentPower,
+                                                    opponentDraws) -> {
+                                                BattlePredictor.BattleOutcome
+                                                        outcome =
+                                                    BattlePredictor.predictBattle(
+                                                        myPower, myDraws,
+                                                        opponentPower,
+                                                        opponentDraws,
+                                                        context.getDeckOracle(),
+                                                        context
+                                                            .getOpponentDeckTracker());
+                                                return new BattleDecisionPolicy
+                                                    .Prediction(
+                                                        outcome.winProbability,
+                                                        outcome.expectedDamageDealt,
+                                                        outcome.expectedDamageTaken);
+                                            }))
+                            : 0;
                     int ralltiirRouteReserve =
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
@@ -2137,6 +2185,22 @@ public class DeployEvaluator extends ActionEvaluator {
                                     < agentsOfBlackSunMoveReserve) {
                             action.hardVeto(
                                 "OBJECTIVE.AGENTS_OF_BLACK_SUN.MOVE_FORCE_RESERVE: preserve the current actor's exact battleground move payment");
+                            actions.add(action);
+                            continue;
+                        }
+                    }
+                    if (countedOperativeOrdinaryDeploy
+                            && iWantThatMapRouteReserve > 0) {
+                        int boundedDeployPayment =
+                                exactNormalDeployPayment != null
+                                    ? exactNormalDeployPayment
+                                    : massassiDeployPayment;
+                        if (boundedDeployPayment > 0
+                                && availableForce
+                                    - boundedDeployPayment
+                                    < iWantThatMapRouteReserve) {
+                            action.hardVeto(
+                                "OBJECTIVE.I_WANT_THAT_MAP.ROUTE_FORCE_RESERVE: preserve the exact executable actor movement, deployment, and blocker-battle payment");
                             actions.add(action);
                             continue;
                         }

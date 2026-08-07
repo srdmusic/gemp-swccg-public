@@ -319,6 +319,99 @@ public class PullCardSelectionCharacterizationTest {
     }
 
     @Test
+    public void iWantThatMapSelfLossVetoAppliesOnlyToDeployFromReserve() {
+        GameState gameState = gameState(2);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard maul = card(
+                "Darth Maul", 6.0f, CardCategory.CHARACTER);
+        when(maul.getOwner()).thenReturn(PLAYER);
+        when(maul.getZone()).thenReturn(Zone.RESERVE_DECK);
+        when(maul.getBlueprintId(true)).thenReturn("11_55");
+        when(game.getGameState()).thenReturn(gameState);
+        when(gameState.findCardById(701)).thenReturn(maul);
+        when(gameState.getCardPile(PLAYER, Zone.RESERVE_DECK))
+                .thenReturn(List.of(maul));
+        when(gameState.getHand(PLAYER)).thenReturn(List.of());
+
+        var randoObjective = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy
+                        .ObjectiveAnalyzer.class);
+        when(randoObjective.isAnalyzed()).thenReturn(true);
+        when(randoObjective.isIWantThatMapSelfLosingDeployCandidate(
+                game, PLAYER, maul)).thenReturn(true);
+        var chosenObjective = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy
+                        .ObjectiveAnalyzer.class);
+        when(chosenObjective.isAnalyzed()).thenReturn(true);
+        when(chosenObjective.isIWantThatMapSelfLosingDeployCandidate(
+                game, PLAYER, maul)).thenReturn(true);
+
+        var randoTake = new com.gempukku.swccgo.ai.models.rando.evaluators
+                .DecisionContext(
+                    gameState, PLAYER, "CARD_SELECTION",
+                    "Choose card to take into hand from Reserve Deck",
+                    "iwtm-take-rando", Phase.DEPLOY);
+        configureSingle(randoTake, "701", "11_55", "Darth Maul");
+        randoTake.setGame(game);
+        randoTake.setObjectiveAnalyzer(randoObjective);
+        var chosenTake = new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                .DecisionContext(
+                    gameState, PLAYER, "CARD_SELECTION",
+                    "Choose card to take into hand from Reserve Deck",
+                    "iwtm-take-chosen", Phase.DEPLOY);
+        configureSingle(chosenTake, "701", "11_55", "Darth Maul");
+        chosenTake.setGame(game);
+        chosenTake.setObjectiveAnalyzer(chosenObjective);
+
+        var randoTaken = new com.gempukku.swccgo.ai.models.rando.evaluators
+                .CardSelectionEvaluator().evaluate(randoTake);
+        var chosenTaken = new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                .CardSelectionEvaluator().evaluate(chosenTake);
+        assertEquals(1, randoTaken.size());
+        assertFalse(randoTaken.getFirst().isHardVetoed());
+        assertFalse(randoTaken.getFirst().getReasoning().stream().anyMatch(
+                reason -> reason.contains("I_WANT_THAT_MAP.SELF_LOSS")));
+        assertMirrored(randoTaken, chosenTaken);
+
+        var randoDeploy = new com.gempukku.swccgo.ai.models.rando.evaluators
+                .DecisionContext(
+                    gameState, PLAYER, "ARBITRARY_CARDS",
+                    "Choose card to deploy from Reserve Deck",
+                    "iwtm-deploy-rando", Phase.DEPLOY);
+        configureSingle(randoDeploy, "temp0", "11_55", "Darth Maul");
+        randoDeploy.setMin(1);
+        randoDeploy.setMax(1);
+        randoDeploy.setGame(game);
+        randoDeploy.setObjectiveAnalyzer(randoObjective);
+        var chosenDeploy = new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                .DecisionContext(
+                    gameState, PLAYER, "ARBITRARY_CARDS",
+                    "Choose card to deploy from Reserve Deck",
+                    "iwtm-deploy-chosen", Phase.DEPLOY);
+        configureSingle(chosenDeploy, "temp0", "11_55", "Darth Maul");
+        chosenDeploy.setMin(1);
+        chosenDeploy.setMax(1);
+        chosenDeploy.setGame(game);
+        chosenDeploy.setObjectiveAnalyzer(chosenObjective);
+
+        var randoDeployed = new com.gempukku.swccgo.ai.models.rando.evaluators
+                .CardSelectionEvaluator().evaluate(randoDeploy);
+        var chosenDeployed = new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                .CardSelectionEvaluator().evaluate(chosenDeploy);
+        assertEquals(1, randoDeployed.size());
+        assertTrue("Expected deploy-only self-loss veto; score="
+                        + randoDeployed.getFirst().getScore()
+                        + "; reasons="
+                        + randoDeployed.getFirst().getReasoning(),
+                randoDeployed.getFirst().isHardVetoed());
+        assertTrue(randoDeployed.getFirst().getReasoning().stream().anyMatch(
+                reason -> reason.contains("I_WANT_THAT_MAP.SELF_LOSS")));
+        assertMirrored(randoDeployed, chosenDeployed);
+        assertEquals(randoDeployed.getFirst().isHardVetoed(),
+                chosenDeployed.getFirst().isHardVetoed());
+    }
+
+    @Test
     public void reserveBlueprintObjectiveOrderPreservesExactAdapterScores() {
         var randoObjective = mock(
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer.class);

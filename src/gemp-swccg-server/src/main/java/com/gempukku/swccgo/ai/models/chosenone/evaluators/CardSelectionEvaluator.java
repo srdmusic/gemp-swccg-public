@@ -903,7 +903,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     private void applyCountedObjectivePullPolicy(
             DecisionContext context, EvaluatedAction action,
             String cardId, String blueprintId,
-            boolean lossDecision) {
+            boolean lossDecision, boolean deploysToTable) {
         if (lossDecision || context.getGame() == null
                 || context.getGameState() == null
                 || context.getPlayerId() == null
@@ -914,6 +914,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
         PhysicalCard candidate = findPullCandidate(
                 context, cardId, blueprintId);
+        if (deploysToTable && candidate != null
+                && context.getObjectiveAnalyzer()
+                    .isIWantThatMapSelfLosingDeployCandidate(
+                        context.getGame(), context.getPlayerId(),
+                        candidate)) {
+            action.hardVeto(
+                "OBJECTIVE.I_WANT_THAT_MAP.SELF_LOSS: do not choose a Reserve Deck candidate that the objective package immediately loses");
+            return;
+        }
         PhysicalCard nativeLocationSource =
                 readExactCountedLocationPullSource(context);
         PhysicalCard nativeLocationCandidate =
@@ -1189,10 +1198,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         .TWIN_SUNS_OF_TATOOINE__DOWNLOAD_TATOOINE_BATTLEGROUND_SITE
                     && "Deploy Tatooine battleground site from Reserve Deck"
                         .equals(actionText);
+            boolean exactIWantThatMap = objective
+                    .isIWantThatMapBattlegroundRouteAction(
+                        context.getGame(), context.getPlayerId(),
+                        source, actionText)
+                    && (actionId == GameTextActionId
+                            .STARKILLER_BASE__DOWNLOAD_STARKILLER_BASE_BATTLEGROUND
+                        || actionId == GameTextActionId
+                            .THE_FIRST_ORDER_WAS_JUST_THE_BEGINNING__DOWNLOAD_JAKKU_OR_KIJIMI_BATTLEGROUND);
             return exactMassassi || exactEntanglements
                     || exactOldAllies
                     || exactCountedOperative
-                    || exactTwinSuns ? source : null;
+                    || exactTwinSuns
+                    || exactIWantThatMap ? source : null;
         } catch (Exception ignored) {
             return null;
         }
@@ -2812,6 +2830,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         action.getActionId(),
                                         objectiveProgressAnalyzer
                                             .isFirstOrderReignsTerminalDeploymentHazardAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location),
+                                        objectiveProgressAnalyzer
+                                            .isIWantThatMapSelfBlockingResistanceAgentAt(
                                                 game, playerId,
                                                 objectiveProgressDeployingCard,
                                                 location)));
@@ -8629,6 +8652,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     if (location != null) {
                         String title = location.getTitle();
                         action.setDisplayText("Move to " + (title != null ? title : "location"));
+                        if (fsMover != null
+                                && context.getObjectiveAnalyzer() != null
+                                && context.getObjectiveAnalyzer()
+                                    .isIWantThatMapSelfBlockingResistanceAgentAt(
+                                        game, playerId, fsMover, location)) {
+                            action.hardVeto(
+                                "OBJECTIVE.I_WANT_THAT_MAP.SELF_BLOCKER: do not move our declared Resistance Agent to a battleground site");
+                        }
                         boolean objectiveTheyHaveNoIdeaLandingDestination =
                             fsMover != null
                             && context.getObjectiveAnalyzer() != null
@@ -11081,7 +11112,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             PolicyOperationAdapter.apply(action, pullLedger);
             applyCountedObjectivePullPolicy(
                     context, action, cardId,
-                    blueprintId, false);
+                    blueprintId, false, false);
 
             logger.debug("🎯 {} ({}): score={}, destiny={}, power={}",
                     cardTitle, blueprintId != null ? blueprintId : cardId,
@@ -11579,7 +11610,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     isLossDecision, textLower);
             applyCountedObjectivePullPolicy(
                     context, action, cardId,
-                    blueprintId, isLossDecision);
+                    blueprintId, isLossDecision,
+                    isExactReserveDeployChoice(context));
 
             // V28/V47 RESERVE SOLO BLOCK — RETIRED 2026-07-12 (batch 1d; Codex m00206 wrong-facts
             // audit CODEX_V47_WRONG_FACTS_AUDIT_2026-07-12.md): it applied Cloud City board facts to
@@ -11920,7 +11952,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     textLower, plan);
             applyCountedObjectivePullPolicy(
                     context, action, candidateCardId,
-                    blueprintId, false);
+                    blueprintId, false, true);
             if (context.getObjectiveAnalyzer() != null
                     && pullBlueprint != null) {
                 int matchingOperatives = context.getObjectiveAnalyzer()

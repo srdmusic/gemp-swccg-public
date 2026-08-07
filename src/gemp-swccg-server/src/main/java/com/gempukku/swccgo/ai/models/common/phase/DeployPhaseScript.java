@@ -277,6 +277,19 @@ public abstract class DeployPhaseScript {
         }
         if (objectiveAnalyzer != null
                 && objectiveAnalyzer
+                    .isExhaustedIWantThatMapBattlegroundRouteAction(
+                        game, playerId, sourceCard, actionText)) {
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isIWantThatMapBattlegroundRouteAction(
+                        game, playerId, sourceCard, actionText)) {
+            steps.add(Step.LOCATIONS);
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
                     .isSetYourCourseDeathStarSitePullAction(
                         game, playerId, sourceCard, actionText)) {
             steps.add(Step.LOCATIONS);

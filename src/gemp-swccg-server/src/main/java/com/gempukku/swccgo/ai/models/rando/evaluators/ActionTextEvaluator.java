@@ -578,6 +578,34 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             if (exactDeployAnalyzer != null
                     && exactDeployAnalyzer
+                        .isIWantThatMapBackInterruptAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText)) {
+                boolean playStacked =
+                        "Play stacked Interrupt".equals(actionText);
+                action.addReasoning(
+                    playStacked
+                        ? "OBJECTIVE.I_WANT_THAT_MAP.PLAY_STACKED_INTERRUPT: use an engine-confirmed playable stacked Interrupt before ending the turn"
+                        : "OBJECTIVE.I_WANT_THAT_MAP.STACK_INTERRUPT: bank an Interrupt from Lost Pile for Kylo's back-side route",
+                    playStacked ? 500.0f : 250.0f);
+                actions.add(action);
+                continue;
+            }
+
+            if (exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isIWantThatMapBattlegroundRouteAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText)) {
+                action.addReasoning(
+                    "OBJECTIVE.I_WANT_THAT_MAP.BATTLEGROUND_PULL: use the exact free battleground route before unrelated deploys",
+                    12000.0f);
+                actions.add(action);
+                continue;
+            }
+
+            if (exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
                         .isSetYourCourseDeathStarSitePullAction(
                             game, context.getPlayerId(),
                             actionSource, actionText)) {

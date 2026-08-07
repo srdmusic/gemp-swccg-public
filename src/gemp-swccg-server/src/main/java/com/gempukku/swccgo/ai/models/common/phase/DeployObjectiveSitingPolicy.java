@@ -460,21 +460,53 @@ public final class DeployObjectiveSitingPolicy {
 
     public static PolicyResult blockTerminalObjectiveExposure(
             String actionId, boolean terminalExposure) {
+        return blockTerminalObjectiveExposure(
+                actionId, terminalExposure, false);
+    }
+
+    public static PolicyResult blockTerminalObjectiveExposure(
+            String actionId, boolean terminalExposure,
+            boolean iWantThatMapSelfBlocker) {
         Objects.requireNonNull(actionId, "actionId");
-        if (!terminalExposure) {
+        if (!terminalExposure && !iWantThatMapSelfBlocker) {
             return new PolicyResult(
                     "DEPLOY_TERMINAL_OBJECTIVE_EXPOSURE_POLICY",
                     List.of());
         }
-        return single(
-                "DEPLOY_TERMINAL_OBJECTIVE_EXPOSURE_POLICY",
-                PolicyOperation.hardVeto(
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (terminalExposure) {
+            operations.add(PolicyOperation.hardVeto(
                         actionId,
                         TraceRuleId.of(
                                 "DEPLOY.OBJECTIVE.TERMINAL_ACTOR_EXPOSURE"),
                         TraceDomainId.DEPLOY_SITING,
                         TraceOutputKind.VETO,
                         "Do not deploy the objective's terminal actor into the exact conjunction that can place the objective out of play"));
+        }
+        if (iWantThatMapSelfBlocker) {
+            operations.addAll(blockIWantThatMapSelfBlocker(
+                    actionId, true).operations());
+        }
+        return new PolicyResult(
+                "DEPLOY_TERMINAL_OBJECTIVE_EXPOSURE_POLICY", operations);
+    }
+
+    public static PolicyResult blockIWantThatMapSelfBlocker(
+            String actionId, boolean selfBlockingResistanceAgent) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!selfBlockingResistanceAgent) {
+            return new PolicyResult(
+                    "DEPLOY_IWTM_SELF_BLOCKER_POLICY", List.of());
+        }
+        return single(
+                "DEPLOY_IWTM_SELF_BLOCKER_POLICY",
+                PolicyOperation.hardVeto(
+                        actionId,
+                        TraceRuleId.of(
+                                "OBJECTIVE.I_WANT_THAT_MAP.SELF_BLOCKER"),
+                        TraceDomainId.DEPLOY_SITING,
+                        TraceOutputKind.VETO,
+                        "Do not deploy our declared Resistance Agent to a battleground site"));
     }
 
     public static PolicyResult blockRequiredCardInactivation(

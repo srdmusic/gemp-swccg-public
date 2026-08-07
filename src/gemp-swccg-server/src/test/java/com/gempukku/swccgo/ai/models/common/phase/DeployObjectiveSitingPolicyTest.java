@@ -228,6 +228,24 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
+    public void iWantThatMapSelfBlockerIsAnExactHardVeto() {
+        PolicyResult blocked = DeployObjectiveSitingPolicy
+                .blockIWantThatMapSelfBlocker("a", true);
+        PolicyResult unrelated = DeployObjectiveSitingPolicy
+                .blockIWantThatMapSelfBlocker("a", false);
+
+        assertEquals(1, blocked.operations().size());
+        PolicyOperation operation = blocked.operations().get(0);
+        assertEquals("OBJECTIVE.I_WANT_THAT_MAP.SELF_BLOCKER",
+                operation.ruleArmId().id());
+        assertEquals(PolicyOperationKind.HARD_VETO,
+                operation.kind());
+        assertEquals(TraceDomainId.DEPLOY_SITING,
+                operation.domainId());
+        assertTrue(unrelated.operations().isEmpty());
+    }
+
+    @Test
     public void postFlipPayoffPreservesPrimaryAndSecondaryOrdering() {
         PolicyOperation primary =
                 DeployObjectiveSitingPolicy

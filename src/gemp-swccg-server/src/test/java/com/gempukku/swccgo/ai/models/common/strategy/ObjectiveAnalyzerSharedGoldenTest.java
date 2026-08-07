@@ -98,7 +98,7 @@ public class ObjectiveAnalyzerSharedGoldenTest {
                 "Flip this card if you control Theed Palace Throne Room with Amidala there.");
         ObjectiveAnalyzer endor = analyzed("8_167", "Endor Operations",
                 "Deploy Endor system, Bunker and Landing Platform. Flip this card if Ominous Rumors and Establish Secret Base are both on table.");
-        ObjectiveAnalyzer iwtm = analyzed("208_057", "I Want That Map",
+        ObjectiveAnalyzer iwtm = analyzed("208_57", "I Want That Map",
                 "Deploy Tuanul Village. Flip this card if your First Order characters control two battlegrounds.");
         ObjectiveAnalyzer hiddenPath = analyzed("226_028", "The Hidden Path",
                 "Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. Flip this card if Jedi occupy two non-Mapuzo sites.");
@@ -157,7 +157,7 @@ public class ObjectiveAnalyzerSharedGoldenTest {
 
     @Test
     public void iwtmUsesBattlegroundsForLiveRelevanceButNotSetupSystemName() {
-        ObjectiveAnalyzer iwtm = analyzed("208_057", "I Want That Map",
+        ObjectiveAnalyzer iwtm = analyzed("208_57", "I Want That Map",
                 "Deploy Tuanul Village. Flip this card if your First Order characters control two battlegrounds.");
         SwccgGame game = mock(SwccgGame.class);
         GameState gameState = mock(GameState.class);
@@ -231,8 +231,9 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // 35 -> 37.
         // On The Verge Of Greatness family batch: 37 -> 38.
         // Agents Of Black Sun family batch: 38 -> 39.
-        assertEquals(39, enabled);
-        assertEquals(23, profiles.size() - enabled);
+        // I Want That Map family batch: 39 -> 40.
+        assertEquals(40, enabled);
+        assertEquals(22, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);
