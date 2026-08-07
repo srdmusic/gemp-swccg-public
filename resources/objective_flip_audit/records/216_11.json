@@ -109,14 +109,52 @@
  "seedMismatches": [],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
-  "profileGaps": [
-   "flipGateSite null: gate location is a Scarif battleground site (Filters.Scarif_battleground_site); present only as a named-location recipe",
-   "keyCharacterFilter null and flipGateCardIds empty: flip actors Krennic (209_36) / Tarkin (102_11, 204_45) not listed",
-   "orbit condition (Death Star system isOrbiting Scarif) exists only as a recipe string in objectiveNamedLocations, with no structured gate semantics",
-   "requiredCardsOnTable empty: back hard-loses if Death Star system or Shield Gate (216_18) leaves table",
-   "flip-back exposure (need your leader at a Scarif battleground site) not represented"
-  ]
+  "loaderEnabled": true,
+  "profileGaps": []
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "ownerBehavior": [
+   "exact front Scarif battleground parent and child ownership",
+   "exact Scarif Command Center Krennic parent and child ownership",
+   "source-exact Director Krennic and Commandant Krennic deploy costs",
+   "sequential Krennic deploy plus Death Star mobile-system Force budgeting",
+   "existing Death Star movement toward Scarif and post-flip orbit hold",
+   "generic Krennic-or-Tarkin deployment to the typed Scarif battleground-site gate",
+   "native front flip for both public bots",
+   "Filters.at semantics for actors aboard vehicles or starships",
+   "real Force-loss and battle-forfeit preservation of the last required actor",
+   "exact back nonunique-ability retrieval",
+   "safe native Vader battle reaction and unsafe last-leader reaction veto",
+   "native flip-back and hard-loss execution",
+   "active owner-agnostic duplicate and inactive-card handling for hard-loss retention"
+  ],
+  "opponentBehavior": [
+   "an opponent-owned active Death Star-system duplicate satisfies the native broad spot check",
+   "removing the last own Scarif leader flips the back to the front",
+   "removing the last active Death Star system or Shield Gate places the back out of play before flip-back"
+  ],
+  "scoring": [
+   "exact front Scarif route +2000",
+   "exact Command Center Krennic route +2000",
+   "exact legal route child +1200",
+   "exact back retrieval +2000 with useful child +1200",
+   "safe Vader reaction +2000 with safe child +1200",
+   "exhausted, unaffordable, unknown, unsafe-departure, and true hard-loss actions receive terminal vetoes"
+  ],
+  "nativeEngineTests": [
+   "OnTheVergeObjectiveRouteEngineContractTest",
+   "OnTheVergeObjectivePolicyTest"
+  ],
+  "verification": "OTVOG contract 17/0/0/0 and pure policy 6/0/0/0; final 35-suite affected and neighboring ring passed 291/0/0/0. Independent verification and K2 review returned zero open P0/P1 defects. JSON, diff, scope, compiled-byte identity, and normalized mirror checks passed.",
+  "knownLimits": [
+   "Fresh live replay firing is not yet proved.",
+   "The workbook remains research only.",
+   "The orbit conjunct and exact source-action provenance remain code-side because the shared playbook schema does not represent them completely."
+  ],
+  "localBehaviorCommit": "dbf18c470",
+  "artifact": "All 13 relevant production class files byte-match target/classes, the server jar, and web.jar; the embedded playbook also byte-matches. Server jar SHA-256 41616180df52d713cbcafe7c6bec3c61b9a654642a9ad450e878d997c1aa7b85; live web.jar SHA-256 d4cb3f57b9b95c4acbc742471522e8085a9f3860f7af6fe615985681e1bff3cf; playbook SHA-256 d94267fb5da821a9ad724bbea3e270b244b47ca23c34e9f8f5a497c0d1114e44.",
+  "deployment": "The authenticated hall was empty at all pre-restart gates. Prior Ralltiir jar preserved as web.jar.pre-otvog-dbf18c470. Fresh app start 2026-08-07T07:03:45.457097422Z, restart count 0, Java PID 1, jar mtime precedes JVM start, candidate/host/container hashes match, operational status, all gameplay settings, startup completion, login, and reopened empty hall passed.",
+  "proofCeiling": "Deterministic unchanged-engine public-bot execution provides FLIP_OBSERVED. Package identity and fresh-JVM deployment are verified; fresh live replay firing remains separate. Nothing was pushed."
+ },
+ "proofGate": "FLIP_OBSERVED"
 }

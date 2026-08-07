@@ -10218,3 +10218,69 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     provides FLIP_OBSERVED. Fresh live replay firing remains separate. Nothing
     was pushed. Restore web.jar.pre-ralltiir-0e4043a20 and revert 929e37ded
     followed by 0e4043a20 to remove this seal.
+
+  ==== On The Verge Of Greatness behavior seal (2026-08-07) ====
+
+    Dark 216_11/216_11_BACK flips when Krennic or Tarkin is at a Scarif
+    battleground site and a Death Star system is orbiting Scarif. The source
+    uses at, so an actor aboard a vehicle or starship there counts. The back
+    flips if the owner has no leader at a Scarif battleground site. It is
+    placed out of play first if no active Death Star system or no active
+    Shield Gate can be spotted. Either player's active matching copy satisfies
+    that broad native spot check. Card and engine Java remain unchanged.
+
+    Both public bots own the exact Scarif battleground parent and child, then
+    Scarif: Command Center's exact paid Krennic route. Director Krennic costs
+    3 and Commandant Krennic costs 4. Until the Death Star orbits Scarif, the
+    planner also preserves the actual 1-Force mobile-system move, yielding
+    exact four- and five-Force chains. The reserve releases after orbit is
+    complete. Exhausted parents cannot starve ordinary useful deployments.
+
+    The existing Death Star movement policy remains authoritative for moving
+    toward Scarif, orbit completion, and post-flip orbit hold. Generic deploy
+    recognizes Krennic or Tarkin at the typed site gate. The public-bot Tarkin
+    regression deploys through the ordinary route and invokes the unchanged
+    native flip. Formation and departure safety retain at semantics for aboard
+    actors on both faces.
+
+    Force loss preserves the only executable Krennic route, and battle forfeit
+    preserves the last Scarif leader. The back takes its exact nonunique-card
+    retrieval. Both bots accept the native Vader battle reaction only when the
+    paid regular move preserves the hold. Last-copy Death Star-system and
+    Shield Gate retention follows ordinary active-card spotting, including an
+    opponent-owned duplicate and suspended-card counterexample. Native
+    flip-back and out-of-play effects execute in the contract.
+
+    Exact Scarif and Command Center parents receive +2000, exact useful route
+    children receive +1200, the back retrieval receives +2000/+1200, and the
+    safe Vader route receives +2000/+1200. Exhausted, unaffordable, unknown,
+    unsafe-departure, and true last-copy terminal actions receive hard vetoes.
+    Existing legality, affordability, formation, and battle rules remain
+    dominant outside the exact route. No numeric V-tag was introduced.
+
+    The contract passed 17/0/0/0 and the pure policy passed 6/0/0/0. The final
+    35-suite affected and neighboring ring passed 291/0/0/0. Independent
+    verification and K2 review returned zero open P0/P1 defects. JSON, diff,
+    scope, compiled-byte identity, and mirrored-bot checks passed.
+
+    Local behavior commit dbf18c470 packaged successfully. All 13 relevant
+    production class files byte-match target/classes, the server jar, and
+    web.jar; the embedded playbook also byte-matches. Server jar SHA-256 is
+    41616180df52d713cbcafe7c6bec3c61b9a654642a9ad450e878d997c1aa7b85;
+    live web.jar SHA-256 is
+    d4cb3f57b9b95c4acbc742471522e8085a9f3860f7af6fe615985681e1bff3cf;
+    playbook SHA-256 is
+    d94267fb5da821a9ad724bbea3e270b244b47ca23c34e9f8f5a497c0d1114e44.
+    The prior Ralltiir jar is preserved as web.jar.pre-otvog-dbf18c470. The
+    hall stayed empty through all restart gates. The fresh app started at
+    2026-08-07T07:03:45.457097422Z with restart count zero and Java at PID 1.
+    Operational status, all gameplay settings, jar identity, clean startup,
+    login, and the reopened empty hall passed.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    evaluators, approved objective data, AI tests, and approved audit/history
+    records. No engine Java, card Java, client, deck library, database, or
+    workbook changed. Deterministic unchanged-engine public-bot execution
+    provides FLIP_OBSERVED. Fresh live replay firing remains separate. Nothing
+    was pushed. Restore web.jar.pre-otvog-dbf18c470 and revert dbf18c470 to
+    remove only this seal.

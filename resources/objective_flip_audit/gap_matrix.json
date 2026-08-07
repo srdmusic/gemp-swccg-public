@@ -649,15 +649,15 @@
    "frontBp": "216_11",
    "title": "On The Verge Of Greatness",
    "side": "DARK",
-   "classification": "ABSENT",
-   "subclass": "DISABLED",
-   "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
+   "classification": "COMPLETE",
+   "subclass": "ENABLED",
+   "why": "Loader-enabled source-exact actor-at-site profile plus native Scarif and Krennic routes, real Force budgeting, Death Star movement, loss retention, native flip and flip-back, back retrieval and Vader reaction, and active-card hard-loss protection in both public bots.",
    "flipLaw": "Flip if Krennic or Tarkin is at a Scarif battleground site AND a Death Star system is orbiting Scarif.",
    "flipBackLaw": "Back flips to front if you do NOT have a leader at a Scarif battleground site. Separately (checked first), back is PLACED OUT OF PLAY if Death Star system or Shield Gate is not on table.",
-   "profileGaps": 5,
+   "profileGaps": 0,
    "seedMismatches": 0,
-   "engineClass": "SMALL_SHARED_EXTENSION",
-   "engineClassNote": "orbit half EXISTING via V79; add actorToSite(Krennic|Tarkin,Scarif site) + requiredCardsOnTable guard"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven at behavior commit dbf18c470 by OnTheVergeObjectiveRouteEngineContractTest and OnTheVergeObjectivePolicyTest: final 35-suite affected and neighboring ring passed 291 tests with zero open P0/P1 defects."
   },
   {
    "frontBp": "219_1",
