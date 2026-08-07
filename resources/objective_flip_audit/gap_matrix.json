@@ -229,15 +229,15 @@
    "frontBp": "10_29",
    "title": "Agents Of Black Sun",
    "side": "DARK",
-   "classification": "ABSENT",
-   "subclass": "DISABLED",
-   "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
+   "classification": "COMPLETE",
+   "subclass": "ENABLED",
+   "why": "Loader-enabled dynamic actor and target law plus exact gate geography, regular-move funding, whole-carrier projection, blocker tactics, loss retention, distinct back payoff, paid bounty movement, and unchanged native flip execution in both public bots.",
    "flipLaw": "Flip if Xizor (or legacy Shada under LEGACY__TREAT_XIZOR_AS_SHADA) is at a battleground site AND Luke (or Rey/Anakin under Reflections-II retarget mods) is NOT at a battleground site.",
    "flipBackLaw": "Back flips to front if the Luke-target (Luke, or Rey/Anakin under retarget mods) is at a battleground site, OR Xizor (or legacy Shada) is not on table.",
-   "profileGaps": 5,
+   "profileGaps": 0,
    "seedMismatches": 2,
-   "engineClass": "SMALL_SHARED_EXTENSION",
-   "engineClassNote": "actorToSite(Xizor) + negative/absence-leg ext (opponent Luke absence at battleground), shared w/208_25"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven at local behavior commit 1c8c36c39 by AgentsOfBlackSunObjectiveBehaviorTest and AgentsOfBlackSunObjectiveEngineContractTest; final bounded affected ring passed 100/0/0/0 and independent delta review returned PASS."
   },
   {
    "frontBp": "12_88",

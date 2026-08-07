@@ -133,14 +133,47 @@
  ],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
-  "profileGaps": [
-   "keyCharacterFilter null: flip actor is Filters.Xizor (10_45) at a battleground site; flipGateCardIds empty (Xizor not listed)",
-   "no encoding of the negative flip constraint (Luke/Rey/Anakin must NOT be at a battleground site) anywhere in the profile",
-   "requiredCardsOnTable empty: back flips away whenever Xizor is not on table - Xizor-on-table is a standing requirement",
-   "flipGateSite null: gate is any battleground site (dynamic); only a generic battleground-site named-location recipe exists",
-   "back Force-loss engine actors (Xizor/Emperor occupying battlegrounds) and the deploy lock exception classes not represented"
-  ]
+  "loaderEnabled": true,
+  "profileGaps": []
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "ownerBehavior": [
+   "source-exact dynamic Xizor or Legacy Shada actor resolution",
+   "source-exact Rey then Anakin then Luke target precedence",
+   "ownership-free at semantics with excluded and aboard actors included",
+   "Xizor's Palace first and another Coruscant battleground fallback",
+   "exact legal regular-move Force reserve and release",
+   "whole-carrier movement projection for Xizor or Shada aboard",
+   "native front flip for both public bots",
+   "last-required-actor Force-loss and forfeit retention",
+   "exact back flip state and distinct-location Force-loss payoff projection",
+   "complete paid bounty parent, hunter, mechanism, destination, payment, and movement chain"
+  ],
+  "opponentBehavior": [
+   "the current target at any battleground site blocks the front and reopens the back",
+   "legal safe battle and movement routes may clear or pursue the blocker without bypassing ordinary safety"
+  ],
+  "scoring": [
+   "Xizor's Palace gate route +1200",
+   "other legal Coruscant battleground gate route +800",
+   "distinct back-side payoff deployment +800",
+   "exact bounty parent +40 and landspeed mechanism +600",
+   "unsafe bounty movers and destinations receive terminal vetoes"
+  ],
+  "nativeEngineTests": [
+   "AgentsOfBlackSunObjectiveBehaviorTest",
+   "AgentsOfBlackSunObjectiveEngineContractTest"
+  ],
+  "verification": "Final bounded affected ring passed 100/0/0/0. Independent hostile delta review returned PASS after the carrier projection and starship-cost findings were repaired. JSON, diff, scope, compile, embedded-byte identity, and mirrored-bot checks passed.",
+  "knownLimits": [
+   "Fresh live replay firing is not yet proved.",
+   "The workbook remains research only.",
+   "The native both-sides deploy restriction remains authoritative engine legality rather than duplicated AI policy."
+  ],
+  "localBehaviorCommit": "1c8c36c39",
+  "artifact": "All 69 generated class entries for changed production sources byte-match target/classes, the server jar, and web.jar; the embedded playbook also byte-matches. Server jar SHA-256 8729b24fb6eac328dd6784124579db9cf05223f2e0104fa376ddbf7899ffc47a; live web.jar SHA-256 7493a14e938a7d02270552607b4e08383334f48aee36c62e615e86ab0e7182bb; playbook SHA-256 2a29b1798c3d63c759c07deda389eb8174c9674a4e0dc313878bdca5b27016bc.",
+  "deployment": "The authenticated hall was frozen with zero tables. Prior jar preserved as web.jar.pre-aobs-1c8c36c39-20260807-035905. Fresh app start 2026-08-07T10:59:06.534361263Z, restart count 0, jar mtime precedes JVM start, candidate/host/container hashes match, operational status, gameplay settings, startup completion, login, HTTP 200, and reopened empty hall passed.",
+  "proofCeiling": "Deterministic unchanged-engine public-bot execution provides FLIP_OBSERVED. Package identity and fresh-JVM deployment are verified; fresh live replay firing remains separate. Nothing was pushed."
+ },
+ "proofGate": "FLIP_OBSERVED"
 }

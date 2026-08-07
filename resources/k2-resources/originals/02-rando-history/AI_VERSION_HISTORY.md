@@ -10284,3 +10284,70 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     provides FLIP_OBSERVED. Fresh live replay firing remains separate. Nothing
     was pushed. Restore web.jar.pre-otvog-dbf18c470 and revert dbf18c470 to
     remove only this seal.
+
+  ==== Agents Of Black Sun behavior seal (2026-08-07) ====
+
+    Dark 10_29/10_29_BACK flips when the current actor is at a battleground
+    site and the current target is absent from every battleground site. The
+    actor is Xizor, or Shada under the Legacy substitution. Target precedence
+    is Rey, then Anakin, then Luke. The source uses owner-neutral at with
+    excluded and aboard cards included. The back flips front when the target
+    reaches a battleground site or the actor leaves the table. Card and engine
+    Java remain unchanged.
+
+    Both public bots deploy a Coruscant battleground beside Imperial City,
+    rank Xizor's Palace first for its free Black Sun movement, retain another
+    legal Coruscant battleground as fallback, and reserve the actual regular
+    move payment. The reserve releases when the move is free, complete,
+    obsolete, or a legal deployment completes the actor leg directly.
+
+    Movement projects the complete moving group. A vehicle carrying Xizor or
+    Shada receives the objective route and pays the carrier's real movement
+    cost. Exact blocker geography feeds battle and loss choices. The current
+    actor is retained while required. Direct actor movement and permanent-
+    pilot carrier movement execute the unchanged native flip for both bots.
+
+    Back-side deploy and movement project distinct battleground payoff
+    locations occupied with the actor or Emperor. Legacy No Bargain reduces
+    the reachable count from two to one by excluding Emperor. Both faces
+    follow the native paid-bounty action through parent, hunter, optional
+    regular-move mechanism, destination, payment, and physical movement.
+    Unsafe choices are rejected and physical-card provenance is cleared on
+    unrelated paths.
+
+    Xizor's Palace receives +1200, another legal Coruscant battleground +800,
+    a distinct back payoff +800, the exact bounty parent +40, and its
+    landspeed mechanism +600. Existing legality, affordability, formation,
+    and battle-safety rules remain dominant outside the exact route.
+
+    AgentsOfBlackSunObjectiveBehaviorTest passed 6 tests and
+    AgentsOfBlackSunObjectiveEngineContractTest passed 5. The final bounded
+    ring passed 100/0/0/0. Independent hostile review caught and closed
+    missing carrier-group projection and an unsafe starship-cost
+    generalization. The final reader remains character-only with a fail-
+    closed starship regression. JSON, diff, scope, compile, mirrored-bot, and
+    embedded-byte checks passed.
+
+    Local behavior commit 1c8c36c39 packaged successfully. All 69 generated
+    class entries from changed production sources byte-match target/classes,
+    the server jar, and web.jar; the playbook also byte-matches. Server jar
+    SHA-256 is
+    8729b24fb6eac328dd6784124579db9cf05223f2e0104fa376ddbf7899ffc47a;
+    live web.jar SHA-256 is
+    7493a14e938a7d02270552607b4e08383334f48aee36c62e615e86ab0e7182bb;
+    playbook SHA-256 is
+    2a29b1798c3d63c759c07deda389eb8174c9674a4e0dc313878bdca5b27016bc.
+    The prior jar is preserved as
+    web.jar.pre-aobs-1c8c36c39-20260807-035905. The hall was frozen at zero
+    tables. The fresh app started at 2026-08-07T10:59:06.534361263Z after jar
+    mtime, with restart count zero. Operational status, gameplay settings,
+    jar identity, startup completion, login, HTTP 200, and the reopened empty
+    hall passed.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen
+    One evaluators, approved objective data, AI tests, and approved audit and
+    history records. No engine Java, card Java, client, deck library, database,
+    or workbook changed. Deterministic unchanged-engine public-bot execution
+    provides FLIP_OBSERVED. Fresh live replay firing remains separate. Nothing
+    was pushed. Restore web.jar.pre-aobs-1c8c36c39-20260807-035905 and revert
+    1c8c36c39 to remove only this seal.
