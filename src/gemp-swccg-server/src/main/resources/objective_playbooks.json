@@ -5031,6 +5031,15 @@
           ]
         }
       ],
+      "hardLossLocationRules": [
+        {
+          "id": "ralltiir-operations-system-blown-away",
+          "locationFilterKey": "Ralltiir_system",
+          "trigger": "blownAwayLastStep",
+          "outcome": "objectiveOutOfPlay",
+          "sourceText": "Both faces are placed out of play if Ralltiir is blown away (Card7_300.java and Card7_300_BACK.java). Classic Commence Primary Ignition is a same-owner self-sabotage action, so no opponent defense location or threat card is encoded."
+        }
+      ],
       "frontBp": "7_300",
       "backBp": "7_300_BACK",
       "abbreviation": "RO",

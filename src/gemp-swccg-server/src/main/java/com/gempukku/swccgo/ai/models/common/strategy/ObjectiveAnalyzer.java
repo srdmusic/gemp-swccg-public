@@ -3420,6 +3420,30 @@ public class ObjectiveAnalyzer {
                 game, playerId, candidate, location)) {
             return true;
         }
+        if (isRalltiirOperationsFamily()) {
+            boolean movingProtectedPiece = candidate.getZone() != null
+                    && candidate.getZone().isInPlay()
+                    && classifyGateFormationPieceIfRemoved(
+                        game, playerId, candidate)
+                        != FlipGateFormationRole.NONE;
+            if (movingProtectedPiece) return false;
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isActivePreFlipRule(rule)
+                        || isRuleSatisfied(game, playerId, rule)) {
+                    continue;
+                }
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (isRalltiirControlWithAlternative(alternative)
+                            && advancesAlternativeAt(
+                                game, playerId, candidate,
+                                location, alternative)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)
                     || isRuleSatisfied(game, playerId, rule)) {
@@ -3494,6 +3518,43 @@ public class ObjectiveAnalyzer {
             return true;
         }
         GameState gameState = game.getGameState();
+        if (isRalltiirOperationsFamily()) {
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isActivePreFlipRule(rule)) continue;
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (!isRalltiirControlWithAlternative(alternative)
+                            || !locationMatchesAlternative(
+                                gameState, game, playerId,
+                                location, alternative)) {
+                        continue;
+                    }
+                    String controller = resolveController(
+                            gameState, playerId,
+                            alternative.controller);
+                    if (controller != null
+                            && !controller.equals(
+                                candidate.getOwner())) {
+                        continue;
+                    }
+                    if (candidate.getZone() != null
+                            && candidate.getZone().isInPlay()
+                            && !isActiveForSpot(
+                                game, candidate,
+                                alternative
+                                    .includeExcludedFromBattle)) {
+                        continue;
+                    }
+                    com.gempukku.swccgo.filters.Filter actorFilter =
+                            resolveFilter(alternative.actorFilterKey);
+                    return actorFilter != null
+                            && actorFilter.accepts(
+                                gameState,
+                                game.getModifiersQuerying(), candidate);
+                }
+            }
+            return false;
+        }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)) continue;
             for (FlipLocationAlternative alternative : rule.alternatives) {
@@ -3729,6 +3790,22 @@ public class ObjectiveAnalyzer {
                 || game.getModifiersQuerying() == null) {
             return false;
         }
+        if (isRalltiirOperationsFamily()) {
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isActivePreFlipRule(rule)) continue;
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (isRalltiirControlWithAlternative(alternative)
+                            && isOpponentConstraintBlockingAt(
+                                game, playerId, location,
+                                alternative.opponentConstraint)
+                            && hasOpponentBattleParticipantAt(
+                                game, playerId, location)) {
+                        return true;
+                    }
+                }
+            }
+        }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)
                     || isRuleSatisfied(game, playerId, rule)) {
@@ -3746,6 +3823,36 @@ public class ObjectiveAnalyzer {
                             game, playerId, location, alternative)) {
                     continue;
                 }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasOpponentBattleParticipantAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        String opponent = game.getGameState().getOpponent(playerId);
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (opponent == null || permanents == null) return false;
+        com.gempukku.swccgo.filters.Filter participant =
+                Filters.canParticipateInBattleAt(location, playerId);
+        for (PhysicalCard card : permanents) {
+            if (card != null
+                    && opponent.equals(card.getOwner())
+                    && Filters.or(
+                        Filters.character,
+                        Filters.vehicle,
+                        Filters.starship).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), card)
+                    && samePhysicalLocation(
+                        presenceContributionLocation(game, card),
+                        location)
+                    && participant.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
                 return true;
             }
         }
@@ -3793,6 +3900,20 @@ public class ObjectiveAnalyzer {
                 || game.getGameState() == null
                 || game.getModifiersQuerying() == null) {
             return false;
+        }
+        if (isRalltiirOperationsFamily()) {
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isActivePreFlipRule(rule)) continue;
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (isRalltiirControlWithAlternative(alternative)
+                            && isOpponentConstraintBlockingAt(
+                                game, playerId, location,
+                                alternative.opponentConstraint)) {
+                        return true;
+                    }
+                }
+            }
         }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)
@@ -3850,6 +3971,279 @@ public class ObjectiveAnalyzer {
                 && alternative.count.value > 0;
     }
 
+    private static boolean isRalltiirControlWithAlternative(
+            FlipLocationAlternative alternative) {
+        return alternative != null
+                && "controlWith".equals(alternative.relation)
+                && "self".equals(alternative.controller)
+                && "Ralltiir_site".equals(
+                    alternative.locationFilterKey)
+                && "Imperial".equals(alternative.actorFilterKey)
+                && "flipProgress".equals(alternative.scoreRole)
+                && alternative.count != null
+                && alternative.count.value != null
+                && alternative.count.value == 3;
+    }
+
+    private FlipLocationAlternative findRalltiirControlWithAlternative() {
+        if (activeFlipLocationRules == null) return null;
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)) continue;
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (isRalltiirControlWithAlternative(alternative)) {
+                    return alternative;
+                }
+            }
+        }
+        return null;
+    }
+
+    private PhysicalCard findRalltiirSoleSystemBlocker(
+            SwccgGame game, String playerId) {
+        if (!isRalltiirOperationsFamily() || isFlipped
+                || !"7_300".equals(objectiveBlueprintId)
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        FlipLocationAlternative alternative =
+                findRalltiirControlWithAlternative();
+        RuleOpponentConstraint constraint = alternative != null
+                ? alternative.opponentConstraint : null;
+        if (alternative == null || constraint == null
+                || countAlternativeMatches(
+                    game, playerId, playerId, alternative)
+                    < expectedCount(game, playerId, alternative.count)
+                || countOpponentConstraintMatches(
+                    game, playerId, constraint) != 1) {
+            return null;
+        }
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (location != null
+                    && Filters.Ralltiir_system.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)
+                    && isOpponentConstraintBlockingAt(
+                        game, playerId, location, constraint)) {
+                return location;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Exact terminal front-side projection. Once three Ralltiir sites already
+     * satisfy control-with-Imperial, a presence-supplying starship arriving at
+     * the sole opponent-controlled Ralltiir system removes the last blocker.
+     */
+    public boolean isRalltiirSoleSystemBlockerPresenceDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        if (game == null || playerId == null
+                || candidate == null || destination == null
+                || !playerId.equals(candidate.getOwner())
+                || candidate.getBlueprint() == null
+                || candidate.getBlueprint().getCardCategory()
+                    != CardCategory.STARSHIP
+                || !candidateProvidesPresence(game, candidate)) {
+            return false;
+        }
+        PhysicalCard blocker = findRalltiirSoleSystemBlocker(
+                game, playerId);
+        return samePhysicalLocation(blocker, destination);
+    }
+
+    /** A presence-supplying pilot can complete the same terminal route by
+     * boarding an owned ship that is already at the blocked system. */
+    public boolean isRalltiirSoleSystemBlockerPilotHost(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard host) {
+        if (game == null || playerId == null
+                || candidate == null || host == null
+                || !playerId.equals(candidate.getOwner())
+                || !playerId.equals(host.getOwner())
+                || candidate.getBlueprint() == null
+                || host.getBlueprint() == null
+                || candidate.getBlueprint().getCardCategory()
+                    != CardCategory.CHARACTER
+                || host.getBlueprint().getCardCategory()
+                    != CardCategory.STARSHIP
+                || !candidateProvidesPresence(game, candidate)
+                || !isLegalProspectivePilotForHost(
+                    game, playerId, host, candidate)) {
+            return false;
+        }
+        PhysicalCard blocker = findRalltiirSoleSystemBlocker(
+                game, playerId);
+        PhysicalCard hostLocation = presenceContributionLocation(
+                game, host);
+        return samePhysicalLocation(blocker, hostLocation);
+    }
+
+    private PhysicalCard findLegalRalltiirSoleSystemBlockerDeployTarget(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        PhysicalCard blocker = findRalltiirSoleSystemBlocker(
+                game, playerId);
+        if (blocker == null || candidate == null
+                || candidate.getZone() != Zone.HAND) {
+            return null;
+        }
+        try {
+            if (isRalltiirSoleSystemBlockerPresenceDestination(
+                        game, playerId, candidate, blocker)
+                    && Filters.deployableToLocation(
+                        candidate, Filters.sameCardId(blocker),
+                        false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate)) {
+                return blocker;
+            }
+            Collection<PhysicalCard> permanents =
+                    game.getGameState().getAllPermanentCards();
+            if (permanents == null) return null;
+            for (PhysicalCard host : permanents) {
+                if (isRalltiirSoleSystemBlockerPilotHost(
+                            game, playerId, candidate, host)
+                        && isProspectivePairRouteLegalAt(
+                            game, playerId, host,
+                            candidate, blocker)) {
+                    return host;
+                }
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return null;
+    }
+
+    public boolean hasLegalRalltiirSoleSystemBlockerDeployRoute(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        return findLegalRalltiirSoleSystemBlockerDeployTarget(
+                game, playerId, candidate) != null;
+    }
+
+    private boolean hasLegalRalltiirSoleSystemBlockerHyperspeedRoute(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard destination) {
+        if (!isRalltiirSoleSystemBlockerPresenceDestination(
+                    game, playerId, candidate, destination)
+                || candidate.getZone() == null
+                || !candidate.getZone().isInPlay()) {
+            return false;
+        }
+        try {
+            PhysicalCard origin = presenceContributionLocation(
+                    game, candidate);
+            return origin != null
+                    && !samePhysicalLocation(origin, destination)
+                    && Filters.canMoveToUsingHyperspeed(
+                        playerId, candidate,
+                        false, false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), destination)
+                    && FormationSafety.vetoMoveDestination(
+                        game, game.getGameState(), playerId,
+                        candidate, destination) == null
+                    && FormationSafety.vetoMoveOrigin(
+                        game, game.getGameState(), playerId,
+                        candidate, origin) == null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Projects the exact Ralltiir control-with-Imperial result while the
+     * engine is asking where to deploy the selected card. During that child
+     * decision the card can be in a transient in-play state without a real
+     * location, so the ordinary active-card spot query is not authoritative.
+     */
+    public boolean isRalltiirFrontProgressDeployDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate, PhysicalCard location) {
+        if (!isRalltiirOperationsFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null || location == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || activeFlipLocationRules == null) {
+            return false;
+        }
+        if (isRalltiirSoleSystemBlockerPresenceDestination(
+                    game, playerId, candidate, location)
+                || isRalltiirSoleSystemBlockerPilotHost(
+                    game, playerId, candidate, location)) {
+            return true;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isActivePreFlipRule(rule)) continue;
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (!isRalltiirControlWithAlternative(alternative)
+                            || !locationMatchesAlternative(
+                                gameState, game, playerId,
+                                location, alternative)) {
+                        continue;
+                    }
+                    com.gempukku.swccgo.filters.Filter actorFilter =
+                            resolveFilter(alternative.actorFilterKey);
+                    if (actorFilter == null || !actorFilter.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), candidate)) {
+                        return false;
+                    }
+                    boolean suppliesPresence =
+                            candidateProvidesPresence(game, candidate);
+                    if (!suppliesPresence
+                            && candidate.getBlueprint() != null
+                            && candidate.getBlueprint()
+                                .hasAbilityAttribute()
+                            && candidate.getBlueprint().getAbility()
+                                != null
+                            && candidate.getBlueprint().getAbility()
+                                >= 1.0f) {
+                        suppliesPresence = true;
+                    }
+                    int required = expectedCount(
+                            game, playerId, alternative.count);
+                    int qualified = countAlternativeMatches(
+                            game, playerId, playerId, alternative);
+                    if (!suppliesPresence || qualified >= required
+                            || relationSatisfiedAt(
+                                game, playerId, playerId, location,
+                                alternative.relation,
+                                alternative.actorFilterKey,
+                                alternative.includeExcludedFromBattle,
+                                alternative.spotOverride)) {
+                        return false;
+                    }
+                    Map<com.gempukku.swccgo.common.InactiveReason, Boolean>
+                        overrides = resolveSpotOverride(
+                            alternative.includeExcludedFromBattle,
+                            alternative.spotOverride);
+                    String opponent = gameState.getOpponent(playerId);
+                    return opponent == null
+                            || !game.getModifiersQuerying()
+                                .occupiesLocation(
+                                    gameState, location,
+                                    opponent, overrides);
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Ralltiir prospective deploy destination failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
     public boolean wouldCompletePreFlipRequirementAt(
             SwccgGame game, String playerId, PhysicalCard candidate,
             PhysicalCard location) {
@@ -3859,6 +4253,12 @@ public class ObjectiveAnalyzer {
                 || game.getGameState() == null
                 || game.getModifiersQuerying() == null) {
             return false;
+        }
+        if (isRalltiirSoleSystemBlockerPresenceDestination(
+                    game, playerId, candidate, location)
+                || isRalltiirSoleSystemBlockerPilotHost(
+                    game, playerId, candidate, location)) {
+            return true;
         }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)) continue;
@@ -8884,10 +9284,17 @@ public class ObjectiveAnalyzer {
     private Integer requiredCardDeployCostAt(
             SwccgGame game, PhysicalCard card,
             PhysicalCard target) {
+        return requiredCardDeployCostAt(
+                game, card, card, target);
+    }
+
+    private Integer requiredCardDeployCostAt(
+            SwccgGame game, PhysicalCard sourceCard,
+            PhysicalCard card, PhysicalCard target) {
         try {
             float cost = game.getModifiersQuerying()
                     .getDeployCost(
-                        game.getGameState(), card, card,
+                        game.getGameState(), sourceCard, card,
                         target, false, null, false,
                         0.0f, null, true);
             return (int) Math.ceil(Math.max(0.0f, cost));
@@ -10478,6 +10885,146 @@ public class ObjectiveAnalyzer {
     public boolean isTwinSunsObjectiveFamily() {
         return analyzed && ("301_4".equals(objectiveBlueprintId)
                 || "301_4_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isRalltiirOperationsFamily() {
+        return analyzed && ("7_300".equals(objectiveBlueprintId)
+                || "7_300_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isRalltiirFrontRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isRalltiirOperationsFamily() && !isFlipped
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "7_300".equals(sourceCard.getBlueprintId(
+                    game.getGameState(), false))
+                && actionText != null
+                && "deploy card from reserve deck".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT))
+                && hasRalltiirFrontRouteCandidateInReserve(
+                    game, playerId, sourceCard);
+    }
+
+    public boolean isExhaustedRalltiirFrontRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isRalltiirOperationsFamily() && !isFlipped
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "7_300".equals(sourceCard.getBlueprintId(
+                    game.getGameState(), false))
+                && actionText != null
+                && "deploy card from reserve deck".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT))
+                && !hasRalltiirFrontRouteCandidateInReserve(
+                    game, playerId, sourceCard);
+    }
+
+    public boolean isRalltiirBackAnyCardTutorAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isRalltiirOperationsFamily() && isFlipped
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "7_300_BACK".equals(sourceCard.getBlueprintId(
+                    game.getGameState(), false))
+                && game.getGameState().getCurrentPhase() == Phase.CONTROL
+                && game.getGameState().getReserveDeckSize(playerId) > 0
+                && actionText != null
+                && "take card into hand from reserve deck".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Uses the back-side any-card tutor to answer the immediate flip-back
+     * threat. The source flips front when the opponent controls two Ralltiir
+     * locations, so one already-controlled location makes a legal presence
+     * body for that exact location objective-critical.
+     */
+    public boolean isRalltiirBackUrgentHoldTutorCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
+        if (!isRalltiirOperationsFamily() || !isFlipped
+                || game == null || playerId == null
+                || sourceCard == null || candidate == null
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                || !playerId.equals(candidate.getOwner())
+                || candidate.getZone() != Zone.RESERVE_DECK
+                    && candidate.getZone() != Zone.TOP_OF_RESERVE_DECK
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        String opponent = game.getGameState().getOpponent(playerId);
+        if (opponent == null) return false;
+
+        PhysicalCard threatened = null;
+        int opponentControlled = 0;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (location == null
+                    || !Filters.Ralltiir_location.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)
+                    || !game.getModifiersQuerying().controlsLocation(
+                        game.getGameState(), location, opponent,
+                        SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)) {
+                continue;
+            }
+            threatened = location;
+            opponentControlled++;
+        }
+        if (opponentControlled != 1 || threatened == null
+                || !candidateProvidesPresence(game, candidate)) {
+            return false;
+        }
+
+        try {
+            // The tutor pays its 2 Force before this child decision. Check
+            // future destination legality without treating that temporary
+            // empty Force pile as a permanent deployment prohibition.
+            return Filters.deployableToLocation(
+                    candidate, Filters.sameCardId(threatened),
+                    true, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Exact catastrophic self-target. Classic Commence Primary Ignition is
+     * owned by the same Dark Side player as Ralltiir Operations, so this is a
+     * self-sabotage veto rather than an opponent-threat defense route.
+     */
+    public boolean isRalltiirObjectiveSelfDestructAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isRalltiirOperationsFamily()
+                || game == null || playerId == null
+                || sourceCard == null || actionText == null
+                || !playerId.equals(sourceCard.getOwner())
+                || !"2_130".equals(sourceCard.getBlueprintId(true))
+                || !actionText.trim().toLowerCase(Locale.ROOT)
+                    .startsWith("attempt to 'blow away' ralltiir")
+                || game.getGameState() == null) {
+            return false;
+        }
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (isObjectiveHardLossLocation(
+                    game, playerId, location)
+                    && Filters.Ralltiir_system.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isTwinSunsFrontSiteRouteAction(
@@ -12382,6 +12929,256 @@ public class ObjectiveAnalyzer {
                     && game.getGameState().getRenegadePlanet() == null;
     }
 
+    public boolean hasRalltiirFrontRouteCandidateInReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        if (!isRalltiirOperationsFamily() || isFlipped
+                || game == null || playerId == null
+                || sourceCard == null
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> reserve = game.getGameState()
+                .getReserveDeck(playerId);
+        if (reserve == null) return false;
+        for (PhysicalCard candidate : reserve) {
+            if (getRalltiirFrontPullCandidatePriority(
+                    game, playerId, sourceCard, candidate) > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Stages the mixed native route. A legal site wins until three usable
+     * control lanes exist. Once an existing site can accept a progressing
+     * Imperial, the cheapest legal non-unique Imperial wins instead.
+     */
+    public int getRalltiirFrontPullCandidatePriority(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
+        if (!isRalltiirOperationsFamily() || isFlipped
+                || game == null || playerId == null
+                || sourceCard == null || candidate == null
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)) {
+            return 0;
+        }
+        if (isRalltiirFrontSiteRouteCandidate(
+                game, playerId, sourceCard, candidate)) {
+            return 3;
+        }
+        if (hasRalltiirFrontSiteRouteCandidateInReserve(
+                    game, playerId, sourceCard)) {
+            return 0;
+        }
+        return isRalltiirFrontImperialRouteCandidate(
+                game, playerId, sourceCard, candidate) ? 2 : 0;
+    }
+
+    public boolean hasRalltiirFrontSiteRouteCandidateInReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        if (!isRalltiirOperationsFamily() || isFlipped
+                || game == null || playerId == null
+                || sourceCard == null
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> reserve = game.getGameState()
+                .getReserveDeck(playerId);
+        if (reserve == null) return false;
+        for (PhysicalCard candidate : reserve) {
+            if (isRalltiirFrontSiteRouteCandidate(
+                    game, playerId, sourceCard, candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isRalltiirFrontSiteRouteCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
+        if (candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        try {
+            return Filters.site.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    && needsRalltiirFrontSiteRoute(
+                        game, playerId, sourceCard)
+                    && Filters.deployableToSystem(
+                        sourceCard, Title.Ralltiir,
+                        null, false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean needsRalltiirFrontSiteRoute(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        return sourceCard != null
+                && countRalltiirUsableRouteSites(
+                    game, playerId) < 3;
+    }
+
+    private boolean isRalltiirFrontImperialRouteCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
+        if (sourceCard == null || candidate == null
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        try {
+            if (!Filters.and(Filters.non_unique, Filters.Imperial)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)) {
+                return false;
+            }
+            if (!Filters.deployableToSystem(
+                        sourceCard, Title.Ralltiir,
+                        null, false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate)) {
+                return false;
+            }
+            for (PhysicalCard location
+                    : game.getGameState().getLocationsInOrder()) {
+                if (advancesPreFlipRequirementAt(
+                            game, playerId, candidate, location)
+                        && Filters.deployableToLocation(
+                            sourceCard, Filters.sameCardId(location),
+                            false, 0.0f).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), candidate)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return false;
+    }
+
+    private int countRalltiirSitesOnTable(SwccgGame game) {
+        if (game == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        int count = 0;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (location != null && Filters.Ralltiir_site.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), location)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private int countRalltiirQualifiedSites(
+            SwccgGame game, String playerId) {
+        if (game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        int count = 0;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (location != null
+                    && Filters.Ralltiir_site.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)
+                    && relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        "controlWith", "Imperial", true, null)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private int countRalltiirUsableRouteSites(
+            SwccgGame game, String playerId) {
+        if (game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        FlipLocationAlternative alternative =
+                findRalltiirControlWithAlternative();
+        if (alternative == null) return 0;
+        Map<com.gempukku.swccgo.common.InactiveReason, Boolean> overrides =
+                resolveSpotOverride(
+                    alternative.includeExcludedFromBattle,
+                    alternative.spotOverride);
+        String opponent = game.getGameState().getOpponent(playerId);
+        int count = 0;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (location == null
+                    || !Filters.Ralltiir_site.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)) {
+                continue;
+            }
+            if (relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride)
+                    || opponent == null
+                    || !game.getModifiersQuerying().occupiesLocation(
+                            game.getGameState(), location,
+                            opponent, overrides)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private Integer cheapestRalltiirImperialDeployCost(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
+        Integer cheapest = null;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!advancesPreFlipRequirementAt(
+                        game, playerId, candidate, location)
+                    || !Filters.deployableToLocation(
+                        sourceCard, Filters.sameCardId(location),
+                        false, 0.0f).accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate)) {
+                continue;
+            }
+            Integer cost = requiredCardDeployCostAt(
+                    game, sourceCard, candidate, location);
+            if (cost != null
+                    && (cheapest == null || cost < cheapest)) {
+                cheapest = cost;
+            }
+        }
+        return cheapest;
+    }
+
     /**
      * Projects an objective's initial generic-site choice at the already
      * chosen operative planet. Arbitrary-card setup decisions expose blueprint
@@ -14181,6 +14978,355 @@ public class ObjectiveAnalyzer {
         }
     }
 
+    private Integer getRalltiirSoleSystemBlockerDeployForceReserve(
+            SwccgGame game, String playerId) {
+        PhysicalCard blocker = findRalltiirSoleSystemBlocker(
+                game, playerId);
+        if (blocker == null
+                || game.getGameState().getCurrentPhase()
+                    != Phase.DEPLOY) {
+            return null;
+        }
+        int cheapest = Integer.MAX_VALUE;
+        List<PhysicalCard> hand = game.getGameState().getHand(playerId);
+        if (hand == null) return null;
+        for (PhysicalCard candidate : hand) {
+            PhysicalCard target =
+                    findLegalRalltiirSoleSystemBlockerDeployTarget(
+                        game, playerId, candidate);
+            if (target == null) continue;
+            Integer cost = requiredCardDeployCostAt(
+                    game, candidate, target);
+            if (cost != null) cheapest = Math.min(cheapest, cost);
+        }
+        return cheapest == Integer.MAX_VALUE ? null : cheapest;
+    }
+
+    private Integer getRalltiirSoleSystemBlockerMoveForceReserve(
+            SwccgGame game, String playerId) {
+        PhysicalCard blocker = findRalltiirSoleSystemBlocker(
+                game, playerId);
+        if (blocker == null) return null;
+        int cheapest = Integer.MAX_VALUE;
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard candidate : permanents) {
+            if (!hasLegalRalltiirSoleSystemBlockerHyperspeedRoute(
+                    game, playerId, candidate, blocker)) {
+                continue;
+            }
+            try {
+                PhysicalCard origin = presenceContributionLocation(
+                        game, candidate);
+                float cost = game.getModifiersQuerying()
+                        .getMoveUsingHyperspeedCost(
+                            game.getGameState(), candidate,
+                            origin, blocker, false, 0.0f);
+                if (Float.isFinite(cost)) {
+                    cheapest = Math.min(cheapest,
+                            (int) Math.ceil(Math.max(0.0f, cost)));
+                }
+            } catch (Exception e) {
+                LOG.debug(
+                        "Ralltiir system-blocker move reserve failed: {}",
+                        e.getMessage());
+            }
+        }
+        return cheapest == Integer.MAX_VALUE ? null : cheapest;
+    }
+
+    private int getRalltiirSoleSystemBlockerRouteForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (deployingCandidate != null
+                && hasLegalRalltiirSoleSystemBlockerDeployRoute(
+                    game, playerId, deployingCandidate)) {
+            return 0;
+        }
+        Integer deploy = getRalltiirSoleSystemBlockerDeployForceReserve(
+                game, playerId);
+        Integer move = getRalltiirSoleSystemBlockerMoveForceReserve(
+                game, playerId);
+        if (deploy == null) return move != null ? move : 0;
+        if (move == null) return deploy;
+        return Math.min(deploy, move);
+    }
+
+    public int getRalltiirCurrentRouteForceReserve(
+            SwccgGame game, String playerId) {
+        return getRalltiirCurrentRouteForceReserve(
+                game, playerId, null);
+    }
+
+    /**
+     * Preserves only the currently executable payments for the native mixed
+     * pull, a safe blocker-clearing battle, and a net-progress Imperial move.
+     * All three phases can advance the objective in the same turn, so their
+     * exact current-turn costs are additive.
+     */
+    public int getRalltiirCurrentRouteForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!isRalltiirOperationsFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        if (findRalltiirSoleSystemBlocker(game, playerId) != null) {
+            return getRalltiirSoleSystemBlockerRouteForceReserve(
+                    game, playerId, deployingCandidate);
+        }
+        if (deployingCandidate != null
+                && deployingCandidate.getZone() == Zone.HAND
+                && hasLegalRalltiirProgressDeployDestination(
+                    game, playerId, deployingCandidate)) {
+            int qualifiedAfterDeploy =
+                    countRalltiirQualifiedSites(game, playerId) + 1;
+            int remainingNativePull =
+                    qualifiedAfterDeploy < 3
+                        ? getRalltiirCurrentNativePullForceReserve(
+                            game, playerId)
+                        : 0;
+            int remainingMove = qualifiedAfterDeploy < 3
+                    ? getRalltiirCurrentMoveForceReserve(
+                        game, playerId)
+                    : 0;
+            return remainingNativePull
+                    + getRalltiirCurrentBattleForceReserve(
+                        game, playerId)
+                    + remainingMove;
+        }
+        return getRalltiirCurrentNativePullForceReserve(
+                    game, playerId)
+                + getRalltiirCurrentBattleForceReserve(
+                    game, playerId)
+                + getRalltiirCurrentMoveForceReserve(
+                    game, playerId);
+    }
+
+    private int getRalltiirCurrentNativePullForceReserve(
+            SwccgGame game, String playerId) {
+        if (game.getGameState().getCurrentPhase() != Phase.DEPLOY) {
+            return 0;
+        }
+        try {
+            PhysicalCard objective = findOurObjective(
+                    game.getGameState(), playerId);
+            if (objective == null
+                    || !"7_300".equals(objective.getBlueprintId(
+                        game.getGameState(), false))
+                    || game.getModifiersQuerying()
+                        .getUntilEndOfPhaseLimitCounter(
+                            objective, playerId,
+                            objective.getCardId(),
+                            GameTextActionId
+                                .RALLTIIR_OPERATIONS__DOWNLOAD_SITE_OR_NONUNIQUE_IMPERIAL_TO_RALLTIIR,
+                            Phase.DEPLOY)
+                        .getUsedLimit() >= 1) {
+                return 0;
+            }
+            int cheapest = Integer.MAX_VALUE;
+            for (PhysicalCard candidate
+                    : game.getGameState().getReserveDeck(playerId)) {
+                int priority = getRalltiirFrontPullCandidatePriority(
+                        game, playerId, objective, candidate);
+                if (priority <= 0) continue;
+                Integer cost = priority >= 3
+                        ? requiredCardDeployCost(game, candidate)
+                        : cheapestRalltiirImperialDeployCost(
+                            game, playerId, objective, candidate);
+                if (cost != null) cheapest = Math.min(cheapest, cost);
+            }
+            return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+        } catch (Exception e) {
+            LOG.debug("Ralltiir native-route Force reserve failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+    }
+
+    public int getRalltiirCurrentMoveForceReserve(
+            SwccgGame game, String playerId) {
+        if (!isRalltiirOperationsFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        if (findRalltiirSoleSystemBlocker(game, playerId) != null) {
+            Integer reserve =
+                    getRalltiirSoleSystemBlockerMoveForceReserve(
+                        game, playerId);
+            return reserve != null ? reserve : 0;
+        }
+        int cheapest = Integer.MAX_VALUE;
+        try {
+            Collection<PhysicalCard> permanents =
+                    game.getGameState().getAllPermanentCards();
+            if (permanents == null) return 0;
+            for (PhysicalCard mover : permanents) {
+                if (mover == null
+                        || !playerId.equals(mover.getOwner())
+                        || mover.getZone() == null
+                        || !mover.getZone().isInPlay()
+                        || !isActiveForSpot(game, mover, true)) {
+                    continue;
+                }
+                PhysicalCard origin = presenceContributionLocation(
+                        game, mover);
+                if (origin == null) continue;
+                for (PhysicalCard destination
+                        : game.getGameState().getLocationsInOrder()) {
+                    boolean advancesRoute =
+                            advancesPreFlipActorAtRuntimeLocation(
+                                game, playerId, mover, destination);
+                    boolean chasesBlocker = !advancesRoute
+                            && qualifiesPreFlipRuntimeActorAtLocation(
+                                game, playerId, mover, destination)
+                            && isPreFlipGlobalBlockerAt(
+                                game, playerId, destination);
+                    boolean followsBattleClear = !advancesRoute
+                            && !chasesBlocker
+                            && qualifiesPreFlipRuntimeActorAtLocation(
+                                game, playerId, mover, destination)
+                            && !hasMatchingActorAtLocation(
+                                game, playerId, destination,
+                                "Imperial", true)
+                            && isRalltiirCurrentWinnableRouteBattleAt(
+                                game, playerId, destination);
+                    if ((!advancesRoute
+                                && !chasesBlocker
+                                && !followsBattleClear)
+                            || samePhysicalLocation(origin, destination)
+                            || !Filters.canMoveToUsingLandspeed(
+                                playerId, mover,
+                                false, false, false, 0.0f, null)
+                                .accepts(
+                                    game.getGameState(),
+                                    game.getModifiersQuerying(),
+                                    destination)
+                            || FormationSafety.vetoMoveDestination(
+                                game, game.getGameState(), playerId,
+                                mover, destination) != null
+                            || FormationSafety.vetoMoveOrigin(
+                                game, game.getGameState(), playerId,
+                                mover, origin) != null) {
+                        continue;
+                    }
+                    float cost = game.getModifiersQuerying()
+                            .getMoveUsingLandspeedCost(
+                                game.getGameState(), mover,
+                                origin, destination,
+                                false, 0.0f);
+                    if (Float.isFinite(cost)) {
+                        cheapest = Math.min(
+                                cheapest,
+                                Math.max(0,
+                                    (int) Math.ceil(cost)));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Ralltiir move Force reserve failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
+    public int getRalltiirCurrentBattleForceReserve(
+            SwccgGame game, String playerId) {
+        if (!isRalltiirOperationsFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        String opponent = game.getGameState().getOpponent(playerId);
+        if (opponent == null) return 0;
+        int cheapest = Integer.MAX_VALUE;
+        try {
+            for (PhysicalCard location
+                    : game.getGameState().getLocationsInOrder()) {
+                if (!isRalltiirCurrentWinnableRouteBattleAt(
+                        game, playerId, location)) {
+                    continue;
+                }
+                float cost = game.getModifiersQuerying()
+                        .getInitiateBattleCost(
+                            game.getGameState(), location,
+                            playerId, true);
+                cheapest = Math.min(
+                        cheapest,
+                        Math.max(0, (int) Math.ceil(cost)));
+            }
+        } catch (Exception e) {
+            LOG.debug("Ralltiir battle Force reserve failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
+    private boolean isRalltiirCurrentWinnableRouteBattleAt(
+            SwccgGame game, String playerId,
+            PhysicalCard location) {
+        if (location == null
+                || !Filters.Ralltiir_location.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), location)
+                || !isMissingPreFlipRequirementAt(
+                    game, playerId, location)
+                || isPreFlipGlobalBlockerAt(
+                    game, playerId, location)
+                    && !isPreFlipBattleRemovableGlobalBlockerAt(
+                        game, playerId, location)
+                || !com.gempukku.swccgo.cards.GameConditions
+                    .canInitiateBattleAtLocation(
+                        playerId, game, location,
+                        false, true)
+                || FormationSafety.vetoInitiateBattle(
+                    game, game.getGameState(), playerId,
+                    location) != null) {
+            return false;
+        }
+        String opponent = game.getGameState().getOpponent(playerId);
+        if (opponent == null) return false;
+        float ourPower = game.getModifiersQuerying()
+                .getTotalPowerAtLocation(
+                    game.getGameState(), location,
+                    playerId, false, false);
+        float opponentPower = game.getModifiersQuerying()
+                .getTotalPowerAtLocation(
+                    game.getGameState(), location,
+                    opponent, false, false);
+        return ourPower > opponentPower;
+    }
+
+    private boolean hasLegalRalltiirProgressDeployDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        try {
+            for (PhysicalCard location
+                    : game.getGameState().getLocationsInOrder()) {
+                if (advancesPreFlipRequirementAt(
+                            game, playerId, candidate, location)
+                        && Filters.deployableToLocation(
+                            candidate, Filters.sameCardId(location),
+                            false, 0.0f).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), candidate)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return false;
+    }
+
     public int getTwinSunsCurrentMoveForceReserve(
             SwccgGame game, String playerId) {
         return getTwinSunsCurrentMoveForceReserve(
@@ -14963,10 +16109,41 @@ public class ObjectiveAnalyzer {
         if ((!isMassassiBaseOperationsFamily()
                     && !isImperialEntanglementsFamily()
                     && !isOldAlliesObjectiveFamily()
+                    && !isRalltiirOperationsFamily()
                     && !isTwinSunsObjectiveFamily())
                 || isFlipped || game == null || playerId == null
                 || candidate == null || activeFlipLocationRules == null
                 || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        if (isRalltiirOperationsFamily()) {
+            PhysicalCard objective = findOurObjective(
+                    game.getGameState(), playerId);
+            int needed = Math.max(
+                    0, 3 - countRalltiirUsableRouteSites(
+                        game, playerId));
+            if (objective == null || needed == 0
+                    || !isRalltiirFrontSiteRouteCandidate(
+                        game, playerId, objective, candidate)) {
+                return false;
+            }
+            List<PhysicalCard> sites = new ArrayList<>();
+            for (PhysicalCard card : objectiveForceLossSurvivors(
+                    game.getGameState(), playerId)) {
+                if (isRalltiirFrontSiteRouteCandidate(
+                        game, playerId, objective, card)) {
+                    sites.add(card);
+                }
+            }
+            sites.sort(Comparator
+                    .comparingInt((PhysicalCard card) ->
+                        countedLocationForceLossZoneRank(card.getZone()))
+                    .thenComparingInt(
+                        PhysicalCard::getPermanentCardId));
+            for (int i = 0;
+                    i < Math.min(needed, sites.size()); i++) {
+                if (sites.get(i) == candidate) return true;
+            }
             return false;
         }
         for (FlipLocationRule rule : activeFlipLocationRules) {
@@ -15029,6 +16206,7 @@ public class ObjectiveAnalyzer {
                     && !isImperialEntanglementsFamily()
                     && !isOldAlliesObjectiveFamily()
                     && !isNoMoneyNoPartsObjectiveFamily()
+                    && !isRalltiirOperationsFamily()
                     && !isTwinSunsObjectiveFamily()
                     && !isISBOperations)
                 || isFlipped || game == null || playerId == null
@@ -15048,6 +16226,45 @@ public class ObjectiveAnalyzer {
         if (isISBOperations) {
             return isPreferredIsbDeployRouteCandidate(
                     game, playerId, candidate);
+        }
+        if (isRalltiirOperationsFamily()) {
+            int needed = Math.max(
+                    0, 3 - countRalltiirQualifiedSites(
+                        game, playerId));
+            if (needed == 0
+                    || !Filters.Imperial.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), candidate)) {
+                return false;
+            }
+            Map<PhysicalCard, Integer> costs = new HashMap<>();
+            for (PhysicalCard card
+                    : game.getGameState().getHand(playerId)) {
+                if (card == null
+                        || !Filters.Imperial.accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), card)) {
+                    continue;
+                }
+                Integer cost = cheapestRalltiirImperialDeployCost(
+                        game, playerId, card, card);
+                if (cost == null
+                        && countRalltiirSitesOnTable(game) < 3) {
+                    cost = requiredCardDeployCost(game, card);
+                }
+                if (cost != null) costs.put(card, cost);
+            }
+            List<PhysicalCard> candidates =
+                    new ArrayList<>(costs.keySet());
+            candidates.sort(Comparator
+                    .comparingInt((PhysicalCard card) -> costs.get(card))
+                    .thenComparingInt(
+                        PhysicalCard::getPermanentCardId));
+            for (int i = 0;
+                    i < Math.min(needed, candidates.size()); i++) {
+                if (candidates.get(i) == candidate) return true;
+            }
+            return false;
         }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)) continue;
@@ -17042,6 +18259,12 @@ public class ObjectiveAnalyzer {
                 game, playerId, candidate)) {
             return FlipGateFormationRole.LAST_REQUIRED_ACTOR;
         }
+        FlipGateFormationRole ralltiirImperialRole =
+                classifyRalltiirImperialIfRemoved(
+                        game, playerId, candidate);
+        if (ralltiirImperialRole != FlipGateFormationRole.NONE) {
+            return ralltiirImperialRole;
+        }
         FlipGateFormationRole runtimeActorRole =
                 classifyRuntimeActorIfRemoved(
                         game, playerId, candidate);
@@ -17118,6 +18341,101 @@ public class ObjectiveAnalyzer {
             }
         } catch (Exception e) {
             LOG.debug("Typed flip-gate casualty classification failed: {}",
+                    e.getMessage());
+        }
+        return FlipGateFormationRole.NONE;
+    }
+
+    /**
+     * Preserves the sole Imperial in the live battle for the contested third
+     * Ralltiir site. Outside that exact two-controlled-plus-one-contested
+     * seam, ordinary casualty value decides. A duplicate Imperial at the
+     * battle site also makes the candidate replaceable.
+     */
+    private FlipGateFormationRole classifyRalltiirImperialIfRemoved(
+            SwccgGame game, String playerId, PhysicalCard candidate) {
+        if (!isRalltiirOperationsFamily() || isFlipped
+                || game == null || playerId == null || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || activeFlipLocationRules == null) {
+            return FlipGateFormationRole.NONE;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isActivePreFlipRule(rule)) continue;
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (!isRalltiirControlWithAlternative(alternative)) {
+                        continue;
+                    }
+                    com.gempukku.swccgo.filters.Filter actorFilter =
+                            resolveFilter(alternative.actorFilterKey);
+                    if (actorFilter == null
+                            || !isActiveForSpot(
+                                game, candidate,
+                                alternative.includeExcludedFromBattle)
+                            || !actorFilter.accepts(
+                                gameState,
+                                game.getModifiersQuerying(), candidate)) {
+                        return FlipGateFormationRole.NONE;
+                    }
+                    PhysicalCard candidateLocation =
+                            actorLocationForAlternative(
+                                    game, candidate, alternative);
+                    PhysicalCard battleLocation =
+                            gameState.getBattleState() != null
+                                ? gameState.getBattleState()
+                                    .getBattleLocation()
+                                : null;
+                    if (!locationMatchesAlternative(
+                                gameState, game, playerId,
+                                candidateLocation, alternative)
+                            || !samePhysicalLocation(
+                                candidateLocation, battleLocation)
+                            || !hasOpponentBattleParticipantAt(
+                                game, playerId, candidateLocation)
+                            || relationSatisfiedAt(
+                                game, playerId, playerId,
+                                candidateLocation,
+                                alternative.relation,
+                                alternative.actorFilterKey,
+                                alternative.includeExcludedFromBattle,
+                                alternative.spotOverride)
+                            || hasOtherMatchingActorAtLocation(
+                                game, playerId, candidateLocation,
+                                alternative, candidate)) {
+                        return FlipGateFormationRole.NONE;
+                    }
+                    int required = expectedCount(
+                            game, playerId, alternative.count);
+                    int qualified = countAlternativeMatches(
+                            game, playerId, playerId, alternative);
+                    int supportedSites = 0;
+                    for (PhysicalCard location
+                            : gameState.getLocationsInOrder()) {
+                        if (locationMatchesAlternative(
+                                    gameState, game, playerId,
+                                    location, alternative)
+                                && hasMatchingActorAtLocation(
+                                    game, playerId, location,
+                                    alternative.actorFilterKey,
+                                    alternative
+                                        .includeExcludedFromBattle)) {
+                            supportedSites++;
+                        }
+                    }
+                    return qualified == required - 1
+                            && supportedSites == required
+                        ? FlipGateFormationRole.LAST_REQUIRED_ACTOR
+                        : FlipGateFormationRole.NONE;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Ralltiir Imperial casualty assessment failed: {}",
                     e.getMessage());
         }
         return FlipGateFormationRole.NONE;
@@ -19179,6 +20497,11 @@ public class ObjectiveAnalyzer {
             case "Dantooine_location":           return com.gempukku.swccgo.filters.Filters.Dantooine_location;
             case "Ralltiir_site":                return com.gempukku.swccgo.filters.Filters.Ralltiir_site;
             case "Ralltiir_location":            return com.gempukku.swccgo.filters.Filters.Ralltiir_location;
+            case "Ralltiir_system":
+                return com.gempukku.swccgo.filters.Filters.and(
+                    com.gempukku.swccgo.common.CardSubtype.SYSTEM,
+                    com.gempukku.swccgo.filters.Filters.title(
+                        com.gempukku.swccgo.common.Title.Ralltiir, true));
             case "Lothal_location":              return com.gempukku.swccgo.filters.Filters.Lothal_location;
             case "Lothal_site":                  return com.gempukku.swccgo.filters.Filters.Lothal_site;
             case "battleground_site":            return com.gempukku.swccgo.filters.Filters.battleground_site;
@@ -19566,6 +20889,15 @@ public class ObjectiveAnalyzer {
         if (sycLaserDeploy.applies()) {
             notes.add(new ScoreNote(
                     sycLaserDeploy.delta(), sycLaserDeploy.reason()));
+        }
+
+        if (hasLegalRalltiirSoleSystemBlockerDeployRoute(
+                game, playerId, card)) {
+            notes.add(new ScoreNote(
+                    2000.0f,
+                    "OBJECTIVE RALLTIIR SOLE SYSTEM BLOCKER: deploy '"
+                            + card.getTitle()
+                            + "' to contest the last opponent-controlled Ralltiir location"));
         }
 
         if (analyzed && !isFlipped

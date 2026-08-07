@@ -34,6 +34,7 @@ import com.gempukku.swccgo.ai.models.common.phase.ObjectiveHardLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
@@ -270,16 +271,56 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     && exactDeployAnalyzer.isTwinSunsPeekAction(
                         game, context.getPlayerId(),
                         actionSource, actionText);
+            boolean exactRalltiirFrontRoute =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isRalltiirFrontRouteAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean exhaustedRalltiirFrontRoute =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isExhaustedRalltiirFrontRouteAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean exactRalltiirBackTutor =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isRalltiirBackAnyCardTutorAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean ralltiirSelfDestruct =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isRalltiirObjectiveSelfDestructAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
             boolean exactSetYourCourseCpi =
                     exactDeployAnalyzer != null
                     && exactDeployAnalyzer
                         .isSetYourCourseClassicCpiAction(
                             game, context.getPlayerId(),
                             actionSource, actionText);
+            PolicyResult ralltiirHardLoss =
+                    ObjectiveHardLossPolicy
+                        .scoreRalltiirSelfDestruct(
+                            actionId, ralltiirSelfDestruct);
+            if (!ralltiirHardLoss.operations().isEmpty()) {
+                PolicyContributionLedger hardLossLedger =
+                        new PolicyContributionLedger(
+                            "ralltiir-hard-loss-" + actionId);
+                hardLossLedger.register(ralltiirHardLoss);
+                PolicyOperationAdapter.apply(
+                        action, hardLossLedger);
+                actions.add(action);
+                continue;
+            }
             if (!exactShieldCannonDeploy
                     && !exactHiddenPathJabiimRoute
                     && !exactSetYourCourseRouteMove
                     && !exactSetYourCourseCpi
+                    && !exactRalltiirFrontRoute
+                    && !exactRalltiirBackTutor
                     && (blocked.contains(actionId)
                         || blocked.contains(actionText))) {
                 // V167 (Steve, 2026-06): NEVER hard-veto a phase-fundamental action.
@@ -5256,6 +5297,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         TwinSunsObjectivePolicy.scoreOccupationRoute(
                             actionId,
                             exactTwinSunsOccupation));
+                pullLedger.register(
+                        RalltiirOperationsObjectivePolicy
+                            .scoreFrontRoute(
+                                actionId,
+                                exactRalltiirFrontRoute,
+                                exhaustedRalltiirFrontRoute));
+                pullLedger.register(
+                        RalltiirOperationsObjectivePolicy
+                            .scoreBackAnyCardTutor(
+                                actionId,
+                                exactRalltiirBackTutor));
                 PolicyOperationAdapter.apply(action, pullLedger);
             }
 

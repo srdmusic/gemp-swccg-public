@@ -30,6 +30,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFacts;
@@ -1793,6 +1794,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                     .getTwinSunsCurrentMoveForceReserve(
                                         game, playerId, card)
                             : 0;
+                    int ralltiirRouteReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getRalltiirCurrentRouteForceReserve(
+                                    game, playerId, card)
+                            : 0;
                     int countedOperativeMoveReserve =
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
@@ -2081,6 +2088,30 @@ public class DeployEvaluator extends ActionEvaluator {
                     PolicyOperationAdapter.apply(
                         action, twinSunsRouteBudgetLedger);
                     if (!twinSunsRouteBudget.operations().isEmpty()) {
+                        actions.add(action);
+                        continue;
+                    }
+                    PolicyResult ralltiirRouteBudget =
+                        RalltiirOperationsObjectivePolicy
+                            .preserveRouteForceForOrdinaryDeploy(
+                                actionId,
+                                countedOperativeOrdinaryDeploy,
+                                ralltiirRouteReserve,
+                                availableForce,
+                                exactNormalDeployPayment,
+                                massassiDeployPayment);
+                    PolicyContributionLedger ralltiirRouteBudgetLedger =
+                        new PolicyContributionLedger(
+                            (decisionId == null || decisionId.isBlank()
+                                ? "deploy-ralltiir-route-budget"
+                                : decisionId
+                                    + "-deploy-ralltiir-route-budget")
+                                + "-" + actionId);
+                    ralltiirRouteBudgetLedger.register(
+                        ralltiirRouteBudget);
+                    PolicyOperationAdapter.apply(
+                        action, ralltiirRouteBudgetLedger);
+                    if (!ralltiirRouteBudget.operations().isEmpty()) {
                         actions.add(action);
                         continue;
                     }

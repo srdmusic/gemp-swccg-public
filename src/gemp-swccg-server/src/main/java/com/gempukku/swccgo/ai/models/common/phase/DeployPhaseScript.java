@@ -312,6 +312,27 @@ public abstract class DeployPhaseScript {
         }
         if (objectiveAnalyzer != null
                 && objectiveAnalyzer
+                    .isExhaustedRalltiirFrontRouteAction(
+                        game, playerId,
+                        sourceCard, actionText)) {
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isRalltiirFrontRouteAction(
+                        game, playerId,
+                        sourceCard, actionText)) {
+            if (objectiveAnalyzer
+                    .hasRalltiirFrontSiteRouteCandidateInReserve(
+                        game, playerId, sourceCard)) {
+                steps.add(Step.LOCATIONS);
+            } else {
+                steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+            }
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
                     .isExhaustedTwinSunsFrontSiteRouteAction(
                         game, playerId,
                         sourceCard, actionText)) {

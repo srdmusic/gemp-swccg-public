@@ -66,6 +66,21 @@ public class ObjectiveHardLossPolicyTest {
         }
     }
 
+    @Test
+    public void exactRalltiirSelfDestructIsTerminal() {
+        PolicyResult result = ObjectiveHardLossPolicy
+                .scoreRalltiirSelfDestruct("cpi", true);
+        assertEquals(1, result.operations().size());
+        assertEquals(
+                "OBJECTIVE.HARD_LOSS.RALLTIIR_SELF_DESTRUCT",
+                result.operations().getFirst().ruleArmId().id());
+        assertEquals(PolicyOperationKind.HARD_VETO,
+                result.operations().getFirst().kind());
+        assertTrue(ObjectiveHardLossPolicy
+                .scoreRalltiirSelfDestruct("cpi", false)
+                .operations().isEmpty());
+    }
+
     private static void assertHardLoss(
             ObjectiveHardLossPolicy.Threat threat,
             boolean maulException,

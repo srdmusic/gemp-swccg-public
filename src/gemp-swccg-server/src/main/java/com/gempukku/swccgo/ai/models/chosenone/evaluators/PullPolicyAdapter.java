@@ -243,6 +243,9 @@ final class PullPolicyAdapter {
                                 game, playerId, source, actionText)
                         || objective.isTwinSunsOccupationPullAction(
                                 game, playerId, source, actionText);
+                boolean ralltiirRoute = objective
+                        .isRalltiirFrontRouteAction(
+                                game, playerId, source, actionText);
                 boolean bringHimBeforeMeEmperorRoute =
                         CaptureObjectiveFacts.objectiveKind(objective)
                             == CaptureObjectivePolicy.ObjectiveKind.BHBM
@@ -262,6 +265,7 @@ final class PullPolicyAdapter {
                         || countedOperativeSiteRoute
                         || noMoneyWattoRoute
                         || twinSunsRoute
+                        || ralltiirRoute
                         || bringHimBeforeMeEmperorRoute;
             }
 
@@ -276,6 +280,10 @@ final class PullPolicyAdapter {
                         || objective.isTwinSunsFrontSiteRouteAction(
                             game, playerId, source, actionText)
                         || objective.isTwinSunsOccupationPullAction(
+                            game, playerId, source, actionText)
+                        || objective.isRalltiirFrontRouteAction(
+                            game, playerId, source, actionText)
+                        || objective.isRalltiirBackAnyCardTutorAction(
                             game, playerId, source, actionText);
             }
 

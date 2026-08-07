@@ -83,6 +83,62 @@ public class BattleForfeitFactsTest {
     }
 
     @Test
+    public void nonselectableCardDoesNotCountAsFormationAlternative() {
+        GameState gameState = mock(GameState.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+        PhysicalCard protectedActor = mock(PhysicalCard.class);
+        PhysicalCard unavailableAlternative = mock(PhysicalCard.class);
+        when(gameState.findCardById(1)).thenReturn(protectedActor);
+        when(gameState.findCardById(2)).thenReturn(unavailableAlternative);
+        when(analyzer.classifyGateFormationPieceIfRemoved(
+                null, "player", protectedActor)).thenReturn(
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_REQUIRED_ACTOR);
+        when(analyzer.classifyGateFormationPieceIfRemoved(
+                null, "player", unavailableAlternative)).thenReturn(
+                    ObjectiveAnalyzer.FlipGateFormationRole.NONE);
+
+        BattleForfeitFacts.FlipGateFormationSelectionFacts facts =
+                BattleForfeitFacts.readFlipGateFormationSelection(
+                    List.of("1", "2"), List.of(true, false),
+                    gameState, null, "player", analyzer, false, 0);
+
+        assertEquals(ObjectiveAnalyzer.FlipGateFormationRole
+                .LAST_REQUIRED_ACTOR, facts.roleFor("1"));
+        assertFalse(facts.hasUnprotectedLegalAlternative());
+    }
+
+    @Test
+    public void missingOrNullSelectableEntryKeepsLegacySelectableMeaning() {
+        GameState gameState = mock(GameState.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+        PhysicalCard protectedActor = mock(PhysicalCard.class);
+        PhysicalCard alternative = mock(PhysicalCard.class);
+        when(gameState.findCardById(1)).thenReturn(protectedActor);
+        when(gameState.findCardById(2)).thenReturn(alternative);
+        when(analyzer.classifyGateFormationPieceIfRemoved(
+                null, "player", protectedActor)).thenReturn(
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_REQUIRED_ACTOR);
+        when(analyzer.classifyGateFormationPieceIfRemoved(
+                null, "player", alternative)).thenReturn(
+                    ObjectiveAnalyzer.FlipGateFormationRole.NONE);
+
+        var facts = BattleForfeitFacts
+                .readFlipGateFormationSelection(
+                    List.of("1", "2"),
+                    java.util.Arrays.asList(true, null),
+                    gameState, null, "player", analyzer, false, 0);
+        var shortList = BattleForfeitFacts
+                .readFlipGateFormationSelection(
+                    List.of("1", "2"), List.of(true),
+                    gameState, null, "player", analyzer, false, 0);
+
+        assertTrue(facts.hasUnprotectedLegalAlternative());
+        assertTrue(shortList.hasUnprotectedLegalAlternative());
+    }
+
+    @Test
     public void candidateSetKeepsFirstLowestForfeitHitAndIndependentDeadFact() {
         BattleForfeitFacts.CandidateSetFacts facts = BattleForfeitFacts.readCandidateSet(
                 List.of(

@@ -754,6 +754,10 @@ public class MoveEvaluator extends ActionEvaluator {
                                     || routeAnalyzer
                                         .isIsbBlountBlockerChaseActorAt(
                                             game, playerId, cardToMove,
+                                            routeDestination)
+                                    || routeAnalyzer
+                                        .isRalltiirSoleSystemBlockerPresenceDestination(
+                                            game, playerId, cardToMove,
                                             routeDestination);
                             boolean requiredEnablerHop = routeAnalyzer
                                     .advancesRequiredCardDeployPrerequisiteByMovingTo(

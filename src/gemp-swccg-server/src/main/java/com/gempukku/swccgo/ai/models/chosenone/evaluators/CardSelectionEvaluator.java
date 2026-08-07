@@ -38,6 +38,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidatePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
@@ -904,6 +905,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     ? findExactReservePullCandidate(
                         context, cardId, blueprintId)
                     : null;
+        PhysicalCard ralltiirFrontSource =
+                readExactRalltiirFrontRouteSource(context);
+        PhysicalCard ralltiirFrontCandidate =
+                ralltiirFrontSource != null
+                    ? findExactReservePullCandidate(
+                        context, cardId, blueprintId)
+                    : null;
         PhysicalCard massassiPackageSource =
                 readExactMassassiPackagePullSource(context);
         PhysicalCard massassiPackageCandidate =
@@ -1030,6 +1038,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 && !dedicatedFlipGateLocation
                                 && nativeCountedLocation));
         applyPullSelectionPolicy(action,
+                RalltiirOperationsObjectivePolicy
+                    .scoreFrontPullCandidate(
+                        action.getActionId(),
+                        ralltiirFrontCandidate != null
+                            ? context.getObjectiveAnalyzer()
+                                .getRalltiirFrontPullCandidatePriority(
+                                    context.getGame(),
+                                    context.getPlayerId(),
+                                    ralltiirFrontSource,
+                                    ralltiirFrontCandidate)
+                            : 0));
+        applyPullSelectionPolicy(action,
                 PullSelectionCandidatePolicy
                     .scoreCountedObjectiveHoldLocation(
                         action.getActionId(), countedHoldLocation));
@@ -1119,6 +1139,80 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     || exactOldAllies
                     || exactCountedOperative
                     || exactTwinSuns ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private PhysicalCard readExactRalltiirFrontRouteSource(
+            DecisionContext context) {
+        if (context == null || context.getGame() == null
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !"ARBITRARY_CARDS".equals(context.getDecisionType())
+                || context.getDecisionText() == null
+                || !"choose card to deploy from reserve deck"
+                    .equalsIgnoreCase(context.getDecisionText().trim())
+                || context.getMin() != 1 || context.getMax() != 1) {
+            return null;
+        }
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            GameTextActionId actionId = liveAction != null
+                    ? liveAction.getGameTextActionId() : null;
+            String actionText = liveAction != null
+                    ? liveAction.getText() : null;
+            return actionId == GameTextActionId
+                        .RALLTIIR_OPERATIONS__DOWNLOAD_SITE_OR_NONUNIQUE_IMPERIAL_TO_RALLTIIR
+                    && context.getObjectiveAnalyzer()
+                        .isRalltiirFrontRouteAction(
+                            context.getGame(),
+                            context.getPlayerId(),
+                            source, actionText)
+                ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private PhysicalCard readExactRalltiirBackTutorSource(
+            DecisionContext context) {
+        if (context == null || context.getGame() == null
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !"ARBITRARY_CARDS".equals(context.getDecisionType())
+                || context.getDecisionText() == null
+                || !"choose card to take into hand".equalsIgnoreCase(
+                    context.getDecisionText().trim())
+                || context.getMin() != 1 || context.getMax() != 1) {
+            return null;
+        }
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            String actionText = liveAction != null
+                    ? liveAction.getText() : null;
+            return liveAction != null
+                    && liveAction.getGameTextActionId()
+                        == GameTextActionId
+                            .IN_THE_HANDS_OF_THE_EMPIRE__UPLOAD_CARD
+                    && "Take card into hand from Reserve Deck"
+                        .equals(actionText)
+                    && context.getObjectiveAnalyzer()
+                        .isRalltiirBackAnyCardTutorAction(
+                            context.getGame(),
+                            context.getPlayerId(),
+                            source, actionText)
+                ? source : null;
         } catch (Exception ignored) {
             return null;
         }
@@ -2151,6 +2245,36 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 }
             }
         }
+        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer
+            objectiveProgressAnalyzer = context.getObjectiveAnalyzer();
+        boolean ralltiirProgressDestinationOffered = false;
+        if (objectiveProgressAnalyzer != null
+                && objectiveProgressAnalyzer.isRalltiirOperationsFamily()
+                && !objectiveProgressAnalyzer.isFlipped()
+                && objectiveProgressDeployingCard != null
+                && gameState != null && game != null) {
+            java.util.List<String> destinationIds = context.getCardIds();
+            java.util.List<Boolean> selectable = context.getSelectable();
+            for (int i = 0; i < destinationIds.size(); i++) {
+                if (selectable != null && i < selectable.size()
+                        && Boolean.FALSE.equals(selectable.get(i))) {
+                    continue;
+                }
+                try {
+                    PhysicalCard destination = gameState.findCardById(
+                            Integer.parseInt(destinationIds.get(i)));
+                    if (objectiveProgressAnalyzer
+                            .isRalltiirFrontProgressDeployDestination(
+                                game, playerId,
+                                objectiveProgressDeployingCard,
+                                destination)) {
+                        ralltiirProgressDestinationOffered = true;
+                        break;
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
 
         for (String cardId : context.getCardIds()) {
             EvaluatedAction action = new EvaluatedAction(
@@ -2243,8 +2367,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 boardingOpenPilotDestinationOffered,
                                                 destinationHasOpenPilotSlot)));
 
-                        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer
-                            objectiveProgressAnalyzer = context.getObjectiveAnalyzer();
                         boolean exactIsbRouteCompletion = false;
                         if (objectiveProgressAnalyzer != null) {
                             if (objectiveProgressAnalyzer
@@ -2275,6 +2397,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 game, playerId,
                                                 objectiveProgressDeployingCard,
                                                 location);
+                            boolean ralltiirProgress =
+                                    objectiveProgressAnalyzer
+                                        .isRalltiirFrontProgressDeployDestination(
+                                            game, playerId,
+                                            objectiveProgressDeployingCard,
+                                            location);
+                            applyDeploySitingPolicy(action,
+                                RalltiirOperationsObjectivePolicy
+                                    .preserveFrontProgressDeployDestination(
+                                        action.getActionId(),
+                                        ralltiirProgressDestinationOffered,
+                                        ralltiirProgress));
                             exactIsbRouteCompletion =
                                     objectiveProgressAnalyzer
                                         .isISBOperations()
@@ -2316,6 +2450,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     .isImperialEntanglementsFamily()
                                                 || objectiveProgressAnalyzer
                                                     .isNoMoneyNoPartsObjectiveFamily()
+                                                || objectiveProgressAnalyzer
+                                                    .isRalltiirOperationsFamily()
                                                 || objectiveProgressAnalyzer
                                                     .isTwinSunsObjectiveFamily())
                                             && objectiveProgressAnalyzer
@@ -3955,6 +4091,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     && fsObj.isSenateObjectiveSenatorDeployment(
                                                         context.getGame(), context.getPlayerId(),
                                                         v136DeployingCard, location);
+                                                boolean fsRalltiirProgress = fsObj != null
+                                                    && fsObj.isRalltiirFrontProgressDeployDestination(
+                                                        context.getGame(), context.getPlayerId(),
+                                                        v136DeployingCard, location);
                                                 String fsFlipGate = (fsObj != null && fsObj.isAnalyzed())
                                                     ? fsObj.getFlipCriticalControlSite() : null;
                                                 if (fsObj != null && fsObj.hasFlipGateActorRequirement()) {
@@ -4011,9 +4151,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     v212FormationReason = fsVerdict.reason();
                                                     logger.warn("FORMATION SAFETY (deploy-site): {}", fsVerdict.reason());
                                                 } else if (fsVerdict.constraint() == com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployConstraint.DEFER_UNSUPPORTED_SOLO) {
-                                                    if (fsSenateProgress) {
-                                                        action.addReasoning("SENATE OBJECTIVE FORMATION: allow senator to advance the Galactic Senate count");
-                                                        logger.warn("SENATE OBJECTIVE FORMATION: releasing unsupported-solo defer at Galactic Senate");
+                                                    if (fsSenateProgress || fsRalltiirProgress) {
+                                                        action.addReasoning(fsRalltiirProgress
+                                                            ? "RALLTIIR OBJECTIVE FORMATION: allow the Imperial to establish a missing control site"
+                                                            : "SENATE OBJECTIVE FORMATION: allow senator to advance the Galactic Senate count");
+                                                        logger.warn("OBJECTIVE FORMATION: releasing unsupported-solo defer at {}", location.getTitle());
                                                     } else {
                                                         v212FormationState = DeploySitingPolicy.FormationState.DEFER_UNSUPPORTED_SOLO;
                                                         v212FormationReason = fsVerdict.reason();
@@ -5871,7 +6013,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         BattleForfeitFacts.FlipGateFormationSelectionFacts
             flipGateFormationSelection =
                 BattleForfeitFacts.readFlipGateFormationSelection(
-                    context.getCardIds(), gameState, context.getGame(),
+                    context.getCardIds(), context.getSelectable(),
+                    gameState, context.getGame(),
                     context.getPlayerId(), context.getObjectiveAnalyzer(),
                     isOptional, optionalAttritionRemaining);
         PolicyContributionLedger flipGateFormationLedger =
@@ -6254,7 +6397,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         BattleForfeitFacts.FlipGateFormationSelectionFacts
             flipGateFormationSelection =
                 BattleForfeitFacts.readFlipGateFormationSelection(
-                    context.getCardIds(), gameState, game, playerId,
+                    context.getCardIds(), context.getSelectable(),
+                    gameState, game, playerId,
                     context.getObjectiveAnalyzer(), false,
                     attritionRemaining);
         PolicyContributionLedger flipGateFormationLedger =
@@ -8474,7 +8618,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         && routeAnalyzer
                                             .isPreFlipGlobalBlockerAt(
                                                 game, playerId, location)
-                                        || exactIsbBlockerChase);
+                                        || exactIsbBlockerChase
+                                        || routeAnalyzer != null
+                                            && routeAnalyzer.isAnalyzed()
+                                            && routeAnalyzer
+                                            .isRalltiirSoleSystemBlockerPresenceDestination(
+                                                game, playerId, fsMover,
+                                                location));
                                 var moverFormationRole =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -10476,6 +10626,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         List<String> testingTexts = context.getTestingTexts();  // CARD TITLES from GEMP!
         PhysicalCard exactTdigwattPullSource =
                 readExactTdigwattPullSource(context);
+        PhysicalCard exactRalltiirBackTutorSource =
+                readExactRalltiirBackTutorSource(context);
 
         logger.info("🔍 evaluateTakeIntoHand: {} cards, {} blueprints, {} testingTexts",
                    cardIds != null ? cardIds.size() : 0,
@@ -10561,6 +10713,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                                 true))
                                                     .result()));
                 }
+            }
+
+            if (exactRalltiirBackTutorSource != null) {
+                PhysicalCard exactCandidate =
+                        findExactReservePullCandidate(
+                            context, cardId, blueprintId);
+                pullLedger.register(
+                    RalltiirOperationsObjectivePolicy
+                        .scoreBackTutorCandidate(
+                            action.getActionId(),
+                            exactCandidate != null
+                                && context.getObjectiveAnalyzer()
+                                    .isRalltiirBackUrgentHoldTutorCandidate(
+                                        game,
+                                        context.getPlayerId(),
+                                        exactRalltiirBackTutorSource,
+                                        exactCandidate)));
             }
 
             pullLedger.register(PullTakeCandidatePolicy.evaluate(pullFacts));

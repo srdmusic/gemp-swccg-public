@@ -113,4 +113,21 @@ public final class ObjectiveHardLossPolicy {
                                 + " last Vader into hand would immediately"
                                 + " satisfy the flip-back law")));
     }
+
+    public static PolicyResult scoreRalltiirSelfDestruct(
+            String actionId, boolean exactSelfDestruct) {
+        Objects.requireNonNull(actionId, "actionId");
+        return exactSelfDestruct
+                ? new PolicyResult(
+                    "OBJECTIVE_HARD_LOSS_POLICY",
+                    List.of(PolicyOperation.hardVeto(
+                        actionId,
+                        TraceRuleId.of(
+                            "OBJECTIVE.HARD_LOSS.RALLTIIR_SELF_DESTRUCT"),
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.VETO,
+                        "RALLTIIR OPERATIONS HARD LOSS: do not use Commence Primary Ignition to blow away the active objective system")))
+                : new PolicyResult(
+                    "OBJECTIVE_HARD_LOSS_POLICY", List.of());
+    }
 }

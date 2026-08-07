@@ -182,6 +182,20 @@ public final class BattleForfeitFacts {
             ObjectiveAnalyzer objectiveAnalyzer,
             boolean passLegal,
             int attritionRemaining) {
+        return readFlipGateFormationSelection(
+                actionIds, null, gameState, game, playerId,
+                objectiveAnalyzer, passLegal, attritionRemaining);
+    }
+
+    public static FlipGateFormationSelectionFacts readFlipGateFormationSelection(
+            List<String> actionIds,
+            List<Boolean> selectable,
+            GameState gameState,
+            SwccgGame game,
+            String playerId,
+            ObjectiveAnalyzer objectiveAnalyzer,
+            boolean passLegal,
+            int attritionRemaining) {
         Map<String, ObjectiveAnalyzer.FlipGateFormationRole> roles =
                 new LinkedHashMap<>();
         boolean hasAlternative = passLegal;
@@ -190,7 +204,12 @@ public final class BattleForfeitFacts {
                     roles, hasAlternative);
         }
 
-        for (String actionId : actionIds) {
+        for (int index = 0; index < actionIds.size(); index++) {
+            if (selectable != null && index < selectable.size()
+                    && Boolean.FALSE.equals(selectable.get(index))) {
+                continue;
+            }
+            String actionId = actionIds.get(index);
             if (actionId == null || actionId.isBlank()) continue;
             ObjectiveAnalyzer.FlipGateFormationRole role =
                     ObjectiveAnalyzer.FlipGateFormationRole.NONE;
