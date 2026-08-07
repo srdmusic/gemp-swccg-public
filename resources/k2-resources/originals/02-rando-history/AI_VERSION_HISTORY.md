@@ -10162,3 +10162,59 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     analyzer-plus-adapter proof; fresh live replay firing remains separate.
     Nothing was pushed. Restore web.jar.pre-twin-suns-458b5390c and revert
     bf28e62e1 followed by 458b5390c to remove this seal.
+
+  ==== Ralltiir Operations behavior seal (2026-08-06) ====
+
+    Dark 7_300/7_300_BACK flips when its owner controls three Ralltiir sites,
+    each with an Imperial there, and the opponent controls no Ralltiir
+    locations. The back flips when the opponent controls at least two Ralltiir
+    locations. The front deploys one site or one nonunique Imperial from
+    Reserve Deck to Ralltiir once per deploy phase. The back may use exactly 2
+    Force once per control phase to take any one card from Reserve Deck.
+    Ralltiir being blown away places either face out of play. Card and engine
+    Java remain unchanged.
+
+    Both public bots stage usable site lanes before pulling a nonunique
+    Imperial, reject an opponent-occupied incomplete site as a usable third
+    lane, and deploy the selected body only where it advances the route. The
+    planner prices native, deploy, battle, landspeed, and hyperspeed costs;
+    preserves sequential legs; clears a favorable contested lane; and answers
+    a sole system blocker by direct ship, pilot, or hyperspeed. Force loss and
+    forfeit preserve still-needed sites and Imperial bodies. The unchanged
+    objective performs the native flip.
+
+    The back tutor parent receives +2000 and a useful legal child receives
+    +1200 when one opponent-controlled Ralltiir location needs an answer.
+    Post-flip movement preserves the sole blocker preventing the opponent's
+    second controlled location. Both Ralltiir text variants are recognized for
+    hard loss, and both bots reject their own Commence Primary Ignition route
+    against Ralltiir.
+
+    K2's late review exposed an inherited save-1-Force-for-battle penalty that
+    still made Pass beat an immediate flip. Cumulative local commit 929e37ded
+    adds one narrow exception for a legal hand deployment that completes the
+    entire current flip law. Non-completing deployments keep all old reserves.
+    The exact regression proves both public bots spend the final Force and
+    trigger the unchanged native flip.
+
+    The final contract passed 25/0/0/0 and the pure policy passed 7/0/0/0. The
+    17-suite affected and neighboring ring passed 207/0/0/0. Independent
+    amendment review, JSON, diff, scope, compiled-symbol, and mirrored parity
+    checks passed. The amendment's 53 generated class entries byte-match
+    target/classes, the server jar, and web.jar; the base seal's 102 relevant
+    entries were verified before the amendment. Server jar SHA-256 is
+    b81c63f22fd1fa6aa3ba54fcbe07a24fefb7acb73948ad3bbdd2fb720a247e9d;
+    live web.jar SHA-256 is
+    9d2ab5287b54be756a234ee07c980a764cc0a91e27322837036fd6330734c427;
+    playbook SHA-256 is
+    f613c452cc0f6065b0a7dbd51c699e514f493e2136e3de48fcaa481c7de2863d.
+    The final fresh app started at 2026-08-07T03:51:35.131774711Z with zero
+    tables and games, restart count zero, and the exact jar at Java PID 1.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    evaluators, approved objective data, AI tests, and approved audit/history
+    records. No engine Java, card Java, client, deck library, database, or
+    workbook changed. Deterministic unchanged-engine public-bot execution
+    provides FLIP_OBSERVED. Fresh live replay firing remains separate. Nothing
+    was pushed. Restore web.jar.pre-ralltiir-0e4043a20 and revert 929e37ded
+    followed by 0e4043a20 to remove this seal.

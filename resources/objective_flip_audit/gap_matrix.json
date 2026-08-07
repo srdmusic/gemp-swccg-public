@@ -145,15 +145,15 @@
    "frontBp": "7_300",
    "title": "Ralltiir Operations",
    "side": "DARK",
-   "classification": "PARTIAL",
+   "classification": "COMPLETE",
    "subclass": "ENABLED",
-   "why": "fragments-only; Imperial actor, count 3, opponent-zero constraint all missing",
+   "why": "Loader-enabled source-exact three-site control-with profile plus mixed native pull, legal Imperial deployment, deploy/battle/movement Force budgeting, contested-site and system-blocker routes, Force-loss retention, native front flip, back tutor and hold, and hard-loss avoidance in both public bots.",
    "flipLaw": "Flip if you control at least 3 Ralltiir sites each with an Imperial there, and opponent controls no Ralltiir locations.",
    "flipBackLaw": "Back flips to front if opponent controls at least 2 Ralltiir locations.",
-   "profileGaps": 5,
+   "profileGaps": 0,
    "seedMismatches": 0,
    "engineClass": "PROVEN_BY_CODEX",
-   "engineClassNote": "Proven via fef64a826 RegionalObjectiveEngineContractTest/BehaviorTest; twin pattern to Dantooine (Ralltiir)"
+   "engineClassNote": "Proven at cumulative behavior commit 929e37ded by RalltiirOperationsObjectiveEngineContractTest and RalltiirOperationsObjectivePolicyTest: final 17-suite affected and neighboring ring passed 207 tests, including exact public-bot tight-Force native flip completion and mirrored parity."
   },
   {
    "frontBp": "8_78",

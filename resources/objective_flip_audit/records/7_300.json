@@ -107,13 +107,51 @@
  "profile": {
   "exists": true,
   "loaderEnabled": true,
-  "profileGaps": [
-   "flipGateSite null: true gate is 3 controlled-with-Imperial Ralltiir sites (Filters.Ralltiir_site); profile only carries a generic 'ralltiir' locationFragment",
-   "keyCharacterFilter null: flip requires Imperials (Filters.Imperial) as the controlling bodies at each gate site",
-   "no encoding of count=3 sites nor the opponentConstraint (opponent controls 0 Ralltiir locations to flip; 2 to flip back)",
-   "pullableCards empty: front site/non-unique-Imperial download to Ralltiir and back 2-Force any-card upload not represented",
-   "hard-lose (Ralltiir system blown away -> objective out of play, both sides) not represented"
-  ]
+  "profileGaps": []
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behaviorProof": {
+  "ownerBehavior": [
+   "exact physical front mixed site-or-nonunique-Imperial action ownership",
+   "usable-site staging that rejects an opponent-occupied incomplete third lane",
+   "legal nonunique Imperial selection and exact open-site deployment",
+   "native pull, deploy, battle, and movement Force budgeting",
+   "favorable contested-site battle and battle-then-move sequencing",
+   "direct ship, pilot, and hyperspeed routes against a sole system blocker",
+   "real Force-loss and battle-forfeit preservation of required sites and Imperial bodies",
+   "native front flip after the complete three-site control-with route",
+   "back 2-Force any-card tutor with Reserve Deck buffer",
+   "back child selection for a legal future answer to one opponent-controlled Ralltiir location",
+   "post-flip sole-blocker hold",
+   "classic and virtual Ralltiir hard-loss recognition",
+   "owner Commence Primary Ignition veto against Ralltiir",
+   "exact full-law flip-completing deploy release from route and unrelated battle reserves"
+  ],
+  "opponentBehavior": [
+   "an opponent-controlled Ralltiir location blocks the front flip",
+   "two opponent-controlled Ralltiir locations flip the back to the front",
+   "a single opponent-controlled location drives the back tutor toward legal presence there"
+  ],
+  "scoring": [
+   "exact front mixed route +2000",
+   "exact back any-card parent +2000",
+   "exact useful back child +1200",
+   "exact flip completion dominates the inherited V176 battle reserve",
+   "owner Ralltiir destruction and exhausted native actions are terminal vetoes"
+  ],
+  "nativeEngineTests": [
+   "RalltiirOperationsObjectiveEngineContractTest",
+   "RalltiirOperationsObjectivePolicyTest"
+  ],
+  "verification": "Ralltiir contract 25/0/0/0 and pure policy 7/0/0/0; final 17-suite affected and neighboring ring passed 207/0/0/0. Independent amendment review passed after K2 found the tight-Force battle-reserve blocker. The exact public-bot regression reproduced the failure and then proved both bots deploy, spend the last Force, and trigger unchanged native flip. JSON, diff, scope, compiled-symbol, and normalized mirror checks passed.",
+  "knownLimits": [
+   "Fresh live replay firing is not yet proved.",
+   "Post-flip hold and blown-away hard loss include deterministic counterfactual execution rather than a complete live game replay.",
+   "The workbook remains research only."
+  ],
+  "localBehaviorCommit": "929e37ded",
+  "artifact": "The 53 generated class entries from the amendment's three production sources byte-match target/classes, the server jar, and web.jar; the base seal's 102 relevant entries from 16 production sources were verified before the amendment. Server jar SHA-256 b81c63f22fd1fa6aa3ba54fcbe07a24fefb7acb73948ad3bbdd2fb720a247e9d; live web.jar SHA-256 9d2ab5287b54be756a234ee07c980a764cc0a91e27322837036fd6330734c427; playbook SHA-256 f613c452cc0f6065b0a7dbd51c699e514f493e2136e3de48fcaa481c7de2863d.",
+  "deployment": "The authenticated hall was frozen at zero tables and games. Prior Twin Suns jar preserved as web.jar.pre-ralltiir-0e4043a20; preliminary Ralltiir jar preserved as web.jar.pre-ralltiir-amend-929e37ded. Final fresh app start 2026-08-07T03:51:35.131774711Z, restart count 0, Java PID 1, jar mtime precedes JVM start, host/container/candidate jar hashes match, root health, operational status, all gameplay settings, common and mirrored live markers, startup completion, and reopened empty hall passed.",
+  "proofCeiling": "Deterministic unchanged-engine public-bot execution provides FLIP_OBSERVED. Package identity and fresh-JVM deployment are verified; fresh live replay firing remains separate. Nothing was pushed."
+ },
+ "proofGate": "FLIP_OBSERVED"
 }
