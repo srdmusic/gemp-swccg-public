@@ -33,9 +33,9 @@
    "frontBp": "7_136",
    "title": "Hidden Base",
    "side": "LIGHT",
-   "classification": "ABSENT",
-   "subclass": "DISABLED",
-   "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
+   "classification": "COMPLETE",
+   "subclass": "ENABLED",
+   "why": "loader-enabled exact front allOf and back anyOf rules now drive mirrored pull, deploy, Force-budget, movement, battle, loss, hold, and back-action behavior; unchanged-engine native flip observed",
    "flipLaw": "Owner may flip any time once the deployed-system tracker is satisfied: the 'Hidden Base' indicator system has been deployed AND (6+ tracked system titles exist, i.e. hidden base non-battleground + 5 b",
    "flipBackLaw": "No FlipCardEffect exists on the back. Required after-trigger: when TriggerConditions.systemProbed fires and the probed system's title equals the stacked hidden-base indicator's title, the objective is",
    "profileGaps": 5,
@@ -122,7 +122,7 @@
    "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
    "flipLaw": "Flips when your matching operatives CONTROL at least 3 battleground sites related to the Renegade planet (controlsWith: you control the site AND at least one of your matchingOperativeToRenegadePlanet ",
    "flipBackLaw": "Flips back when you do NOT OCCUPY at least 2 battleground sites related to the Renegade planet (plain occupies, no operative requirement).",
-   "profileGaps": 4,
+   "profileGaps": 0,
    "seedMismatches": 0,
    "engineClass": "SMALL_SHARED_EXTENSION",
    "engineClassNote": "actorToSite(matchingOperativeToRenegadePlanet); DARK twin of 7_137, identical pattern"
@@ -544,8 +544,8 @@
    "flipBackLaw": "Flips back if you do NOT OCCUPY two battlegrounds (plain occupy - First Order characters NOT required to hold) OR a Resistance Agent IS present at a battleground site.",
    "profileGaps": 4,
    "seedMismatches": 0,
-   "engineClass": "NEW_PRIMITIVE",
-   "engineClassNote": "positive leg (First Order control-2-battleground) small-ext; negative leg needs denyOpponentActor consumer"
+   "engineClass": "IMPLEMENTED_SHARED_PRIMITIVE",
+   "engineClassNote": "exact controlWith and any-owner actor-presence alternatives are live; executable route consumers cover qualified battlegrounds and Resistance Agent blockers"
   },
   {
    "frontBp": "209_29",

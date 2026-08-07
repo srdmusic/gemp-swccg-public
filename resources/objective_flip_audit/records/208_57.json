@@ -111,7 +111,8 @@
  "setupAndPullRoutes": [
   "On deploy: deploy Tuanul Village, any other [Episode VII] location, and I Will Finish What You Started from Reserve Deck [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:58-78]",
   "On deploy (optional, OPPONENT): reveal one unique character with ability (except Luke or a Jedi, or mayBeRevealedAsResistanceAgent) from opponent's Reserve Deck as Resistance Agent; if declined, Luke is the agent and loses immunity to attrition [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:79-124]",
-  "No ongoing Reserve Deck pulls on either side; back engine instead stacks Interrupts from Lost Pile on I Will Finish What You Started (once/turn if Kylo on table) and plays one stacked Interrupt per turn as if from hand (then out of play) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:174-297]"
+  "Starkiller Base 208_51 can deploy a battleground from Reserve Deck, and The First Order Was Just The Beginning 214_12 can deploy a Jakku or Kijimi location from Reserve Deck. Both are exact AI route sources until two qualified controlled battlegrounds exist.",
+  "Back engine stacks Interrupts from Lost Pile on I Will Finish What You Started (once/turn if Kylo on table) and plays one stacked Interrupt per turn as if from hand (then out of play) [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057_BACK.java:174-297]"
  ],
  "otherObligations": [
   "Remainder of game: non-[Episode VII] Dark Jedi are LOST (required proxy trigger on isTableChanged) - deck-construction constraint Rando must respect [src/gemp-swccg-cards/src/main/java/com/gempukku/swccgo/cards/set208/dark/Card208_057.java:125-151]",
@@ -123,13 +124,53 @@
  "seedMismatches": [],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
-  "profileGaps": [
-   "keyCharacterFilter null: flip actor Filters.First_Order_character and threat actor Filters.Resistance_Agent unrepresented",
-   "requiredCardsOnTable empty: mandatory I Will Finish What You Started (also the back's Interrupt-stack anchor) absent",
-   "no representation of the NEGATIVE flip leg (no Resistance Agent present at battleground site) - the profile has no concept of keeping opponent's agent off battleground sites",
-   "flipGateSite null; flipGateCardIds empty; weights empty; the Resistance-Agent chosen-state (revealed title vs Luke) is unrepresented"
+  "loaderEnabled": true,
+  "profileGaps": [],
+  "frontRule": "allOf(controlWith >=2 battlegrounds using First_Order_character, any-owner Resistance_Agent presentAt battleground_site ==0)",
+  "backRule": "anyOf(occupy battlegrounds <2, any-owner Resistance_Agent presentAt battleground_site >=1)",
+  "requiredCardsOnTable": [
+   "I Will Finish What You Started"
   ]
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behavior": {
+  "commit": "93719f2c5",
+  "bots": [
+   "Rando",
+   "Chosen One"
+  ],
+  "tests": {
+   "focusedBehavior": 6,
+   "focusedEngine": 13,
+   "boundedAffected": 140,
+   "failures": 0
+  },
+  "covered": [
+   "exact front and back condition trees",
+   "site and system routes, including a physical First Order actor aboard a carrier",
+   "native battleground pulls and exhaustion",
+   "self-losing Reserve deploy rejection",
+   "own Resistance Agent destination rejection",
+   "exact actor deploy, move, and blocker-battle Force reserve",
+   "single-location live battle predictor agreement",
+   "movement, Force-loss, battle-forfeit, and back-side Interrupt actions",
+   "unchanged-engine native flip and flip-back"
+  ],
+  "review": [
+   "K2 mailbox m01656 SHIP",
+   "independent post-fix PASS"
+  ]
+ },
+ "delivery": {
+  "webJarSha256": "2f03363b314b1bc28ea47abeb257ce35c4eeea67abc1aa750d2cc137125aeef9",
+  "serverJarSha256": "5720b17b241edbc1d865b48c100841ae6329b5c2b8aa8d51896964fe5486e0cd",
+  "playbookSha256": "e7ec921a3903649551a9c886942594837b4f6e9b10cee43a961d1e44637ec271",
+  "deployed": true,
+  "freshJvmStartedAt": "2026-08-07T13:43:38.151752054Z",
+  "restartCount": 0,
+  "hallTableCountBefore": 0,
+  "hallTableCountAfter": 0,
+  "backup": "web.jar.pre-iwtm-7493a14e",
+  "liveReplayProof": false
+ },
+ "proofGate": "FLIP_OBSERVED"
 }

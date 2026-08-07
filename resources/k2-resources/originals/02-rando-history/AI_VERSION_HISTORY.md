@@ -10351,3 +10351,56 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     provides FLIP_OBSERVED. Fresh live replay firing remains separate. Nothing
     was pushed. Restore web.jar.pre-aobs-1c8c36c39-20260807-035905 and revert
     1c8c36c39 to remove only this seal.
+
+  ==== I Want That Map behavior seal (2026-08-07) ====
+
+    Dark 208_57/208_57_BACK flips when its owner controls two battlegrounds
+    with a physical First Order character at each and no Resistance Agent is
+    present at a battleground site. Systems and physical aboard actors count;
+    permanent pilots alone do not. The back holds through plain occupancy of
+    two battlegrounds and flips front below two or when an Agent reaches a
+    battleground site. Card and engine Java remain unchanged.
+
+    Both public bots own the exact Starkiller Base and The First Order Was Just
+    The Beginning location routes until two qualified battlegrounds exist.
+    Deploy and carrier-group movement must produce net new progress. The route
+    prices the cheapest legal actor deployment or move and a legal blocker
+    battle. A completing actor releases its own reserve.
+
+    Reserve Deck self-loss rejects candidates that I Will Finish What You
+    Started immediately loses. The bots also reject sending their own declared
+    Resistance Agent to a battleground site. Loss and forfeit policy preserve
+    the final actor, carrier group, and two-location hold when another choice
+    exists.
+
+    Blocker-battle routing selects one cheapest legal location before calling
+    the same prediction gate consumed by live battle policy. The predictor is
+    invoked exactly once and fails closed. The unchanged-engine contract runs
+    deploy, battle, printed Force loss, blocker removal, and native flip. The
+    back's two exact stacked-Interrupt actions beat Pass.
+
+    The final 11-suite bounded gate passed 140/0/0/0, including 6 focused
+    behavior tests and 13 engine-contract tests. K2 mailbox m01656 returned
+    SHIP. Independent review caught and closed an extra destination policy
+    application and a multi-route predictor call, then returned PASS. JSON,
+    diff, mirror, scope, package, and byte checks passed.
+
+    Local behavior commit 93719f2c5 packaged successfully. Server jar SHA-256
+    is 5720b17b241edbc1d865b48c100841ae6329b5c2b8aa8d51896964fe5486e0cd;
+    live web.jar SHA-256 is
+    2f03363b314b1bc28ea47abeb257ce35c4eeea67abc1aa750d2cc137125aeef9;
+    playbook SHA-256 is
+    e7ec921a3903649551a9c886942594837b4f6e9b10cee43a961d1e44637ec271.
+    The prior jar is preserved as web.jar.pre-iwtm-7493a14e. The hall was
+    frozen at zero tables, and the fresh app started at
+    2026-08-07T13:43:38.151752054Z with restart count zero. Operational status,
+    gameplay switches, exact jar identity, clean startup, and the empty hall
+    passed.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    adapters, approved objective data, AI tests, and approved audit/history
+    records. No engine Java, card Java, client, deck library, database, or
+    workbook changed. Deterministic unchanged-engine public-bot execution
+    provides FLIP_OBSERVED. Fresh live replay firing remains separate. Nothing
+    was pushed. Restore web.jar.pre-iwtm-7493a14e and revert 93719f2c5 to
+    remove only this seal.
