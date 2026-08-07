@@ -1594,6 +1594,7 @@ public class DeckOracle {
             case "site": case "sites":
             case "location": case "locations":
             case "battleground": case "battlegrounds":
+            case "system": case "systems":
                 return CardCategory.LOCATION;
             case "character": case "characters":
                 return CardCategory.CHARACTER;

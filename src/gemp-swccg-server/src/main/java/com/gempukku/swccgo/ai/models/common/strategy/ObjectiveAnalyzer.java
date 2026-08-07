@@ -22709,6 +22709,20 @@ public class ObjectiveAnalyzer {
                         com.gempukku.swccgo.filters.Filters.not(
                             com.gempukku.swccgo.filters.Filters
                                 .undercover_spy));
+            // A Great Tactician Creates Plans. Thrawn is a persona with four
+            // current printings. Artwork is source-defined as any physical
+            // card stacked on the active Collection, not a card type.
+            case "Thrawn":
+                return com.gempukku.swccgo.filters.Filters.Thrawn;
+            case "Thrawns_Art_Collection":
+                return com.gempukku.swccgo.filters.Filters
+                        .Thrawns_Art_Collection;
+            case "Thrawns_Art_Collection_with_2_artwork":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters
+                            .Thrawns_Art_Collection,
+                        com.gempukku.swccgo.filters.Filters.hasStacked(
+                            2, com.gempukku.swccgo.filters.Filters.any));
             // Batch Eighteen (2026-07-27): Profit pair actors. Han legs are
             // ownership-free spots (canSpot has no side); on(Tatooine) is
             // presence-on-planet (excludes the system location), never

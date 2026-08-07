@@ -8079,6 +8079,7 @@
     },
     {
       "label": "A Great Tactician Creates Plans",
+      "loaderEnabled": true,
       "blueprintIds": [
         "219_1",
         "219_1_BACK"
@@ -8087,8 +8088,14 @@
         "a great tactician creates plans",
         "the result is often resentment"
       ],
-      "locationFragments": [],
-      "requiredCardsOnTable": [],
+      "locationFragments": [
+        "lothal"
+      ],
+      "requiredCardsOnTable": [
+        "thrawn's art collection",
+        "grand admiral thrawn",
+        "mitth'raw'nuruodo"
+      ],
       "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
@@ -8098,6 +8105,51 @@
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "great-tactician-front-complete-artwork-route",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "self",
+              "locationFilterKey": "battleground",
+              "actorFilterKey": "Thrawn",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "gamePhase": "DEPLOY",
+              "scoreRole": "actorToLocation",
+              "sourceText": "During either player's deploy phase, Thrawn must be at any battleground (Card219_001.java L124-L127). whosePhase is deliberately omitted because either player is source law."
+            },
+            {
+              "relation": "onTable",
+              "controller": "self",
+              "actorFilterKey": "Thrawns_Art_Collection_with_2_artwork",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "scoreRole": "stayFlipped",
+              "sourceText": "The active Thrawn's Art Collection must host at least two stacked cards; every card stacked there is artwork (Card219_001.java L128-L129; Card219_020.java L49-L61)."
+            },
+            {
+              "relation": "onTable",
+              "controller": "self",
+              "actorFilterKey": "Thrawns_Art_Collection",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "scoreRole": "requiredOnTableCardMissing",
+              "sourceText": "Plain Collection identity separately feeds legal deploy and retention consumers; the stacked composite cannot match a hand candidate. DELIBERATE POST-FLIP OMISSION: zero artwork flips back only outside battle, while absent Thrawn flips back even during battle (Card219_001_BACK.java L148-L178). The current schema cannot encode that battle exception honestly, so required-card retention protects both and unchanged card Java owns both flip-back routes."
+            }
+          ]
+        }
+      ],
       "frontBp": "219_1",
       "backBp": "219_1_BACK",
       "abbreviation": "AGTCP",
