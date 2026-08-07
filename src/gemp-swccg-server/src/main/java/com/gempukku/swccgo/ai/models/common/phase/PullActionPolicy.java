@@ -173,6 +173,21 @@ public final class PullActionPolicy {
                     : List.of());
     }
 
+    public static PolicyResult scoreShadowCollectiveRoutePull(
+            String actionId, boolean routeReady) {
+        Objects.requireNonNull(actionId, "actionId");
+        return new PolicyResult(
+                PRODUCER,
+                routeReady
+                    ? List.of(add(
+                        actionId,
+                        "OBJECTIVE.SHADOW_COLLECTIVE.ROUTE_PULL",
+                        TraceOutputKind.BANDED,
+                        2000.0f,
+                        "SHADOW COLLECTIVE: pull a legal blaster or First Light route card before the unrelated Maul route"))
+                    : List.of());
+    }
+
     public static Evaluation evaluateParent(PullActionFacts.Parent facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>();

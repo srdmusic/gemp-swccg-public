@@ -5469,6 +5469,20 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                             actionSource,
                                             actionText)));
                 pullLedger.register(
+                        PullActionPolicy.scoreShadowCollectiveRoutePull(
+                                actionId,
+                                context.getObjectiveAnalyzer() != null
+                                    && context.getObjectiveAnalyzer()
+                                        .isShadowCollectiveRoutePullAction(
+                                            context.getPlayerId(),
+                                            actionSource,
+                                            actionText)
+                                    && context.getObjectiveAnalyzer()
+                                        .hasShadowCollectiveNativePullCandidateInReserve(
+                                            game,
+                                            context.getPlayerId(),
+                                            actionSource)));
+                pullLedger.register(
                         TwinSunsObjectivePolicy.scoreFrontSiteRoute(
                             actionId,
                             exactTwinSunsFrontRoute,

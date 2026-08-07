@@ -144,6 +144,22 @@ public final class DeployObjectiveSitingPolicy {
                         "Complete the final controlled site for the three-site objective before reinforcing elsewhere"));
     }
 
+    public static PolicyResult scoreShadowCollectiveRouteCompletion(
+            String actionId, boolean completesRoute) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!completesRoute) {
+            return new PolicyResult(
+                    "DEPLOY_SHADOW_COLLECTIVE_ROUTE_COMPLETION_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_SHADOW_COLLECTIVE_ROUTE_COMPLETION_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.SHADOW_COLLECTIVE.ROUTE_COMPLETION",
+                        TraceOutputKind.BANDED, 8000.0f,
+                        "Deploy the final gangster to complete Shadow Collective's two-battleground route"));
+    }
+
     public static PolicyResult scoreActorRuntimeLocation(
             String actionId, boolean advancesActorLocation) {
         Objects.requireNonNull(actionId, "actionId");

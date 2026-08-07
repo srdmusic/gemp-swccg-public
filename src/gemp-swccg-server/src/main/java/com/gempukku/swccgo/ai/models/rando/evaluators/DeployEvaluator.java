@@ -1824,33 +1824,42 @@ public class DeployEvaluator extends ActionEvaluator {
                                 .getAgentsOfBlackSunCurrentMoveForceReserve(
                                     game, playerId, card)
                             : 0;
+                    java.util.function.Predicate<PhysicalCard>
+                            objectivePredictorSafeBattle =
+                        location -> BattleDecisionPolicy
+                            .isPredictorSafeAtLocation(
+                                game, gameState, playerId,
+                                location,
+                                (myPower, myDraws,
+                                        opponentPower,
+                                        opponentDraws) -> {
+                                    BattlePredictor.BattleOutcome outcome =
+                                        BattlePredictor.predictBattle(
+                                            myPower, myDraws,
+                                            opponentPower,
+                                            opponentDraws,
+                                            context.getDeckOracle(),
+                                            context
+                                                .getOpponentDeckTracker());
+                                    return new BattleDecisionPolicy
+                                        .Prediction(
+                                            outcome.winProbability,
+                                            outcome.expectedDamageDealt,
+                                            outcome.expectedDamageTaken);
+                                });
                     int iWantThatMapRouteReserve =
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
                                 .getIWantThatMapCurrentRouteForceReserve(
                                     game, playerId, card,
-                                    location -> BattleDecisionPolicy
-                                        .isPredictorSafeAtLocation(
-                                            game, gameState, playerId,
-                                            location,
-                                            (myPower, myDraws,
-                                                    opponentPower,
-                                                    opponentDraws) -> {
-                                                BattlePredictor.BattleOutcome
-                                                        outcome =
-                                                    BattlePredictor.predictBattle(
-                                                        myPower, myDraws,
-                                                        opponentPower,
-                                                        opponentDraws,
-                                                        context.getDeckOracle(),
-                                                        context
-                                                            .getOpponentDeckTracker());
-                                                return new BattleDecisionPolicy
-                                                    .Prediction(
-                                                        outcome.winProbability,
-                                                        outcome.expectedDamageDealt,
-                                                        outcome.expectedDamageTaken);
-                                            }))
+                                    objectivePredictorSafeBattle)
+                            : 0;
+                    int shadowCollectiveBattleReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getShadowCollectiveCurrentBattleForceReserve(
+                                    game, playerId, card,
+                                    objectivePredictorSafeBattle)
                             : 0;
                     int ralltiirRouteReserve =
                         context.getObjectiveAnalyzer() != null
@@ -2201,6 +2210,22 @@ public class DeployEvaluator extends ActionEvaluator {
                                     < iWantThatMapRouteReserve) {
                             action.hardVeto(
                                 "OBJECTIVE.I_WANT_THAT_MAP.ROUTE_FORCE_RESERVE: preserve the exact executable actor movement, deployment, and blocker-battle payment");
+                            actions.add(action);
+                            continue;
+                        }
+                    }
+                    if (countedOperativeOrdinaryDeploy
+                            && shadowCollectiveBattleReserve > 0) {
+                        int boundedDeployPayment =
+                                exactNormalDeployPayment != null
+                                    ? exactNormalDeployPayment
+                                    : massassiDeployPayment;
+                        if (boundedDeployPayment > 0
+                                && availableForce
+                                    - boundedDeployPayment
+                                    < shadowCollectiveBattleReserve) {
+                            action.hardVeto(
+                                "OBJECTIVE.SHADOW_COLLECTIVE.BATTLE_FORCE_RESERVE: preserve the exact safe battle payment that completes the second gangster battleground");
                             actions.add(action);
                             continue;
                         }

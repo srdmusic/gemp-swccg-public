@@ -232,8 +232,9 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // On The Verge Of Greatness family batch: 37 -> 38.
         // Agents Of Black Sun family batch: 38 -> 39.
         // I Want That Map family batch: 39 -> 40.
-        assertEquals(40, enabled);
-        assertEquals(22, profiles.size() - enabled);
+        // Shadow Collective route-B batch: 40 -> 41.
+        assertEquals(41, enabled);
+        assertEquals(21, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);

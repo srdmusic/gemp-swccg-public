@@ -944,6 +944,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     ? findExactReservePullCandidate(
                         context, cardId, blueprintId)
                     : null;
+        PhysicalCard shadowCollectiveSource =
+                readExactShadowCollectiveRouteSource(context);
+        PhysicalCard shadowCollectiveCandidate =
+                shadowCollectiveSource != null
+                    ? findExactReservePullCandidate(
+                        context, cardId, blueprintId)
+                    : null;
         PhysicalCard onTheVergeKrennicSource =
                 readExactOnTheVergeKrennicRouteSource(context);
         PhysicalCard onTheVergeKrennicCandidate =
@@ -1059,6 +1066,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         context.getPlayerId(),
                         nativeLocationSource,
                         nativeLocationCandidate);
+        boolean shadowCollectiveBattleground =
+                shadowCollectiveCandidate != null
+                && context.getObjectiveAnalyzer()
+                    .isShadowCollectiveNativeBattlegroundPullCandidate(
+                        context.getGame(), context.getPlayerId(),
+                        shadowCollectiveSource,
+                        shadowCollectiveCandidate);
         applyPullSelectionPolicy(action,
                 PullSelectionCandidatePolicy.scoreCountedObjectiveProgress(
                         action.getActionId(),
@@ -1070,12 +1084,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 .strategy.ObjectiveAnalyzer
                                 .ObjectiveProgressCandidateRole
                                 .REQUIRED_COMPANION,
-                        role == com.gempukku.swccgo.ai.models.common.strategy
+                        (role == com.gempukku.swccgo.ai.models.common.strategy
                                 .ObjectiveAnalyzer
                                 .ObjectiveProgressCandidateRole
                                 .REQUIRED_LOCATION
                                 && !dedicatedFlipGateLocation
-                                && nativeCountedLocation));
+                                && nativeCountedLocation
+                            || shadowCollectiveBattleground
+                                && role != com.gempukku.swccgo.ai.models
+                                    .common.strategy.ObjectiveAnalyzer
+                                    .ObjectiveProgressCandidateRole
+                                    .REQUIRED_ACTOR
+                                && role != com.gempukku.swccgo.ai.models
+                                    .common.strategy.ObjectiveAnalyzer
+                                    .ObjectiveProgressCandidateRole
+                                    .REQUIRED_COMPANION)));
         applyPullSelectionPolicy(action,
                 RalltiirOperationsObjectivePolicy
                     .scoreFrontPullCandidate(
@@ -1272,6 +1295,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         .isOnTheVergeScarifBattlegroundRouteAction(
                             context.getGame(), context.getPlayerId(),
                             source, actionText)
+                ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private PhysicalCard readExactShadowCollectiveRouteSource(
+            DecisionContext context) {
+        if (!isExactReserveDeployChoice(context)) return null;
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            String actionText = liveAction != null
+                    ? liveAction.getText() : null;
+            return liveAction != null
+                    && liveAction.getGameTextActionId()
+                        == GameTextActionId
+                            .SHADOW_COLLECTIVE__DOWNLOAD_BLASTER_OR_FIRST_LIGHT_CARD
+                    && context.getObjectiveAnalyzer()
+                        .isShadowCollectiveRoutePullAction(
+                            context.getPlayerId(), source,
+                            actionText)
                 ? source : null;
         } catch (Exception ignored) {
             return null;
@@ -2695,6 +2744,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     .isRalltiirOperationsFamily()
                                                 || objectiveProgressAnalyzer
                                                     .isTwinSunsObjectiveFamily())
+                                            && objectiveProgressAnalyzer
+                                                .wouldCompletePreFlipRequirementAt(
+                                                    game, playerId,
+                                                    objectiveProgressDeployingCard,
+                                                    location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
+                                    .scoreShadowCollectiveRouteCompletion(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .isShadowCollectiveObjectiveFamily()
                                             && objectiveProgressAnalyzer
                                                 .wouldCompletePreFlipRequirementAt(
                                                     game, playerId,

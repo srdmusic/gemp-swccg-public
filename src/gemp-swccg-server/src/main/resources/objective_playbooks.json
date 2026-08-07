@@ -7788,6 +7788,7 @@
     },
     {
       "label": "Shadow Collective",
+      "loaderEnabled": true,
       "blueprintIds": [
         "213_32",
         "213_32_BACK"
@@ -7807,6 +7808,31 @@
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "shadow-collective-front-gangster-route",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "controlWith",
+              "controller": "self",
+              "locationFilterKey": "battleground",
+              "count": {
+                "comparator": ">=",
+                "value": 2
+              },
+              "actorFilterKey": "non_undercover_gangster",
+              "includeExcludedFromBattle": true,
+              "gamePhase": "BATTLE",
+              "whosePhase": "self",
+              "scoreRole": "actorToLocation",
+              "sourceText": "Route B: during the owner's battle phase, the owner's gangsters control two battlegrounds (Card213_032.java L121-L135). Undercover spies cannot contribute to control. Cards excluded from battle still count. DELIBERATE SCHEMA OMISSIONS: Route A is the justHitBy event trigger for any owner card hitting a character (Card213_032.java L137-L145), not a persistent board-state rule; the back flips front unconditionally at the end of every turn (Card213_032_BACK.java L79-L88), so there is intentionally no postFlip stay rule; the three-battleground clause is a one-shot Force-loss rider when the front becomes active after that end-turn flip (Card213_032.java L110-L118), not a hold law or a reason to weaken formation safety. The native pull is intentionally two-tiered: any legal non-unique blaster or First Light card keeps the exact objective action viable for Route A, while only a First Light battleground advances this encoded Route B location count."
+            }
+          ]
+        }
+      ],
       "frontBp": "213_32",
       "backBp": "213_32_BACK",
       "abbreviation": "SC",

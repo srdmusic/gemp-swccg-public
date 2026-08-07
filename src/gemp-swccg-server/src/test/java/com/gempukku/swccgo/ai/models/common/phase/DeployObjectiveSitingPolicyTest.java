@@ -167,6 +167,20 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
+    public void shadowCollectiveCompletionUsesItsOwnTwoSiteRuleIdentity() {
+        PolicyOperation completion = DeployObjectiveSitingPolicy
+                .scoreShadowCollectiveRouteCompletion("a", true)
+                .operations().get(0);
+        PolicyResult neutral = DeployObjectiveSitingPolicy
+                .scoreShadowCollectiveRouteCompletion("a", false);
+
+        assertOperation(completion,
+                "DEPLOY.OBJECTIVE.SHADOW_COLLECTIVE.ROUTE_COMPLETION",
+                8000.0f);
+        assertTrue(neutral.operations().isEmpty());
+    }
+
+    @Test
     public void typedActorStagingDominatesCountedProgressButNotDirectGate() {
         PolicyOperation staging =
                 DeployObjectiveSitingPolicy.scoreActorRouteStaging(

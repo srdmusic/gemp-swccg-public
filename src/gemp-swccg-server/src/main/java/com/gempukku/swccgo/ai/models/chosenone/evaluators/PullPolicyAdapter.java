@@ -254,6 +254,12 @@ final class PullPolicyAdapter {
                 boolean iWantThatMapRoute = objective
                         .isIWantThatMapBattlegroundRouteAction(
                                 game, playerId, source, actionText);
+                boolean shadowCollectiveRoute = objective
+                        .isShadowCollectiveRoutePullAction(
+                                playerId, source, actionText)
+                        && objective
+                            .hasShadowCollectiveNativePullCandidateInReserve(
+                                game, playerId, source);
                 boolean bringHimBeforeMeEmperorRoute =
                         CaptureObjectiveFacts.objectiveKind(objective)
                             == CaptureObjectivePolicy.ObjectiveKind.BHBM
@@ -276,6 +282,7 @@ final class PullPolicyAdapter {
                         || ralltiirRoute
                         || onTheVergeRoute
                         || iWantThatMapRoute
+                        || shadowCollectiveRoute
                         || bringHimBeforeMeEmperorRoute;
             }
 
@@ -301,7 +308,12 @@ final class PullPolicyAdapter {
                         || objective.isOnTheVergeKrennicDeployAction(
                                 game, playerId, source, actionText)
                         || objective.isIWantThatMapBattlegroundRouteAction(
-                                game, playerId, source, actionText);
+                                game, playerId, source, actionText)
+                        || objective.isShadowCollectiveRoutePullAction(
+                                playerId, source, actionText)
+                            && objective
+                                .hasShadowCollectiveNativePullCandidateInReserve(
+                                    game, playerId, source);
             }
 
             @Override

@@ -7870,6 +7870,20 @@ public class ObjectiveAnalyzer {
                 && !isUpperBound(alternative.count);
     }
 
+    private boolean isCountedObjectivePresenceAlternative(
+            FlipLocationAlternative alternative) {
+        return isPlainSelfPresenceAlternative(alternative)
+                || (isShadowCollectiveObjectiveFamily()
+                    && alternative != null
+                    && alternative.actorFilterKey != null
+                    && "self".equals(alternative.controller)
+                    && "controlWith".equals(alternative.relation)
+                    && alternative.count != null
+                    && alternative.count.value != null
+                    && alternative.count.value > 0
+                    && !isUpperBound(alternative.count));
+    }
+
     private boolean candidateProvidesPresence(
             SwccgGame game, PhysicalCard candidate) {
         if (game == null || candidate == null
@@ -11356,6 +11370,122 @@ public class ObjectiveAnalyzer {
     public boolean isIWantThatMapObjectiveFamily() {
         return analyzed && ("208_57".equals(objectiveBlueprintId)
                 || "208_57_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isShadowCollectiveObjectiveFamily() {
+        return analyzed && ("213_32".equals(objectiveBlueprintId)
+                || "213_32_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isShadowCollectiveRoutePullAction(
+            String playerId, PhysicalCard sourceCard,
+            String actionText) {
+        return !isFlipped && isShadowCollectiveObjectiveFamily()
+                && playerId != null && sourceCard != null
+                && playerId.equals(sourceCard.getOwner())
+                && "213_32".equals(
+                    sourceCard.getBlueprintId(true))
+                && "Deploy a card from Reserve Deck".equals(
+                    actionText);
+    }
+
+    public boolean hasShadowCollectiveNativePullCandidateInReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        if (!isShadowCollectiveRoutePullAction(
+                    playerId, sourceCard,
+                    "Deploy a card from Reserve Deck")
+                || game == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> reserve =
+                game.getGameState().getReserveDeck(playerId);
+        if (reserve == null) return false;
+        for (PhysicalCard candidate : reserve) {
+            if (isShadowCollectiveNativePullCandidate(
+                    game, playerId, sourceCard, candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasShadowCollectiveBattlegroundPullCandidateInReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        if (!isShadowCollectiveRoutePullAction(
+                    playerId, sourceCard,
+                    "Deploy a card from Reserve Deck")
+                || game == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> reserve =
+                game.getGameState().getReserveDeck(playerId);
+        if (reserve == null) return false;
+        for (PhysicalCard candidate : reserve) {
+            if (isShadowCollectiveNativeBattlegroundPullCandidate(
+                    game, playerId, sourceCard, candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isShadowCollectiveNativeBattlegroundPullCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
+        if (game == null || playerId == null || sourceCard == null
+                || candidate == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        FlipLocationAlternative alternative =
+                findShadowCollectiveRouteAlternative();
+        return alternative != null
+                && countAlternativeMatches(
+                    game, playerId, playerId, alternative)
+                    < expectedCount(game, playerId, alternative.count)
+                && isShadowCollectiveNativePullCandidate(
+                    game, playerId, sourceCard, candidate)
+                && candidate.getTitle() != null
+                && candidate.getTitle().toLowerCase(Locale.ROOT)
+                    .contains("first light")
+                && Filters.battleground.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate);
+    }
+
+    private boolean isShadowCollectiveNativePullCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
+        if (!isShadowCollectiveRoutePullAction(
+                    playerId, sourceCard,
+                    "Deploy a card from Reserve Deck")
+                || game == null || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            return Filters.or(
+                        Filters.and(
+                            Filters.non_unique,
+                            Filters.blaster),
+                        Filters.titleContains("First Light"))
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    && Filters.deployable(
+                        sourceCard, null, false, 0.0f)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean isIWantThatMapSelfLosingDeployCandidate(
@@ -15598,10 +15728,7 @@ public class ObjectiveAnalyzer {
         return preferred;
     }
 
-    /**
-     * Funds the cheapest bodies that can occupy the still-missing physical
-     * sites this deploy phase for the two audited three-site objectives.
-     */
+    /** Funds the cheapest actors for still-missing counted formations. */
     public int getCountedObjectivePresenceForceReserve(
             SwccgGame game, String playerId,
             PhysicalCard deployingCandidate) {
@@ -15617,6 +15744,10 @@ public class ObjectiveAnalyzer {
         }
         if (isISBOperations) {
             return getIsbOnTableAgentForceReserve(
+                    game, playerId, deployingCandidate);
+        }
+        if (isShadowCollectiveObjectiveFamily()) {
+            return getShadowCollectivePresenceForceReserve(
                     game, playerId, deployingCandidate);
         }
         if (!isMassassiBaseOperationsFamily()
@@ -15676,6 +15807,221 @@ public class ObjectiveAnalyzer {
             }
         }
         return bestReserve;
+    }
+
+    private int getShadowCollectivePresenceForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        FlipLocationAlternative alternative =
+                findShadowCollectiveRouteAlternative();
+        if (alternative != null) {
+            int missing = Math.max(0,
+                    expectedCount(game, playerId, alternative.count)
+                    - countAlternativeMatches(
+                        game, playerId, playerId, alternative));
+            if (missing == 0) return 0;
+
+            List<List<DeployContributionOption>> optionsByTarget =
+                    new ArrayList<>();
+            for (PhysicalCard location
+                    : game.getGameState().getLocationsInOrder()) {
+                if (!locationMatchesAlternative(
+                            game.getGameState(), game, playerId,
+                            location, alternative)
+                        || relationSatisfiedAt(
+                            game, playerId, playerId, location,
+                            alternative.relation,
+                            alternative.actorFilterKey,
+                            alternative.includeExcludedFromBattle,
+                            alternative.spotOverride)) {
+                    continue;
+                }
+                List<DeployContributionOption> options =
+                        new ArrayList<>();
+                if (deployingCandidate != null
+                        && deployingCandidate.getZone() == Zone.HAND
+                        && shadowCollectiveGangsterCanDeployTo(
+                            game, playerId, deployingCandidate,
+                            location, alternative)) {
+                    options.add(new DeployContributionOption(
+                            deployingCandidate, null, 0));
+                }
+                for (PhysicalCard card
+                        : game.getGameState().getHand(playerId)) {
+                    if (card == null || card == deployingCandidate
+                            || !shadowCollectiveGangsterCanDeployTo(
+                                game, playerId, card,
+                                location, alternative)) {
+                        continue;
+                    }
+                    Integer cost = requiredCardDeployCostAt(
+                            game, card, location);
+                    if (cost != null) {
+                        options.add(new DeployContributionOption(
+                                card, null, cost));
+                    }
+                }
+                if (!options.isEmpty()) {
+                    options.sort(Comparator.comparingInt(
+                            option -> option.cost));
+                    optionsByTarget.add(options);
+                }
+            }
+            optionsByTarget.sort(
+                    Comparator.comparingInt(List::size));
+            int maxUnits = Math.min(missing, optionsByTarget.size());
+            for (int units = maxUnits; units > 0; units--) {
+                int[] best = {Integer.MAX_VALUE};
+                minimumDistinctContributionCost(
+                        optionsByTarget, 0, units, 0,
+                        Collections.newSetFromMap(
+                            new IdentityHashMap<>()),
+                        best);
+                if (best[0] != Integer.MAX_VALUE) {
+                    return best[0];
+                }
+            }
+        }
+        return 0;
+    }
+
+    private FlipLocationAlternative
+            findShadowCollectiveRouteAlternative() {
+        if (!isShadowCollectiveObjectiveFamily() || isFlipped
+                || activeFlipLocationRules == null) {
+            return null;
+        }
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative : rule.alternatives) {
+                if (isCountedObjectivePresenceAlternative(alternative)
+                        && "non_undercover_gangster".equals(
+                            alternative.actorFilterKey)
+                        && "battleground".equals(
+                            alternative.locationFilterKey)) {
+                    return alternative;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean shadowCollectiveGangsterCanDeployTo(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard location,
+            FlipLocationAlternative alternative) {
+        if (!advancesAlternativeAt(
+                    game, playerId, candidate, location, alternative)) {
+            return false;
+        }
+        try {
+            return Filters.deployableToLocation(
+                    candidate, Filters.sameCardId(location),
+                    false, 0.0f).accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Preserves the exact initiation fee for a safe battle that completes
+     * Route B.
+     */
+    public int getShadowCollectiveCurrentBattleForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate,
+            Predicate<PhysicalCard> predictorSafeBattle) {
+        FlipLocationAlternative alternative =
+                findShadowCollectiveRouteAlternative();
+        if (alternative == null || game == null || playerId == null
+                || predictorSafeBattle == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        int required = expectedCount(
+                game, playerId, alternative.count);
+        int qualified = countAlternativeMatches(
+                game, playerId, playerId, alternative);
+        if (qualified != required - 1
+                || deployingCandidate != null
+                    && shadowCollectiveCandidateCompletesOpenRoute(
+                        game, playerId, deployingCandidate,
+                        alternative)) {
+            return 0;
+        }
+
+        int cheapest = Integer.MAX_VALUE;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (!locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)
+                    || relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride)
+                    || !hasMatchingActorAtLocation(
+                        game, playerId, location,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle, true)
+                    || !com.gempukku.swccgo.cards.GameConditions
+                        .canInitiateBattleAtLocation(
+                            playerId, game, location,
+                            false, true)
+                    || FormationSafety.vetoInitiateBattle(
+                        game, game.getGameState(), playerId,
+                        location) != null) {
+                continue;
+            }
+            try {
+                if (!predictorSafeBattle.test(location)) continue;
+                float cost = game.getModifiersQuerying()
+                        .getInitiateBattleCost(
+                            game.getGameState(), location,
+                            playerId, true);
+                if (Float.isFinite(cost)) {
+                    cheapest = Math.min(
+                            cheapest,
+                            Math.max(0, (int) Math.ceil(cost)));
+                }
+            } catch (Exception ignored) {
+                // Only a proven safe, finite payment creates a reserve.
+            }
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
+    private boolean shadowCollectiveCandidateCompletesOpenRoute(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            FlipLocationAlternative alternative) {
+        if (candidate.getZone() != Zone.HAND) return false;
+        for (PhysicalCard location
+                : game.getGameState().getLocationsInOrder()) {
+            if (locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative)
+                    && !relationSatisfiedAt(
+                        game, playerId, playerId, location,
+                        alternative.relation,
+                        alternative.actorFilterKey,
+                        alternative.includeExcludedFromBattle,
+                        alternative.spotOverride)
+                    && shadowCollectiveGangsterCanDeployTo(
+                        game, playerId, candidate,
+                        location, alternative)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public record OldAlliesRouteReserve(
@@ -18011,11 +18357,7 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
-    /**
-     * Protects exactly the cheapest executable bodies still needed to occupy
-     * the open sites of the audited three-site objectives. A second legal
-     * body is not a duplicate while two distinct sites remain empty.
-     */
+    /** Protects exactly the cheapest actors still needed by a counted route. */
     public boolean isPreferredCountedObjectivePresenceForceLossCandidate(
             SwccgGame game, String playerId, PhysicalCard candidate) {
         if ((!isMassassiBaseOperationsFamily()
@@ -18024,7 +18366,8 @@ public class ObjectiveAnalyzer {
                     && !isNoMoneyNoPartsObjectiveFamily()
                     && !isRalltiirOperationsFamily()
                     && !isTwinSunsObjectiveFamily()
-                    && !isISBOperations)
+                    && !isISBOperations
+                    && !isShadowCollectiveObjectiveFamily())
                 || isFlipped || game == null || playerId == null
                 || candidate == null || candidate.getZone() != Zone.HAND
                 || !playerId.equals(candidate.getOwner())
@@ -18085,7 +18428,7 @@ public class ObjectiveAnalyzer {
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule)) continue;
             for (FlipLocationAlternative alternative : rule.alternatives) {
-                if (!isPlainSelfPresenceAlternative(alternative)
+                if (!isCountedObjectivePresenceAlternative(alternative)
                         || alternative.count == null
                         || alternative.count.value == null) {
                     continue;
@@ -22357,6 +22700,12 @@ public class ObjectiveAnalyzer {
             case "non_undercover_ISB_agent":
                 return com.gempukku.swccgo.filters.Filters.and(
                         com.gempukku.swccgo.filters.Filters.ISB_agent,
+                        com.gempukku.swccgo.filters.Filters.not(
+                            com.gempukku.swccgo.filters.Filters
+                                .undercover_spy));
+            case "non_undercover_gangster":
+                return com.gempukku.swccgo.filters.Filters.and(
+                        com.gempukku.swccgo.filters.Filters.gangster,
                         com.gempukku.swccgo.filters.Filters.not(
                             com.gempukku.swccgo.filters.Filters
                                 .undercover_spy));
