@@ -10404,3 +10404,55 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     provides FLIP_OBSERVED. Fresh live replay firing remains separate. Nothing
     was pushed. Restore web.jar.pre-iwtm-7493a14e and revert 93719f2c5 to
     remove only this seal.
+
+  ==== Shadow Collective behavior seal (2026-08-07) ====
+
+    Dark 213_32/213_32_BACK has two independent flip routes. Any character hit
+    by the owner's card triggers Route A. Route B requires two battlegrounds
+    controlled with gangsters during the owner's battle phase. The back flips
+    front unconditionally at end of turn, and the newly active front makes the
+    opponent lose exactly 1 Force when the owner occupies three battlegrounds.
+    Card and engine Java remain unchanged.
+
+    Both public bots own the exact native non-unique blaster and First Light
+    pull. Any legal candidate preserves Route A, while only a First Light
+    battleground advances Route B. A blaster without a legal warrior host does
+    not receive route credit. Existing legal weapon-fire and target logic then
+    completes the native hit-event route without a new target bonus.
+
+    Route B reserves distinct gangsters for distinct open battlegrounds and
+    prices the exact safe battle fee when control must be established. The
+    final direct deployment receives an objective-specific +8000 completion
+    rule and releases its own reserve. Movement adds a net second route leg,
+    and Force-loss choice preserves a still-needed gangster.
+
+    ShadowCollectiveObjectiveEngineContractTest passed 10 tests. The final
+    bounded affected ring passed 176/0/0/0. It proves both native routes, the
+    Battle-phase and undercover boundaries, pull legality, deployment,
+    budgeting, movement, Force loss, unconditional flip-back, and the exact
+    three-battleground rider. K2 mailbox m01668 returned SHIP, and independent
+    current-snapshot verification returned PASS. JSON, diff, scope, semantic
+    rule identity, and Rando/Chosen One mirror checks passed.
+
+    Local behavior commit 64cc71fdf packaged successfully. All 124 generated
+    class entries from changed production sources byte-match target/classes,
+    the server jar, and web.jar; the playbook also byte-matches. Server jar
+    SHA-256 is
+    1a8087f1afe84b803163cb04181b161d76d733129d3b047f1243567426e203e7;
+    live web.jar SHA-256 is
+    97730140fca9bdb93087f4bfc4e79891a8a0cff659fde6b839fc5702a35c0303;
+    playbook SHA-256 is
+    1bd67ea9f54126b6462f30300156be12134e2122d4383b292aef9270de1ffc28.
+    The prior jar is preserved as
+    web.jar.pre-shadow-20260807-0922-2f03363b. The hall was frozen at zero
+    tables, and the fresh app started at 2026-08-07T16:24:10.247381095Z with
+    restart count zero. Operational status, gameplay switches, exact jar
+    identity, clean startup, and the empty hall passed.
+
+    Scope is shared AI strategy and phase policy, mirrored Rando and Chosen One
+    adapters, approved objective data, AI tests, and approved audit/history
+    records. No engine Java, card Java, client, deck library, database, or
+    workbook changed. Deterministic unchanged-engine public-bot execution
+    provides FLIP_OBSERVED. Fresh live replay firing remains separate. Nothing
+    was pushed. Restore web.jar.pre-shadow-20260807-0922-2f03363b and revert
+    64cc71fdf to remove only this seal.

@@ -621,15 +621,15 @@
    "frontBp": "213_32",
    "title": "Shadow Collective",
    "side": "DARK",
-   "classification": "ABSENT",
-   "subclass": "DISABLED",
-   "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
+   "classification": "COMPLETE",
+   "subclass": "ENABLED",
+   "why": "Loader-enabled battle-phase gangster route plus exact native blaster and First Light pulls, distinct deploy and movement planning, Force budgeting and retention, both native flip routes, unconditional flip-back, and the three-battleground rider in both public bots.",
    "flipLaw": "Route A: flip when a character was just 'hit' by your card (any character, any location; no canBeFlipped guard in code). Route B: flip during your battle phase when your gangsters CONTROL two battlegr",
    "flipBackLaw": "Flips back at end of every turn (TriggerConditions.isEndOfEachTurn), unconditional (no canBeFlipped guard in code). Companion effects: on flipping (cardFlipped on back) owner MAY re-circulate and shuf",
-   "profileGaps": 5,
+   "profileGaps": 0,
    "seedMismatches": 0,
-   "engineClass": "NEW_PRIMITIVE",
-   "engineClassNote": "hit-EVENT flip signal (route A) + controlsWith(gangster) counter (route B) + turn oscillation"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven at behavior commit 64cc71fdf by ShadowCollectiveObjectiveEngineContractTest: 10 focused tests and a 176-test bounded affected ring passed with exact mirrored parity."
   },
   {
    "frontBp": "215_17",

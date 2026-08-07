@@ -97,14 +97,50 @@
  "seedMismatches": [],
  "profile": {
   "exists": true,
-  "loaderEnabled": false,
-  "profileGaps": [
-   "no representation of flip route A (just-'hit' a character) - the profile has no event-trigger concept; hitting characters (non-unique blasters + gangsters) is the primary flip engine",
-   "no representation of the end-of-turn auto flip-back oscillation (back is a one-turn window; strategy = re-flip every turn)",
-   "keyCharacterFilter null: Filters.gangster flip actor unrepresented (only buried in a namedLocation label string)",
-   "pullableCards empty despite the recurring non-unique blaster / 'First Light' download on both sides",
-   "flipGateSite null; the battle-phase-only gate on route B and the occupy-3-battlegrounds Force-loss rider are unrepresented; weights empty"
+  "loaderEnabled": true,
+  "profileGaps": [],
+  "frontRule": "controlWith two battlegrounds using distinct non-undercover gangsters during the owner's battle phase",
+  "deliberateRuntimeBoundaries": [
+   "Route A is a transient justHitBy event, so it is executed through exact native pull support and existing legal weapon-fire logic rather than represented as a persistent playbook rule.",
+   "The back flips front unconditionally at end of every turn, so no postFlip hold rule exists.",
+   "The three-battleground clause is a one-shot native Force-loss rider, not a hold rule."
   ]
  },
- "proofGate": "SOURCE_VERIFIED"
+ "behavior": {
+  "commit": "64cc71fdf",
+  "bots": [
+   "Rando",
+   "Chosen One"
+  ],
+  "tests": {
+   "focusedEngine": 10,
+   "boundedAffected": 176,
+   "failures": 0
+  },
+  "covered": [
+   "exact Route B phase, control, actor, undercover, and excluded-from-battle law",
+   "native non-unique blaster and First Light pulls with illegal-host rejection",
+   "distinct gangster and location Force reserve",
+   "safe battle initiation fee reserve and completing-deploy release",
+   "deploy, movement, Force loss, weapon fire, target selection, and both unchanged-engine native flips",
+   "unconditional end-turn flip-back and exact three-battleground Force-loss rider"
+  ],
+  "review": [
+   "K2 mailbox m01668 SHIP",
+   "independent current-snapshot PASS"
+  ]
+ },
+ "delivery": {
+  "webJarSha256": "97730140fca9bdb93087f4bfc4e79891a8a0cff659fde6b839fc5702a35c0303",
+  "serverJarSha256": "1a8087f1afe84b803163cb04181b161d76d733129d3b047f1243567426e203e7",
+  "playbookSha256": "1bd67ea9f54126b6462f30300156be12134e2122d4383b292aef9270de1ffc28",
+  "deployed": true,
+  "freshJvmStartedAt": "2026-08-07T16:24:10.247381095Z",
+  "restartCount": 0,
+  "hallTableCountBefore": 0,
+  "hallTableCountAfter": 0,
+  "backup": "web.jar.pre-shadow-20260807-0922-2f03363b",
+  "liveReplayProof": false
+ },
+ "proofGate": "FLIP_OBSERVED"
 }
