@@ -1798,6 +1798,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                     .getTwinSunsCurrentMoveForceReserve(
                                         game, playerId, card)
                             : 0;
+                    int agentsOfBlackSunMoveReserve =
+                        context.getObjectiveAnalyzer() != null
+                            ? context.getObjectiveAnalyzer()
+                                .getAgentsOfBlackSunCurrentMoveForceReserve(
+                                    game, playerId, card)
+                            : 0;
                     int ralltiirRouteReserve =
                         context.getObjectiveAnalyzer() != null
                             ? context.getObjectiveAnalyzer()
@@ -2118,6 +2124,22 @@ public class DeployEvaluator extends ActionEvaluator {
                     if (!ralltiirRouteBudget.operations().isEmpty()) {
                         actions.add(action);
                         continue;
+                    }
+                    if (countedOperativeOrdinaryDeploy
+                            && agentsOfBlackSunMoveReserve > 0) {
+                        int boundedDeployPayment =
+                                exactNormalDeployPayment != null
+                                    ? exactNormalDeployPayment
+                                    : massassiDeployPayment;
+                        if (boundedDeployPayment > 0
+                                && availableForce
+                                    - boundedDeployPayment
+                                    < agentsOfBlackSunMoveReserve) {
+                            action.hardVeto(
+                                "OBJECTIVE.AGENTS_OF_BLACK_SUN.MOVE_FORCE_RESERVE: preserve the current actor's exact battleground move payment");
+                            actions.add(action);
+                            continue;
+                        }
                     }
                     if (countedOperativeOrdinaryDeploy
                             && countedOperativeMoveReserve > 0) {

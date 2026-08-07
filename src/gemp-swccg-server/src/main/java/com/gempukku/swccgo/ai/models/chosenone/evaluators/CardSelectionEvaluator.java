@@ -1854,6 +1854,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return evaluateHiddenPathCorridorTransit(context);
         } else if (isObjectiveDockingTransitDecision(context)) {
             return evaluateObjectiveDockingTransit(context);
+        } else if (isAgentsOfBlackSunBountyMoverDecision(context)) {
+            return evaluateAgentsOfBlackSunBountyMover(context);
+        } else if (isAgentsOfBlackSunBountyDestinationDecision(context)) {
+            return evaluateAgentsOfBlackSunBountyDestination(context);
         } else if (textLower.contains("move to,")
                    || textLower.contains("where to move")
                    || textLower.contains("where to take off")
@@ -8154,6 +8158,115 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private boolean isAgentsOfBlackSunBountyMoverDecision(
+            DecisionContext context) {
+        return context != null
+                && context.getDecisionText() != null
+                && context.getDecisionText().trim()
+                    .toLowerCase(Locale.ROOT)
+                    .startsWith("choose bounty hunter to move")
+                && context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isActiveAgentsOfBlackSunBountyMoveAction(
+                        context.getGame(), context.getPlayerId());
+    }
+
+    private boolean isAgentsOfBlackSunBountyDestinationDecision(
+            DecisionContext context) {
+        if (context == null || context.getDecisionText() == null
+                || context.getObjectiveAnalyzer() == null
+                || !context.getObjectiveAnalyzer()
+                    .isActiveAgentsOfBlackSunBountyMoveAction(
+                        context.getGame(), context.getPlayerId())) {
+            return false;
+        }
+        String prompt = context.getDecisionText().trim()
+                .toLowerCase(Locale.ROOT);
+        return prompt.startsWith("choose where to move")
+                && prompt.contains("using landspeed");
+    }
+
+    private List<EvaluatedAction>
+            evaluateAgentsOfBlackSunBountyMover(
+                    DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            PhysicalCard mover = null;
+            try {
+                mover = context.getGameState().findCardById(
+                        Integer.parseInt(cardId));
+            } catch (Exception ignored) {
+            }
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.MOVE, 0.0f,
+                    "Choose bounty hunter for objective move");
+            if (context.getObjectiveAnalyzer()
+                    .isSafeAgentsOfBlackSunBountyMover(
+                        context.getGame(), context.getPlayerId(), mover)) {
+                action.addReasoning(
+                    "OBJECTIVE.AOBS.BOUNTY_MOVE.MOVER: choose a bounty hunter with a formation-safe paid route",
+                    600.0f);
+            } else {
+                action.hardVeto(
+                    "OBJECTIVE.AOBS.BOUNTY_MOVE.MOVER_HOLD: choose a bounty hunter with a formation-safe paid route");
+            }
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    private List<EvaluatedAction>
+            evaluateAgentsOfBlackSunBountyDestination(
+                    DecisionContext context) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        PhysicalCard mover = null;
+        Integer moverCardId = movePhysicalCardId(context);
+        if (moverCardId != null) {
+            try {
+                mover = context.getGameState().findCardById(
+                        moverCardId);
+            } catch (Exception ignored) {
+            }
+        }
+        if (mover == null) {
+            String blueprintId = extractBlueprintFromDecisionText(
+                    context.getDecisionText());
+            MovePhysicalCardResolver.ResolvedMover resolved =
+                    MovePhysicalCardResolver.resolveOnTable(
+                        context.getGameState().getAllPermanentCards(),
+                        context.getPlayerId(), blueprintId);
+            mover = resolved != null ? resolved.card() : null;
+        }
+        for (int i = 0; i < context.getCardIds().size(); i++) {
+            if (!isCardSelectable(context, i)) continue;
+            String cardId = context.getCardIds().get(i);
+            PhysicalCard destination = null;
+            try {
+                destination = context.getGameState().findCardById(
+                        Integer.parseInt(cardId));
+            } catch (Exception ignored) {
+            }
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.MOVE, 0.0f,
+                    "Choose objective bounty-move destination");
+            if (context.getObjectiveAnalyzer()
+                    .isSafeAgentsOfBlackSunBountyDestination(
+                        context.getGame(), context.getPlayerId(),
+                        mover, destination)) {
+                action.addReasoning(
+                    "OBJECTIVE.AOBS.BOUNTY_MOVE.DESTINATION: finish the formation-safe move to a bounty",
+                    600.0f);
+            } else {
+                action.hardVeto(
+                    "OBJECTIVE.AOBS.BOUNTY_MOVE.DESTINATION_HOLD: preserve the safer bounty route");
+            }
+            actions.add(action);
+        }
+        return actions;
     }
 
     private List<EvaluatedAction>

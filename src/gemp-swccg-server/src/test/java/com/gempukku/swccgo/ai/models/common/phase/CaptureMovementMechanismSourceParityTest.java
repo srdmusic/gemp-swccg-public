@@ -82,6 +82,17 @@ public class CaptureMovementMechanismSourceParityTest {
                 "ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA"));
         assertTrue(randoChild.contains(
                 "pendingMoveActionSourcePermanentCardId = null"));
+        assertOrdered(randoChild,
+                "boolean agentsOfBlackSunMoveMechanismChild",
+                "&& objectiveAnalyzer != null",
+                "&& objectiveAnalyzer",
+                ".isActiveAgentsOfBlackSunBountyMoveAction(",
+                "if (!agentsOfBlackSunMoveMechanismChild)",
+                "pendingMovePhysicalCardId = null");
+        assertFalse("The new context receives its analyzer later in the builder",
+                randoChild.contains(
+                    "evalContext.getObjectiveAnalyzer()\n"
+                        + "                    .isActiveAgentsOfBlackSunBountyMoveAction("));
         assertTrue(randoDeploy.contains(
                 "AiActionSourceProvenance"));
         assertTrue(randoDeployChild.contains(

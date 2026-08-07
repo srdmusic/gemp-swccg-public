@@ -230,8 +230,9 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         // Naboo duel family batch: both mirrored profiles activated,
         // 35 -> 37.
         // On The Verge Of Greatness family batch: 37 -> 38.
-        assertEquals(38, enabled);
-        assertEquals(24, profiles.size() - enabled);
+        // Agents Of Black Sun family batch: 38 -> 39.
+        assertEquals(39, enabled);
+        assertEquals(23, profiles.size() - enabled);
 
         Method findProfile = ObjectiveAnalyzer.class.getDeclaredMethod("findProfile", String.class, String.class);
         findProfile.setAccessible(true);

@@ -1163,8 +1163,15 @@ public class TheChosenOneAi extends HeuristicAiBase {
             DecisionContext context,
             EvaluatedAction selected,
             AwaitingDecision parentDecision) {
+        boolean agentsOfBlackSunControlMove = context != null
+                && context.getPhase() == Phase.CONTROL
+                && context.getObjectiveAnalyzer() != null
+                && context.getObjectiveAnalyzer()
+                    .isActiveAgentsOfBlackSunBountyMoveAction(
+                        currentGame, context.getPlayerId());
         if (context == null || selected == null
                 || context.getPhase() != Phase.MOVE
+                    && !agentsOfBlackSunControlMove
                 || context.getDecisionType() == null) {
             return;
         }
@@ -1172,6 +1179,45 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 ? context.getDecisionText().trim()
                     .toLowerCase(Locale.ROOT)
                 : "";
+        if (agentsOfBlackSunControlMove
+                && "CARD_SELECTION".equals(
+                    context.getDecisionType())
+                && normalizedPrompt.startsWith(
+                    "choose bounty hunter to move")) {
+            pendingMovePhysicalCardId = null;
+            pendingMoveActionSourcePermanentCardId = null;
+            pendingHiddenPathCorridorDestinationPermanentCardId = null;
+            try {
+                PhysicalCard selectedHunter =
+                        context.getGameState() != null
+                            ? context.getGameState().findCardById(
+                                Integer.parseInt(
+                                    selected.getActionId()))
+                            : null;
+                if (selectedHunter != null) {
+                    pendingMovePhysicalCardId =
+                            selectedHunter.getCardId();
+                }
+            } catch (NumberFormatException ignored) {
+            }
+            return;
+        }
+        if (agentsOfBlackSunControlMove
+                && "MULTIPLE_CHOICE".equals(
+                    context.getDecisionType())
+                && normalizedPrompt.contains(
+                    "choose regular move action")) {
+            int selectedIndex = context.getActionIds().indexOf(
+                    selected.getActionId());
+            String selectedText = selectedIndex >= 0
+                    && selectedIndex
+                        < context.getActionTexts().size()
+                ? context.getActionTexts().get(selectedIndex) : "";
+            if (!"Move using landspeed".equals(selectedText)) {
+                pendingMovePhysicalCardId = null;
+            }
+            return;
+        }
         PhysicalCard pendingMoveSource = findCardByPermanentId(
                 context.getGameState(),
                 pendingMoveActionSourcePermanentCardId);
@@ -1739,6 +1785,14 @@ public class TheChosenOneAi extends HeuristicAiBase {
                         "choose card to move from")
                     || promptLower.trim().startsWith(
                         "choose card to move to"));
+        boolean agentsOfBlackSunMoveMechanismChild =
+                "MULTIPLE_CHOICE".equals(decisionType.name())
+                && promptLower.contains(
+                    "choose regular move action")
+                && objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isActiveAgentsOfBlackSunBountyMoveAction(
+                        currentGame, playerId);
         if (pendingMovePhysicalCardId != null
                 || pendingMoveActionSourcePermanentCardId != null) {
             if ("CARD_SELECTION".equals(
@@ -1782,7 +1836,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
             // The selected top-level movement action's next decision owns this
             // provenance. If the expected child is absent or unreadable, fail
             // open instead of leaking the physical card into a later move.
-            pendingMovePhysicalCardId = null;
+            if (!agentsOfBlackSunMoveMechanismChild) {
+                pendingMovePhysicalCardId = null;
+            }
             if (!hiddenPathRelocationMoverChild
                     && !hiddenPathCorridorChild) {
                 pendingMoveActionSourcePermanentCardId = null;

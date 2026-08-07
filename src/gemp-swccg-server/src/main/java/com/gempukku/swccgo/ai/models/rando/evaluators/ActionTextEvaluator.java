@@ -366,6 +366,27 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .isSetYourCourseClassicCpiAction(
                             game, context.getPlayerId(),
                             actionSource, actionText);
+            boolean exactAgentsOfBlackSunBountyMove =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isAgentsOfBlackSunBountyMoveAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText)
+                    && exactDeployAnalyzer
+                        .hasSafeAgentsOfBlackSunBountyMoveRoute(
+                            game, context.getPlayerId());
+            boolean exactAgentsOfBlackSunLandspeedChoice =
+                    exactDeployAnalyzer != null
+                    && "MULTIPLE_CHOICE".equals(
+                        context.getDecisionType())
+                    && context.getDecisionText() != null
+                    && "Choose regular move action".equalsIgnoreCase(
+                        context.getDecisionText().trim())
+                    && "Move using landspeed".equalsIgnoreCase(
+                        actionText.trim())
+                    && exactDeployAnalyzer
+                        .isActiveAgentsOfBlackSunBountyMoveAction(
+                            game, context.getPlayerId());
             PolicyResult ralltiirHardLoss =
                     ObjectiveHardLossPolicy
                         .scoreRalltiirSelfDestruct(
@@ -461,6 +482,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     actions.add(action);
                     continue;
                 }
+            }
+
+            if (exactAgentsOfBlackSunBountyMove) {
+                action.setActionType(ActionType.MOVE);
+                action.addReasoning(
+                    "OBJECTIVE.AOBS.BOUNTY_MOVE.PARENT: move a bounty hunter toward the objective's bounty site after ordinary drains",
+                    40.0f);
+                actions.add(action);
+                continue;
+            }
+
+            if (exactAgentsOfBlackSunLandspeedChoice) {
+                action.setActionType(ActionType.MOVE);
+                action.addReasoning(
+                    "OBJECTIVE.AOBS.BOUNTY_MOVE.MECHANISM: complete the proven objective move using landspeed",
+                    600.0f);
+                actions.add(action);
+                continue;
             }
 
             NabooDuelObjectivePolicy.ActionKind nabooDuelAction = null;
@@ -5586,6 +5625,26 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 context.getForcePileSize(), spend);
                     if (sycReserve.hardVeto()) {
                         action.hardVeto(sycReserve.reason());
+                    }
+                    int bountyMoveReserve = context
+                        .getObjectiveAnalyzer()
+                        .getAgentsOfBlackSunBountyMoveForceReserve(
+                            context.getGame(), context.getPlayerId());
+                    float availableForce = context.getGame()
+                        .getModifiersQuerying()
+                        .getForceAvailableToUse(
+                            context.getGameState(),
+                            context.getPlayerId());
+                    if (bountyMoveReserve > 0
+                            && Float.isFinite(spend)
+                            && spend >= 0.0f
+                            && Float.isFinite(availableForce)
+                            && availableForce >= bountyMoveReserve
+                            && availableForce
+                                - Math.ceil(spend)
+                                < bountyMoveReserve) {
+                        action.hardVeto(
+                            "OBJECTIVE.AOBS.BOUNTY_MOVE.FORCE_RESERVE: preserve the exact paid move to a bounty");
                     }
                 }
             } catch (Exception e) {

@@ -5587,6 +5587,7 @@
     },
     {
       "label": "Agents Of Black Sun",
+      "loaderEnabled": true,
       "blueprintIds": [
         "10_29",
         "10_29_BACK"
@@ -5600,12 +5601,126 @@
       "pullableCards": [],
       "flipGateSite": null,
       "flipGateCardIds": [],
-      "startingLocations": [],
+      "startingLocations": [
+        {
+          "blueprintIds": [
+            "7_277",
+            "201_38"
+          ],
+          "titleFragments": [
+            "coruscant: imperial city",
+            "imperial city"
+          ]
+        },
+        {
+          "blueprintIds": [
+            "7_275",
+            "12_165",
+            "203_31",
+            "226_2"
+          ],
+          "titleFragments": [
+            "coruscant"
+          ]
+        }
+      ],
       "startingEffects": [],
       "startingInterrupts": [],
-      "keyCharacterFilter": null,
-      "keySiteFilter": null,
+      "keyCharacterFilter": "AOBS_current_actor",
+      "keySiteFilter": "battleground_site",
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "agents-black-sun-front",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "any",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "AOBS_current_actor",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "actorToLocation",
+              "sourceText": "The active actor is Xizor, or title Shada only while Legacy No Bargain modifies this objective. The source spot is ownership-free and uses at, so an aboard actor counts."
+            },
+            {
+              "relation": "at",
+              "controller": "any",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "AOBS_current_target",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "globalBlockerAbsent",
+              "sourceText": "The current target is Rey when that modification is active, otherwise Anakin when that modification is active, otherwise Luke. Ownership-free by source law."
+            }
+          ]
+        },
+        {
+          "id": "agents-black-sun-back",
+          "phase": "postFlip",
+          "purpose": "flipBack",
+          "mode": "anyOf",
+          "alternatives": [
+            {
+              "relation": "onTable",
+              "controller": "any",
+              "count": {
+                "comparator": "==",
+                "value": 0
+              },
+              "actorFilterKey": "AOBS_current_actor",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "requiredActorMissing",
+              "sourceText": "Flip back when the current actor cannot be spotted anywhere on table; the actor need not remain at a battleground."
+            },
+            {
+              "relation": "at",
+              "controller": "any",
+              "locationFilterKey": "battleground_site",
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "AOBS_current_target",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "globalBlockerPresent",
+              "sourceText": "Flip back when the current target is at any battleground site. This role records native source truth; generic post-flip risk scoring does not consume globalBlockerPresent."
+            }
+          ]
+        },
+        {
+          "id": "agents-black-sun-back-payoff",
+          "phase": "postFlip",
+          "purpose": "payoff",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "occupyWith",
+              "controller": "self",
+              "locationFilterKey": "battleground",
+              "count": {
+                "comparator": ">=",
+                "value": 2,
+                "gameTextModification": "LEGACY__TREAT_XIZOR_AS_SHADA",
+                "modifiedValue": 1
+              },
+              "actorFilterKey": "AOBS_current_actor_or_Emperor",
+              "includeExcludedFromBattle": false,
+              "scoreRole": "postFlipPrimary",
+              "sourceText": "Force loss is one per distinct battleground location occupied with the current actor or Emperor. The strategic target is both unique actors at separate battlegrounds; Legacy No Bargain forbids Emperor, so its reachable target is one. Multiple qualifying actors at one location still count once."
+            }
+          ]
+        }
+      ],
       "frontBp": "10_29",
       "backBp": "10_29_BACK",
       "abbreviation": "AOBS",

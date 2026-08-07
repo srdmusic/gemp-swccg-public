@@ -270,6 +270,17 @@ public class ObjectiveAnalyzer {
     private record CountedOperativeFormationNeed(
             int actors, int companions) { }
 
+    private record AgentsOfBlackSunPayoffProjection(
+            boolean qualifyingMover,
+            int requiredLocations,
+            int currentLocations,
+            int projectedLocations) { }
+
+    private record AgentsOfBlackSunBountyRoute(
+            PhysicalCard mover,
+            PhysicalCard destination,
+            int forceCost) { }
+
     /** Current counterfactual risk for one counted post-flip location rule. */
     public record PostFlipLocationRisk(
             boolean applies,
@@ -3451,9 +3462,17 @@ public class ObjectiveAnalyzer {
             }
             for (FlipLocationAlternative alternative : rule.alternatives) {
                 if (isActorToRuntimeLocationAlternative(alternative)
-                        && advancesAlternativeAt(
+                        && (advancesAlternativeAt(
                                 game, playerId, candidate,
-                                location, alternative)) {
+                                location, alternative)
+                            || isAgentsOfBlackSunObjectiveFamily()
+                                && !isFlipLocationAlternativeSatisfied(
+                                    game, playerId, alternative)
+                                && movedGroupCanSatisfyAlternativeAt(
+                                    game, playerId, candidate,
+                                    location, alternative,
+                                    resolveFilter(
+                                        alternative.actorFilterKey)))) {
                     return true;
                 }
             }
@@ -3587,9 +3606,15 @@ public class ObjectiveAnalyzer {
                 }
                 com.gempukku.swccgo.filters.Filter actorFilter =
                         resolveFilter(alternative.actorFilterKey);
-                if (actorFilter != null && actorFilter.accepts(
-                        gameState, game.getModifiersQuerying(),
-                        candidate)) {
+                if (actorFilter != null
+                        && (actorFilter.accepts(
+                                gameState,
+                                game.getModifiersQuerying(), candidate)
+                            || isAgentsOfBlackSunObjectiveFamily()
+                                && movedGroupCanSatisfyAlternativeAt(
+                                    game, playerId, candidate,
+                                    location, alternative,
+                                    actorFilter))) {
                     return true;
                 }
             }
@@ -10112,6 +10137,227 @@ public class ObjectiveAnalyzer {
      * Unlike classifyPostFlipPayoffAt, this remains true when the payoff is
      * already satisfied so movement can preserve rather than re-score it.
      */
+    private AgentsOfBlackSunPayoffProjection
+            projectAgentsOfBlackSunPayoff(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate,
+                    PhysicalCard destination) {
+        AgentsOfBlackSunPayoffProjection none =
+                new AgentsOfBlackSunPayoffProjection(
+                        false, 0, 0, 0);
+        if (!isAgentsOfBlackSunObjectiveFamily() || !isFlipped
+                || game == null || playerId == null
+                || candidate == null || destination == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return none;
+        }
+        FlipLocationAlternative payoff =
+                agentsOfBlackSunPayoffAlternative();
+        if (payoff == null || payoff.count == null) return none;
+
+        try {
+            GameState gameState = game.getGameState();
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(payoff.actorFilterKey);
+            PhysicalCard payoffDestination =
+                    objectivePayoffLocation(game, destination);
+            if (actorFilter == null || payoffDestination == null
+                    || !locationMatchesAlternative(
+                        gameState, game, playerId,
+                        payoffDestination, payoff)) {
+                return none;
+            }
+
+            Set<PhysicalCard> movingGroup =
+                    Collections.newSetFromMap(
+                            new IdentityHashMap<>());
+            movingGroup.add(candidate);
+            if (candidate.getZone() != null
+                    && candidate.getZone().isInPlay()) {
+                movingGroup.addAll(
+                        gameState.getAboardCards(candidate, true));
+                Collection<PhysicalCard> permanents =
+                        gameState.getAllPermanentCards();
+                if (permanents != null) {
+                    for (PhysicalCard card : permanents) {
+                        if (card != null
+                                && game.getModifiersQuerying()
+                                    .isAboard(
+                                        gameState, card,
+                                        candidate, true, true)) {
+                            movingGroup.add(card);
+                        }
+                    }
+                }
+            }
+
+            boolean qualifyingMover = false;
+            for (PhysicalCard card : movingGroup) {
+                if (card != null
+                        && playerId.equals(card.getOwner())
+                        && actorFilter.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), card)
+                        && (card.getZone() == null
+                            || !card.getZone().isInPlay()
+                            || isActiveForSpot(
+                                game, card,
+                                payoff.includeExcludedFromBattle))) {
+                    qualifyingMover = true;
+                    break;
+                }
+            }
+            if (!qualifyingMover) return none;
+
+            Set<PhysicalCard> currentActorLocations =
+                    Collections.newSetFromMap(
+                            new IdentityHashMap<>());
+            Set<PhysicalCard> projectedActorLocations =
+                    Collections.newSetFromMap(
+                            new IdentityHashMap<>());
+            PhysicalCard candidateCurrentLocation =
+                    candidate.getZone() != null
+                            && candidate.getZone().isInPlay()
+                        ? game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(
+                                gameState, candidate)
+                        : null;
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (permanents == null) return none;
+            for (PhysicalCard card : permanents) {
+                if (card == null
+                        || !playerId.equals(card.getOwner())
+                        || card.getZone() == null
+                        || !card.getZone().isInPlay()
+                        || !isActiveForSpot(
+                            game, card,
+                            payoff.includeExcludedFromBattle)
+                        || !actorFilter.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), card)) {
+                    continue;
+                }
+                PhysicalCard currentLocation =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(
+                                gameState, card);
+                if (currentLocation != null) {
+                    currentActorLocations.add(currentLocation);
+                    projectedActorLocations.add(
+                            movingGroup.contains(card)
+                                && samePhysicalLocation(
+                                    currentLocation,
+                                    candidateCurrentLocation)
+                                ? payoffDestination
+                                : currentLocation);
+                }
+            }
+            if ((candidate.getZone() == null
+                    || !candidate.getZone().isInPlay())
+                    && actorFilter.accepts(
+                        gameState,
+                        game.getModifiersQuerying(), candidate)) {
+                projectedActorLocations.add(payoffDestination);
+            }
+
+            int current = countAgentsOfBlackSunPayoffLocations(
+                    game, playerId, currentActorLocations,
+                    null, false);
+            boolean projectedGroupProvidesPresence = false;
+            for (PhysicalCard card : movingGroup) {
+                if (card != null
+                        && playerId.equals(card.getOwner())
+                        && actorFilter.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), card)
+                        && candidateWouldSatisfyAlternativeAt(
+                            game, playerId, card,
+                            payoffDestination, payoff)) {
+                    projectedGroupProvidesPresence = true;
+                    break;
+                }
+            }
+            int projected = countAgentsOfBlackSunPayoffLocations(
+                    game, playerId, projectedActorLocations,
+                    payoffDestination,
+                    projectedGroupProvidesPresence);
+            return new AgentsOfBlackSunPayoffProjection(
+                    true,
+                    expectedCount(game, playerId, payoff.count),
+                    current, projected);
+        } catch (Exception e) {
+            LOG.debug(
+                    "Agents of Black Sun payoff projection failed: {}",
+                    e.getMessage());
+            return none;
+        }
+    }
+
+    private FlipLocationAlternative
+            agentsOfBlackSunPayoffAlternative() {
+        if (activeFlipLocationRules == null) return null;
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule == null
+                    || !"agents-black-sun-back-payoff".equals(rule.id)
+                    || rule.alternatives == null) {
+                continue;
+            }
+            for (FlipLocationAlternative alternative
+                    : rule.alternatives) {
+                if (alternative != null
+                        && "postFlipPrimary".equals(
+                            alternative.scoreRole)) {
+                    return alternative;
+                }
+            }
+        }
+        return null;
+    }
+
+    private PhysicalCard objectivePayoffLocation(
+            SwccgGame game, PhysicalCard destination) {
+        if (Filters.location.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(), destination)) {
+            return destination;
+        }
+        return game.getModifiersQuerying()
+                .getLocationThatCardIsAt(
+                    game.getGameState(), destination);
+    }
+
+    private int countAgentsOfBlackSunPayoffLocations(
+            SwccgGame game, String playerId,
+            Set<PhysicalCard> actorLocations,
+            PhysicalCard projectedDestination,
+            boolean candidateProvidesDestinationPresence) {
+        int count = 0;
+        for (PhysicalCard location : actorLocations) {
+            if (location == null
+                    || !Filters.battleground.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), location)) {
+                continue;
+            }
+            boolean occupied = game.getModifiersQuerying()
+                    .occupiesLocation(
+                        game.getGameState(), location,
+                        playerId, null);
+            if (!occupied
+                    && projectedDestination != null
+                    && samePhysicalLocation(
+                        location, projectedDestination)
+                    && candidateProvidesDestinationPresence) {
+                occupied = true;
+            }
+            if (occupied) count++;
+        }
+        return count;
+    }
+
     public ObjectivePostFlipPayoffRole classifyPostFlipPayoffRoleAt(
             SwccgGame game, String playerId,
             PhysicalCard candidate,
@@ -10127,6 +10373,16 @@ public class ObjectiveAnalyzer {
         if (qualifiesMassassiAttackRunCarrierAt(
                 game, playerId, candidate, destination)) {
             return ObjectivePostFlipPayoffRole.PRIMARY;
+        }
+        AgentsOfBlackSunPayoffProjection agentsOfBlackSun =
+                projectAgentsOfBlackSunPayoff(
+                        game, playerId, candidate, destination);
+        if (agentsOfBlackSun.qualifyingMover()) {
+            return agentsOfBlackSun.projectedLocations() > 0
+                    && agentsOfBlackSun.projectedLocations()
+                        >= agentsOfBlackSun.currentLocations()
+                        ? ObjectivePostFlipPayoffRole.PRIMARY
+                        : ObjectivePostFlipPayoffRole.NONE;
         }
         if (!analyzed || !isFlipped || game == null
                 || playerId == null || candidate == null
@@ -10327,6 +10583,17 @@ public class ObjectiveAnalyzer {
             if (!samePhysicalLocation(origin, destination)) {
                 return ObjectivePostFlipPayoffRole.PRIMARY;
             }
+        }
+        AgentsOfBlackSunPayoffProjection agentsOfBlackSun =
+                projectAgentsOfBlackSunPayoff(
+                        game, playerId, candidate, destination);
+        if (agentsOfBlackSun.qualifyingMover()) {
+            return agentsOfBlackSun.currentLocations()
+                        < agentsOfBlackSun.requiredLocations()
+                    && agentsOfBlackSun.projectedLocations()
+                        > agentsOfBlackSun.currentLocations()
+                        ? ObjectivePostFlipPayoffRole.PRIMARY
+                        : ObjectivePostFlipPayoffRole.NONE;
         }
         if (!analyzed || !isFlipped || game == null
                 || playerId == null || candidate == null
@@ -10892,6 +11159,475 @@ public class ObjectiveAnalyzer {
     public boolean isRalltiirOperationsFamily() {
         return analyzed && ("7_300".equals(objectiveBlueprintId)
                 || "7_300_BACK".equals(objectiveBlueprintId));
+    }
+
+    public boolean isAgentsOfBlackSunObjectiveFamily() {
+        return analyzed && ("10_29".equals(objectiveBlueprintId)
+                || "10_29_BACK".equals(objectiveBlueprintId));
+    }
+
+    /**
+     * Ranks a Coruscant battleground site that creates the missing route from
+     * Imperial City. Xizor's Palace ranks first because the current actor is
+     * a Black Sun Agent and therefore moves there for free.
+     */
+    public int getAgentsOfBlackSunGateLocationDeployPriority(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isAgentsOfBlackSunObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null
+                || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || activeFlipLocationRules == null) {
+            return 0;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            if (!Filters.and(
+                    Filters.Coruscant_site,
+                    Filters.battleground_site).accepts(
+                        gameState,
+                        game.getModifiersQuerying(), candidate)) {
+                return 0;
+            }
+
+            FlipLocationAlternative actorAlternative = null;
+            FlipLocationAlternative blockerAlternative = null;
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (rule == null
+                        || !"agents-black-sun-front".equals(rule.id)
+                        || rule.alternatives == null) {
+                    continue;
+                }
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (alternative == null) continue;
+                    if ("actorToLocation".equals(
+                            alternative.scoreRole)) {
+                        actorAlternative = alternative;
+                    } else if ("globalBlockerAbsent".equals(
+                            alternative.scoreRole)) {
+                        blockerAlternative = alternative;
+                    }
+                }
+            }
+            if (actorAlternative == null
+                    || blockerAlternative == null
+                    || isFlipLocationAlternativeSatisfied(
+                        game, playerId, actorAlternative)
+                    || !isFlipLocationAlternativeSatisfied(
+                        game, playerId, blockerAlternative)) {
+                return 0;
+            }
+
+            com.gempukku.swccgo.filters.Filter actorFilter =
+                    resolveFilter(
+                            actorAlternative.actorFilterKey);
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            if (actorFilter == null || permanents == null) {
+                return 0;
+            }
+            boolean actorCanUseNewCoruscantSite = false;
+            for (PhysicalCard actor : permanents) {
+                if (actor == null
+                        || !playerId.equals(actor.getOwner())
+                        || actor.getZone() == null
+                        || !actor.getZone().isInPlay()
+                        || !isActiveForSpot(game, actor, true)
+                        || !actorFilter.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), actor)) {
+                    continue;
+                }
+                PhysicalCard origin =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(
+                                gameState, actor);
+                if (origin == null
+                        || !Filters.Coruscant_site.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), origin)) {
+                    continue;
+                }
+                actorCanUseNewCoruscantSite = true;
+                if (hasSafePreFlipRuntimeActorLandspeedDestination(
+                        game, playerId, actor)) {
+                    return 0;
+                }
+            }
+            if (!actorCanUseNewCoruscantSite) return 0;
+            return "203_32".equals(
+                    candidate.getBlueprintId(true)) ? 2 : 1;
+        } catch (Exception e) {
+            LOG.debug(
+                    "Agents of Black Sun gate-location assessment failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+    }
+
+    /** Exact regular-move payment still needed by the current front route. */
+    public int getAgentsOfBlackSunCurrentMoveForceReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard deployingCandidate) {
+        if (!isAgentsOfBlackSunObjectiveFamily() || isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        boolean openActorRoute = false;
+        if (activeFlipLocationRules != null) {
+            for (FlipLocationRule rule : activeFlipLocationRules) {
+                if (!isActivePreFlipRule(rule)) continue;
+                FlipLocationAlternative actor = null;
+                FlipLocationAlternative blocker = null;
+                for (FlipLocationAlternative alternative
+                        : rule.alternatives) {
+                    if (alternative == null) continue;
+                    if ("actorToLocation".equals(
+                            alternative.scoreRole)) {
+                        actor = alternative;
+                    } else if ("globalBlockerAbsent".equals(
+                            alternative.scoreRole)) {
+                        blocker = alternative;
+                    }
+                }
+                if (actor != null && blocker != null
+                        && !isFlipLocationAlternativeSatisfied(
+                            game, playerId, actor)
+                        && isFlipLocationAlternativeSatisfied(
+                            game, playerId, blocker)) {
+                    openActorRoute = true;
+                    break;
+                }
+            }
+        }
+        if (!openActorRoute) return 0;
+        if (deployingCandidate != null
+                && deployingCandidate.getZone() == Zone.HAND
+                && hasLegalPreFlipActorLocationDestination(
+                    game, playerId, deployingCandidate)) {
+            return 0;
+        }
+        int cheapest = Integer.MAX_VALUE;
+        try {
+            GameState gameState = game.getGameState();
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            List<PhysicalCard> locations =
+                    gameState.getLocationsInOrder();
+            if (permanents == null || locations == null) return 0;
+            for (PhysicalCard mover : permanents) {
+                if (mover == null
+                        || !playerId.equals(mover.getOwner())
+                        || mover.getZone() == null
+                        || !mover.getZone().isInPlay()
+                        || !isActiveForSpot(game, mover, true)) {
+                    continue;
+                }
+                PhysicalCard origin =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsPresentAt(
+                                gameState, mover);
+                if (origin == null) continue;
+                for (PhysicalCard destination : locations) {
+                    if (!isSafePreFlipRuntimeActorLandspeedDestination(
+                                game, playerId, mover,
+                                destination)
+                            || !Filters.movableAsRegularMove(
+                                playerId, false, 0.0f, false,
+                                Filters.sameCardId(destination))
+                                .accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(), mover)
+                            || samePhysicalLocation(
+                                origin, destination)) {
+                        continue;
+                    }
+                    float cost = game.getModifiersQuerying()
+                            .getMoveUsingLandspeedCost(
+                                gameState, mover, origin,
+                                destination, false, 0.0f);
+                    if (Float.isFinite(cost)) {
+                        cheapest = Math.min(
+                                cheapest,
+                                Math.max(0,
+                                    (int) Math.ceil(cost)));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Agents of Black Sun move Force reserve failed: {}",
+                    e.getMessage());
+            return 0;
+        }
+        return cheapest == Integer.MAX_VALUE ? 0 : cheapest;
+    }
+
+    public boolean isAgentsOfBlackSunPayoffDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isAgentsOfBlackSunObjectiveFamily() || !isFlipped
+                || game == null || playerId == null
+                || candidate == null
+                || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            List<PhysicalCard> locations =
+                    game.getGameState().getLocationsInOrder();
+            if (locations != null) {
+                for (PhysicalCard location : locations) {
+                    if (location != null
+                            && Filters.deployableToLocation(
+                                candidate,
+                                Filters.sameCardId(location),
+                                false, 0.0f).accepts(
+                                    game.getGameState(),
+                                    game.getModifiersQuerying(),
+                                    candidate)
+                            && classifyPostFlipPayoffAt(
+                                game, playerId, candidate,
+                                location)
+                                == ObjectivePostFlipPayoffRole.PRIMARY) {
+                        return true;
+                    }
+                }
+            }
+            Collection<PhysicalCard> permanents =
+                    game.getGameState().getAllPermanentCards();
+            if (permanents == null) return false;
+            for (PhysicalCard target : permanents) {
+                if (target == null
+                        || target.getZone() == null
+                        || !target.getZone().isInPlay()
+                        || Filters.location.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(), target)
+                        || !Filters.deployableToTarget(
+                            candidate,
+                            Filters.sameCardId(target),
+                            false, 0.0f).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(),
+                                candidate)) {
+                    continue;
+                }
+                if (classifyPostFlipPayoffAt(
+                        game, playerId, candidate, target)
+                        == ObjectivePostFlipPayoffRole.PRIMARY) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Agents of Black Sun payoff deploy-route failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean isAgentsOfBlackSunBountyMoveAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isAgentsOfBlackSunObjectiveFamily()
+                || game == null || playerId == null
+                || sourceCard == null || actionText == null
+                || game.getGameState() == null
+                || game.getGameState().getCurrentPhase() != Phase.CONTROL
+                || !playerId.equals(
+                    game.getGameState().getCurrentPlayerId())
+                || !playerId.equals(sourceCard.getOwner())
+                || !"10_29".equals(
+                    sourceCard.getBlueprintId(true))
+                || !"Move bounty hunter to a bounty".equals(
+                    actionText)) {
+            return false;
+        }
+        PhysicalCard objective =
+                findOurObjective(game.getGameState(), playerId);
+        return objective != null
+                && (objective == sourceCard
+                    || objective.getPermanentCardId() > 0
+                        && objective.getPermanentCardId()
+                            == sourceCard.getPermanentCardId());
+    }
+
+    public boolean isActiveAgentsOfBlackSunBountyMoveAction(
+            SwccgGame game, String playerId) {
+        if (game == null || game.getGameState() == null) {
+            return false;
+        }
+        try {
+            var state = game.getGameState()
+                    .getTopGameTextActionState();
+            var action = state != null
+                    ? state.getGameTextAction() : null;
+            return action != null
+                    && action.getGameTextActionId()
+                        == GameTextActionId.OTHER_CARD_ACTION_1
+                    && isAgentsOfBlackSunBountyMoveAction(
+                        game, playerId,
+                        action.getActionSource(),
+                        action.getText());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean hasSafeAgentsOfBlackSunBountyMoveRoute(
+            SwccgGame game, String playerId) {
+        return findAgentsOfBlackSunBountyRoute(
+                game, playerId, null, null) != null;
+    }
+
+    public int getAgentsOfBlackSunBountyMoveForceReserve(
+            SwccgGame game, String playerId) {
+        AgentsOfBlackSunBountyRoute route =
+                findAgentsOfBlackSunBountyRoute(
+                    game, playerId, null, null);
+        return route != null ? route.forceCost() : 0;
+    }
+
+    public boolean isSafeAgentsOfBlackSunBountyMover(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        return candidate != null
+                && findAgentsOfBlackSunBountyRoute(
+                    game, playerId, candidate, null) != null;
+    }
+
+    public boolean isSafeAgentsOfBlackSunBountyDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard mover, PhysicalCard destination) {
+        return destination != null
+                && findAgentsOfBlackSunBountyRoute(
+                    game, playerId, mover, destination) != null;
+    }
+
+    private AgentsOfBlackSunBountyRoute
+            findAgentsOfBlackSunBountyRoute(
+                    SwccgGame game, String playerId,
+                    PhysicalCard requestedMover,
+                    PhysicalCard requestedDestination) {
+        if (!isAgentsOfBlackSunObjectiveFamily()
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            PhysicalCard objective =
+                    findOurObjective(gameState, playerId);
+            Collection<PhysicalCard> permanents =
+                    gameState.getAllPermanentCards();
+            List<PhysicalCard> locations =
+                    gameState.getLocationsInOrder();
+            if (objective == null
+                    || !"10_29".equals(
+                        objective.getBlueprintId(true))
+                    || permanents == null || locations == null) {
+                return null;
+            }
+
+            AgentsOfBlackSunBountyRoute best = null;
+            for (PhysicalCard mover : permanents) {
+                if (mover == null
+                        || requestedMover != null
+                            && mover != requestedMover
+                            && (requestedMover.getPermanentCardId() <= 0
+                                || mover.getPermanentCardId()
+                                    != requestedMover
+                                        .getPermanentCardId())
+                        || !playerId.equals(mover.getOwner())
+                        || mover.getZone() == null
+                        || !mover.getZone().isInPlay()
+                        || !isActiveForSpot(game, mover, false)
+                        || !Filters.bounty_hunter.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), mover)) {
+                    continue;
+                }
+                PhysicalCard origin =
+                        game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(
+                                gameState, mover);
+                if (origin == null
+                        || !Filters.site.accepts(
+                            gameState,
+                            game.getModifiersQuerying(), origin)
+                        || FormationSafety.vetoMoveOrigin(
+                            game, gameState, playerId,
+                            mover, origin) != null) {
+                    continue;
+                }
+                com.gempukku.swccgo.filters.Filter bountyDestination =
+                        Filters.and(
+                            Filters.adjacentSite(mover),
+                            Filters.sameSiteAs(
+                                objective, Filters.any_bounty));
+                if (!Filters.movableAsRegularMove(
+                            playerId, false, 0.0f, false,
+                            bountyDestination)
+                        .accepts(
+                            gameState,
+                            game.getModifiersQuerying(), mover)) {
+                    continue;
+                }
+                for (PhysicalCard destination : locations) {
+                    if (destination == null
+                            || requestedDestination != null
+                                && !samePhysicalLocation(
+                                    destination,
+                                    requestedDestination)
+                            || !bountyDestination
+                                .accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(),
+                                    destination)
+                            || !Filters.canMoveToUsingLandspeed(
+                                playerId, mover,
+                                false, false,
+                                false, 0.0f, null)
+                                .accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(),
+                                    destination)
+                            || FormationSafety.vetoMoveDestination(
+                                game, gameState, playerId,
+                                mover, destination) != null) {
+                        continue;
+                    }
+                    float rawCost = game.getModifiersQuerying()
+                            .getMoveUsingLandspeedCost(
+                                gameState, mover, origin,
+                                destination, false, 0.0f);
+                    if (!Float.isFinite(rawCost)) continue;
+                    int cost = Math.max(
+                            0, (int) Math.ceil(rawCost));
+                    if (best == null || cost < best.forceCost()) {
+                        best = new AgentsOfBlackSunBountyRoute(
+                                mover, destination, cost);
+                    }
+                }
+            }
+            return best;
+        } catch (Exception e) {
+            LOG.debug(
+                    "Agents of Black Sun bounty route failed: {}",
+                    e.getMessage());
+            return null;
+        }
     }
 
     public boolean isRalltiirFrontRouteAction(
@@ -20589,6 +21325,12 @@ public class ObjectiveAnalyzer {
                 return com.gempukku.swccgo.filters.Filters.or(
                     com.gempukku.swccgo.filters.Filters.Krennic,
                     com.gempukku.swccgo.filters.Filters.Tarkin);
+            case "AOBS_current_actor":
+                return agentsOfBlackSunCurrentActorFilter(false);
+            case "AOBS_current_target":
+                return agentsOfBlackSunCurrentTargetFilter();
+            case "AOBS_current_actor_or_Emperor":
+                return agentsOfBlackSunCurrentActorFilter(true);
             case "leader":           return com.gempukku.swccgo.filters.Filters.leader;
             case "Scarif_battleground_site":
                 return com.gempukku.swccgo.filters.Filters.Scarif_battleground_site;
@@ -20857,6 +21599,108 @@ public class ObjectiveAnalyzer {
                 LOG.warn("[ObjectiveAnalyzer] unknown Filter key '{}' in objective_playbooks.json — playbook Filter left null.", key);
                 return null;
         }
+    }
+
+    private com.gempukku.swccgo.filters.Filter
+            agentsOfBlackSunCurrentActorFilter(
+                    boolean includeEmperor) {
+        return new com.gempukku.swccgo.filters.Filter() {
+            @Override
+            public boolean accepts(
+                    GameState gameState,
+                    com.gempukku.swccgo.logic.modifiers.querying
+                        .ModifiersQuerying modifiersQuerying,
+                    PhysicalCard candidate) {
+                if (gameState == null || modifiersQuerying == null
+                        || candidate == null) {
+                    return false;
+                }
+                PhysicalCard objective =
+                        findActiveAgentsOfBlackSunObjective(
+                                gameState);
+                if (objective == null) return false;
+                if (includeEmperor
+                        && com.gempukku.swccgo.filters.Filters.Emperor
+                            .accepts(
+                                gameState, modifiersQuerying,
+                                candidate)) {
+                    return true;
+                }
+                com.gempukku.swccgo.filters.Filter currentActor =
+                        modifiersQuerying.hasGameTextModification(
+                                gameState, objective,
+                                ModifyGameTextType
+                                    .LEGACY__TREAT_XIZOR_AS_SHADA)
+                            ? com.gempukku.swccgo.filters.Filters
+                                .title("Shada")
+                            : com.gempukku.swccgo.filters.Filters
+                                .Xizor;
+                return currentActor.accepts(
+                        gameState, modifiersQuerying, candidate);
+            }
+        };
+    }
+
+    private com.gempukku.swccgo.filters.Filter
+            agentsOfBlackSunCurrentTargetFilter() {
+        return new com.gempukku.swccgo.filters.Filter() {
+            @Override
+            public boolean accepts(
+                    GameState gameState,
+                    com.gempukku.swccgo.logic.modifiers.querying
+                        .ModifiersQuerying modifiersQuerying,
+                    PhysicalCard candidate) {
+                if (gameState == null || modifiersQuerying == null
+                        || candidate == null) {
+                    return false;
+                }
+                PhysicalCard objective =
+                        findActiveAgentsOfBlackSunObjective(
+                                gameState);
+                if (objective == null) return false;
+                com.gempukku.swccgo.filters.Filter currentTarget;
+                if (modifiersQuerying.hasGameTextModification(
+                        gameState, objective,
+                        ModifyGameTextType
+                            .REFLECTIONS_II_OBJECTIVE__TARGETS_REY_INSTEAD_OF_LUKE)) {
+                    currentTarget =
+                            com.gempukku.swccgo.filters.Filters.Rey;
+                } else if (modifiersQuerying.hasGameTextModification(
+                        gameState, objective,
+                        ModifyGameTextType
+                            .REFLECTIONS_II_OBJECTIVE__TARGETS_ANAKIN_INSTEAD_OF_LUKE)) {
+                    currentTarget =
+                            com.gempukku.swccgo.filters.Filters.Anakin;
+                } else {
+                    currentTarget =
+                            com.gempukku.swccgo.filters.Filters.Luke;
+                }
+                return currentTarget.accepts(
+                        gameState, modifiersQuerying, candidate);
+            }
+        };
+    }
+
+    private PhysicalCard findActiveAgentsOfBlackSunObjective(
+            GameState gameState) {
+        if (gameState == null) return null;
+        Collection<PhysicalCard> permanents =
+                gameState.getAllPermanentCards();
+        if (permanents == null) return null;
+        for (PhysicalCard card : permanents) {
+            if (card == null || card.getZone() == null
+                    || !card.getZone().isInPlay()) {
+                continue;
+            }
+            try {
+                if ("10_29".equals(card.getBlueprintId(true))) {
+                    return card;
+                }
+            } catch (Exception e) {
+                // A malformed permanent is not the active objective.
+            }
+        }
+        return null;
     }
 
     // Loader-EXTENSION location-filter registry (step 2, 2026-07-08). Maps flipLocationRules/actorLocationRules
@@ -21384,6 +22228,14 @@ public class ObjectiveAnalyzer {
                             + card.getTitle()
                             + "' before unrelated cards"));
         }
+        if (isAgentsOfBlackSunPayoffDeployCandidate(
+                game, playerId, card)) {
+            notes.add(new ScoreNote(
+                    800.0f,
+                    "OBJECTIVE AGENTS OF BLACK SUN PAYOFF: deploy '"
+                            + card.getTitle()
+                            + "' where it adds a distinct battleground Force-loss location"));
+        }
         if (isOldAlliesRouteDeployCandidate(
                 game, playerId, card)) {
             notes.add(new ScoreNote(
@@ -21391,6 +22243,21 @@ public class ObjectiveAnalyzer {
                     "OBJECTIVE OLD ALLIES ROUTE: deploy '"
                             + card.getTitle()
                             + "' as part of the funded Jakku flip route"));
+        }
+        int agentsOfBlackSunLocationPriority =
+                getAgentsOfBlackSunGateLocationDeployPriority(
+                        game, playerId, card);
+        if (agentsOfBlackSunLocationPriority > 0) {
+            float score = agentsOfBlackSunLocationPriority >= 2
+                    ? 1200.0f : 800.0f;
+            notes.add(new ScoreNote(
+                    score,
+                    "OBJECTIVE AGENTS OF BLACK SUN GATE: deploy '"
+                            + card.getTitle()
+                            + "' beside Imperial City to open the battleground route"
+                            + (agentsOfBlackSunLocationPriority >= 2
+                                ? " with a free Black Sun Agent move"
+                                : "")));
         }
         if (isNoMoneyNoPartsObjectiveFamily() && !isFlipped
                 && isPreferredCountedObjectivePresenceForceLossCandidate(

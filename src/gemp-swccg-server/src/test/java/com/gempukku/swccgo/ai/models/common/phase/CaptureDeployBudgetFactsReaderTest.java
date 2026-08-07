@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.cards.actions.PlayCharacterAction;
+import com.gempukku.swccgo.cards.actions.PlayStarshipOrVehicleAction;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
@@ -164,6 +165,32 @@ public class CaptureDeployBudgetFactsReaderTest {
                 CaptureDeployBudgetFactsReader
                     .actionPayment(
                         changedCostUnknown, "0"));
+    }
+
+    @Test
+    public void starshipDeployFailsClosedBeforeAnyPilotChoice() {
+        Fixture fixture = fixture(2.0f);
+        when(fixture.card.getBlueprint()
+                .getCardCategory())
+                .thenReturn(CardCategory.STARSHIP);
+        Action starship = new PlayStarshipOrVehicleAction(
+                fixture.game,
+                fixture.card,
+                fixture.card,
+                false, 0.0f,
+                null, null,
+                Filters.any, Filters.any,
+                List.of());
+
+        Object snapshot =
+                CaptureDeployBudgetFactsReader
+                    .snapshotExactNormalDeployPayments(
+                        decision(starship),
+                        fixture.game,
+                        PLAYER);
+
+        assertNull(CaptureDeployBudgetFactsReader
+                .actionPayment(snapshot, "0"));
     }
 
     private static Fixture fixture(float printedCost) {
