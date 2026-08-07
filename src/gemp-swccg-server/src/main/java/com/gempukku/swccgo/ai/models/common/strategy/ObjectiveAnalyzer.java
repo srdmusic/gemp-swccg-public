@@ -22040,12 +22040,19 @@ public class ObjectiveAnalyzer {
         public ScoreNote(float score, String reason) { this.score = score; this.reason = reason; }
     }
 
-    /** Senator detection: Keyword.SENATOR OR lore contains "senator" (only ~29/35 add the keyword). */
+    /** Senator detection: Keyword.SENATOR only. The lore-widening clause was retired 2026-08-07:
+     * census showed 29 blueprints carry the keyword (28 characters) and the ONLY character with
+     * "senator" in lore but no keyword is Mas Amedda 12_15, whom card law deliberately lists
+     * SEPARATELY from Filters.senator (Card12_061:87) and whom the 12_88 flip CNF (keyword-only
+     * Filters.senator) never counts — so the widening added zero true senators and one phantom
+     * that V99/V108/V110 scored toward a flip he cannot advance. K2 check-queue batch H, m01676. */
     private static boolean isSenatorCard(SwccgCardBlueprint bp) {
         if (bp == null) return false;
         if (bp.hasKeyword(com.gempukku.swccgo.common.Keyword.SENATOR)) return true;
-        String lore = bp.getLore();
-        return lore != null && lore.toLowerCase(Locale.ROOT).contains("senator");
+        // SUPERSEDED 2026-08-07 (phantom-senator fix, m01676): lore widening retired.
+        // String lore = bp.getLore();
+        // return lore != null && lore.toLowerCase(Locale.ROOT).contains("senator");
+        return false;
     }
 
     // ═══ OBJECTIVE PLAYBOOK — analyzer-owned typed facts + weights (pilot 2026-07-07, Steve's ruling) ═══

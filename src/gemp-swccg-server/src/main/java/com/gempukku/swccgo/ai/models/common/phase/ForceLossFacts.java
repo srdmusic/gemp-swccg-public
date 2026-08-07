@@ -227,8 +227,12 @@ public final class ForceLossFacts {
         if (blueprint.hasKeyword(Keyword.SENATOR)) {
             return true;
         }
-        String lore = blueprint.getLore();
-        return lore != null && lore.toLowerCase(Locale.ROOT).contains("senator");
+        // SUPERSEDED 2026-08-07 (phantom-senator fix, m01676): lore widening retired — the only
+        // character it admitted was Mas Amedda 12_15, a non-senator by card law (Card12_061:87
+        // lists him separately from Filters.senator); V109 was protecting a phantom. Keyword only.
+        // String lore = blueprint.getLore();
+        // return lore != null && lore.toLowerCase(Locale.ROOT).contains("senator");
+        return false;
     }
 
     private static boolean isBattleInterrupt(SwccgCardBlueprint blueprint) {

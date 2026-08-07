@@ -3987,13 +3987,22 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     if (v88DepBp != null) {
                                         if (v88DepBp.hasKeyword(com.gempukku.swccgo.common.Keyword.SENATOR)) {
                                             isSenator = true;
-                                        } else {
-                                            String v88Lore = v88DepBp.getLore();
-                                            if (v88Lore != null && v88Lore.toLowerCase(java.util.Locale.ROOT)
-                                                    .contains("senator")) {
-                                                isSenator = true;
-                                            }
+                                        } else if (v88DepBp.getPolitics() > 0) {
+                                            // 2026-08-07 phantom-senator fix (m01676): lore widening retired.
+                                            // For the Senate DESTINATION lane only, politicians (politics > 0,
+                                            // e.g. Mas Amedda 12_15) stay Senate-eligible — their game text
+                                            // functions in a senate majority — without counting as senators
+                                            // anywhere the flip CNF or scoring lanes are concerned.
+                                            isSenator = true;
                                         }
+                                        // SUPERSEDED 2026-08-07: lore-contains "senator" clause retired —
+                                        // census: 29 keyword blueprints (28 characters); the only lore-only
+                                        // character was Mas Amedda, a non-senator by card law (Card12_061:87).
+                                        // String v88Lore = v88DepBp.getLore();
+                                        // if (v88Lore != null && v88Lore.toLowerCase(java.util.Locale.ROOT)
+                                        //         .contains("senator")) {
+                                        //     isSenator = true;
+                                        // }
                                     }
                                     if (isSenator) {
                                         String v88TitleLower = title.toLowerCase(java.util.Locale.ROOT);
@@ -4158,13 +4167,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     if (v99DepBp != null) {
                                         if (v99DepBp.hasKeyword(com.gempukku.swccgo.common.Keyword.SENATOR)) {
                                             v99IsSenator = true;
-                                        } else {
-                                            String v99DepLore = v99DepBp.getLore();
-                                            if (v99DepLore != null && v99DepLore.toLowerCase(java.util.Locale.ROOT)
-                                                    .contains("senator")) {
-                                                v99IsSenator = true;
-                                            }
                                         }
+                                        // SUPERSEDED 2026-08-07 (phantom-senator fix, m01676): lore widening
+                                        // retired — keyword-only now matches the 12_88 flip CNF exactly.
+                                        // else {
+                                        //     String v99DepLore = v99DepBp.getLore();
+                                        //     if (v99DepLore != null && v99DepLore.toLowerCase(java.util.Locale.ROOT)
+                                        //             .contains("senator")) {
+                                        //         v99IsSenator = true;
+                                        //     }
+                                        // }
                                     }
                                     if (v99IsCharacter && !v99IsSenator) {
                                         // Find the actual Senate location to query power
@@ -4200,13 +4212,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 if (pc.getBlueprint().hasKeyword(
                                                         com.gempukku.swccgo.common.Keyword.SENATOR)) {
                                                     v99PcIsSenator = true;
-                                                } else {
-                                                    String v99PcLore = pc.getBlueprint().getLore();
-                                                    if (v99PcLore != null && v99PcLore.toLowerCase(
-                                                            java.util.Locale.ROOT).contains("senator")) {
-                                                        v99PcIsSenator = true;
-                                                    }
                                                 }
+                                                // SUPERSEDED 2026-08-07 (phantom-senator fix, m01676):
+                                                // lore widening retired — undercounting a politician's power
+                                                // here only makes reinforcement MORE likely (safe direction).
+                                                // else {
+                                                //     String v99PcLore = pc.getBlueprint().getLore();
+                                                //     if (v99PcLore != null && v99PcLore.toLowerCase(
+                                                //             java.util.Locale.ROOT).contains("senator")) {
+                                                //         v99PcIsSenator = true;
+                                                //     }
+                                                // }
                                                 if (!v99PcIsSenator) continue;
                                                 Float p = pc.getBlueprint().getPower();
                                                 if (p != null) v99FriendlySenatorPower += p;
