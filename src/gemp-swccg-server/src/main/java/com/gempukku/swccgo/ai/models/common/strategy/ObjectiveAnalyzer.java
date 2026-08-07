@@ -15080,6 +15080,12 @@ public class ObjectiveAnalyzer {
         }
         if (deployingCandidate != null
                 && deployingCandidate.getZone() == Zone.HAND
+                && isRalltiirFlipCompletionDeployCandidate(
+                    game, playerId, deployingCandidate)) {
+            return 0;
+        }
+        if (deployingCandidate != null
+                && deployingCandidate.getZone() == Zone.HAND
                 && hasLegalRalltiirProgressDeployDestination(
                     game, playerId, deployingCandidate)) {
             int qualifiedAfterDeploy =
@@ -15323,6 +15329,37 @@ public class ObjectiveAnalyzer {
             }
         } catch (Exception e) {
             return false;
+        }
+        return false;
+    }
+
+    public boolean isRalltiirFlipCompletionDeployCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isRalltiirOperationsFamily() || isFlipped
+                || game == null || playerId == null
+                || candidate == null || candidate.getZone() != Zone.HAND
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            for (PhysicalCard location
+                    : game.getGameState().getLocationsInOrder()) {
+                if (wouldCompletePreFlipRequirementAt(
+                            game, playerId, candidate, location)
+                        && Filters.deployableToLocation(
+                            candidate, Filters.sameCardId(location),
+                            false, 0.0f).accepts(
+                                game.getGameState(),
+                                game.getModifiersQuerying(), candidate)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "Ralltiir completion-deploy assessment failed: {}",
+                    e.getMessage());
         }
         return false;
     }

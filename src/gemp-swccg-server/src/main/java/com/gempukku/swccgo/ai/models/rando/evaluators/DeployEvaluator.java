@@ -733,10 +733,14 @@ public class DeployEvaluator extends ActionEvaluator {
             }
             if (winnableBattle != null
                     && context.getObjectiveAnalyzer() != null
-                    && context.getObjectiveAnalyzer()
-                        .isIsbFlipCompletionDeployCandidate(
-                            context.getGame(), context.getPlayerId(),
-                            deployActionSource)) {
+                    && (context.getObjectiveAnalyzer()
+                            .isIsbFlipCompletionDeployCandidate(
+                                context.getGame(), context.getPlayerId(),
+                                deployActionSource)
+                        || context.getObjectiveAnalyzer()
+                            .isRalltiirFlipCompletionDeployCandidate(
+                                context.getGame(), context.getPlayerId(),
+                                deployActionSource))) {
                 winnableBattle = null;
             }
             DeploySequencingPolicy.Evaluation envelope = DeploySequencingPolicy.phaseEnvelope(

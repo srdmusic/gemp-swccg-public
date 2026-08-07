@@ -1071,6 +1071,93 @@ public class RalltiirOperationsObjectiveEngineContractTest {
     }
 
     @Test
+    public void flipCompletingDeployMaySpendUnrelatedBattleReserve() {
+        var scn = scenario();
+        var objective = scn.GetDSCard("objective");
+        var forest = scn.GetDSCard("forest");
+        var jungle = scn.GetDSCard("jungle");
+        var desert = scn.GetDSCard("desert");
+        var swamp = scn.GetDSCard("swamp");
+        var handImperial = scn.GetDSFiller(1);
+        var rebel = scn.GetLSFiller(1);
+
+        scn.MoveCardsToDSHand(handImperial);
+        scn.StartGame();
+        addAllSites(scn);
+        moveSiteToRalltiir(scn, swamp);
+        scn.MoveCardsToLocation(forest, scn.GetDSFiller(2));
+        scn.MoveCardsToLocation(jungle, scn.GetDSFiller(3));
+        scn.MoveCardsToLocation(
+                desert,
+                scn.GetDSCard("jawa"),
+                scn.GetDSCard("jawaTwo"),
+                scn.GetDSCard("jawaThree"),
+                scn.GetDSCard("jawaFour"),
+                rebel);
+        scn.SkipToDSTurn(Phase.DEPLOY);
+        keepOnlyDarkReserveRouteCandidates(scn);
+        keepOnlyDarkHandCards(scn, handImperial);
+
+        int deployCost = (int) Math.ceil(
+                scn.game().getModifiersQuerying().getDeployCost(
+                    scn.gameState(), handImperial, handImperial,
+                    swamp, false, null, false,
+                    0.0f, null, true));
+        keepExactlyDarkForce(scn, deployCost);
+
+        var rando =
+                new com.gempukku.swccgo.ai.models.rando.strategy
+                    .ObjectiveAnalyzer();
+        var chosen =
+                new com.gempukku.swccgo.ai.models.chosenone.strategy
+                    .ObjectiveAnalyzer();
+        rando.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        chosen.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+
+        assertEquals("The unrelated favorable battle still costs one Force",
+                1, rando.getRalltiirCurrentBattleForceReserve(
+                    scn.game(), VirtualTableScenario.DS));
+        assertTrue("The exact Swamp deploy completes the front law",
+                rando.wouldCompletePreFlipRequirementAt(
+                    scn.game(), VirtualTableScenario.DS,
+                    handImperial, swamp));
+        assertEquals("Immediate completion releases the unrelated battle reserve",
+                0, rando.getRalltiirCurrentRouteForceReserve(
+                    scn.game(), VirtualTableScenario.DS,
+                    handImperial));
+        assertEquals(
+                rando.getRalltiirCurrentRouteForceReserve(
+                    scn.game(), VirtualTableScenario.DS,
+                    handImperial),
+                chosen.getRalltiirCurrentRouteForceReserve(
+                    scn.game(), VirtualTableScenario.DS,
+                    handImperial));
+
+        String deploy = scn.GetCardActionId(
+                VirtualTableScenario.DS, handImperial, "Deploy");
+        assertNotNull(deploy);
+        var bots = PublicBots.forGame(scn);
+        assertEquals("Both bots must spend the tight Force on the flip",
+                deploy, bots.decideBoth(scn));
+        scn.DSDecided(deploy);
+
+        AwaitingDecision destination = scn.GetAwaitingDecision(
+                VirtualTableScenario.DS);
+        assertNotNull(destination);
+        String destinationResponse = bots.decideBoth(scn);
+        assertSame("The Imperial must choose the open third site",
+                swamp,
+                selectedPhysicalCard(
+                    scn, destination, destinationResponse));
+        scn.DSDecided(destinationResponse);
+        scn.PassAllResponses();
+
+        assertEquals(0, scn.GetDSForcePileCount());
+        assertTrue("Opponent occupation alone must not stop the native flip",
+                objective.isFlipped());
+    }
+
+    @Test
     public void publicBotsFundBattleThenMoveAsOneFlipChain() {
         var scn = scenario();
         var objective = scn.GetDSCard("objective");
