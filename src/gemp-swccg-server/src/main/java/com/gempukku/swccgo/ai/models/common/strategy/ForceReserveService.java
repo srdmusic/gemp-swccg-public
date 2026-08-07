@@ -207,8 +207,7 @@ public final class ForceReserveService {
                     try {
                         if (pc.isUndercover()) undercoverSpyCount++;
                     } catch (Exception ignore) { /* ignore */ }
-                    if (titleLower.contains("on the verge of greatness")
-                            || titleLower.contains("taking control of the weapon")) {
+                    if (titleLower.contains("on the verge of greatness")) {
                         vergeActive = true;
                     }
                     // V79: detect our Death Star LOCATION (title only — the (V)

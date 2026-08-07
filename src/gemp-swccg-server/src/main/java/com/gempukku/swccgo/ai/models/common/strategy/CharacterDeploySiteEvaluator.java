@@ -874,7 +874,7 @@ public class CharacterDeploySiteEvaluator {
                 if (pc == null || !playerId.equals(pc.getOwner()) || pc.getBlueprint() == null) continue;
                 if (pc.getZone() == null || !pc.getZone().isInPlay()) continue;
                 String t = pc.getTitle() != null ? pc.getTitle().toLowerCase(Locale.ROOT) : "";
-                if (t.contains("on the verge of greatness") || t.contains("taking control of the weapon")) vergeUp = true;
+                if (t.contains("on the verge of greatness")) vergeUp = true;
                 if (t.contains("death star") && pc.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
                     dsOnTable = true;
                     // V79 UPDATED 2026-07-07 (VERGE post-flip fix, Game9f3c46b00681): getAtLocation()

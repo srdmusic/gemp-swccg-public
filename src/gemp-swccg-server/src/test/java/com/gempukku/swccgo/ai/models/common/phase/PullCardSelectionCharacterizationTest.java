@@ -433,12 +433,24 @@ public class PullCardSelectionCharacterizationTest {
                 "Choose a unique pilot character",
                 "amsd-rando", Phase.DEPLOY);
         configureSingle(randoContext, "401", "inPlay", "Jango Fett");
+        var randoOracle = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.class);
+        when(randoOracle.isAnalyzed()).thenReturn(true);
+        when(randoOracle.isCardInPlay("Alert My Star Destroyer!"))
+                .thenReturn(true);
+        randoContext.setDeckOracle(randoOracle);
 
         var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
                 gameState, PLAYER, "CARD_SELECTION",
                 "Choose a unique pilot character",
                 "amsd-chosen", Phase.DEPLOY);
         configureSingle(chosenContext, "401", "inPlay", "Jango Fett");
+        var chosenOracle = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.class);
+        when(chosenOracle.isAnalyzed()).thenReturn(true);
+        when(chosenOracle.isCardInPlay("Alert My Star Destroyer!"))
+                .thenReturn(true);
+        chosenContext.setDeckOracle(chosenOracle);
 
         var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
                 .evaluate(randoContext);

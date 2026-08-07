@@ -4744,10 +4744,6 @@ public class ObjectiveAnalyzer {
         }
         try {
             GameState gameState = game.getGameState();
-            PhysicalCard location = game.getModifiersQuerying()
-                    .getLocationThatCardIsPresentAt(gameState, mover);
-            if (location == null) return false;
-
             for (FlipLocationRule rule : activeFlipLocationRules) {
                 if (rule == null
                         || !"postFlip".equals(rule.phase)
@@ -4758,7 +4754,12 @@ public class ObjectiveAnalyzer {
                 for (FlipLocationAlternative alternative
                         : rule.alternatives) {
                     if (!isSupportedPostFlipAlternative(
-                                rule, alternative)
+                                rule, alternative)) {
+                        continue;
+                    }
+                    PhysicalCard location = actorLocationForAlternative(
+                            game, mover, alternative);
+                    if (location == null
                             || !locationMatchesAlternative(
                                 gameState, game, playerId,
                                 location, alternative)) {
@@ -5195,7 +5196,8 @@ public class ObjectiveAnalyzer {
         return "stayFlipped".equals(rule.purpose)
                 && "self".equals(alternative.controller)
                 && ("occupyWith".equals(alternative.relation)
-                    || "controlWith".equals(alternative.relation))
+                    || "controlWith".equals(alternative.relation)
+                    || "at".equals(alternative.relation))
                 && alternative.locationFilterKey != null
                 && alternative.actorFilterKey != null
                 && alternative.count != null
@@ -11773,6 +11775,388 @@ public class ObjectiveAnalyzer {
                 && candidate.getZone().isInPlay();
     }
 
+    public boolean isOnTheVergeScarifBattlegroundRouteAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isOnTheVergeObjectiveFamily()
+                || game == null || playerId == null
+                || sourceCard == null || actionText == null
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                || !"Deploy a Scarif battleground"
+                    .equals(actionText)) {
+            return false;
+        }
+        String blueprintId = sourceCard.getBlueprintId(
+                game.getGameState(), false);
+        return "216_11".equals(blueprintId)
+                || "216_11_BACK".equals(blueprintId);
+    }
+
+    public boolean hasOnTheVergeScarifBattlegroundCandidateInReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard) {
+        if (!isOnTheVergeObjectiveFamily()
+                || game == null || playerId == null
+                || sourceCard == null
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> reserve = game.getGameState()
+                .getReserveDeck(playerId);
+        if (reserve == null) return false;
+        for (PhysicalCard candidate : reserve) {
+            if (isOnTheVergeScarifBattlegroundPullCandidate(
+                    game, playerId, sourceCard, candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isOnTheVergeScarifBattlegroundPullCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
+        if (!isOnTheVergeObjectiveFamily()
+                || game == null || playerId == null
+                || sourceCard == null || candidate == null
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                || !playerId.equals(candidate.getOwner())
+                || candidate.getZone() != Zone.RESERVE_DECK
+                    && candidate.getZone()
+                        != Zone.TOP_OF_RESERVE_DECK
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            return Filters.and(
+                        Filters.Scarif_location,
+                        Filters.battleground)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    && Filters.deployableToSystem(
+                        sourceCard, Title.Scarif,
+                        null, false, 0.0f)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isOnTheVergeCommandCenterPullCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, PhysicalCard candidate) {
+        return candidate != null
+                && "216_16".equals(
+                    candidate.getBlueprintId(true))
+                && isOnTheVergeScarifBattlegroundPullCandidate(
+                    game, playerId, sourceCard, candidate);
+    }
+
+    public boolean isOnTheVergeKrennicDeployAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isOnTheVergeObjectiveFront()
+                && game != null && playerId != null
+                && sourceCard != null
+                && playerId.equals(sourceCard.getOwner())
+                && sourceCard.getZone() != null
+                && sourceCard.getZone().isInPlay()
+                && "216_16".equals(
+                    sourceCard.getBlueprintId(
+                        game.getGameState(), false))
+                && "Deploy Krennic from Reserve Deck"
+                    .equals(actionText);
+    }
+
+    public PhysicalCard findOnTheVergeLegalKrennicInReserve(
+            SwccgGame game, String playerId,
+            PhysicalCard commandCenter) {
+        if (!isOnTheVergeKrennicDeployAction(
+                    game, playerId, commandCenter,
+                    "Deploy Krennic from Reserve Deck")
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        List<PhysicalCard> reserve = game.getGameState()
+                .getReserveDeck(playerId);
+        if (reserve == null) return null;
+        for (PhysicalCard candidate : reserve) {
+            if (isOnTheVergeKrennicPullCandidate(
+                    game, playerId, commandCenter, candidate)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    public boolean isOnTheVergeKrennicPullCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard commandCenter, PhysicalCard candidate) {
+        if (!isOnTheVergeKrennicDeployAction(
+                    game, playerId, commandCenter,
+                    "Deploy Krennic from Reserve Deck")
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || candidate.getZone() != Zone.RESERVE_DECK
+                    && candidate.getZone()
+                        != Zone.TOP_OF_RESERVE_DECK
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        try {
+            return Filters.Krennic.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)
+                    && Filters.deployableToLocation(
+                        commandCenter,
+                        Filters.sameCardId(commandCenter),
+                        false, 0.0f)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Integer getOnTheVergeKrennicDeployCost(
+            SwccgGame game, String playerId,
+            PhysicalCard commandCenter) {
+        PhysicalCard krennic = findOnTheVergeLegalKrennicInReserve(
+                game, playerId, commandCenter);
+        return krennic != null
+                ? requiredCardDeployCostAt(
+                    game, commandCenter, krennic,
+                    commandCenter)
+                : null;
+    }
+
+    public Integer getOnTheVergeForceAvailable(
+            SwccgGame game, String playerId) {
+        if (!isOnTheVergeObjectiveFront()
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        try {
+            return (int) Math.floor(Math.max(
+                    0.0f,
+                    game.getModifiersQuerying()
+                        .getForceAvailableToUse(
+                            game.getGameState(), playerId)));
+        } catch (Exception e) {
+            LOG.debug(
+                    "On The Verge available Force unavailable: {}",
+                    e.getMessage());
+            return null;
+        }
+    }
+
+    public Integer getOnTheVergeCurrentMoveForceReserve(
+            SwccgGame game, String playerId) {
+        if (!isOnTheVergeObjectiveFront()
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return 0;
+        }
+        for (PhysicalCard card
+                : game.getGameState().getAllPermanentCards()) {
+            if (card == null
+                    || !playerId.equals(card.getOwner())
+                    || card.getZone() == null
+                    || !card.getZone().isInPlay()
+                    || !Filters.Death_Star_system.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                continue;
+            }
+            if (Title.Scarif.equals(card.getSystemOrbited())) {
+                return 0;
+            }
+            try {
+                float cost = game.getModifiersQuerying()
+                        .getMoveUsingHyperspeedCost(
+                            game.getGameState(), card,
+                            null, null, false, 0.0f);
+                return (int) Math.ceil(
+                        Math.max(0.0f, cost));
+            } catch (Exception e) {
+                LOG.debug(
+                    "On The Verge Death Star move cost unavailable: {}",
+                    e.getMessage());
+                return null;
+            }
+        }
+        return null;
+    }
+
+    public boolean isOnTheVergeBackRetrievalAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isOnTheVergeObjectiveFamily() && isFlipped
+                && game != null && playerId != null
+                && sourceCard != null
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "216_11_BACK".equals(
+                    sourceCard.getBlueprintId(
+                        game.getGameState(), false))
+                && game.getGameState().getCurrentPhase()
+                    == Phase.DRAW
+                && "Retrieve a non-unique card with ability"
+                    .equals(actionText);
+    }
+
+    public boolean hasOnTheVergeBackRetrievalTarget(
+            SwccgGame game, String playerId) {
+        if (!isOnTheVergeObjectiveFamily() || !isFlipped
+                || game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> lost = game.getGameState()
+                .getLostPile(playerId);
+        if (lost == null) return false;
+        for (PhysicalCard card : lost) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && Filters.and(
+                        Filters.non_unique,
+                        Filters.hasAbilityOrHasPermanentPilotWithAbility)
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isOnTheVergeVaderBattleReactionAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        return isOnTheVergeObjectiveFamily() && isFlipped
+                && game != null && playerId != null
+                && sourceCard != null
+                && isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                && "216_11_BACK".equals(
+                    sourceCard.getBlueprintId(
+                        game.getGameState(), false))
+                && "Move Vader to the battle".equals(actionText);
+    }
+
+    public boolean isOnTheVergeVaderBattleReactionCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText,
+            PhysicalCard candidate) {
+        if (!isOnTheVergeVaderBattleReactionAction(
+                    game, playerId, sourceCard, actionText)
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || candidate.getZone() == null
+                || !candidate.getZone().isInPlay()
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !isActiveForSpot(game, candidate, false)) {
+            return false;
+        }
+        PhysicalCard battleLocation = game.getGameState()
+                .getBattleLocation();
+        if (battleLocation == null
+                || !Filters.and(
+                        Filters.Vader,
+                        Filters.movableAsRegularMove(
+                            playerId, false, 0, false,
+                            Filters.locationAndCardsAtLocation(
+                                Filters.battleLocation)))
+                    .accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate)) {
+            return false;
+        }
+        return preservesStayFlippedRequirementByMovingTo(
+                game, playerId, candidate, battleLocation);
+    }
+
+    public boolean hasOnTheVergeSafeVaderBattleReactionCandidate(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!isOnTheVergeVaderBattleReactionAction(
+                    game, playerId, sourceCard, actionText)
+                || game.getGameState() == null) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard candidate : permanents) {
+            if (isOnTheVergeVaderBattleReactionCandidate(
+                    game, playerId, sourceCard,
+                    actionText, candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isOnTheVergeHardLossDependency(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isOnTheVergeObjectiveFamily() || !isFlipped
+                || game == null || playerId == null
+                || candidate == null
+                || !playerId.equals(candidate.getOwner())
+                || candidate.getZone() == null
+                || !candidate.getZone().isInPlay()
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !isActiveForSpot(game, candidate, false)) {
+            return false;
+        }
+        boolean deathStar = Filters.Death_Star_system.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(), candidate);
+        boolean shieldGate = Filters.Shield_Gate.accepts(
+                game.getGameState(),
+                game.getModifiersQuerying(), candidate);
+        if (!deathStar && !shieldGate) return false;
+        Collection<PhysicalCard> permanents = game.getGameState()
+                .getAllPermanentCards();
+        if (permanents == null) return true;
+        for (PhysicalCard other : permanents) {
+            if (other == null || other == candidate
+                    || other.getCardId() == candidate.getCardId()
+                    || other.getZone() == null
+                    || !other.getZone().isInPlay()
+                    || !isActiveForSpot(game, other, false)) {
+                continue;
+            }
+            if (deathStar && Filters.Death_Star_system.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), other)
+                    || shieldGate && Filters.Shield_Gate.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), other)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public SetYourCourseObjectivePolicy.RouteFacts getSetYourCourseRouteFacts(
             SwccgGame game, String playerId) {
         boolean frontActive = analyzed && !isFlipped
@@ -18191,6 +18575,8 @@ public class ObjectiveAnalyzer {
     public int countFlipGateActorsAtLocation(
             SwccgGame game, String playerId, PhysicalCard destination) {
         if (!isFlipGateLocation(game, playerId, destination)) return 0;
+        ActorLocationRule rule = findFlipGateActorRule();
+        if (rule == null) return 0;
 
         int actorsAtGate = 0;
         try {
@@ -18200,8 +18586,12 @@ public class ObjectiveAnalyzer {
                         || !matchesFlipGateActorRequirement(game, playerId, card)) {
                     continue;
                 }
-                PhysicalCard actorLocation = game.getModifiersQuerying()
-                        .getLocationThatCardIsPresentAt(gameState, card);
+                PhysicalCard actorLocation = "at".equals(rule.relation)
+                        ? game.getModifiersQuerying()
+                            .getLocationThatCardIsAt(gameState, card)
+                        : game.getModifiersQuerying()
+                            .getLocationThatCardIsPresentAt(
+                                gameState, card);
                 if (samePhysicalLocation(actorLocation, destination)) actorsAtGate++;
             }
         } catch (Exception e) {
@@ -18235,6 +18625,11 @@ public class ObjectiveAnalyzer {
                     game, playerId, candidate)) {
             return FlipGateFormationRole
                     .TERMINAL_OBJECTIVE_ACTOR;
+        }
+        if (isOnTheVergeHardLossDependency(
+                    game, playerId, candidate)) {
+            return FlipGateFormationRole
+                    .REQUIRED_CARD_RETENTION_DEFENDER;
         }
         if (isSolePresenceSourceAtObjectiveHardLossLocation(
                     game, playerId, candidate)) {
@@ -19970,7 +20365,7 @@ public class ObjectiveAnalyzer {
         String id;
         String phase;
         String purpose;
-        String relation;              // presentAt | absentFrom | controlsWith | occupiesWith | sameSiteAs
+        String relation;              // at | presentAt | absentFrom | controlsWith | occupiesWith | sameSiteAs
         String actorFilterKey;
         String locationFilterKey;
         String coActorFilterKey;
@@ -20190,6 +20585,13 @@ public class ObjectiveAnalyzer {
             case "senator":          return com.gempukku.swccgo.filters.Filters.senator;
             case "Neimoidian":       return com.gempukku.swccgo.filters.Filters.Neimoidian;
             case "Amidala":          return com.gempukku.swccgo.filters.Filters.Amidala;
+            case "Krennic_or_Tarkin":
+                return com.gempukku.swccgo.filters.Filters.or(
+                    com.gempukku.swccgo.filters.Filters.Krennic,
+                    com.gempukku.swccgo.filters.Filters.Tarkin);
+            case "leader":           return com.gempukku.swccgo.filters.Filters.leader;
+            case "Scarif_battleground_site":
+                return com.gempukku.swccgo.filters.Filters.Scarif_battleground_site;
             case "Vader":             return com.gempukku.swccgo.filters.Filters.Vader;
             case "Kylo":              return com.gempukku.swccgo.filters.Filters.Kylo;
             case "Tracked_Fleet":
@@ -20498,6 +20900,7 @@ public class ObjectiveAnalyzer {
             case "Jakku_system":                 return com.gempukku.swccgo.filters.Filters.Jakku_system;
             // Batch Fourteen (2026-07-27): They Have No Idea We're Coming.
             case "Scarif_location":              return com.gempukku.swccgo.filters.Filters.Scarif_location;
+            case "Scarif_battleground_site":    return com.gempukku.swccgo.filters.Filters.Scarif_battleground_site;
             // Batch Sixteen (2026-07-27): Twin Suns Of Tatooine four-leg law.
             case "Tatooine_battleground_site":   return com.gempukku.swccgo.filters.Filters.Tatooine_battleground_site;
             // Batch Seventeen (2026-07-27): Watch Your Step (V) Corellia law.

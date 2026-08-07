@@ -7688,6 +7688,7 @@
     },
     {
       "label": "On The Verge Of Greatness",
+      "loaderEnabled": true,
       "blueprintIds": [
         "216_11",
         "216_11_BACK"
@@ -7704,9 +7705,75 @@
       "startingLocations": [],
       "startingEffects": [],
       "startingInterrupts": [],
-      "keyCharacterFilter": null,
-      "keySiteFilter": null,
+      "keyCharacterFilter": "Krennic_or_Tarkin",
+      "keySiteFilter": "Scarif_battleground_site",
       "weights": {},
+      "flipLocationRules": [
+        {
+          "id": "on-the-verge-front-actor",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "any",
+              "locationFilterKey": "Scarif_battleground_site",
+              "locationFragments": [
+                "scarif"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "Krennic_or_Tarkin",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "actorToLocation",
+              "sourceText": "Krennic or Tarkin at a Scarif battleground site"
+            }
+          ]
+        },
+        {
+          "id": "taking-control-back-leader-hold",
+          "phase": "postFlip",
+          "purpose": "stayFlipped",
+          "mode": "allOf",
+          "alternatives": [
+            {
+              "relation": "at",
+              "controller": "self",
+              "locationFilterKey": "Scarif_battleground_site",
+              "locationFragments": [
+                "scarif"
+              ],
+              "count": {
+                "comparator": ">=",
+                "value": 1
+              },
+              "actorFilterKey": "leader",
+              "includeExcludedFromBattle": true,
+              "scoreRole": "stayFlipped",
+              "sourceText": "your leader at a Scarif battleground site"
+            }
+          ]
+        }
+      ],
+      "actorLocationRules": [
+        {
+          "id": "on-the-verge-krennic-or-tarkin-scarif",
+          "phase": "preFlip",
+          "purpose": "flip",
+          "relation": "at",
+          "actorFilterKey": "Krennic_or_Tarkin",
+          "locationFilterKey": "Scarif_battleground_site",
+          "count": {
+            "comparator": ">=",
+            "value": 1
+          },
+          "scoreRole": "actorToSite",
+          "sourceText": "Krennic or Tarkin at a Scarif battleground site"
+        }
+      ],
       "frontBp": "216_11",
       "backBp": "216_11_BACK",
       "abbreviation": "OTVOG",

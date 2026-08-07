@@ -370,6 +370,27 @@ public abstract class DeployPhaseScript {
             steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
             return steps;
         }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer
+                    .isOnTheVergeScarifBattlegroundRouteAction(
+                        game, playerId, sourceCard, actionText)) {
+            if (objectiveAnalyzer
+                    .hasOnTheVergeScarifBattlegroundCandidateInReserve(
+                        game, playerId, sourceCard)) {
+                steps.add(Step.LOCATIONS);
+            }
+            return steps;
+        }
+        if (objectiveAnalyzer != null
+                && objectiveAnalyzer.isOnTheVergeKrennicDeployAction(
+                    game, playerId, sourceCard, actionText)) {
+            // Krennic completes the Scarif-location route. Keep the exact action
+            // in the route's first bucket so a redundant Scarif site pull cannot
+            // pre-empt a funded flip; the dedicated policy still hard-vetoes him
+            // when his deploy would consume the Death Star movement payment.
+            steps.add(Step.LOCATIONS);
+            return steps;
+        }
         if (NoMoneyNoPartsObjectivePolicy
                 .isExactOpponentWattoRemovalAction(
                     game, playerId, sourceCard, actionText)) {

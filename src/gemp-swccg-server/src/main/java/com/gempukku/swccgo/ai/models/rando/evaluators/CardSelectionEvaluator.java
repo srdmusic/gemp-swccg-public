@@ -33,6 +33,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveSpyFollowPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveTransitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NabooDuelObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.OnTheVergeObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
@@ -788,7 +789,22 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
         PullSelectionCandidateFacts.UnknownAmsdState amsdState =
                 PullSelectionCandidateFacts.UnknownAmsdState.NONE;
-        if (context.getPhase() == Phase.DEPLOY && blueprintKnown
+        PhysicalCard onTheVergeKrennicSource =
+                readExactOnTheVergeKrennicRouteSource(context);
+        PhysicalCard onTheVergeKrennicCandidate =
+                onTheVergeKrennicSource != null
+                    ? findExactReservePullCandidate(
+                        context, action.getActionId(), blueprintId)
+                    : null;
+        boolean exactOnTheVergeKrennicCandidate =
+                onTheVergeKrennicCandidate != null
+                && objective != null
+                && objective.isOnTheVergeKrennicPullCandidate(
+                    context.getGame(), context.getPlayerId(),
+                    onTheVergeKrennicSource,
+                    onTheVergeKrennicCandidate);
+        if (!exactOnTheVergeKrennicCandidate
+                && context.getPhase() == Phase.DEPLOY && blueprintKnown
                 && category == CardCategory.CHARACTER) {
             var oracle = context.getDeckOracle();
             if (oracle != null && oracle.isAnalyzed()
@@ -909,6 +925,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 readExactRalltiirFrontRouteSource(context);
         PhysicalCard ralltiirFrontCandidate =
                 ralltiirFrontSource != null
+                    ? findExactReservePullCandidate(
+                        context, cardId, blueprintId)
+                    : null;
+        PhysicalCard onTheVergeScarifSource =
+                readExactOnTheVergeScarifRouteSource(context);
+        PhysicalCard onTheVergeScarifCandidate =
+                onTheVergeScarifSource != null
+                    ? findExactReservePullCandidate(
+                        context, cardId, blueprintId)
+                    : null;
+        PhysicalCard onTheVergeKrennicSource =
+                readExactOnTheVergeKrennicRouteSource(context);
+        PhysicalCard onTheVergeKrennicCandidate =
+                onTheVergeKrennicSource != null
                     ? findExactReservePullCandidate(
                         context, cardId, blueprintId)
                     : null;
@@ -1050,6 +1080,30 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     ralltiirFrontCandidate)
                             : 0));
         applyPullSelectionPolicy(action,
+                OnTheVergeObjectivePolicy
+                    .scoreScarifBattlegroundCandidate(
+                        action.getActionId(),
+                        onTheVergeScarifSource != null,
+                        onTheVergeScarifCandidate != null
+                            && context.getObjectiveAnalyzer()
+                                .isOnTheVergeCommandCenterPullCandidate(
+                                    context.getGame(),
+                                    context.getPlayerId(),
+                                    onTheVergeScarifSource,
+                                    onTheVergeScarifCandidate)));
+        applyPullSelectionPolicy(action,
+                OnTheVergeObjectivePolicy
+                    .scoreKrennicCandidate(
+                        action.getActionId(),
+                        onTheVergeKrennicSource != null,
+                        onTheVergeKrennicCandidate != null
+                            && context.getObjectiveAnalyzer()
+                                .isOnTheVergeKrennicPullCandidate(
+                                    context.getGame(),
+                                    context.getPlayerId(),
+                                    onTheVergeKrennicSource,
+                                    onTheVergeKrennicCandidate)));
+        applyPullSelectionPolicy(action,
                 PullSelectionCandidatePolicy
                     .scoreCountedObjectiveHoldLocation(
                         action.getActionId(), countedHoldLocation));
@@ -1178,6 +1232,154 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    private PhysicalCard readExactOnTheVergeScarifRouteSource(
+            DecisionContext context) {
+        if (!isExactReserveDeployChoice(context)) return null;
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            String actionText = liveAction != null
+                    ? liveAction.getText() : null;
+            return liveAction != null
+                    && liveAction.getGameTextActionId()
+                        == GameTextActionId
+                            .ON_THE_VERGE_OF_GREATNESS__DEPLOY_SCARIF_BATTLEGROUND
+                    && context.getObjectiveAnalyzer()
+                        .isOnTheVergeScarifBattlegroundRouteAction(
+                            context.getGame(), context.getPlayerId(),
+                            source, actionText)
+                ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private PhysicalCard readExactOnTheVergeKrennicRouteSource(
+            DecisionContext context) {
+        if (!isExactReserveDeployChoice(context)) return null;
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            String actionText = liveAction != null
+                    ? liveAction.getText() : null;
+            return liveAction != null
+                    && liveAction.getGameTextActionId()
+                        == GameTextActionId
+                            .SCARIF_COMMAND_CENTER__DOWNLOAD_KRENNIC
+                    && context.getObjectiveAnalyzer()
+                        .isOnTheVergeKrennicDeployAction(
+                            context.getGame(), context.getPlayerId(),
+                            source, actionText)
+                ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private PhysicalCard readExactOnTheVergeVaderReactionSource(
+            DecisionContext context) {
+        if (context == null || context.getGame() == null
+                || context.getGameState() == null
+                || context.getObjectiveAnalyzer() == null
+                || !"CARD_SELECTION".equals(context.getDecisionType())
+                || context.getDecisionText() == null
+                || !"Choose Vader, or click 'Done' to cancel".equals(
+                    context.getDecisionText().trim())
+                || context.getMin() != 0 || context.getMax() != 1) {
+            return null;
+        }
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard pendingSource = bhbmActionSource(context);
+            PhysicalCard source = pendingSource != null
+                    ? pendingSource
+                    : liveAction != null
+                        ? liveAction.getActionSource() : null;
+            String actionText = pendingSource != null
+                    ? "Move Vader to the battle"
+                    : liveAction != null
+                        ? liveAction.getText() : null;
+            return context.getObjectiveAnalyzer()
+                    .isOnTheVergeVaderBattleReactionAction(
+                        context.getGame(), context.getPlayerId(),
+                        source, actionText)
+                    ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private List<EvaluatedAction>
+            evaluateOnTheVergeVaderReactionSelection(
+                    DecisionContext context,
+                    PhysicalCard source) {
+        List<EvaluatedAction> actions = new ArrayList<>();
+        List<String> cardIds = context.getCardIds();
+        List<Boolean> selectable = context.getSelectable();
+        for (int index = 0;
+                cardIds != null && index < cardIds.size(); index++) {
+            String cardId = cardIds.get(index);
+            PhysicalCard candidate = null;
+            try {
+                candidate = context.getGameState().findCardById(
+                        Integer.parseInt(cardId));
+            } catch (NumberFormatException ignored) {
+                // Exact target decisions use physical numeric ids.
+            }
+            EvaluatedAction action = new EvaluatedAction(
+                    cardId, ActionType.MOVE, 50.0f,
+                    "Choose Vader for Taking Control Of The Weapon");
+            PolicyContributionLedger ledger =
+                    new PolicyContributionLedger(
+                        "on-the-verge-vader-reaction-" + cardId);
+            ledger.register(
+                OnTheVergeObjectivePolicy
+                    .scoreVaderBattleReactionCandidate(
+                        cardId, true,
+                        context.getObjectiveAnalyzer()
+                            .isOnTheVergeVaderBattleReactionCandidate(
+                                context.getGame(),
+                                context.getPlayerId(), source,
+                                "Move Vader to the battle",
+                                candidate)));
+            PolicyOperationAdapter.apply(action, ledger);
+            if (selectable != null && index < selectable.size()
+                    && !Boolean.TRUE.equals(selectable.get(index))) {
+                action.hardVeto(
+                    "Engine marked this Vader target non-selectable");
+            }
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    private boolean isExactReserveDeployChoice(
+            DecisionContext context) {
+        return context != null
+                && context.getGame() != null
+                && context.getGameState() != null
+                && context.getObjectiveAnalyzer() != null
+                && "ARBITRARY_CARDS".equals(
+                    context.getDecisionType())
+                && context.getDecisionText() != null
+                && "choose card to deploy from reserve deck"
+                    .equalsIgnoreCase(
+                        context.getDecisionText().trim())
+                && context.getMin() == 1
+                && context.getMax() == 1;
     }
 
     private PhysicalCard readExactRalltiirBackTutorSource(
@@ -1443,6 +1645,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             }
         }
 
+        PhysicalCard onTheVergeVaderSource =
+                readExactOnTheVergeVaderReactionSource(context);
+        if (onTheVergeVaderSource != null) {
+            return evaluateOnTheVergeVaderReactionSelection(
+                    context, onTheVergeVaderSource);
+        }
+
         List<String> cardIds = context.getCardIds();
         List<String> blueprints = context.getBlueprints();
         List<Boolean> selectable = context.getSelectable();
@@ -1537,6 +1746,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             logger.warn("[CardSelectionEvaluator] No card IDs or blueprints in {} decision", context.getDecisionType());
             return new ArrayList<>();
         }
+
+        boolean exactOnTheVergeKrennicChoice =
+                readExactOnTheVergeKrennicRouteSource(context) != null;
 
         if (isCaptureSetupHutDecision(context)) {
             return evaluateCaptureSetupHut(context);
@@ -1685,7 +1897,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // this is actually an AMSD pilot selection. Route to evaluatePilotSelection
             // so Piett-only enforcement fires. Without this, Vader gets picked and
             // the AMSD action fails because Executor isn't his matching ship.
-            if (context.getPhase() == Phase.DEPLOY) {
+            if (!exactOnTheVergeKrennicChoice
+                    && context.getPhase() == Phase.DEPLOY) {
                 com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle amsdOracle = context.getDeckOracle();
                 if (amsdOracle != null && amsdOracle.isAnalyzed()) {
                     boolean amsdOnTable = amsdOracle.isCardInPlay("Alert My Star Destroyer")
@@ -1757,7 +1970,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             // this is almost certainly an AMSD pilot selection that wasn't caught by
             // the regular pilot routing (decision text didn't contain "pilot").
             // Route to evaluatePilotSelection to get full Piett-only enforcement.
-            if (context.getPhase() == Phase.DEPLOY) {
+            if (!exactOnTheVergeKrennicChoice
+                    && context.getPhase() == Phase.DEPLOY) {
                 com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle routeOracle = context.getDeckOracle();
                 if (routeOracle != null && routeOracle.isAnalyzed()) {
                     boolean amsdOnTable = routeOracle.isCardInPlay("Alert My Star Destroyer")
@@ -2386,6 +2600,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             boolean actorLocationProgress =
                                     objectiveProgressAnalyzer
                                             .advancesPreFlipActorAtRuntimeLocation(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)
+                                    || objectiveProgressAnalyzer
+                                            .advancesUnfilledFlipGateActorRequirement(
                                                 game, playerId,
                                                 objectiveProgressDeployingCard,
                                                 location);

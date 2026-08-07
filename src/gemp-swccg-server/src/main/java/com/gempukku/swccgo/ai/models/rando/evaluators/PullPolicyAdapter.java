@@ -246,6 +246,11 @@ final class PullPolicyAdapter {
                 boolean ralltiirRoute = objective
                         .isRalltiirFrontRouteAction(
                                 game, playerId, source, actionText);
+                boolean onTheVergeRoute = objective
+                        .isOnTheVergeScarifBattlegroundRouteAction(
+                                game, playerId, source, actionText)
+                        || objective.isOnTheVergeKrennicDeployAction(
+                                game, playerId, source, actionText);
                 boolean bringHimBeforeMeEmperorRoute =
                         CaptureObjectiveFacts.objectiveKind(objective)
                             == CaptureObjectivePolicy.ObjectiveKind.BHBM
@@ -266,6 +271,7 @@ final class PullPolicyAdapter {
                         || noMoneyWattoRoute
                         || twinSunsRoute
                         || ralltiirRoute
+                        || onTheVergeRoute
                         || bringHimBeforeMeEmperorRoute;
             }
 
@@ -284,7 +290,12 @@ final class PullPolicyAdapter {
                         || objective.isRalltiirFrontRouteAction(
                             game, playerId, source, actionText)
                         || objective.isRalltiirBackAnyCardTutorAction(
-                            game, playerId, source, actionText);
+                            game, playerId, source, actionText)
+                        || objective
+                            .isOnTheVergeScarifBattlegroundRouteAction(
+                                game, playerId, source, actionText)
+                        || objective.isOnTheVergeKrennicDeployAction(
+                                game, playerId, source, actionText);
             }
 
             @Override
@@ -292,7 +303,12 @@ final class PullPolicyAdapter {
                     SwccgGame game, String playerId,
                     PhysicalCard source, String actionText) {
                 return objective.isNoMoneyNoPartsWattoPullAction(
-                        game, playerId, source, actionText);
+                            game, playerId, source, actionText)
+                        || objective
+                            .isOnTheVergeScarifBattlegroundRouteAction(
+                                game, playerId, source, actionText)
+                        || objective.isOnTheVergeKrennicDeployAction(
+                                game, playerId, source, actionText);
             }
         };
     }

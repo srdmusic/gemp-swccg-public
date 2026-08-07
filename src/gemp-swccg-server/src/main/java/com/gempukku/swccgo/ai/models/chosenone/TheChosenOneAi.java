@@ -150,6 +150,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
     private Integer pendingTdigwattDestinationPermanentCardId;
     private Integer pendingObjectiveDeployingCardId;
     private Integer pendingDeployActionSourcePermanentCardId;
+    private Integer pendingOnTheVergeVaderActionSourcePermanentCardId;
 
     // Bot stats DAO for record lookups (optional - set via setter)
     private com.gempukku.swccgo.db.BotStatsDAO botStatsDAO;
@@ -1509,6 +1510,35 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 context, selected);
     }
 
+    private void rememberSelectedOnTheVergeVaderReaction(
+            DecisionContext context,
+            EvaluatedAction selected,
+            AwaitingDecision parentDecision) {
+        pendingOnTheVergeVaderActionSourcePermanentCardId = null;
+        if (context == null || selected == null
+                || context.getObjectiveAnalyzer() == null
+                || context.getDecisionType() == null
+                || !context.getDecisionType().contains("ACTION_CHOICE")) {
+            return;
+        }
+        int index = context.getActionIds().indexOf(
+                selected.getActionId());
+        if (index < 0 || index >= context.getActionTexts().size()) {
+            return;
+        }
+        String actionText = context.getActionTexts().get(index);
+        PhysicalCard source = AiActionSourceProvenance
+                .selectedActionSource(
+                    parentDecision, selected.getActionId());
+        if (context.getObjectiveAnalyzer()
+                .isOnTheVergeVaderBattleReactionAction(
+                    currentGame, context.getPlayerId(),
+                    source, actionText)) {
+            pendingOnTheVergeVaderActionSourcePermanentCardId =
+                    source.getPermanentCardId();
+        }
+    }
+
     /**
      * Try to use the evaluator system for this decision.
      *
@@ -1541,6 +1571,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
         rememberSelectedTdigwattLandoMove(
                 evalContext, bestAction, decision);
         rememberSelectedDeployCard(
+                evalContext, bestAction, decision);
+        rememberSelectedOnTheVergeVaderReaction(
                 evalContext, bestAction, decision);
 
         // === MULTI-SELECT FIX (Steve, 2026-05-31) ===
@@ -1629,6 +1661,19 @@ public class TheChosenOneAi extends HeuristicAiBase {
         );
         String promptLower = decision.getText() != null
             ? decision.getText().toLowerCase(Locale.ROOT) : "";
+        if (pendingOnTheVergeVaderActionSourcePermanentCardId != null) {
+            boolean vaderTargetChild =
+                    "CARD_SELECTION".equals(decisionType.name())
+                    && "choose vader, or click 'done' to cancel"
+                        .equals(promptLower.trim());
+            if (vaderTargetChild) {
+                evalContext.setExtra(
+                    BhbmForceDripUrgencyFactsReader
+                        .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA,
+                    pendingOnTheVergeVaderActionSourcePermanentCardId);
+            }
+            pendingOnTheVergeVaderActionSourcePermanentCardId = null;
+        }
         if (pendingTdigwattLandoPermanentCardId != null
                 || pendingTdigwattActionSourcePermanentCardId
                     != null

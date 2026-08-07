@@ -30,6 +30,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MassassiObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NabooDuelObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.OnTheVergeObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveHardLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
@@ -289,6 +290,70 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .isRalltiirBackAnyCardTutorAction(
                             game, context.getPlayerId(),
                             actionSource, actionText);
+            boolean exactOnTheVergeScarifRoute =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isOnTheVergeScarifBattlegroundRouteAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean onTheVergeScarifCandidateAvailable =
+                    exactOnTheVergeScarifRoute
+                    && exactDeployAnalyzer
+                        .hasOnTheVergeScarifBattlegroundCandidateInReserve(
+                            game, context.getPlayerId(), actionSource);
+            boolean exactOnTheVergeKrennicRoute =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isOnTheVergeKrennicDeployAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            PhysicalCard onTheVergeKrennic =
+                    exactOnTheVergeKrennicRoute
+                    ? exactDeployAnalyzer
+                        .findOnTheVergeLegalKrennicInReserve(
+                            game, context.getPlayerId(), actionSource)
+                    : null;
+            Integer onTheVergeKrennicCost =
+                    exactOnTheVergeKrennicRoute
+                    ? exactDeployAnalyzer
+                        .getOnTheVergeKrennicDeployCost(
+                            game, context.getPlayerId(), actionSource)
+                    : null;
+            Integer onTheVergeMoveReserve =
+                    exactOnTheVergeKrennicRoute
+                    ? exactDeployAnalyzer
+                        .getOnTheVergeCurrentMoveForceReserve(
+                            game, context.getPlayerId())
+                    : null;
+            Integer onTheVergeForceAvailable =
+                    exactOnTheVergeKrennicRoute
+                    ? exactDeployAnalyzer
+                        .getOnTheVergeForceAvailable(
+                            game, context.getPlayerId())
+                    : null;
+            boolean exactOnTheVergeBackRetrieval =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isOnTheVergeBackRetrievalAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean onTheVergeBackRetrievalTarget =
+                    exactOnTheVergeBackRetrieval
+                    && exactDeployAnalyzer
+                        .hasOnTheVergeBackRetrievalTarget(
+                            game, context.getPlayerId());
+            boolean exactOnTheVergeVaderReaction =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isOnTheVergeVaderBattleReactionAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
+            boolean safeOnTheVergeVaderCandidate =
+                    exactOnTheVergeVaderReaction
+                    && exactDeployAnalyzer
+                        .hasOnTheVergeSafeVaderBattleReactionCandidate(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
             boolean ralltiirSelfDestruct =
                     exactDeployAnalyzer != null
                     && exactDeployAnalyzer
@@ -321,6 +386,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     && !exactSetYourCourseCpi
                     && !exactRalltiirFrontRoute
                     && !exactRalltiirBackTutor
+                    && !exactOnTheVergeScarifRoute
+                    && !exactOnTheVergeKrennicRoute
+                    && !exactOnTheVergeBackRetrieval
+                    && !exactOnTheVergeVaderReaction
                     && (blocked.contains(actionId)
                         || blocked.contains(actionText))) {
                 // V167 (Steve, 2026-06): NEVER hard-veto a phase-fundamental action.
@@ -419,6 +488,35 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             actionId, nabooDuelAction));
                 PolicyOperationAdapter.apply(
                         action, nabooDuelLedger);
+                actions.add(action);
+                continue;
+            }
+
+            if (exactOnTheVergeBackRetrieval) {
+                PolicyContributionLedger onTheVergeLedger =
+                        new PolicyContributionLedger(
+                            "on-the-verge-back-retrieval-" + actionId);
+                onTheVergeLedger.register(
+                        OnTheVergeObjectivePolicy.scoreBackRetrieval(
+                            actionId, true,
+                            onTheVergeBackRetrievalTarget));
+                PolicyOperationAdapter.apply(
+                        action, onTheVergeLedger);
+                actions.add(action);
+                continue;
+            }
+
+            if (exactOnTheVergeVaderReaction) {
+                PolicyContributionLedger onTheVergeLedger =
+                        new PolicyContributionLedger(
+                            "on-the-verge-vader-reaction-" + actionId);
+                onTheVergeLedger.register(
+                        OnTheVergeObjectivePolicy
+                            .scoreVaderBattleReaction(
+                                actionId, true,
+                                safeOnTheVergeVaderCandidate));
+                PolicyOperationAdapter.apply(
+                        action, onTheVergeLedger);
                 actions.add(action);
                 continue;
             }
@@ -1093,6 +1191,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     });
             }
 
+            if (exactOnTheVergeScarifRoute) {
+                PolicyContributionLedger onTheVergeRouteLedger =
+                        new PolicyContributionLedger(
+                            "on-the-verge-scarif-route-" + actionId);
+                onTheVergeRouteLedger.register(
+                        OnTheVergeObjectivePolicy
+                            .scoreScarifBattlegroundRoute(
+                                actionId, true,
+                                onTheVergeScarifCandidateAvailable));
+                PolicyOperationAdapter.apply(
+                        action, onTheVergeRouteLedger);
+            }
+
             // === V116 (Steve, 2026-05-22): GUARANTEED +100 FLOOR FOR RESERVE-DECK PULLS ===
             // Per Steve: "The game gives players an option to deploy anything from
             // reserve deck should be +100 at least. In the case of the objective,
@@ -1109,7 +1220,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // V209 PULL preflight: evaluate dead-search knowledge before any positive scorer.
             // Stock action/card ids remain the route boundary; shared code only reads AI facts.
             if (textLower.contains("from reserve deck")
-                    || textLower.contains("[download]")) {
+                    || textLower.contains("[download]")
+                    || exactOnTheVergeScarifRoute) {
                 PullActionPolicy.Evaluation earlyPull = PullActionPolicy.evaluateEarlySearch(
                         PullPolicyAdapter.readEarlySearch(
                                 context, actionId, actionText, cardId));
@@ -5273,7 +5385,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                      || textLower.contains("[upload]")
                      || (textLower.contains("take")
                          && textLower.contains("into hand"))
-                     || firstOrderReignsObjectiveDownload) {
+                     || firstOrderReignsObjectiveDownload
+                     || exactOnTheVergeScarifRoute) {
                 PullActionPolicy.Evaluation pull = PullActionPolicy.evaluateParent(
                         PullPolicyAdapter.readParent(
                                 context, actionId, actionText, cardId));
@@ -5308,6 +5421,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             .scoreBackAnyCardTutor(
                                 actionId,
                                 exactRalltiirBackTutor));
+                pullLedger.register(
+                        OnTheVergeObjectivePolicy
+                            .scoreKrennicRoute(
+                                actionId,
+                                exactOnTheVergeKrennicRoute,
+                                onTheVergeKrennic != null,
+                                onTheVergeForceAvailable,
+                                onTheVergeKrennicCost,
+                                onTheVergeMoveReserve));
                 PolicyOperationAdapter.apply(action, pullLedger);
             }
 
