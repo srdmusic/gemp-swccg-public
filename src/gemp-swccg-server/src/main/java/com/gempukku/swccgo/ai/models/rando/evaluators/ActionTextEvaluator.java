@@ -5045,9 +5045,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .isISBBackAgentRetrievalAction(
                             game, context.getPlayerId(),
                             actionSource, actionText);
+                // 2026-08-07 (m01675): Endor back biker-scout retrieval carve-out.
+                boolean exactEndorBikerRetrieval =
+                    exactDeployAnalyzer != null
+                    && exactDeployAnalyzer
+                        .isEndorBackBikerScoutRetrievalAction(
+                            game, context.getPlayerId(),
+                            actionSource, actionText);
                 controlLedger.register(ControlActionPolicy.retrieve(
                         actionId, lostPileSize,
-                        exactIsbAgentRetrieval));
+                        exactIsbAgentRetrieval,
+                        exactEndorBikerRetrieval));
                 PolicyOperationAdapter.apply(action, controlLedger);
             }
 

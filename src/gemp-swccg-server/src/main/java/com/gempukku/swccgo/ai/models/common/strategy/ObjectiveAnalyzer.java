@@ -15527,6 +15527,39 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
+    /** Endor Operations back (8_167_BACK): the free once-per-draw-phase "Retrieve a biker scout"
+     *  was falling into the generic CONTROL-retrieve band and scored -30 when Lost Pile <= 15 —
+     *  the bot declined a free objective payoff that feeds its own drain protection. Exact-action
+     *  predicate cloned from the ISB retrieval shape above. K2 check-queue batch F, m01675. */
+    public boolean isEndorBackBikerScoutRetrievalAction(
+            SwccgGame game, String playerId,
+            PhysicalCard sourceCard, String actionText) {
+        if (!analyzed || !isEndor || !isFlipped
+                || game == null || playerId == null
+                || sourceCard == null
+                || !isExactCurrentObjectiveSourceCard(
+                    game, playerId, sourceCard)
+                || actionText == null
+                || !"retrieve a biker scout".equals(
+                    actionText.trim().toLowerCase(Locale.ROOT))
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        List<PhysicalCard> lostPile =
+                game.getGameState().getLostPile(playerId);
+        if (lostPile == null) return false;
+        for (PhysicalCard card : lostPile) {
+            if (card != null && playerId.equals(card.getOwner())
+                    && Filters.biker_scout.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), card)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isExactCurrentObjectiveSourceCard(
             SwccgGame game, String playerId,
             PhysicalCard sourceCard) {
