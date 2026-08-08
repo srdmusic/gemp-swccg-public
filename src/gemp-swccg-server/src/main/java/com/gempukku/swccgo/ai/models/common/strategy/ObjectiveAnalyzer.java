@@ -7120,6 +7120,10 @@ public class ObjectiveAnalyzer {
                 || candidate.getBlueprint() == null
                 || candidate.getBlueprint().getCardCategory()
                     != CardCategory.CHARACTER
+                // ADJUSTED 2026-08-08 (passivity fix, m01683): route crew must be a
+                // real pilot — any FO character (troopers) was collecting the
+                // +1000/+1200 route-crew steer while adding nothing aboard the ship.
+                || !candidate.getBlueprint().hasIcon(Icon.PILOT)
                 || !Filters.First_Order_character.accepts(
                     game.getGameState(),
                     game.getModifiersQuerying(),
@@ -7143,11 +7147,14 @@ public class ObjectiveAnalyzer {
                     game.getGameState()
                         .getAvailablePilotCapacity(
                             game.getModifiersQuerying(),
-                            chaseShip, crew) > 0
-                    || game.getGameState()
-                        .getAvailablePassengerCapacity(
-                            game.getModifiersQuerying(),
                             chaseShip, crew) > 0;
+                    // ADJUSTED 2026-08-08 (passivity fix, m01683): passenger seats no
+                    // longer qualify as route-crew boarding — only a fillable PILOT
+                    // slot counts. Was:
+                    // || game.getGameState()
+                    //     .getAvailablePassengerCapacity(
+                    //         game.getModifiersQuerying(),
+                    //         chaseShip, crew) > 0;
             if (!hasCapacity
                     || !Filters.deployableToTarget(
                         crew,

@@ -839,6 +839,10 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             when(fixture.modifiers.hasIcon(
                     fixture.gameState, crew,
                     Icon.FIRST_ORDER)).thenReturn(true);
+            // ADJUSTED 2026-08-08 (passivity fix, m01683): route crew now
+            // requires a real pilot — the cheap crew here is one.
+            when(crew.getBlueprint()
+                    .hasIcon(Icon.PILOT)).thenReturn(true);
             when(fixture.modifiers.getHighestAbilityPiloting(
                     fixture.gameState, shuttle,
                     true, false)).thenReturn(2.0f);

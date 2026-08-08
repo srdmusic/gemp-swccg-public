@@ -385,6 +385,10 @@ public class FirstOrderReignsObjectiveBehaviorTest {
             when(fixture.modifiers.hasIcon(
                     fixture.gameState, trooper,
                     Icon.FIRST_ORDER)).thenReturn(true);
+            // ADJUSTED 2026-08-08 (passivity fix, m01683): route crew now
+            // requires a real pilot — the cheap crew here is one.
+            when(trooper.getBlueprint()
+                    .hasIcon(Icon.PILOT)).thenReturn(true);
             when(fixture.modifiers.getHighestAbilityPiloting(
                     fixture.gameState, fulminatrix,
                     true, false)).thenReturn(2.0f);
@@ -443,6 +447,61 @@ public class FirstOrderReignsObjectiveBehaviorTest {
         }
     }
 
+    // ADJUSTED 2026-08-08 (passivity fix, m01683): route crew requires a real
+    // pilot — an FO trooper without Icon.PILOT no longer qualifies even with a
+    // pilot seat open on the chase ship (Steve's stormtroopers-on-the-Supremacy
+    // case).
+    @Test
+    public void nonPilotTrooperNoLongerQualifiesAsRouteCrew() {
+        for (ObjectiveAnalyzer analyzer : facades()) {
+            Fixture fixture = fixture(
+                    analyzer, "225_32", false);
+            PhysicalCard fulminatrix = card(
+                    "Fulminatrix", PLAYER_ID,
+                    Zone.AT_LOCATION, CardCategory.STARSHIP,
+                    null, 352);
+            PhysicalCard trooper = card(
+                    "First Order Stormtrooper", PLAYER_ID,
+                    Zone.HAND, CardCategory.CHARACTER,
+                    null, 353);
+            fixture.permanents.add(fulminatrix);
+            fixture.hand.add(trooper);
+            when(fixture.modifiers.hasIcon(
+                    fixture.gameState, trooper,
+                    Icon.FIRST_ORDER)).thenReturn(true);
+            // NO Icon.PILOT on the trooper — that is the point.
+            when(fixture.modifiers.isPiloted(
+                    fixture.gameState, fulminatrix, false))
+                    .thenReturn(true);
+            when(fixture.modifiers.hasAstromechOrNavComputer(
+                    fixture.gameState, fulminatrix))
+                    .thenReturn(true);
+            when(fixture.modifiers.getLocationThatCardIsAt(
+                    fixture.gameState, fulminatrix))
+                    .thenReturn(fixture.host);
+            when(fulminatrix.getAtLocation())
+                    .thenReturn(fixture.host);
+            when(fixture.gameState.findCardByPermanentId(352))
+                    .thenReturn(fulminatrix);
+            when(fixture.gameState.getAvailablePilotCapacity(
+                    fixture.modifiers, fulminatrix, trooper))
+                    .thenReturn(1);
+            when(fixture.modifiers.getDeployCost(
+                    fixture.gameState,
+                    trooper, trooper, fulminatrix,
+                    false, null, false,
+                    0.0f, null, true))
+                    .thenReturn(2.0f);
+            setActive(
+                    fixture.gameState, fulminatrix, true);
+
+            assertFalse(analyzer
+                    .advancesFirstOrderReignsRouteCrewAt(
+                            fixture.game, PLAYER_ID,
+                            trooper, fulminatrix));
+        }
+    }
+
     @Test
     public void contestedFleetHostKeepsTheShipCrewAndCraitSequenceOpen() {
         for (ObjectiveAnalyzer analyzer : facades()) {
@@ -461,6 +520,10 @@ public class FirstOrderReignsObjectiveBehaviorTest {
             when(fixture.modifiers.hasIcon(
                     fixture.gameState, trooper,
                     Icon.FIRST_ORDER)).thenReturn(true);
+            // ADJUSTED 2026-08-08 (passivity fix, m01683): route crew now
+            // requires a real pilot — the cheap crew here is one.
+            when(trooper.getBlueprint()
+                    .hasIcon(Icon.PILOT)).thenReturn(true);
             when(fixture.modifiers.isPiloted(
                     fixture.gameState, fulminatrix, false))
                     .thenReturn(true);

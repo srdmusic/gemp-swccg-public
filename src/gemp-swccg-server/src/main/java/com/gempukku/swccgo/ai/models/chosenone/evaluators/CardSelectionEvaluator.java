@@ -2644,13 +2644,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         gameState,
                                         game.getModifiersQuerying(),
                                         location);
+                        // V30 ADJUSTED 2026-08-08 (passivity fix, m01683): the +3000
+                        // PILOT PROTECTION only applies when the destination actually
+                        // NEEDS a pilot — no permanent pilot and no character pilot
+                        // already aboard (Filters.piloted covers both). Fail-open to
+                        // true (the old behavior) if the read throws.
+                        boolean destinationNeedsPilot = false;
+                        if (destinationHasOpenPilotSlot) {
+                            try {
+                                destinationNeedsPilot = !Filters.piloted.accepts(
+                                        gameState,
+                                        game.getModifiersQuerying(),
+                                        location);
+                            } catch (Exception needsPilotE) {
+                                destinationNeedsPilot = true;
+                            }
+                        }
                         applyDeployPilotPolicy(action,
                                 DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
                                         new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
                                                 action.getActionId(), boardingPilot,
                                                 boardingAbility,
                                                 boardingOpenPilotDestinationOffered,
-                                                destinationHasOpenPilotSlot)));
+                                                // ADJUSTED 2026-08-08 (passivity fix, m01683) — was:
+                                                // destinationHasOpenPilotSlot)));
+                                                destinationHasOpenPilotSlot,
+                                                destinationNeedsPilot)));
 
                         boolean exactIsbRouteCompletion = false;
                         if (objectiveProgressAnalyzer != null) {
@@ -3391,6 +3410,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
+                        // V29 ADJUSTED 2026-08-08 (passivity fix, m01683): hoisted out of
+                        // the aboard block so the passenger penalty ahead of the
+                        // destinationIsAsset short-circuit below can honor the named-ship
+                        // synergy exemption (Vader/Executor-style unique references).
+                        boolean aboardShipRefExemption = false;
                         // =====================================================
                         // CRITICAL: Check if target is a STARSHIP
                         // V29: Characters deploying ABOARD ships as pilot/passenger is GOOD
@@ -3437,12 +3461,25 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     if (matchedShipName.equals("capital starship") || matchedShipName.equals("star destroyer")
                                         || matchedShipName.equals("super star destroyer")) {
                                         // Generic type — matches this ship if it's a capital starship
+                                        // V29 ADJUSTED 2026-08-08 (passivity fix, m01683): the
+                                        // generic ship-type strings only earn the +600 boarding
+                                        // bonus for PILOTS — a trooper whose text mentions
+                                        // "Star Destroyer" adds nothing aboard one. Unique
+                                        // named-ship references stay ungated.
                                         com.gempukku.swccgo.common.CardSubtype shipSubtype = blueprint.getCardSubtype();
-                                        if (shipSubtype == com.gempukku.swccgo.common.CardSubtype.CAPITAL) {
+                                        // ADJUSTED 2026-08-08 (passivity fix, m01683) — was:
+                                        // if (shipSubtype == com.gempukku.swccgo.common.CardSubtype.CAPITAL) {
+                                        if (shipSubtype == com.gempukku.swccgo.common.CardSubtype.CAPITAL
+                                                && boardingPilot) {
                                             gameTextReferencesThisShip = true;
                                         }
                                     }
                                 }
+                                // V29 ADJUSTED 2026-08-08 (passivity fix, m01683): remember the
+                                // ship-reference match for the passenger penalty below (for
+                                // non-pilots this can only be a unique-name match — the generic
+                                // strings are pilot-gated above, so they never exempt).
+                                aboardShipRefExemption = gameTextReferencesThisShip;
                                 addsForceDrain = charGameText.contains("adds 1 to force drain")
                                     || charGameText.contains("add 1 to force drain");
                             }
@@ -3451,8 +3488,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 DeployPilotShipPolicy.evaluateShipBoarding(
                                     new DeployPilotShipPolicy.ShipBoardingFacts(
                                         action.getActionId(), isCharacter,
+                                        // ADJUSTED 2026-08-08 (passivity fix, m01683) — was:
+                                        // isAttachedDeployment, matchedShipName,
+                                        // gameTextReferencesThisShip, isExecutor, addsForceDrain));
                                         isAttachedDeployment, matchedShipName,
-                                        gameTextReferencesThisShip, isExecutor, addsForceDrain));
+                                        gameTextReferencesThisShip, isExecutor, addsForceDrain,
+                                        boardingPilot));
                             applyDeployPilotPolicy(action, boardingEvaluation.result());
 
                             if (isCharacter) {
@@ -3464,9 +3505,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     logger.info("V29 ABOARD: {} references '{}' but boarding {} instead (+50)",
                                         deployingCardName, matchedShipName, title);
                                 } else if (isExecutor) {
-                                    logger.info("V29 ABOARD: {} boarding Executor (+100)", deployingCardName);
+                                    // ADJUSTED 2026-08-08 (passivity fix, m01683) — was:
+                                    // logger.info("V29 ABOARD: {} boarding Executor (+100)", deployingCardName);
+                                    logger.info("V29 ABOARD: {} boarding Executor ({})", deployingCardName,
+                                        boardingPilot ? "+100" : "passenger, +0");
                                 } else {
-                                    logger.info("V29 ABOARD: {} boarding {} (+50)", deployingCardName, title);
+                                    // ADJUSTED 2026-08-08 (passivity fix, m01683) — was:
+                                    // logger.info("V29 ABOARD: {} boarding {} (+50)", deployingCardName, title);
+                                    logger.info("V29 ABOARD: {} boarding {} ({})", deployingCardName, title,
+                                        boardingPilot ? "+50" : "passenger, +0");
                                 }
                             } else if (!isAttachedDeployment) {
                                 logger.warn("⚠️ BLOCKING deploy of {} into cargo bay of {} - ships in cargo contribute 0 power!",
@@ -3604,6 +3651,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
+                        // V29 ADJUSTED 2026-08-08 (passivity fix, m01683): PASSENGER ABOARD
+                        // penalty. Non-pilot characters rode the aboard short-circuit below
+                        // past the entire site-penalty gauntlet while adding zero power to a
+                        // capital starship (logged: troopers boarding the Supremacy at +1300
+                        // while five ground battlegrounds sat open). Mirror of the -200 V29
+                        // ship-ref-on-ground rule. STARSHIP destinations only (vehicles out
+                        // of scope); named-ship synergy (unique reference to THIS ship, e.g.
+                        // Vader/Executor) stays exempt — the generic "capital starship"/
+                        // "star destroyer" strings do NOT exempt (pilot-gated above). Skips
+                        // when the deploying blueprint could not be resolved (fail-open).
+                        if (isCharacter
+                                && blueprint != null
+                                && blueprint.getCardCategory() == CardCategory.STARSHIP
+                                && boardingDeployBlueprint != null
+                                && !boardingPilot
+                                && !aboardShipRefExemption) {
+                            action.addReasoning(
+                                "V29 PASSENGER ABOARD: non-pilot adds nothing to a capital ship's power (-400)",
+                                -400.0f);
+                            logger.warn("V29 PASSENGER ABOARD: {} is not a pilot — boarding {} adds nothing (-400)",
+                                deployingCardName, title);
+                        }
                         applyInvasionPilotDestination(
                             context, action, deployingBlueprintId, location);
                         if (destinationIsAsset) {

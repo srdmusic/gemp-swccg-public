@@ -176,9 +176,21 @@ public final class DeployPilotShipPolicy {
             return new PolicyResult("DEPLOY_LOW_ABILITY_PILOT_BOARDING_POLICY", List.of());
         }
         if (facts.destinationHasOpenPilotSlot()) {
-            return oneAttach(facts.actionId(), "V30-low-ability-pilot-boarding",
-                    TraceOutputKind.ORDERING, 3000.0f,
-                    "V30 PILOT PROTECTION: ability under 5 fills an offered open pilot slot");
+            // V30 ADJUSTED 2026-08-08 (passivity fix, m01683): the +3000 only fires
+            // when the destination actually NEEDS a pilot (no permanent pilot and no
+            // character pilot already aboard). Stuffing a low-ability pilot into an
+            // already-piloted ship's spare seat adds nothing — emit nothing and let
+            // ordinary aboard scoring decide.
+            // ADJUSTED 2026-08-08 (passivity fix, m01683) — was:
+            // return oneAttach(facts.actionId(), "V30-low-ability-pilot-boarding",
+            //         TraceOutputKind.ORDERING, 3000.0f,
+            //         "V30 PILOT PROTECTION: ability under 5 fills an offered open pilot slot");
+            if (facts.destinationNeedsPilot()) {
+                return oneAttach(facts.actionId(), "V30-low-ability-pilot-boarding",
+                        TraceOutputKind.ORDERING, 3000.0f,
+                        "V30 PILOT PROTECTION: ability under 5 fills an offered open pilot slot");
+            }
+            return new PolicyResult("DEPLOY_LOW_ABILITY_PILOT_BOARDING_POLICY", List.of());
         }
         return oneAttach(facts.actionId(), "V30-low-ability-pilot-boarding",
                 TraceOutputKind.VETO, -5000.0f,
@@ -303,14 +315,24 @@ public final class DeployPilotShipPolicy {
                     "V29 ABOARD SHIP: Game text references "
                             + facts.matchedShipName()
                             + " (not this ship) — mild bonus for ship boarding");
-        } else if (facts.executorDestination()) {
+        // V29 ADJUSTED 2026-08-08 (passivity fix, m01683): the flagship +100 and the
+        // default +50 aboard arms are pilots-only — a passenger adds no ability/power.
+        // ADJUSTED 2026-08-08 (passivity fix, m01683) — was:
+        // } else if (facts.executorDestination()) {
+        } else if (facts.executorDestination() && facts.pilot()) {
             addAttach(operations, facts.actionId(), "V29-executor",
                     TraceOutputKind.BANDED, 100.0f,
                     "V29 CHARACTER ABOARD EXECUTOR: Adds ability/power to flagship");
-        } else {
+        // ADJUSTED 2026-08-08 (passivity fix, m01683) — was:
+        // } else {
+        } else if (facts.pilot()) {
             addAttach(operations, facts.actionId(), "V29-character-aboard",
                     TraceOutputKind.BANDED, 50.0f,
                     "V29 CHARACTER ABOARD SHIP: Pilot/passenger deploy");
+        } else {
+            addAttach(operations, facts.actionId(), "V29-passenger-aboard",
+                    TraceOutputKind.BANDED, 0.0f,
+                    "V29 PASSENGER ABOARD: passenger adds nothing to a capital ship's power");
         }
 
         return new Evaluation(
@@ -484,7 +506,19 @@ public final class DeployPilotShipPolicy {
     public record LowAbilityPilotBoardingFacts(
             String actionId, boolean pilot, Float ability,
             boolean openPilotDestinationOffered,
-            boolean destinationHasOpenPilotSlot) {
+            boolean destinationHasOpenPilotSlot,
+            boolean destinationNeedsPilot) {
+        // ADJUSTED 2026-08-08 (passivity fix, m01683): legacy ctor keeps pre-fix
+        // callers/tests compiling — destinationNeedsPilot defaults true (the old
+        // unconditional +3000 behavior).
+        public LowAbilityPilotBoardingFacts(
+                String actionId, boolean pilot, Float ability,
+                boolean openPilotDestinationOffered,
+                boolean destinationHasOpenPilotSlot) {
+            this(actionId, pilot, ability, openPilotDestinationOffered,
+                    destinationHasOpenPilotSlot, true);
+        }
+
         public LowAbilityPilotBoardingFacts {
             Objects.requireNonNull(actionId, "actionId");
         }
@@ -526,7 +560,20 @@ public final class DeployPilotShipPolicy {
             String actionId, boolean character, boolean attachedDeployment,
             String matchedShipName,
             boolean referencedShipMatchesDestination,
-            boolean executorDestination, boolean addsForceDrain) {
+            boolean executorDestination, boolean addsForceDrain,
+            boolean pilot) {
+        // ADJUSTED 2026-08-08 (passivity fix, m01683): legacy ctor defaults
+        // pilot=true so pre-fix callers/tests keep the old +50/+100 arms.
+        public ShipBoardingFacts(
+                String actionId, boolean character, boolean attachedDeployment,
+                String matchedShipName,
+                boolean referencedShipMatchesDestination,
+                boolean executorDestination, boolean addsForceDrain) {
+            this(actionId, character, attachedDeployment, matchedShipName,
+                    referencedShipMatchesDestination, executorDestination,
+                    addsForceDrain, true);
+        }
+
         public ShipBoardingFacts {
             Objects.requireNonNull(actionId, "actionId");
             matchedShipName = matchedShipName == null ? "" : matchedShipName;

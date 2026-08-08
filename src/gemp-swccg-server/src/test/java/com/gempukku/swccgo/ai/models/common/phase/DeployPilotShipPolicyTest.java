@@ -256,6 +256,61 @@ public class DeployPilotShipPolicyTest {
                 new String[]{"V29-character-aboard"}, new float[]{50.0f});
     }
 
+    // ADJUSTED 2026-08-08 (passivity fix, m01683): the aboard +50/+100 arms
+    // are pilots-only; passengers fall to an honest 0.0 arm.
+    @Test
+    public void pilotBoardingKeepsFiftyAndExecutorHundred() {
+        assertRules(DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", true, false, "", false,
+                                false, false, true)).result().operations(),
+                new String[]{"V29-character-aboard"}, new float[]{50.0f});
+        assertRules(DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", true, false, "", false,
+                                true, false, true)).result().operations(),
+                new String[]{"V29-executor"}, new float[]{100.0f});
+    }
+
+    @Test
+    public void passengerBoardingEmitsHonestZeroArm() {
+        DeployPilotShipPolicy.Evaluation passenger =
+                DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", true, false, "", false,
+                                false, false, false));
+        assertRules(passenger.result().operations(),
+                new String[]{"V29-passenger-aboard"}, new float[]{0.0f});
+        assertEquals(
+                "V29 PASSENGER ABOARD: passenger adds nothing to a capital ship's power",
+                passenger.result().operations().get(0).reason());
+        assertEquals(DeployPilotShipPolicy.AdapterStep.FALL_THROUGH,
+                passenger.adapterStep());
+
+        // A passenger on the Executor gets the same honest zero — the +100
+        // flagship arm is pilots-only.
+        assertRules(DeployPilotShipPolicy.evaluateShipBoarding(
+                        new DeployPilotShipPolicy.ShipBoardingFacts(
+                                "a", true, false, "", false,
+                                true, false, false)).result().operations(),
+                new String[]{"V29-passenger-aboard"}, new float[]{0.0f});
+    }
+
+    @Test
+    public void pilotProtectionOnlyFiresWhenTheShipActuallyNeedsAPilot() {
+        // ADJUSTED 2026-08-08 (passivity fix, m01683): an already-piloted ship
+        // with a spare seat emits nothing instead of the +3000 steer.
+        assertTrue(DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
+                new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
+                        "a", true, 4.99f, true, true, false))
+                .operations().isEmpty());
+        assertRules(DeployPilotShipPolicy.evaluateLowAbilityPilotBoarding(
+                        new DeployPilotShipPolicy.LowAbilityPilotBoardingFacts(
+                                "a", true, 4.99f, true, true, true)).operations(),
+                new String[]{"V30-low-ability-pilot-boarding"},
+                new float[]{3000.0f});
+    }
+
     @Test
     public void cargoPenaltyRemainsAdditiveThenContinuesCandidate() {
         DeployPilotShipPolicy.Evaluation cargo =
