@@ -92,9 +92,15 @@ public class BattleInitiationPolicyTest {
         assertSpecific(ourBattle(10, 8, 4, 4, 1, 2),
                 BattleInitiationPolicy.SpecificBattleBranch.ARMED_MARGINAL,
                 80.0f, false);
+        // ADJUSTED 2026-08-08 (passivity fix, m01683): unarmed marginal flipped from
+        // -50/non-favorable to +30/favorable — a real unarmed power edge is a fight
+        // worth taking (live log: unarmed +3 edge netted ~+15 vs Pass and was skipped).
+        // assertSpecific(ourBattle(10, 8, 4, 4, 0, 2),
+        //         BattleInitiationPolicy.SpecificBattleBranch.UNARMED_MARGINAL,
+        //         -50.0f, false);
         assertSpecific(ourBattle(10, 8, 4, 4, 0, 2),
                 BattleInitiationPolicy.SpecificBattleBranch.UNARMED_MARGINAL,
-                -50.0f, false);
+                30.0f, true);
         assertSpecific(ourBattle(10, 10, 4, 4, 0, -8),
                 BattleInitiationPolicy.SpecificBattleBranch.UNFAVORABLE,
                 -100.0f, false);
@@ -104,6 +110,31 @@ public class BattleInitiationPolicyTest {
         assertSpecific(ourBattle(10, 10, 4, 4, 0, -16),
                 BattleInitiationPolicy.SpecificBattleBranch.UNFAVORABLE,
                 -400.0f, false);
+    }
+
+    // ADDED 2026-08-08 (passivity fix, m01683): the FAVORABLE arm is now
+    // advantage-proportional (+25 per point of weapon-adjusted diff over the
+    // threshold, total capped at +400) instead of a flat +150.
+    @Test
+    public void favorableArmPaysProportionallyToAdvantageAndCapsAt400() {
+        BattleInitiationPolicy.SpecificBattleDecision diff5 =
+                ourBattle(15, 10, 4, 4, 0, 5);
+        BattleInitiationPolicy.SpecificBattleDecision diff10 =
+                ourBattle(20, 10, 4, 4, 0, 10);
+        BattleInitiationPolicy.SpecificBattleDecision diff20 =
+                ourBattle(30, 10, 4, 4, 0, 20);
+
+        assertSpecific(diff5,
+                BattleInitiationPolicy.SpecificBattleBranch.FAVORABLE,
+                150.0f, true);
+        assertSpecific(diff10,
+                BattleInitiationPolicy.SpecificBattleBranch.FAVORABLE,
+                275.0f, true);
+        assertTrue("diff 10 must pay more than diff 5",
+                diff10.contribution().delta() > diff5.contribution().delta());
+        assertSpecific(diff20,
+                BattleInitiationPolicy.SpecificBattleBranch.FAVORABLE,
+                400.0f, true);
     }
 
     @Test

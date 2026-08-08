@@ -93,6 +93,12 @@ public final class BattleActionTextPolicy {
             addResolvedInitiation(operations, facts);
         }
 
+        // V25 low-reserve arm RESTORED 2026-08-08 (passivity fix, m01683): a first
+        // pass removed this as a V61 duplicate, but the capture harness
+        // (exactActiveInsignificantRebellionMakesSafeBattleWin) proved the summed -50
+        // is LOAD-BEARING margin at critical reserve — a 13v8 crush at 1-card reserve
+        // must still lose to Pass (-10 vs -5). The two arms are tiered pacing that was
+        // tuned to sum, not a 1:1 duplicate. Kept as-is.
         if (facts.reserveDeckSize() < MINIMUM_BATTLE_RESERVE) {
             add(operations, facts.actionId(), "V25-battle-low-reserve",
                     TraceOutputKind.VETO, -50.0f,

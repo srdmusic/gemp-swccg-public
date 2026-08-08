@@ -195,6 +195,8 @@ public final class BattleInitiationPolicy {
                 Contribution.none());
     }
 
+    // ADJUSTED 2026-08-08 (passivity fix, m01683): legacy 10-arg overload —
+    // reserveHealthy defaults true (the proportional favorable arm applies).
     public static SpecificBattleDecision specificBattle(
             String locationTitle,
             float ourPower,
@@ -206,6 +208,23 @@ public final class BattleInitiationPolicy {
             boolean vaderPresent,
             boolean lukePresent,
             boolean hasIhyn) {
+        return specificBattle(locationTitle, ourPower, theirPower, ourAbility,
+                theirAbility, weaponBonus, weaponEffectiveDiff, vaderPresent,
+                lukePresent, hasIhyn, true);
+    }
+
+    public static SpecificBattleDecision specificBattle(
+            String locationTitle,
+            float ourPower,
+            float theirPower,
+            float ourAbility,
+            float theirAbility,
+            float weaponBonus,
+            float weaponEffectiveDiff,
+            boolean vaderPresent,
+            boolean lukePresent,
+            boolean hasIhyn,
+            boolean reserveHealthy) {
         if (ourPower > 0.0f && theirPower == 0.0f) {
             return new SpecificBattleDecision(
                     SpecificBattleBranch.NO_OPPONENT,
@@ -248,7 +267,22 @@ public final class BattleInitiationPolicy {
                     false);
         }
         if (weaponEffectiveDiff >= FAVORABLE_THRESHOLD) {
-            float bonus = 150.0f;
+            // V29.7 ADJUSTED 2026-08-08 (passivity fix, m01683): flat +150 paid a +20
+            // crush the same as a +5 edge, so big advantages still lost the score race to
+            // stacked penalties (live log: unarmed +3 edge netted ~+15 vs Pass). Pay +25
+            // per point of weapon-adjusted advantage over the threshold; total capped at
+            // +400 below to stay inside the band.
+            // float bonus = 150.0f;
+            // ADJUSTED 2026-08-08 (passivity fix, m01683, capture-harness gate): the
+            // proportional extra applies only with a HEALTHY reserve (>=3, the V61 "<3
+            // risky" boundary). At a critical reserve one bad destiny can be fatal and
+            // the V61 -400/-800 brake must keep winning — the harness pinned exactly
+            // that (13v8 crush at 1-card reserve must still Pass). The passivity
+            // evidence was all healthy-reserve positions.
+            float bonus = 150.0f
+                    + (reserveHealthy
+                        ? 25.0f * (weaponEffectiveDiff - FAVORABLE_THRESHOLD)
+                        : 0.0f);
             String reason;
             if (weaponBonus > 0.0f) {
                 bonus += weaponBonus * 10.0f;
@@ -279,6 +313,9 @@ public final class BattleInitiationPolicy {
                         ourAbility,
                         theirAbility);
             }
+            // V29.7 ADJUSTED 2026-08-08 (passivity fix, m01683): cap the advantage-
+            // proportional total (incl. weapon/Vader adders) at +400 to stay in band.
+            bonus = Math.min(bonus, 400.0f);
             return new SpecificBattleDecision(
                     SpecificBattleBranch.FAVORABLE,
                     new Contribution(true, reason, bonus),
@@ -298,17 +335,33 @@ public final class BattleInitiationPolicy {
                                 80.0f),
                         false);
             }
+            // V29 ADJUSTED 2026-08-08 (passivity fix, m01683): an unarmed +2..+4 edge
+            // was scored NEGATIVE (-50, favorable=false — which then stacked the -60
+            // no-favorable scanOutcome on top). Live log: an unarmed +3-power edge netted
+            // ~+15 vs Pass, so any small penalty flipped the bot to passing. A real power
+            // edge is a fight worth taking: +30 and favorable=true.
+            // return new SpecificBattleDecision(
+            //         SpecificBattleBranch.UNARMED_MARGINAL,
+            //         new Contribution(
+            //                 true,
+            //                 String.format(
+            //                         "V29 MARGINAL at %s (power %.0f vs %.0f) — risky with weapons",
+            //                         locationTitle,
+            //                         ourPower,
+            //                         theirPower),
+            //                 -50.0f),
+            //         false);
             return new SpecificBattleDecision(
                     SpecificBattleBranch.UNARMED_MARGINAL,
                     new Contribution(
                             true,
                             String.format(
-                                    "V29 MARGINAL at %s (power %.0f vs %.0f) — risky with weapons",
+                                    "V29 UNARMED MARGINAL at %s (power %.0f vs %.0f) — small edge, take the fight",
                                     locationTitle,
                                     ourPower,
                                     theirPower),
-                            -50.0f),
-                    false);
+                            30.0f),
+                    true);
         }
 
         float penalty = -100.0f;

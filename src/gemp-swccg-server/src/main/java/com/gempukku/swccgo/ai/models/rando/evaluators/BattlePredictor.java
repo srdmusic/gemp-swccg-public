@@ -31,26 +31,32 @@ public class BattlePredictor {
     public static BattleOutcome predictBattle(
         int myPower, int myDestinyDraws,
         int oppPower, int oppDestinyDraws) {
-        
-        int wins = 0;
+
+        // int wins = 0;
+        // ADJUSTED 2026-08-08 (passivity fix, m01683): ties counted as LOSSES in the
+        // winRate (only strict wins incremented), biasing every parity fight toward the
+        // V76 defeat block. A tie is no damage either way — count it as half a win.
+        float wins = 0f;
         int totalDamageDealt = 0;
         int totalDamageTaken = 0;
-        
+
         // Run simulations
         for (int i = 0; i < SIMULATIONS; i++) {
             int myTotal = myPower + simulateDestiny(myDestinyDraws);
             int oppTotal = oppPower + simulateDestiny(oppDestinyDraws);
-            
+
             if (myTotal > oppTotal) {
                 wins++;
                 totalDamageDealt += (myTotal - oppTotal);
             } else if (oppTotal > myTotal) {
                 totalDamageTaken += (oppTotal - myTotal);
+            } else {
+                wins += 0.5f;
             }
             // Ties = no damage either way
         }
-        
-        float winRate = (float) wins / SIMULATIONS;
+
+        float winRate = wins / SIMULATIONS;
         float avgDamageDealt = (float) totalDamageDealt / SIMULATIONS;
         float avgDamageTaken = (float) totalDamageTaken / SIMULATIONS;
         
@@ -67,7 +73,10 @@ public class BattlePredictor {
         int oppPower, int oppDestinyDraws,
         float knownOppDestinyAvg) {
 
-        int wins = 0;
+        // int wins = 0;
+        // ADJUSTED 2026-08-08 (passivity fix, m01683): same tie-as-loss bias as the
+        // no-intel loop above — count ties as half a win on this route too.
+        float wins = 0f;
         int totalDamageDealt = 0;
         int totalDamageTaken = 0;
 
@@ -81,10 +90,12 @@ public class BattlePredictor {
                 totalDamageDealt += (myTotal - oppTotal);
             } else if (oppTotal > myTotal) {
                 totalDamageTaken += (oppTotal - myTotal);
+            } else {
+                wins += 0.5f;
             }
         }
 
-        float winRate = (float) wins / SIMULATIONS;
+        float winRate = wins / SIMULATIONS;
         float avgDamageDealt = (float) totalDamageDealt / SIMULATIONS;
         float avgDamageTaken = (float) totalDamageTaken / SIMULATIONS;
 
@@ -109,18 +120,35 @@ public class BattlePredictor {
         float damageDealt;
         float damageTaken;
 
+        // ADJUSTED 2026-08-08 (passivity fix, m01683): BINARY winRate 1.0/0.5/0.0 meant
+        // ANY projected average deficit — even 1 point — returned 0.0 and tripped the V76
+        // flat -800 "probable defeat" block, while any edge claimed certainty. Grade by
+        // margin instead: 0.5 +/- margin over the maximum destiny swing both sides could
+        // still produce (destiny averages are AVERAGES, actual draws range 0..DESTINY_MAX),
+        // clamped to [0.05, 0.95] so intel never claims certainty. Monotone in
+        // (myTotal - oppTotal); an exact tie stays 0.5.
+        // if (myTotal > oppTotal) {
+        //     winRate = 1.0f;
+        //     damageDealt = myTotal - oppTotal;
+        //     damageTaken = 0;
+        // } else if (oppTotal > myTotal) {
+        //     winRate = 0.0f;
+        //     damageDealt = 0;
+        //     damageTaken = oppTotal - myTotal;
+        // } else {
+        //     winRate = 0.5f;
+        //     damageDealt = 0;
+        //     damageTaken = 0;
+        // }
+        float maxSwing = DESTINY_MAX * Math.max(1, myDestinyDraws + oppDestinyDraws);
+        winRate = Math.max(0.05f, Math.min(0.95f,
+            0.5f + (myTotal - oppTotal) / (2.0f * maxSwing)));
         if (myTotal > oppTotal) {
-            winRate = 1.0f;
             damageDealt = myTotal - oppTotal;
             damageTaken = 0;
-        } else if (oppTotal > myTotal) {
-            winRate = 0.0f;
+        } else {
             damageDealt = 0;
             damageTaken = oppTotal - myTotal;
-        } else {
-            winRate = 0.5f;
-            damageDealt = 0;
-            damageTaken = 0;
         }
 
         return new BattleOutcome(winRate, damageDealt, damageTaken);

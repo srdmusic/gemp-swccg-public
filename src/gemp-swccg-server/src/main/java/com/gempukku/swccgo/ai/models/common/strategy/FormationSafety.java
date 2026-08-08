@@ -5,6 +5,8 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Locale;
@@ -44,6 +46,10 @@ import java.util.Locale;
 // Partial information rule (council): if a route lacks the facts, DON'T call — never veto blind.
 // ═══════════════════════════════════════════════════════════
 public final class FormationSafety {
+
+    /** ADDED 2026-08-08 (passivity fix, m01683): the L2 dominance waiver logs its own
+     *  reason because a waived veto returns null and callers only log non-null vetoes. */
+    private static final Logger LOG = LogManager.getLogger(FormationSafety.class);
 
     private FormationSafety() {}
 
@@ -127,6 +133,28 @@ public final class FormationSafety {
         if (game == null || gs == null || playerId == null || location == null) return null;
         try {
             if (!battleDestinyEligible(game, gs, playerId, location)) {
+                // L2 ADJUSTED 2026-08-08 (passivity fix, m01683): the documented SOLO
+                // DOMINANCE exemption (header, Steve 2026-07-11) was implemented only in
+                // vetoMoveDestination — the battle veto had NO waiver, so a >=2x
+                // weapon-adjusted force with total ability < 4 could never voluntarily
+                // attack (08-07 logs: V22 MUST-FIGHT override fired and was still
+                // overruled by this veto). Mirror the move-side math: weapon-adjusted
+                // power both sides; a dominant force wins on raw power and does not need
+                // a destiny draw. oppEff > 0 keeps the waiver a real-dominance read —
+                // against a zero-power defender there is nothing to be 2x of, and a
+                // destiny-eligible zero-power defender could still out-draw a tiny force.
+                String opp = gs.getOpponent(playerId);
+                float oppEff = game.getModifiersQuerying().getTotalPowerAtLocation(gs, location, opp, false, false)
+                    + weaponBonusAt(gs, location, opp);
+                float ourEff = game.getModifiersQuerying().getTotalPowerAtLocation(gs, location, playerId, false, false)
+                    + weaponBonusAt(gs, location, playerId);
+                if (oppEff > 0 && ourEff >= DOMINANCE_MULTIPLE * oppEff) {
+                    LOG.warn("L2 WAIVED: dominance ≥2x ({} vs {}) at {} — attack without destiny",
+                        String.format(Locale.ROOT, "%.0f", ourEff),
+                        String.format(Locale.ROOT, "%.0f", oppEff),
+                        location.getTitle());
+                    return null;
+                }
                 float ability = game.getModifiersQuerying().getTotalAbilityAtLocation(gs, playerId, location);
                 return String.format(
                     "L2 NO-DESTINY BATTLE: total ability %.0f < %.0f at %s — zero normal battle destiny draws (engine BattleDestiny threshold)",

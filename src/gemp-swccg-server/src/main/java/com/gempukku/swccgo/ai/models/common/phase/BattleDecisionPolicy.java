@@ -164,8 +164,21 @@ public final class BattleDecisionPolicy {
             }
         }
 
-        int myDraws = Math.max(1, Math.min(4, ourCharacters));
-        int opponentDraws = Math.max(1, Math.min(4, opponentCharacters));
+        // V76 draws ADJUSTED 2026-08-08 (passivity fix, m01683): destiny draws were
+        // estimated from BODY COUNT (clamp 1..4) — engine truth (BattleDestiny.java,
+        // FormationSafety.DESTINY_ABILITY_THRESHOLD) is one normal draw iff TOTAL
+        // ability at the location >= 4. Body count fed phantom destiny (~+3 power per
+        // extra body) into the predictor on BOTH sides, distorting every winRate.
+        // int myDraws = Math.max(1, Math.min(4, ourCharacters));
+        // int opponentDraws = Math.max(1, Math.min(4, opponentCharacters));
+        float ourAbilityHere = game.getModifiersQuerying()
+                .getTotalAbilityAtLocation(gameState, playerId, location);
+        float opponentAbilityHere = game.getModifiersQuerying()
+                .getTotalAbilityAtLocation(gameState, opponentId, location);
+        int myDraws = ourAbilityHere >= com.gempukku.swccgo.ai.models.common.strategy
+                .FormationSafety.DESTINY_ABILITY_THRESHOLD ? 1 : 0;
+        int opponentDraws = opponentAbilityHere >= com.gempukku.swccgo.ai.models.common.strategy
+                .FormationSafety.DESTINY_ABILITY_THRESHOLD ? 1 : 0;
         int effectiveOurPower = (int) (ourPower + weaponBonus);
         int effectiveOpponentPower =
                 (int) (opponentPower + opponentWeaponBonus);
@@ -684,6 +697,10 @@ public final class BattleDecisionPolicy {
                                     foundAnyContestedLocation = true;
                                     boolean formationSafetyVeto = false;
                                     boolean predictorSafe = false;
+                                    // ADDED 2026-08-08 (passivity fix, m01683): retain the
+                                    // V76 winRate for the predictor-confidence
+                                    // reconciliation below; -1 = predictor never ran.
+                                    float predictorWinRate = -1.0f;
 
                                     // FORMATION SAFETY (2026-07-11c): L2 — never voluntarily battle with
                                     // zero normal battle-destiny draws (engine truth: total ability >= 4;
@@ -735,6 +752,7 @@ public final class BattleDecisionPolicy {
                                         BattleInitiationPolicy.PredictionDecision prediction =
                                             predictionGate.decision();
                                         predictorSafe = predictionGate.safe();
+                                        predictorWinRate = v76Outcome.winProbability;
                                         action.apply(prediction.contribution());
                                         if (prediction.branch()
                                             == BattleInitiationPolicy.PredictionBranch.PROBABLE_DEFEAT) {
@@ -760,8 +778,46 @@ public final class BattleDecisionPolicy {
                                             weaponEffectiveDiff,
                                             ourVaderHere,
                                             lukeHere,
-                                            hasIHYN);
+                                            hasIHYN,
+                                            // ADJUSTED 2026-08-08 (passivity fix, m01683):
+                                            // proportional favorable only with reserve >= 3
+                                            // (V61 boundary) — see BattleInitiationPolicy.
+                                            context.getReserveDeckSize() >= 3);
                                     action.apply(specificBattle.contribution());
+
+                                    // === V76/V25 RECONCILIATION ===
+                                    // ADDED 2026-08-08 (passivity fix, m01683): live log
+                                    // evidence — a winRate 0.98 battle was DECLINED because
+                                    // the ability-weighted V25/V29 band (effectiveDiff -4)
+                                    // scored it -60/-100 and the -60 no-favorable
+                                    // scanOutcome stacked on top, outvoting the predictor.
+                                    // When the predictor ran and is confident
+                                    // (winRate >= 0.75), neutralize the NEGATIVE band
+                                    // contribution for this same action with an equal
+                                    // compensating positive. Chosen over the flat +200
+                                    // variant gated on weaponEffectiveDiff >= 0 because the
+                                    // 98%-win incident HAD a negative effectiveDiff and must
+                                    // still come out net positive. Counting the location as
+                                    // a found favorable battle stops the scanOutcome -60
+                                    // from re-stacking. Hard vetoes (formation L2, reserve,
+                                    // objective move-force) are deliberately untouched.
+                                    if (predictorSafe && predictorWinRate >= 0.75f) {
+                                        float abilityBandDelta =
+                                            specificBattle.contribution().applies()
+                                                ? specificBattle.contribution().delta()
+                                                : 0.0f;
+                                        if (abilityBandDelta < 0.0f) {
+                                            action.addReasoning(String.format(
+                                                "V76 PREDICTOR CONFIDENT: winRate %.2f overrides ability band (+%.0f)",
+                                                predictorWinRate, -abilityBandDelta),
+                                                -abilityBandDelta);
+                                            logger.warn("V76 PREDICTOR CONFIDENT at {}: winRate {} — neutralizing ability-band {}",
+                                                targetLocation.getTitle(),
+                                                String.format("%.2f", predictorWinRate),
+                                                (int) abilityBandDelta);
+                                        }
+                                        foundFavorableBattle = true;
+                                    }
 
                                     boolean exactStructuredPreFlipTarget = false;
                                     boolean missingSelfControl = false;
@@ -961,7 +1017,11 @@ public final class BattleDecisionPolicy {
                                             weaponEffectiveDiff,
                                             ourVaderHere,
                                             lukeHere,
-                                            hasIHYN);
+                                            hasIHYN,
+                                            // ADJUSTED 2026-08-08 (passivity fix, m01683):
+                                            // proportional favorable only with reserve >= 3
+                                            // (V61 boundary) — see BattleInitiationPolicy.
+                                            context.getReserveDeckSize() >= 3);
                                     action.apply(specificBattle.contribution());
                                     boolean opponentCardPresent =
                                         cardsHere.stream().anyMatch(
@@ -1203,8 +1263,15 @@ public final class BattleDecisionPolicy {
                             float fsOur = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, fsLoc, fsPid, false, false);
                             float fsTheir = game.getModifiersQuerying().getTotalPowerAtLocation(gameState, fsLoc, fsOpp, false, false);
                             if (fsOur <= 0 || fsTheir <= 0) continue;
+                            // L2 ADJUSTED 2026-08-08 (passivity fix, m01683): route through
+                            // vetoInitiateBattle so this locationless-fallback application
+                            // point honors the same >=2x dominance waiver as the
+                            // specific-location route (raw eligibility alone re-vetoed
+                            // dominant no-destiny attacks here).
+                            // if (com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                            //         .battleDestinyEligible(game, gameState, fsPid, fsLoc)) { fsAnyEligible = true; break; }
                             if (com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
-                                    .battleDestinyEligible(game, gameState, fsPid, fsLoc)) { fsAnyEligible = true; break; }
+                                    .vetoInitiateBattle(game, gameState, fsPid, fsLoc) == null) { fsAnyEligible = true; break; }
                         }
                     } catch (Exception fsE) { fsAnyEligible = true; /* fail-open */ }
                     if (!fsAnyEligible) {
