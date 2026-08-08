@@ -19,7 +19,6 @@ import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotCancelWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.LinkedList;
@@ -65,28 +64,23 @@ public class Card501_203 extends AbstractUsedInterrupt {
         }
 
         final String opponent = game.getOpponent(playerId);
-        final PlayInterruptAction protectBattleAndWeaponDestinyDrawsAction = new PlayInterruptAction(game, self);
-        protectBattleAndWeaponDestinyDrawsAction.setText("Affect battle and weapon destiny draws");
+        final PlayInterruptAction protectBattleDestinyDrawsAction = new PlayInterruptAction(game, self);
+        protectBattleDestinyDrawsAction.setText("Prevent canceling battle destiny draws");
 
         // Allow response(s)
-        protectBattleAndWeaponDestinyDrawsAction.allowResponses("Prevent opponent from canceling battle and character weapon destiny draws for remainder of turn",
-                new RespondablePlayCardEffect(protectBattleAndWeaponDestinyDrawsAction) {
+        protectBattleDestinyDrawsAction.allowResponses("Prevent opponent from canceling battle destiny draws for remainder of turn",
+                new RespondablePlayCardEffect(protectBattleDestinyDrawsAction) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
-                        protectBattleAndWeaponDestinyDrawsAction.appendEffect(
-                                new AddUntilEndOfTurnModifierEffect(protectBattleAndWeaponDestinyDrawsAction,
+                        protectBattleDestinyDrawsAction.appendEffect(
+                                new AddUntilEndOfTurnModifierEffect(protectBattleDestinyDrawsAction,
                                         new MayNotCancelBattleDestinyModifier(self, null, opponent),
                                         "Prevents "+opponent+" from canceling battle destiny draws")
-                        );
-                        protectBattleAndWeaponDestinyDrawsAction.appendEffect(
-                                new AddUntilEndOfTurnModifierEffect(protectBattleAndWeaponDestinyDrawsAction,
-                                        new MayNotCancelWeaponDestinyModifier(self, opponent, Filters.character_weapon),
-                                        "Prevents "+opponent+" from canceling character weapon destiny draws")
                         );
                     }
                 }
         );
-        actions.add(protectBattleAndWeaponDestinyDrawsAction);
+        actions.add(protectBattleDestinyDrawsAction);
 
         if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.or(Filters.Luke, Filters.Leia), Filters.alone))) {
             final PhysicalCard battleLocation = game.getGameState().getBattleLocation();
