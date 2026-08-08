@@ -274,7 +274,8 @@ public final class PullActionFactsReader {
         boolean wmaopBlockadeSiteOnTable =
                 sourceTitle.toLowerCase(Locale.ROOT).contains("accelerate our plans")
                 && blockadeFlagshipSiteOnTable(
-                        context != null ? context.game() : null, gameState);
+                        context != null ? context.game() : null, gameState,
+                        context != null ? context.playerId() : null);
         boolean requiredOnTableCardPull =
                 context != null
                 && context.objective() != null
@@ -594,21 +595,31 @@ public final class PullActionFactsReader {
     // the historical V142 getTopLocations title loop kept as the fallback.
     // Used by the V142 pre-pass gate (both bot mirrors), the shared PULL parent
     // facts above, and the WMAOP.FODDER_HOLD read in ForceLossFacts.
+    // WMAOP 2026-08-08 FIX-FORWARD (post-ship review B1): OWNER-scoped — the
+    // LIGHT-side Blockade Flagship: Docking Bay (14_048) also matches the persona
+    // filter, so an OPPONENT'S site was permanently disarming our WMAOP and
+    // promoting it to fodder. Steve's directive is "once WE pulled/deployed one".
     public static boolean blockadeFlagshipSiteOnTable(
-            SwccgGame game, GameState gameState) {
+            SwccgGame game, GameState gameState, String playerId) {
         try {
-            if (game != null && Filters.canSpot(game, null,
-                    Filters.siteOfStarshipOrVehicle(
-                            Persona.BLOCKADE_FLAGSHIP, true))) {
+            // if (game != null && Filters.canSpot(game, null,
+            //         Filters.siteOfStarshipOrVehicle(
+            //                 Persona.BLOCKADE_FLAGSHIP, true))) {
+            if (game != null && playerId != null && Filters.canSpot(game, null,
+                    Filters.and(
+                            Filters.siteOfStarshipOrVehicle(
+                                    Persona.BLOCKADE_FLAGSHIP, true),
+                            Filters.owner(playerId)))) {
                 return true;
             }
         } catch (Exception ignored) {
             // Fall through to the title probe.
         }
         try {
-            if (gameState != null) {
+            if (gameState != null && playerId != null) {
                 for (PhysicalCard location : gameState.getTopLocations()) {
                     if (location != null && location.getTitle() != null
+                            && playerId.equals(location.getOwner())
                             && location.getTitle().toLowerCase(Locale.ROOT)
                                 .contains("blockade flagship")) {
                         return true;

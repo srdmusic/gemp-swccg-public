@@ -1540,7 +1540,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         if (!v142Block && v142IsWmaopPlay
                                 && com.gempukku.swccgo.ai.models.common.phase.PullActionFactsReader
                                     .blockadeFlagshipSiteOnTable(
-                                        context.getGame(), v142Gs)) {
+                                        context.getGame(), v142Gs,
+                                        context.getPlayerId())) {
                             v142Block = true;
                             v142Reason = "WMAOP.FODDER_HOLD: Blockade Flagship site already on table — hold WMAOP in hand as force-loss fodder";
                         }

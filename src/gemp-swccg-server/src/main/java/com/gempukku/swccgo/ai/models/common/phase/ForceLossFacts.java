@@ -182,7 +182,8 @@ public final class ForceLossFacts {
                 && title != null
                 && title.toLowerCase(Locale.ROOT).contains("accelerate our plans")
                 && PullActionFactsReader.blockadeFlagshipSiteOnTable(
-                        gameState != null ? gameState.getGame() : null, gameState);
+                        gameState != null ? gameState.getGame() : null, gameState,
+                        playerId);
         // return new CandidateFacts(title, zoneName, zoneBand, category,
         //         duplicate, senator, battleInterrupt, hasWielder, priorityCard);
         return new CandidateFacts(title, zoneName, zoneBand, category,

@@ -186,6 +186,18 @@ public final class ForceLossPolicy {
                     TraceOutputKind.ORDERING, 300.0f,
                     "WMAOP.FODDER_HOLD: '" + title
                             + "' is dead in hand (Blockade Flagship site on table) — preferred force-loss fodder +300");
+        // WMAOP 2026-08-08 FIX-FORWARD (post-ship review N4): the directive's
+        // other half — BEFORE the Blockade site is out, the in-hand WMAOP is a
+        // live tool and must not be pitched as ordinary hand fodder. Derived
+        // from existing facts (hand + title + !fodderHold), magnitude mirrors
+        // the +300 promotion.
+        } else if (candidate.fromHand() && title != null
+                && title.toLowerCase(java.util.Locale.ROOT)
+                    .contains("accelerate our plans")) {
+            add(operations, actionId, "WMAOP.LIVE_HOLD",
+                    TraceOutputKind.ORDERING, -300.0f,
+                    "WMAOP.LIVE_HOLD: '" + title
+                            + "' still owes the Blockade Flagship site pull — keep the tool, lose something else");
         }
 
         boolean protectChars = decision.lifeForce() >= 4;
@@ -281,6 +293,18 @@ public final class ForceLossPolicy {
                     TraceOutputKind.ORDERING, 300.0f,
                     "WMAOP.FODDER_HOLD: '" + title
                             + "' is dead in hand (Blockade Flagship site on table) — preferred force-loss fodder +300");
+        // WMAOP 2026-08-08 FIX-FORWARD (post-ship review N4): the directive's
+        // other half — BEFORE the Blockade site is out, the in-hand WMAOP is a
+        // live tool and must not be pitched as ordinary hand fodder. Derived
+        // from existing facts (hand + title + !fodderHold), magnitude mirrors
+        // the +300 promotion.
+        } else if (candidate.fromHand() && title != null
+                && title.toLowerCase(java.util.Locale.ROOT)
+                    .contains("accelerate our plans")) {
+            add(operations, actionId, "WMAOP.LIVE_HOLD",
+                    TraceOutputKind.ORDERING, -300.0f,
+                    "WMAOP.LIVE_HOLD: '" + title
+                            + "' still owes the Blockade Flagship site pull — keep the tool, lose something else");
         }
 
         boolean protectChars = decision.lifeForce() >= 4;

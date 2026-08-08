@@ -226,9 +226,16 @@ public final class PullActionPolicy {
         //   DEPLOY_ONLY   — WMAOP fires only during our own DEPLOY phase.
         //   BLOCKADE_ONLY — only the Blockade Flagship site pull is sanctioned;
         //                   the Effect and Podracer modes waste the card.
+        // WMAOP 2026-08-08 FIX-FORWARD (post-ship review N3): also require the
+        // action text to be one of the card's three Reserve-Deck searches — the
+        // 2026-05-28 V142 incident showed WMAOP's cardId leaking onto unrelated
+        // actions ("Activate Force"); a bare source-title key repeats that class.
         boolean wmaopSource = facts.sourceTitle() != null
                 && facts.sourceTitle().toLowerCase(Locale.ROOT)
-                    .contains("accelerate our plans");
+                    .contains("accelerate our plans")
+                && facts.actionText() != null
+                && facts.actionText().toLowerCase(Locale.ROOT)
+                    .contains("from reserve deck");
         if (!hardBlocked && wmaopSource) {
             boolean wmaopLocationMode = facts.actionText()
                     .toLowerCase(Locale.ROOT).contains("blockade flagship");
