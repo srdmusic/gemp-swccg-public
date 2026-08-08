@@ -80,7 +80,11 @@ public final class PullActionFacts {
             String formationReason,
             boolean requiredOnTableCardPull,
             boolean requiredOnTableCardPullVetoBypass,
-            boolean objectiveRoutePullVetoBypass) {
+            boolean objectiveRoutePullVetoBypass,
+            // WMAOP 2026-08-08 (Steve directive): true when the source is We Must
+            // Accelerate Our Plans AND a Blockade Flagship site is already on table
+            // (engine-typed persona probe) — drives the WMAOP.FODDER_HOLD veto.
+            boolean wmaopBlockadeSiteOnTable) {
         public Parent {
             Objects.requireNonNull(actionId, "actionId");
             actionText = actionText == null ? "" : actionText;

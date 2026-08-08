@@ -5,9 +5,15 @@ import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+// WMAOP 2026-08-08 (Steve directive): imports for the WMAOP parent-gate tests.
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.Phase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+// WMAOP 2026-08-08 (Steve directive): assertions for the WMAOP parent-gate tests.
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class PullActionPolicyTest {
 
@@ -79,6 +85,123 @@ public class PullActionPolicyTest {
         assertTake(take(PullActionPolicy.TakeIntoHandKind.GENERIC),
                 "PULL-take-generic", TraceOutputKind.ORDERING, 30.0f,
                 "Take card into hand");
+    }
+
+    // WMAOP 2026-08-08 (Steve directive): outside our DEPLOY phase, every
+    // We Must Accelerate Our Plans mode is vetoed at the parent gate.
+    @Test
+    public void wmaopOutsideDeployPhaseIsVetoedDeployOnly() {
+        PullActionPolicy.Evaluation result = PullActionPolicy.evaluateParent(
+                wmaopParent("Deploy a Blockade Flagship site from Reserve Deck",
+                        Phase.MOVE, false));
+
+        assertTrue(hasWmaopRule(result, "WMAOP.DEPLOY_ONLY"));
+    }
+
+    // WMAOP 2026-08-08 (Steve directive): the Effect and Podracer-Interrupt
+    // modes are never sanctioned — only the Blockade Flagship site pull is.
+    @Test
+    public void wmaopNonBlockadeModesAreVetoedBlockadeOnly() {
+        assertTrue(hasWmaopRule(PullActionPolicy.evaluateParent(
+                        wmaopParent("Take Effect into hand from Reserve Deck",
+                                Phase.DEPLOY, false)),
+                "WMAOP.BLOCKADE_ONLY"));
+        assertTrue(hasWmaopRule(PullActionPolicy.evaluateParent(
+                        wmaopParent("Take Interrupt into hand from Reserve Deck",
+                                Phase.DEPLOY, false)),
+                "WMAOP.BLOCKADE_ONLY"));
+    }
+
+    // WMAOP 2026-08-08 (Steve directive): once a Blockade Flagship site is on
+    // table, WMAOP never fires again — held in hand as force-loss fodder. The
+    // hold outranks the phase gate on every mode.
+    @Test
+    public void wmaopHeldAsFodderOnceBlockadeSiteOnTable() {
+        assertTrue(hasWmaopRule(PullActionPolicy.evaluateParent(
+                        wmaopParent("Deploy a Blockade Flagship site from Reserve Deck",
+                                Phase.DEPLOY, true)),
+                "WMAOP.FODDER_HOLD"));
+        assertTrue(hasWmaopRule(PullActionPolicy.evaluateParent(
+                        wmaopParent("Take Effect into hand from Reserve Deck",
+                                Phase.MOVE, true)),
+                "WMAOP.FODDER_HOLD"));
+    }
+
+    // WMAOP 2026-08-08 (Steve directive): the one sanctioned play — Blockade
+    // Flagship site pull, our DEPLOY phase, site not yet on table — passes the
+    // WMAOP gate untouched.
+    @Test
+    public void wmaopSanctionedBlockadePullPassesTheGate() {
+        PullActionPolicy.Evaluation result = PullActionPolicy.evaluateParent(
+                wmaopParent("Deploy a Blockade Flagship site from Reserve Deck",
+                        Phase.DEPLOY, false));
+
+        assertFalse(hasWmaopRule(result, "WMAOP.DEPLOY_ONLY"));
+        assertFalse(hasWmaopRule(result, "WMAOP.BLOCKADE_ONLY"));
+        assertFalse(hasWmaopRule(result, "WMAOP.FODDER_HOLD"));
+    }
+
+    // WMAOP 2026-08-08 (Steve directive): parent facts for a We Must
+    // Accelerate Our Plans action — modeled on CaptureObjectivePullPolicyTest.
+    private static PullActionFacts.Parent wmaopParent(
+            String actionText, Phase phase, boolean blockadeSiteOnTable) {
+        PullOracleView.Validation unknown =
+                new PullOracleView.Validation(
+                        PullOracleView.Outcome.UNKNOWN, "");
+        return new PullActionFacts.Parent(
+                "wmaop-42",
+                actionText,
+                10,
+                false,
+                "",
+                unknown,
+                unknown,
+                "We Must Accelerate Our Plans",
+                false,
+                0,
+                6,
+                false,
+                "[]",
+                10,
+                false,
+                "",
+                CardCategory.INTERRUPT,
+                PullActionFacts.V131State.CLOSED,
+                "",
+                false,
+                "",
+                false,
+                0,
+                0,
+                0,
+                false,
+                "",
+                0,
+                0,
+                "",
+                false,
+                phase,
+                false,
+                false,
+                false,
+                PullActionFacts.FormationState.NONE,
+                "",
+                false,
+                false,
+                false,
+                blockadeSiteOnTable);
+    }
+
+    // WMAOP 2026-08-08 (Steve directive): rule lookup for the WMAOP gate tests.
+    private static boolean hasWmaopRule(
+            PullActionPolicy.Evaluation evaluation, String ruleId) {
+        for (PolicyOperation operation
+                : evaluation.result().operations()) {
+            if (ruleId.equals(operation.ruleArmId().id())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static PullActionPolicy.WeaponOrderEvaluation weaponOrder(

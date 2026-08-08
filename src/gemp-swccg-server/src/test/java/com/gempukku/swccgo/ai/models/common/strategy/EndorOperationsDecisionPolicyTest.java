@@ -393,6 +393,8 @@ public class EndorOperationsDecisionPolicyTest {
                 "",
                 requiredOnTableCardPull,
                 false,
+                false,
+                // WMAOP 2026-08-08 (Steve directive): wmaopBlockadeSiteOnTable
                 false);
     }
 

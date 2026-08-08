@@ -11,6 +11,7 @@ import com.gempukku.swccgo.common.Phase;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 /** Pure parent-action PULL policy shared by Rando and Chosen One. */
@@ -216,6 +217,37 @@ public final class PullActionPolicy {
                     "V60 RESERVE MISS: '" + facts.namedMissingTarget()
                             + "' is NOT in Reserve Deck \u2014 pull will fail and reveal deck!"));
             hardBlocked = true;
+        }
+
+        // WMAOP 2026-08-08 (Steve directive): second net behind the V142 pre-pass
+        // gate — the directive holds on EVERY adapter route to the pull engine:
+        //   FODDER_HOLD   — Blockade Flagship site already on table: never play
+        //                   WMAOP again; hold it in hand as force-loss fodder.
+        //   DEPLOY_ONLY   — WMAOP fires only during our own DEPLOY phase.
+        //   BLOCKADE_ONLY — only the Blockade Flagship site pull is sanctioned;
+        //                   the Effect and Podracer modes waste the card.
+        boolean wmaopSource = facts.sourceTitle() != null
+                && facts.sourceTitle().toLowerCase(Locale.ROOT)
+                    .contains("accelerate our plans");
+        if (!hardBlocked && wmaopSource) {
+            boolean wmaopLocationMode = facts.actionText()
+                    .toLowerCase(Locale.ROOT).contains("blockade flagship");
+            if (facts.wmaopBlockadeSiteOnTable()) {
+                operations.add(add(facts.actionId(), "WMAOP.FODDER_HOLD",
+                        TraceOutputKind.VETO, -2000.0f,
+                        "WMAOP.FODDER_HOLD: Blockade Flagship site already on table — never play We Must Accelerate Our Plans again; hold it in hand as preferred force-loss fodder"));
+                hardBlocked = true;
+            } else if (facts.phase() != Phase.DEPLOY) {
+                operations.add(add(facts.actionId(), "WMAOP.DEPLOY_ONLY",
+                        TraceOutputKind.VETO, -2000.0f,
+                        "WMAOP.DEPLOY_ONLY: We Must Accelerate Our Plans fires only during our DEPLOY phase — hold the interrupt"));
+                hardBlocked = true;
+            } else if (!wmaopLocationMode) {
+                operations.add(add(facts.actionId(), "WMAOP.BLOCKADE_ONLY",
+                        TraceOutputKind.VETO, -2000.0f,
+                        "WMAOP.BLOCKADE_ONLY: only the Blockade Flagship site pull is sanctioned — the Effect/Podracer modes waste the card"));
+                hardBlocked = true;
+            }
         }
 
         PullOracleView.Validation memory = facts.memoryValidation();

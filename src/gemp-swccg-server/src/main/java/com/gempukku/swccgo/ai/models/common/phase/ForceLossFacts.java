@@ -39,7 +39,27 @@ public final class ForceLossFacts {
                                  boolean senator,
                                  boolean battleInterrupt,
                                  boolean hasWielder,
-                                 boolean priorityCard) {
+                                 boolean priorityCard,
+                                 // WMAOP 2026-08-08 (Steve directive): in-hand We
+                                 // Must Accelerate Our Plans with its Blockade
+                                 // Flagship site already on table — dead by
+                                 // directive, PREFERRED force-loss fodder.
+                                 boolean wmaopFodderHold) {
+        // WMAOP 2026-08-08 (Steve directive): compatibility constructor —
+        // pre-directive callers default wmaopFodderHold=false.
+        public CandidateFacts(String title,
+                              String zoneName,
+                              ZoneBand zoneBand,
+                              CardCategory category,
+                              boolean duplicate,
+                              boolean senator,
+                              boolean battleInterrupt,
+                              boolean hasWielder,
+                              boolean priorityCard) {
+            this(title, zoneName, zoneBand, category, duplicate, senator,
+                    battleInterrupt, hasWielder, priorityCard, false);
+        }
+
         public boolean fromHand() {
             return zoneBand == ZoneBand.HAND;
         }
@@ -155,8 +175,19 @@ public final class ForceLossFacts {
                 && hasAnyWielder(gameState, playerId);
         boolean priorityCard = title != null
                 && AiPriorityCards.isPriorityCardByTitle(title);
+        // WMAOP 2026-08-08 (Steve directive): once the Blockade Flagship site is
+        // on table, the in-hand WMAOP is dead — mark it as the preferred fodder
+        // (V95 dead-interrupt-save precedent; shared engine-typed table probe).
+        boolean wmaopFodderHold = zoneBand == ZoneBand.HAND
+                && title != null
+                && title.toLowerCase(Locale.ROOT).contains("accelerate our plans")
+                && PullActionFactsReader.blockadeFlagshipSiteOnTable(
+                        gameState != null ? gameState.getGame() : null, gameState);
+        // return new CandidateFacts(title, zoneName, zoneBand, category,
+        //         duplicate, senator, battleInterrupt, hasWielder, priorityCard);
         return new CandidateFacts(title, zoneName, zoneBand, category,
-                duplicate, senator, battleInterrupt, hasWielder, priorityCard);
+                duplicate, senator, battleInterrupt, hasWielder, priorityCard,
+                wmaopFodderHold);
     }
 
     public static boolean isForceLossZone(PhysicalCard card) {

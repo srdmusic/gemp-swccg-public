@@ -68,7 +68,9 @@ public class CaptureObjectivePullPolicyTest {
                 "",
                 false,
                 false,
-                objectiveRouteBypass);
+                objectiveRouteBypass,
+                // WMAOP 2026-08-08 (Steve directive): wmaopBlockadeSiteOnTable
+                false);
     }
 
     private static boolean hasRule(

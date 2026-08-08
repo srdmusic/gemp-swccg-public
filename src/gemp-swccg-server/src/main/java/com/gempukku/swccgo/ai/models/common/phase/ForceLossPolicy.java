@@ -178,6 +178,16 @@ public final class ForceLossPolicy {
 
         addZoneScore(operations, actionId, decision, candidate, true);
 
+        // WMAOP 2026-08-08 (Steve directive): Blockade site on table means the
+        // in-hand WMAOP is dead — promote it as the PREFERRED force-loss fodder
+        // (V95 precedent: the pull veto holds it in hand; this makes it the pick).
+        if (candidate.fromHand() && candidate.wmaopFodderHold()) {
+            add(operations, actionId, "WMAOP.FODDER_HOLD",
+                    TraceOutputKind.ORDERING, 300.0f,
+                    "WMAOP.FODDER_HOLD: '" + title
+                            + "' is dead in hand (Blockade Flagship site on table) — preferred force-loss fodder +300");
+        }
+
         boolean protectChars = decision.lifeForce() >= 4;
         if (candidate.fromReserve() && protectChars
                 && decision.reserveDeckSize() <= 10) {
@@ -263,6 +273,15 @@ public final class ForceLossPolicy {
         }
 
         addZoneScore(operations, actionId, decision, candidate, false);
+
+        // WMAOP 2026-08-08 (Steve directive): mirror of the standalone route —
+        // dead in-hand WMAOP is the preferred fodder on combined decisions too.
+        if (candidate.fromHand() && candidate.wmaopFodderHold()) {
+            add(operations, actionId, "WMAOP.FODDER_HOLD",
+                    TraceOutputKind.ORDERING, 300.0f,
+                    "WMAOP.FODDER_HOLD: '" + title
+                            + "' is dead in hand (Blockade Flagship site on table) — preferred force-loss fodder +300");
+        }
 
         boolean protectChars = decision.lifeForce() >= 4;
         if (candidate.fromReserve() && protectChars

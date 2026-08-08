@@ -243,6 +243,36 @@ public class ForceLossPolicyTest {
                         "V153 ZONE (HAND, lifeForce=8, protectChars=true)"));
     }
 
+    // WMAOP 2026-08-08 (Steve directive): once the Blockade Flagship site is on
+    // table, the in-hand We Must Accelerate Our Plans is dead by directive —
+    // +300 promotes it as the preferred force-loss fodder on BOTH routes.
+    @Test
+    public void wmaopFodderHoldPromotesDeadHandWmaopOnBothRoutes() {
+        ForceLossFacts.CandidateFacts wmaop = new ForceLossFacts.CandidateFacts(
+                "We Must Accelerate Our Plans", "HAND",
+                ForceLossFacts.ZoneBand.HAND, CardCategory.INTERRUPT,
+                false, false, false, false, false, true);
+
+        assertOperations(score(ForceLossPolicy.Route.STANDALONE,
+                        decision(5, 20, 8, 0, 2, false), wmaop, none()),
+                op("V153-zone", 600.0f,
+                        "V153 ZONE (HAND, lifeForce=8, protectChars=true)"),
+                op("WMAOP.FODDER_HOLD", 300.0f,
+                        "WMAOP.FODDER_HOLD: 'We Must Accelerate Our Plans' is dead in hand (Blockade Flagship site on table) — preferred force-loss fodder +300"));
+        assertOperations(score(ForceLossPolicy.Route.COMBINED_BATTLE,
+                        decision(5, 20, 8, 0, 2, false), wmaop, none()),
+                op("V153-zone", 600.0f,
+                        "V153 ZONE (HAND, lifeForce=8, protectChars=true)"),
+                op("WMAOP.FODDER_HOLD", 300.0f,
+                        "WMAOP.FODDER_HOLD: 'We Must Accelerate Our Plans' is dead in hand (Blockade Flagship site on table) — preferred force-loss fodder +300"));
+
+        // Pre-directive nine-arg constructor keeps wmaopFodderHold=false.
+        ForceLossFacts.CandidateFacts legacy = candidate(
+                "We Must Accelerate Our Plans", ForceLossFacts.ZoneBand.HAND,
+                "HAND", CardCategory.INTERRUPT, false, false, false, false, false);
+        assertFalse(legacy.wmaopFodderHold());
+    }
+
     @Test
     public void oneResultNeverRepeatsAnActionRuleContributionKey() {
         ForceLossFacts.CandidateFacts richCandidate = candidate(

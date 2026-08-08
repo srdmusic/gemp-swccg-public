@@ -1477,6 +1477,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
             //
             // If no precondition matches → hard block. We don't fire WMAOP just
             // because we can; we fire when it actually delivers value.
+            //
+            // WMAOP 2026-08-08 (Steve directive): V142 tightened IN PLACE:
+            //   (1) WMAOP.DEPLOY_ONLY   — deploy phase only (existing gate, tagged);
+            //   (2) WMAOP.BLOCKADE_ONLY — ONLY the Blockade Flagship site pull is
+            //       sanctioned; the Effect and Podracer modes are blocked
+            //       unconditionally (old deck-aware preconditions kept below
+            //       as comments);
+            //   (3) WMAOP.FODDER_HOLD   — once a Blockade Flagship site is on
+            //       table (shared engine-typed persona probe), NO mode may fire
+            //       again — hold WMAOP in hand as preferred force-loss fodder
+            //       (see WMAOP.FODDER_HOLD in ForceLossPolicy); mode 2 is also
+            //       held when no Blockade Flagship site remains in Reserve — the
+            //       check this comment always promised but never implemented.
             if (cardId != null && context.getGameState() != null) {
                 try {
                     com.gempukku.swccgo.game.state.GameState v142Gs = context.getGameState();
@@ -1510,62 +1523,118 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         // Phase gate — only for genuine WMAOP plays
                         if (v142IsWmaopPlay && context.getPhase() != Phase.DEPLOY) {
                             v142Block = true;
-                            v142Reason = "not deploy phase";
+                            // WMAOP 2026-08-08 (Steve directive): tagged reason.
+                            // v142Reason = "not deploy phase";
+                            v142Reason = "WMAOP.DEPLOY_ONLY: not deploy phase";
                         }
 
                         com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle v142Oracle =
                             context.getDeckOracle();
 
-                        if (!v142Block && v142IsLocationMode) {
-                            // Block if BFS already on table
-                            for (PhysicalCard loc : v142Gs.getTopLocations()) {
-                                if (loc == null || loc.getTitle() == null) continue;
-                                if (loc.getTitle().toLowerCase(java.util.Locale.ROOT)
-                                        .contains("blockade flagship")) {
-                                    v142Block = true;
-                                    v142Reason = "Blockade Flagship site already on table";
-                                    break;
-                                }
-                            }
+                        // WMAOP 2026-08-08 (Steve directive): once a Blockade
+                        // Flagship site is on table, block EVERY mode — hold the
+                        // card in hand as preferred force-loss fodder. Shared
+                        // engine-typed persona probe (the card's own deploy
+                        // filter, Card12_163.java:83); the old title loop lives
+                        // on inside the probe as its fallback.
+                        if (!v142Block && v142IsWmaopPlay
+                                && com.gempukku.swccgo.ai.models.common.phase.PullActionFactsReader
+                                    .blockadeFlagshipSiteOnTable(
+                                        context.getGame(), v142Gs)) {
+                            v142Block = true;
+                            v142Reason = "WMAOP.FODDER_HOLD: Blockade Flagship site already on table — hold WMAOP in hand as force-loss fodder";
                         }
 
-                        if (!v142Block && v142IsEffectMode && v142Oracle != null
-                                && v142Oracle.isAnalyzed()) {
-                            // Block if no effects in reserve
-                            java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> v142Effects =
-                                v142Oracle.getCardsByCategory(
-                                    com.gempukku.swccgo.common.CardCategory.EFFECT,
-                                    com.gempukku.swccgo.common.Zone.RESERVE_DECK);
-                            if (v142Effects == null || v142Effects.isEmpty()) {
-                                v142Block = true;
-                                v142Reason = "no Effects in reserve for Effect-pull mode";
-                            }
-                        }
+                        // WMAOP 2026-08-08 (Steve directive): SUPERSEDED — the
+                        // location-mode-only on-table loop is replaced by the
+                        // all-modes shared probe above.
+                        // if (!v142Block && v142IsLocationMode) {
+                        //     // Block if BFS already on table
+                        //     for (PhysicalCard loc : v142Gs.getTopLocations()) {
+                        //         if (loc == null || loc.getTitle() == null) continue;
+                        //         if (loc.getTitle().toLowerCase(java.util.Locale.ROOT)
+                        //                 .contains("blockade flagship")) {
+                        //             v142Block = true;
+                        //             v142Reason = "Blockade Flagship site already on table";
+                        //             break;
+                        //         }
+                        //     }
+                        // }
 
-                        if (!v142Block && v142IsInterruptMode && v142Oracle != null
+                        // WMAOP 2026-08-08 (Steve directive): mode 2 must still
+                        // have a Blockade Flagship site IN RESERVE — the check
+                        // the V142 header always promised. Site drawn/lost ⇒ the
+                        // search would fail and reveal reserve; hold as fodder.
+                        if (!v142Block && v142IsLocationMode && v142Oracle != null
                                 && v142Oracle.isAnalyzed()) {
-                            // Block if no podracer interrupts in reserve
-                            boolean v142HasPodracer = false;
-                            java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> v142Interrupts =
+                            boolean v142SiteInReserve = false;
+                            java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> v142Sites =
                                 v142Oracle.getCardsByCategory(
-                                    com.gempukku.swccgo.common.CardCategory.INTERRUPT,
+                                    com.gempukku.swccgo.common.CardCategory.LOCATION,
                                     com.gempukku.swccgo.common.Zone.RESERVE_DECK);
-                            if (v142Interrupts != null) {
-                                for (com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard dc : v142Interrupts) {
-                                    if (dc == null) continue;
-                                    String dcText = dc.getGameText() != null
-                                        ? dc.getGameText().toLowerCase(java.util.Locale.ROOT) : "";
-                                    if (dcText.contains("podracer")) {
-                                        v142HasPodracer = true;
+                            if (v142Sites != null) {
+                                for (com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard dc : v142Sites) {
+                                    if (dc == null || dc.getTitle() == null) continue;
+                                    if (dc.getTitle().toLowerCase(java.util.Locale.ROOT)
+                                            .contains("blockade flagship")) {
+                                        v142SiteInReserve = true;
                                         break;
                                     }
                                 }
                             }
-                            if (!v142HasPodracer) {
+                            if (!v142SiteInReserve) {
                                 v142Block = true;
-                                v142Reason = "no Podracer interrupts in reserve";
+                                v142Reason = "WMAOP.FODDER_HOLD: no Blockade Flagship site remains in Reserve Deck — search would fail; hold WMAOP as fodder";
                             }
                         }
+
+                        // WMAOP 2026-08-08 (Steve directive): BLOCKADE_ONLY — the
+                        // Effect and Podracer modes are never sanctioned, whatever
+                        // the deck contents. The old deck-aware preconditions are
+                        // kept below as comments.
+                        if (!v142Block && (v142IsEffectMode || v142IsInterruptMode)
+                                && !v142IsLocationMode) {
+                            v142Block = true;
+                            v142Reason = "WMAOP.BLOCKADE_ONLY: only the Blockade Flagship site pull is sanctioned — Effect/Podracer modes waste the card";
+                        }
+
+                        // if (!v142Block && v142IsEffectMode && v142Oracle != null
+                        //         && v142Oracle.isAnalyzed()) {
+                        //     // Block if no effects in reserve
+                        //     java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> v142Effects =
+                        //         v142Oracle.getCardsByCategory(
+                        //             com.gempukku.swccgo.common.CardCategory.EFFECT,
+                        //             com.gempukku.swccgo.common.Zone.RESERVE_DECK);
+                        //     if (v142Effects == null || v142Effects.isEmpty()) {
+                        //         v142Block = true;
+                        //         v142Reason = "no Effects in reserve for Effect-pull mode";
+                        //     }
+                        // }
+
+                        // if (!v142Block && v142IsInterruptMode && v142Oracle != null
+                        //         && v142Oracle.isAnalyzed()) {
+                        //     // Block if no podracer interrupts in reserve
+                        //     boolean v142HasPodracer = false;
+                        //     java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> v142Interrupts =
+                        //         v142Oracle.getCardsByCategory(
+                        //             com.gempukku.swccgo.common.CardCategory.INTERRUPT,
+                        //             com.gempukku.swccgo.common.Zone.RESERVE_DECK);
+                        //     if (v142Interrupts != null) {
+                        //         for (com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard dc : v142Interrupts) {
+                        //             if (dc == null) continue;
+                        //             String dcText = dc.getGameText() != null
+                        //                 ? dc.getGameText().toLowerCase(java.util.Locale.ROOT) : "";
+                        //             if (dcText.contains("podracer")) {
+                        //                 v142HasPodracer = true;
+                        //                 break;
+                        //             }
+                        //         }
+                        //     }
+                        //     if (!v142HasPodracer) {
+                        //         v142Block = true;
+                        //         v142Reason = "no Podracer interrupts in reserve";
+                        //     }
+                        // }
 
                         applyPullSpecificActionPolicy(action,
                             PullSpecificActionPolicy.scoreWmaopGate(

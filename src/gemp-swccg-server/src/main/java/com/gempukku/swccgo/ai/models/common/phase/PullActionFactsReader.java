@@ -3,9 +3,11 @@ package com.gempukku.swccgo.ai.models.common.phase;
 import com.gempukku.swccgo.ai.models.common.strategy.FormationSafety;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -266,6 +268,13 @@ public final class PullActionFactsReader {
         PhysicalCard source = sourceCard(gameState, sourceCardId);
         String sourceTitle = sourceTitle(source);
         CardCategory sourceCategory = sourceCategory(source);
+        // WMAOP 2026-08-08 (Steve directive): probe the table only for We Must
+        // Accelerate Our Plans sources — the shared policy turns this into the
+        // WMAOP.FODDER_HOLD veto (never play WMAOP once its Blockade site is out).
+        boolean wmaopBlockadeSiteOnTable =
+                sourceTitle.toLowerCase(Locale.ROOT).contains("accelerate our plans")
+                && blockadeFlagshipSiteOnTable(
+                        context != null ? context.game() : null, gameState);
         boolean requiredOnTableCardPull =
                 context != null
                 && context.objective() != null
@@ -460,7 +469,8 @@ public final class PullActionFactsReader {
                 deadInterrupt, location, hosts, keyCharacter, context,
                 true, formation, requiredOnTableCardPull,
                 requiredOnTableCardPullVetoBypass,
-                objectiveRoutePullVetoBypass);
+                objectiveRoutePullVetoBypass,
+                wmaopBlockadeSiteOnTable);
     }
 
     private static PullActionFacts.Parent buildParent(
@@ -482,13 +492,16 @@ public final class PullActionFactsReader {
             Context context,
             boolean includeLateContext,
             FormationAssessment formation) {
+        // WMAOP 2026-08-08 (Steve directive): early-return veto paths default the
+        // WMAOP table probe to false — every such path is already a hard veto.
+        // formation, false, false, false);
         return buildParent(
                 actionId, text, reserveSize, namedMissingTarget,
                 memoryValidation, sourceValidation, sourceTitle,
                 sourceCategory, allUnattachable, cheapestCost,
                 availableForce, deadInterrupt, location, hosts,
                 keyCharacter, context, includeLateContext,
-                formation, false, false, false);
+                formation, false, false, false, false);
     }
 
     private static PullActionFacts.Parent buildParent(
@@ -512,7 +525,9 @@ public final class PullActionFactsReader {
             FormationAssessment formation,
             boolean requiredOnTableCardPull,
             boolean requiredOnTableCardPullVetoBypass,
-            boolean objectiveRoutePullVetoBypass) {
+            boolean objectiveRoutePullVetoBypass,
+            // WMAOP 2026-08-08 (Steve directive): see readParent probe above.
+            boolean wmaopBlockadeSiteOnTable) {
         boolean charactersOrVehiclesInHand = false;
         boolean battlePlausible = false;
         if (includeLateContext && context != null && context.lateView() != null) {
@@ -568,7 +583,42 @@ public final class PullActionFactsReader {
                 formation.reason(),
                 requiredOnTableCardPull,
                 requiredOnTableCardPullVetoBypass,
-                objectiveRoutePullVetoBypass);
+                objectiveRoutePullVetoBypass,
+                wmaopBlockadeSiteOnTable);
+    }
+
+    // WMAOP 2026-08-08 (Steve directive): shared "Blockade Flagship site on
+    // table" probe. Primary idiom is the engine-typed spot with the card's OWN
+    // deploy filter (Card12_163.java:83) — Filters.canSpot(game, null,
+    // Filters.siteOfStarshipOrVehicle(Persona.BLOCKADE_FLAGSHIP, true)) — with
+    // the historical V142 getTopLocations title loop kept as the fallback.
+    // Used by the V142 pre-pass gate (both bot mirrors), the shared PULL parent
+    // facts above, and the WMAOP.FODDER_HOLD read in ForceLossFacts.
+    public static boolean blockadeFlagshipSiteOnTable(
+            SwccgGame game, GameState gameState) {
+        try {
+            if (game != null && Filters.canSpot(game, null,
+                    Filters.siteOfStarshipOrVehicle(
+                            Persona.BLOCKADE_FLAGSHIP, true))) {
+                return true;
+            }
+        } catch (Exception ignored) {
+            // Fall through to the title probe.
+        }
+        try {
+            if (gameState != null) {
+                for (PhysicalCard location : gameState.getTopLocations()) {
+                    if (location != null && location.getTitle() != null
+                            && location.getTitle().toLowerCase(Locale.ROOT)
+                                .contains("blockade flagship")) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // Fail open exactly like the surrounding readers.
+        }
+        return false;
     }
 
     private static int safeReserveSize(Context context) {

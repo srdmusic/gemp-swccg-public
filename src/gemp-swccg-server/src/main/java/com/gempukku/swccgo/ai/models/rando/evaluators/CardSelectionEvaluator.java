@@ -11236,6 +11236,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 readExactTdigwattPullSource(context);
         PhysicalCard exactRalltiirBackTutorSource =
                 readExactRalltiirBackTutorSource(context);
+        // WMAOP 2026-08-08 (Steve directive): a WMAOP take-into-hand search can
+        // only offer non-Blockade cards (Effects / Podracer Interrupts) — never
+        // spend the card on those; veto every candidate (WMAOP.BLOCKADE_ONLY).
+        PhysicalCard wmaopTakeSource = readLiveWmaopPullSource(context);
 
         logger.info("🔍 evaluateTakeIntoHand: {} cards, {} blueprints, {} testingTexts",
                    cardIds != null ? cardIds.size() : 0,
@@ -11295,6 +11299,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             action.setCardName(cardTitle);
             if (blueprintId != null) {
                 action.setBlueprintId(blueprintId);
+            }
+
+            // WMAOP 2026-08-08 (Steve directive): see wmaopTakeSource above.
+            if (wmaopTakeSource != null) {
+                action.addReasoning(
+                    "WMAOP.BLOCKADE_ONLY: '" + cardTitle
+                        + "' is not the Blockade Flagship site — WMAOP is never spent on Effect/Podracer pulls",
+                    -2000.0f);
             }
 
             if (exactTdigwattPullSource != null) {
@@ -11423,6 +11435,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         .THIS_DEAL_IS_GETTING_WORSE_ALL_THE_TIME_V__UPLOAD_CARD;
             return liveAction.getGameTextActionId()
                     == expectedActionId ? source : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    // WMAOP 2026-08-08 (Steve directive): resolve whether the LIVE child search
+    // decision was opened by We Must Accelerate Our Plans — engine-typed source
+    // read (top GameTextActionState), same idiom as readExactTdigwattPullSource.
+    // Drives the WMAOP.BLOCKADE_ONLY child steering in evaluateTakeIntoHand
+    // (modes 1/3 can only offer non-Blockade cards → veto every candidate) and
+    // evaluateReserveDeckSelection (prefer the Blockade Flagship site).
+    private PhysicalCard readLiveWmaopPullSource(DecisionContext context) {
+        if (context == null || context.getGameState() == null) {
+            return null;
+        }
+        try {
+            var actionState = context.getGameState()
+                    .getTopGameTextActionState();
+            var liveAction = actionState != null
+                    ? actionState.getGameTextAction() : null;
+            PhysicalCard source = liveAction != null
+                    ? liveAction.getActionSource() : null;
+            return source != null && source.getTitle() != null
+                    && source.getTitle().toLowerCase(Locale.ROOT)
+                        .contains("accelerate our plans")
+                    ? source : null;
         } catch (Exception ignored) {
             return null;
         }
@@ -12130,6 +12168,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         List<String> reserveTestingTexts = context.getTestingTexts();
         List<String> reserveCardIds = context.getCardIds();
 
+        // WMAOP 2026-08-08 (Steve directive): in a WMAOP-sourced Reserve search,
+        // strongly prefer the Blockade Flagship site and veto any non-Blockade
+        // pick (mode 2's persona filter should only ever offer Blockade sites).
+        PhysicalCard wmaopDeploySource = readLiveWmaopPullSource(context);
+
         for (int i = 0; i < blueprints.size(); i++) {
             String blueprintId = blueprints.get(i);
             String candidateCardId =
@@ -12179,6 +12222,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 } else {
                     action.hardVeto(
                         "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE_ILLEGAL: offered blueprint no longer has a legal Castle deploy");
+                }
+            }
+            // WMAOP 2026-08-08 (Steve directive): see wmaopDeploySource above.
+            if (wmaopDeploySource != null) {
+                if (cardTitle != null && cardTitle.toLowerCase(Locale.ROOT)
+                        .contains("blockade flagship")) {
+                    action.addReasoning(
+                        "WMAOP.BLOCKADE_ONLY: prefer the Blockade Flagship site — the only sanctioned WMAOP pull",
+                        1000.0f);
+                } else {
+                    action.addReasoning(
+                        "WMAOP.BLOCKADE_ONLY: non-Blockade candidate offered by a WMAOP search — veto",
+                        -2000.0f);
                 }
             }
             PullDeployCandidatePolicy.Evaluation pullCandidate =
