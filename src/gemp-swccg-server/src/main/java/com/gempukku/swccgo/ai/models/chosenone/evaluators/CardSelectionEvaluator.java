@@ -11457,7 +11457,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     ? actionState.getGameTextAction() : null;
             PhysicalCard source = liveAction != null
                     ? liveAction.getActionSource() : null;
-            return source != null && source.getTitle() != null
+            // WMAOP 2026-08-08 FIX-FORWARD (post-ship review blocker 1): title-only
+            // matching could cancel an unrelated pull resolving while a WMAOP action
+            // sits on the stack (nested window / opponent's copy). Gate on the card's
+            // own GameTextActionIds and the deciding player, mirroring the
+            // readExactTdigwattPullSource discipline. getGameTextActionId() throws
+            // for non-game-text actions; the enclosing catch maps that to null.
+            com.gempukku.swccgo.common.GameTextActionId wmaopGtaId = liveAction != null
+                    ? liveAction.getGameTextActionId() : null;
+            boolean wmaopActionId =
+                    wmaopGtaId == com.gempukku.swccgo.common.GameTextActionId.WE_MUST_ACCELERATE_OUR_PLANS__UPLOAD_EFFECT
+                    || wmaopGtaId == com.gempukku.swccgo.common.GameTextActionId.WE_MUST_ACCELERATE_OUR_PLANS__DOWNLOAD_BLOCKADE_FLAGSHIP_SITE
+                    || wmaopGtaId == com.gempukku.swccgo.common.GameTextActionId.WE_MUST_ACCELERATE_OUR_PLANS__UPLOAD_INTERRUPT;
+            // return source != null && source.getTitle() != null
+            //         && source.getTitle().toLowerCase(Locale.ROOT)
+            //             .contains("accelerate our plans")
+            //         ? source : null;
+            return wmaopActionId && source != null
+                    && context.getPlayerId() != null
+                    && context.getPlayerId().equals(source.getOwner())
+                    && source.getTitle() != null
                     && source.getTitle().toLowerCase(Locale.ROOT)
                         .contains("accelerate our plans")
                     ? source : null;
@@ -12231,7 +12250,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     action.addReasoning(
                         "WMAOP.BLOCKADE_ONLY: prefer the Blockade Flagship site — the only sanctioned WMAOP pull",
                         1000.0f);
-                } else {
+                // WMAOP 2026-08-08 FIX-FORWARD (post-ship review blocker 2): only veto
+                // candidates whose title RESOLVED as non-Blockade — an unresolved
+                // lookup must stay neutral or the sanctioned pull itself gets vetoed
+                // when the blueprint library misses.
+                // } else {
+                } else if (cardTitle != null) {
                     action.addReasoning(
                         "WMAOP.BLOCKADE_ONLY: non-Blockade candidate offered by a WMAOP search — veto",
                         -2000.0f);

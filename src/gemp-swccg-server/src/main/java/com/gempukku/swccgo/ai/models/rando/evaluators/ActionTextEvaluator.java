@@ -1582,7 +1582,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     }
                                 }
                             }
-                            if (!v142SiteInReserve) {
+                            // WMAOP 2026-08-08 FIX-FORWARD (post-ship review blocker 3):
+                            // an empty/null oracle location list is UNKNOWN zone data, not
+                            // proof of absence — only block when the oracle affirmatively
+                            // lists reserve locations and none of them is Blockade.
+                            // if (!v142SiteInReserve) {
+                            if (v142Sites != null && !v142Sites.isEmpty() && !v142SiteInReserve) {
                                 v142Block = true;
                                 v142Reason = "WMAOP.FODDER_HOLD: no Blockade Flagship site remains in Reserve Deck — search would fail; hold WMAOP as fodder";
                             }
