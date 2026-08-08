@@ -224,7 +224,7 @@ public class Card_209_011_Tests {
 		assertEquals(Zone.TOP_OF_USED_PILE, finn.getZone());
 	}
 
-	@Test @Ignore
+	@Test
 	public void RoseTicoCanSendFinnHitAndExcludedInBattleToUsedPile() {
 		var scn = GetScenario();
 
@@ -271,29 +271,16 @@ public class Card_209_011_Tests {
 		assertTrue(scn.DSDecisionAvailable("ABOUT_TO_BE_LOST_FROM_TABLE"));
 		scn.DSPass(); //ABOUT_TO_BE_LOST_FROM_TABLE - Optional responses
 
-			///FAILS HERE - HitCardOutsideOfAttackOrBattleRule using allCardsSituation is not allowing response
-//		assertTrue(scn.LSDecisionAvailable("About to lose"));
+			///FAILS HERE
+		assertTrue(scn.LSDecisionAvailable("About to lose"));
 		assertTrue(scn.LSCardActionAvailable(rose, "Used Pile"));
 		scn.LSUseCardAction(rose, "Used Pile");
 		scn.PassAllResponses();
 
-		scn.LSPass();
-
-		assertTrue(scn.DSDecisionAvailable("LOST_FROM_TABLE"));
-		assertEquals(Zone.TOP_OF_LOST_PILE, finn.getZone());
-		scn.DSPass(); //LOST_FROM_TABLE - Optional responses
-		scn.LSPass();
-
-		scn.LSPass(); //EXCLUDED_FROM_BATTLE - Optional responses
-		scn.DSPass();
-
-		scn.LSPass(); //ATTRIBUTE_RESET_OR_MODIFIED - Optional responses
-		scn.DSPass();
-
-		scn.LSPass(); //PUT_IN_CARD_PILE_FROM_OFF_TABLE - Optional responses
-		scn.DSPass();
-
-		assertTrue(scn.AwaitingLSWeaponsSegmentActions());
+		scn.SkipToEndOfPowerSegment(false);
+		scn.PassAllResponses();
+		assertTrue(scn.AwaitingLSBattleDamagePayment());
+		assertEquals(Zone.TOP_OF_USED_PILE, finn.getZone());
 	}
 
 	@Test
@@ -338,6 +325,5 @@ public class Card_209_011_Tests {
 
 		assertTrue(scn.AwaitingLSBattlePhaseActions());
 	}
-
 
 }

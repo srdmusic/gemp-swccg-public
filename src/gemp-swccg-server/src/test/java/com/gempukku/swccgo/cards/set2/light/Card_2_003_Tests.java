@@ -29,7 +29,6 @@ public class Card_2_003_Tests {
 				new HashMap<>()
 				{{
 					put("chewie", "2_003"); //Chewbacca
-                    put("finn", "204_006");
 					put("landspeeder", "1_149"); //Luke's X-34 Landspeeder (non-enclosed vehicle)
 					put("c3p0","1_005"); //C-3PO (See-Threepio)
 				}},
@@ -137,6 +136,7 @@ public class Card_2_003_Tests {
 		scn.DSUseCardAction(eppVader);
 		scn.DSChooseCard(c3p0);
 		scn.PassAllResponses();
+		assertTrue(c3p0.isHit());
 
 		scn.SkipToEndOfPowerSegment(true);
 		scn.PassAllResponses();
@@ -152,7 +152,90 @@ public class Card_2_003_Tests {
 	}
 
 	@Test @Ignore
-	public void ChewbaccaCanSendDroidHitAndExcludedInBattleToUsedPile() {
+	public void ChewbaccaSendsDroidHitAndLostInBattleToUsedPile() {
+		var scn = GetScenario();
+
+		var chewie = scn.GetLSCard("chewie");
+		var c3p0 = scn.GetLSCard("c3p0");
+
+		var eppVader = scn.GetDSCard("eppVader");
+		var drE = scn.GetDSCard("drE");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, eppVader, drE, chewie, c3p0);
+
+		scn.SkipToPhase(Phase.BATTLE);
+		scn.PrepareDSDestiny(6); //succeed hitting c3p0
+		scn.PrepareDSDestiny(7);
+
+		scn.DSInitiateBattle(site);
+		scn.PassAllResponses();
+
+		scn.DSUseCardAction(eppVader);
+		scn.DSChooseCard(c3p0);
+
+		scn.LSPass(); //Fire Vader's Lightsaber - Optional responses
+		scn.DSPass();
+
+
+		scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.DSPass();
+
+		scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.DSPass();
+
+		scn.LSPass(); //DESTINY_DRAWN - Optional responses
+		scn.DSPass();
+
+		scn.LSPass(); //COMPLETE_DESTINY_DRAW - Optional responses
+		scn.DSPass();
+
+
+		scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.DSPass();
+
+		scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.DSPass();
+
+		scn.LSPass(); //DESTINY_DRAWN - Optional responses
+		scn.DSPass();
+
+		scn.LSPass(); //COMPLETE_DESTINY_DRAW - Optional responses
+		scn.DSPass();
+
+
+		scn.LSPass(); //DRAWING_DESTINY_COMPLETE - Optional responses
+		scn.DSPass();
+
+		scn.LSPass(); //ABOUT_TO_BE_HIT - Optional responses
+		scn.DSPass();
+
+		scn.LSPass(); //FORFEIT_REDUCED_TO_ZERO - Optional responses
+		scn.DSPass();
+
+		scn.LSPass(); //Optional responses
+		assertTrue(scn.DSCardActionAvailable(drE));
+		scn.DSUseCardAction(drE);
+
+		scn.DSChooseCard(c3p0);
+
+		scn.LSPass(); //'Operate' on C-3P0 - Optional responses
+		scn.DSPass();
+
+		//automatic send to used pile action should be carried out here
+		scn.PassAllResponses();
+
+		scn.SkipToEndOfPowerSegment(false);
+		scn.PassAllResponses();
+		assertTrue(scn.AwaitingLSBattleDamagePayment());
+		assertEquals(Zone.TOP_OF_USED_PILE, c3p0.getZone());
+	}
+
+	@Test @Ignore
+	public void ChewbaccaSendsDroidHitAndExcludedInBattleToUsedPile() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -179,6 +262,7 @@ public class Card_2_003_Tests {
 		scn.DSChooseCard(c3p0);
 
 		scn.PassAllResponses();
+		assertTrue(c3p0.isHit());
 
 		scn.LSPass();
 
@@ -195,6 +279,7 @@ public class Card_2_003_Tests {
 		scn.DSPass(); //ABOUT_TO_BE_EXCLUDED_FROM_BATTLE - Optional responses
 		scn.LSPass();
 
+		assertTrue(c3p0.isHit());
 		assertTrue(scn.DSDecisionAvailable("ABOUT_TO_BE_LOST_FROM_TABLE"));
 		scn.DSPass(); //ABOUT_TO_BE_LOST_FROM_TABLE - Optional responses
 
@@ -207,7 +292,7 @@ public class Card_2_003_Tests {
 
 
 	@Test
-	public void ChewbaccaCannotSendHitDroidToUsedPileWhenLostViaAllCardsSituation() {
+	public void ChewbaccaDoesNotSendHitDroidToUsedPileWhenLostViaAllCardsSituation() {
 		//AR: "If a vehicle is lost or otherwise leaves the table, any cards aboard it are lost (All Cards situation).
 		//Chewbacca cannot save C-3P0 when aboard a vehicle that is lost
 		var scn = GetScenario();
@@ -236,6 +321,7 @@ public class Card_2_003_Tests {
 		scn.DSUseCardAction(eppVader);
 		scn.DSChooseCard(c3p0);
 		scn.PassAllResponses();
+		assertTrue(c3p0.isHit());
 
 		scn.SkipToEndOfPowerSegment(true);
 		scn.PassAllResponses();
