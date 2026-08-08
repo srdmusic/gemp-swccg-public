@@ -6,11 +6,9 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -66,15 +64,11 @@ public class Card501_201 extends AbstractNormalEffect {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.isEndOfYourPhase(game, self, effectResult, Phase.CONTROL)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+        if (TriggerConditions.isEndOfOpponentsTurn(game, effectResult, playerId)
                 && GameConditions.occupies(game, playerId, 3, Filters.battleground)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 Force");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new LoseForceEffect(action, opponent, 1));
