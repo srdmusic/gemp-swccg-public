@@ -35,7 +35,7 @@ public class Card501_203 extends AbstractUsedInterrupt {
     public Card501_203() {
         super(Side.LIGHT, 4, Title.A_New_Hope, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("The heroes of the Rebellion know that where there is life, there is hope.");
-        setGameText("[Upload] Luke (or a Lars) or Leia (or Bail) with printed deploy < 4. OR For remainder of turn, opponent may not cancel battle destiny draws or character weapon destiny draws. OR If Luke or Leia in battle alone, draw one battle destiny if unable to otherwise.");
+        setGameText("For remainder of turn, opponent may not cancel battle destiny draws. OR If Luke or Leia in battle alone, draw one battle destiny if unable to otherwise. OR If an Alderaan or Tatooine location on table, ▲ Luke (or a Lars) or Leia (or Bail) with printed deploy < 4.");
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_27);
         setTestingText("A New Hope");
     }
