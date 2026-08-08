@@ -38,7 +38,7 @@ public class Card501_201 extends AbstractNormalEffect {
     public Card501_201() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Commando_Training, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Han's Rebel strike team on the forest moon of Endor was highly trained in the use of blasters and explosives.");
-        setGameText("If your [Endor], [Set 3], or [Set 9] objective on table, deploy on table. Your personal Force generation = 2. During your control phase, if you occupy three battlegrounds, opponent loses 1 Force. Where you have two Rebels, you initiate battles for free. [Immune to Alter.]");
+        setGameText("If Rebel Strike Team or They Have No Idea We're Coming on table, deploy on table. Your personal Force generation = 2. You initiate battles for free where you have two Rebels. At end of opponent’s turn, if you occupy three battlegrounds, opponent loses 1 Force. [Immune to Alter.]");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_27);
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
@@ -47,7 +47,7 @@ public class Card501_201 extends AbstractNormalEffect {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.or(Icon.ENDOR, Icon.VIRTUAL_SET_3, Icon.VIRTUAL_SET_9), Filters.Objective));
+        return Filters.canSpot(game, self, Filters.or(Filters.Rebel_Strike_Team, Filters.They_Have_No_Idea_Were_Coming));
     }
 
     @Override
