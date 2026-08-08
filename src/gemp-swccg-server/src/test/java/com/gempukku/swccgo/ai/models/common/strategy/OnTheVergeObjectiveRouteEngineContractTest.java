@@ -477,8 +477,19 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
         scn.StartGame();
         deathStar.setParsec(6);
         deathStar.setSystemOrbited(null);
+        // ADJUSTED 2026-08-08 (passivity fix, m01683): pin the orbit decoy into
+        // the Reserve Deck with the other fixture pulls. Left to the shuffle, Ord
+        // Mantell sometimes sat in the FORCE PILE when moveDeathStarFromSixToScarif
+        // later cheats it onto the table (MoveLocationToTable pulls it from
+        // whatever zone it occupies), silently shrinking the pinned five-Force
+        // pile by one and flaking the force - 4 assert (~15-25% of runs, engine
+        // shuffle randomness only — reproduced at HEAD with every decision
+        // scripted and no AI in the loop). Bots spend exactly pull 0 + Krennic 3
+        // + move 1 in ALL runs; the chain contract itself was never violated.
+        // scn.MoveCardsToBottomOfDSReserveDeck(
+        //         command, beach, krennic);
         scn.MoveCardsToBottomOfDSReserveDeck(
-                command, beach, krennic);
+                command, beach, krennic, orbitDecoy);
         scn.SkipToDSTurn(Phase.DEPLOY);
         leaveDarkForce(scn, force);
         if (scn.AwaitingLSDeployPhaseActions()) {

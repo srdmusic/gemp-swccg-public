@@ -1681,7 +1681,10 @@ public class DeployEvaluator extends ActionEvaluator {
                         v212V136Score, v212V193Eligible, v212V193FormationSupported,
                         v212V193Weight,
                         v212V193GateCard, v212V96Applicable,
-                        v212V96FriendlyPower, v212V96OpponentPower);
+                        // V96 ADJUSTED 2026-08-08 (passivity fix, m01683): the direct route
+                        // passes deployingPower 0.0f explicitly — its V96 diff stays the
+                        // pre-deploy standoff (projection lives on the destination route).
+                        v212V96FriendlyPower, v212V96OpponentPower, 0.0f);
                     PolicyContributionLedger v212SitingLedger = new PolicyContributionLedger(
                         (decisionId == null || decisionId.isBlank()
                             ? "deploy-siting" : decisionId + "-deploy-siting") + "-" + actionId);

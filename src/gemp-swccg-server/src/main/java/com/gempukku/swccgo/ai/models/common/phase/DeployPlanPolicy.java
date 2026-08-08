@@ -129,7 +129,14 @@ public final class DeployPlanPolicy {
                     -100.0f,
                     "Not planned target (want "
                             + facts.plannedTargetName() + ")"));
-            if (facts.plannedTargetOffered()) {
+            // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): a dominant contested
+            // alternative (we would hold >=2x their weapon-adjusted power after this
+            // deploy — the V172/FormationSafety.DOMINANCE_MULTIPLE test, computed by
+            // the caller) must stay in the score race: the non-additive defer REMOVED
+            // every overpower row from comparison instead of outscoring it. The -100
+            // add above still applies; only the defer is skipped.
+            // if (facts.plannedTargetOffered()) {
+            if (facts.plannedTargetOffered() && !facts.dominantAlternative()) {
                 operations.add(PolicyOperation.defer(
                         facts.actionId(), TraceRuleId.of("deploy-plan-target-defer"),
                         TraceDomainId.DEPLOY_SEQUENCING, TraceOutputKind.VETO,
@@ -177,7 +184,17 @@ public final class DeployPlanPolicy {
 
     public record DestinationTargetFacts(
             String actionId, boolean plannedTarget,
-            boolean plannedTargetOffered, String plannedTargetName) {
+            boolean plannedTargetOffered, String plannedTargetName,
+            boolean dominantAlternative) {
+        // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): legacy-signature
+        // constructor — no dominance fact means no defer release (old behavior).
+        public DestinationTargetFacts(
+                String actionId, boolean plannedTarget,
+                boolean plannedTargetOffered, String plannedTargetName) {
+            this(actionId, plannedTarget, plannedTargetOffered,
+                    plannedTargetName, false);
+        }
+
         public DestinationTargetFacts {
             Objects.requireNonNull(actionId, "actionId");
             plannedTargetName = plannedTargetName == null

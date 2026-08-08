@@ -104,6 +104,15 @@ public class FormationSafetyDeployTest {
     }
 
     @Test
+    public void contestedWeakSoloWinnableIsDeferredNotBlocked() {
+        // FS-L4 ADJUSTED 2026-08-08 (passivity fix, m01683): ourEff (2) >= oppEff (2)
+        // downgrades the L4 HARD_BLOCK to the deferrable unsupported-solo verdict;
+        // ourEff < oppEff (the test above, oppEff 4) keeps the hard block.
+        assertEquals(FormationSafety.DeployConstraint.DEFER_UNSUPPORTED_SOLO,
+            assess(3, 8, 2f, null, false, 2).constraint());
+    }
+
+    @Test
     public void destinyEligibleOrUndercoverSoloIsAllowed() {
         assertEquals(FormationSafety.DeployConstraint.ALLOW,
             assess(4, 8, 2f, null, false, 0).constraint());

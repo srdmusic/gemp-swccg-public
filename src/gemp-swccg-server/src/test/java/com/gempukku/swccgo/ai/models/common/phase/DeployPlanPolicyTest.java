@@ -105,6 +105,31 @@ public class DeployPlanPolicyTest {
     }
 
     @Test
+    public void dominantAlternativeKeepsScoreButSkipsPlannedTargetDefer() {
+        // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): a >=2x-dominant contested
+        // alternative keeps the -100 add but is NOT deferred behind the planned target.
+        List<PolicyOperation> operations = DeployPlanPolicy.evaluateDestinationTarget(
+                new DeployPlanPolicy.DestinationTargetFacts(
+                        "a", false, true, "Bespin", true)).operations();
+        assertEquals(1, operations.size());
+        assertEquals("deploy-plan-target-other", operations.get(0).ruleArmId().id());
+        assertEquals(-100.0f, operations.get(0).delta(), 0.0f);
+        assertEquals(PolicyOperationKind.ADD, operations.get(0).kind());
+    }
+
+    @Test
+    public void nonDominantAlternativeStillDefersWhenPlannedTargetOffered() {
+        // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): explicit false keeps the
+        // legacy defer (same as the four-arg constructor).
+        List<PolicyOperation> operations = DeployPlanPolicy.evaluateDestinationTarget(
+                new DeployPlanPolicy.DestinationTargetFacts(
+                        "a", false, true, "Bespin", false)).operations();
+        assertEquals(2, operations.size());
+        assertEquals("deploy-plan-target-defer", operations.get(1).ruleArmId().id());
+        assertEquals(PolicyOperationKind.DEFER, operations.get(1).kind());
+    }
+
+    @Test
     public void objectiveFormationTieBreakAddsOnlyTwentyFiveToPlannedCard() {
         DeployPlanPolicy.Evaluation offPlan = DeployPlanPolicy.evaluate(
                 new DeployPlanPolicy.Facts(

@@ -195,10 +195,46 @@ public class DeploySitingPolicyTest {
                 new String[]{"V96"}, new float[]{500.0f},
                 new PolicyOperationKind[]{PolicyOperationKind.ADD});
 
+        // V96 ADJUSTED 2026-08-08 (passivity fix, m01683): the destination route now
+        // carries V96 after the formation verdict (it previously ignored the V96 facts).
         PolicyResult destination = DeploySitingPolicy.evaluateDestination(facts);
         assertOperations(destination.operations(),
-                new String[]{"FS-L3-solo-deploy-hard"}, new float[]{0.0f},
-                new PolicyOperationKind[]{PolicyOperationKind.HARD_VETO});
+                new String[]{"FS-L3-solo-deploy-hard", "V96"},
+                new float[]{0.0f, 500.0f},
+                new PolicyOperationKind[]{PolicyOperationKind.HARD_VETO,
+                        PolicyOperationKind.ADD});
+    }
+
+    @Test
+    public void v96ProjectsTheDeployingCardIntoTheDiff() {
+        // V96 ADJUSTED 2026-08-08 (passivity fix, m01683): deployingPower joins the
+        // friendly side of the diff. friendly 15 vs opp 9 was the +500 concentrate band
+        // pre-deploy; projecting a power-5 deploy makes it 11 over — the +100 band.
+        DeploySitingPolicy.Facts projected = new DeploySitingPolicy.Facts(
+                "action-1", "Character", "Site", false,
+                DeploySitingPolicy.FormationState.ALLOW, "", 0.0f,
+                false, true, 400.0f, "", true, 15.0f, 9.0f, 5.0f);
+        assertOperations(DeploySitingPolicy.evaluateDirect(projected).operations(),
+                new String[]{"V96"}, new float[]{100.0f},
+                new PolicyOperationKind[]{PolicyOperationKind.ADD});
+
+        // A losing standoff (0 vs 10) that the deploying card flips to parity is now
+        // the concentrate band on the destination route.
+        DeploySitingPolicy.Facts flipped = new DeploySitingPolicy.Facts(
+                "action-1", "Character", "Site", false,
+                DeploySitingPolicy.FormationState.ALLOW, "", 0.0f,
+                false, true, 400.0f, "", true, 0.0f, 10.0f, 10.0f);
+        assertOperations(DeploySitingPolicy.evaluateDestination(flipped).operations(),
+                new String[]{"V96"}, new float[]{500.0f},
+                new PolicyOperationKind[]{PolicyOperationKind.ADD});
+
+        // Legacy 14-arg constructor keeps deployingPower 0 (old behavior preserved).
+        assertOperations(DeploySitingPolicy.evaluateDirect(new DeploySitingPolicy.Facts(
+                "action-1", "Character", "Site", false,
+                DeploySitingPolicy.FormationState.ALLOW, "", 0.0f,
+                false, true, 400.0f, "", true, 15.0f, 9.0f)).operations(),
+                new String[]{"V96"}, new float[]{500.0f},
+                new PolicyOperationKind[]{PolicyOperationKind.ADD});
     }
 
     @Test

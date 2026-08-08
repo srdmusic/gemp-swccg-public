@@ -481,6 +481,26 @@ public class CharacterDeploySiteEvaluator {
         // to contested sites only. Boundary: uncontested ability<4 goes -1500 -> +500 (or
         // V156 -300); contested + ability>=4 unchanged; V151/V181 need oppPower>0. Shared
         // common/ file → fixes both bots.
+        // V136 §A ADJUSTED 2026-08-08 (passivity fix, m01683): DOMINANCE SHORT-CIRCUIT —
+        // mirrors FormationSafety.DOMINANCE_MULTIPLE and V172: a team at 2x an occupied
+        // site is a viability PASS (+500, the same value as the powerPass arm below) even
+        // when ability falls short; the -1500 wall below removed every overpower-the-
+        // weak-solo deploy before the overwhelm bonus could run.
+        // ADJUSTED 2026-08-08 (passivity fix, m01683/panel): weapon-adjust the opponent
+        // side with the same typed read the V172 standard uses
+        // (FormationSafety.weaponBonusAt) — one dominance standard everywhere.
+        float v136OppEff = oppPower
+            + FormationSafety.weaponBonusAt(gs, candidateSite, opponentId);
+        // if (oppPower > 0f && teamPower >= FormationSafety.DOMINANCE_MULTIPLE * oppPower) {
+        //     LOG.warn("V136 §A DOMINANCE PASS: {} → {} team {} >= 2x opp {} — deploy and battle (+500)",
+        //         safeTitle(deployingCard), safeTitle(candidateSite),
+        //         (int) teamPower, (int) oppPower);
+        if (oppPower > 0f && teamPower >= FormationSafety.DOMINANCE_MULTIPLE * v136OppEff) {
+            LOG.warn("V136 §A DOMINANCE PASS: {} → {} team {} >= 2x opp eff {} — deploy and battle (+500)",
+                safeTitle(deployingCard), safeTitle(candidateSite),
+                (int) teamPower, (int) v136OppEff);
+            return 500f;
+        }
         if (oppPower > 0f && !abilityPass) {
             if (buddyInHand) return -200f;  // contested + buddy coming: coordinate
             return -1500f;  // contested + weak solo can't win the battle: almost never

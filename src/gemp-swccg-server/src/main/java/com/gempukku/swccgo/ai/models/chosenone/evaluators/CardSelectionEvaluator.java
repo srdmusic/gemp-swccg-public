@@ -3283,14 +3283,71 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     plannedDeployInstruction, deploymentPlanSnapshot);
                             boolean plannedTargetBlocked = plannedTargetSpyBlocked
                                 || plannedTargetFormationBlocked;
+                            // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): dominant-
+                            // alternative release. When THIS destination has live opponent
+                            // presence and our power there + the deploying card's power
+                            // reaches 2x their weapon-adjusted power (the exact V172 SOLO
+                            // DOMINANCE test), the row must stay in the score race instead
+                            // of being deferred behind the planned target — contested rows
+                            // were REMOVED, not outscored.
+                            boolean dominantAlternative = false;
+                            if (!isPlannedTarget && game != null && playerId != null
+                                    && location != null) {
+                                try {
+                                    String v201Opp = gameState.getOpponent(playerId);
+                                    boolean v201OppHere = false;
+                                    for (PhysicalCard v201C : gameState.getCardsAtLocation(location)) {
+                                        if (v201C != null && v201Opp.equals(v201C.getOwner())
+                                                && !v201C.isUndercover()) {
+                                            v201OppHere = true; break;
+                                        }
+                                    }
+                                    if (v201OppHere) {
+                                        float v201OurPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, location, playerId, false, false);
+                                        float v201TheirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, location, v201Opp, false, false);
+                                        float v201TheirEff = v201TheirPower
+                                            + v177OppWeaponBonus(gameState, location, v201Opp);
+                                        float v201DeployPower = 0f;
+                                        SwccgCardBlueprint v201Bp = getBlueprintFromId(context, deployingBlueprintId);
+                                        // V171/V172 precedent: contact dominance is CHARACTER logic only.
+                                        if (v201Bp != null
+                                                && v201Bp.getCardCategory() == CardCategory.CHARACTER
+                                                && v201Bp.hasPowerAttribute()
+                                                && v201Bp.getPower() != null) {
+                                            v201DeployPower = v201Bp.getPower();
+                                        }
+                                        // ADJUSTED 2026-08-08 (passivity fix, m01683/panel):
+                                        // one dominance standard — the shared constant, not a literal.
+                                        // dominantAlternative = v201DeployPower > 0f
+                                        //     && v201TheirEff > 0f
+                                        //     && v201OurPower + v201DeployPower >= 2.0f * v201TheirEff;
+                                        dominantAlternative = v201DeployPower > 0f
+                                            && v201TheirEff > 0f
+                                            && v201OurPower + v201DeployPower
+                                                >= com.gempukku.swccgo.ai.models.common.strategy
+                                                    .FormationSafety.DOMINANCE_MULTIPLE * v201TheirEff;
+                                        if (dominantAlternative) {
+                                            logger.warn("V201 DOMINANT ALTERNATIVE: {} ({}+{} vs eff {}) — keep the overpower row, skip the planned-target defer",
+                                                title, (int) v201OurPower, (int) v201DeployPower, (int) v201TheirEff);
+                                        }
+                                    }
+                                } catch (Exception v201E) { /* fail-open: no release */ }
+                            }
                             if ((!isPlannedTarget || !plannedTargetBlocked)
                                     && !exactIsbRouteCompletion) {
                                 applyDeployPlanDestinationPolicy(action,
                                     DeployPlanPolicy.evaluateDestinationTarget(
+                                        // V201 ADJUSTED 2026-08-08 (passivity fix, m01683) — was:
+                                        // new DeployPlanPolicy.DestinationTargetFacts(
+                                        //     action.getActionId(), isPlannedTarget,
+                                        //     plannedTargetOffered && !plannedTargetBlocked,
+                                        //     plannedTargetName)));
                                         new DeployPlanPolicy.DestinationTargetFacts(
                                             action.getActionId(), isPlannedTarget,
                                             plannedTargetOffered && !plannedTargetBlocked,
-                                            plannedTargetName)));
+                                            plannedTargetName, dominantAlternative)));
                             }
                             if (isPlannedTarget && plannedTargetSpyBlocked) {
                                 logger.warn("V297.1 PLAN FALLBACK: {} is blocked only by an opponent undercover spy; release alternate destinations",
@@ -4318,7 +4375,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         DeploySitingPolicy.Facts v212EvazanCsFacts = new DeploySitingPolicy.Facts(
                             action.getActionId(), deployingCardName, v212EvazanCsSiteTitle,
                             v212EvazanCsWithoutArmedFriend, DeploySitingPolicy.FormationState.ALLOW, "",
-                            0.0f, false, true, 400.0f, "", false, 0.0f, 0.0f);
+                            // V96 ADJUSTED 2026-08-08 (passivity fix, m01683): explicit
+                            // deployingPower 0 — this V89-only adapter keeps V96 off.
+                            0.0f, false, true, 400.0f, "", false, 0.0f, 0.0f, 0.0f);
                         PolicyContributionLedger v212EvazanCsLedger = new PolicyContributionLedger(
                             "deploy-siting-v89-cs-" + action.getActionId());
                         v212EvazanCsLedger.register(
@@ -4659,6 +4718,37 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             }
                                         }
 
+                                        // V96 ADJUSTED 2026-08-08 (passivity fix, m01683): populate the
+                                        // CONCENTRATE facts on the destination route (were hardcoded
+                                        // off) — live opponent presence, the v171-style engine power
+                                        // reads, and the deploying card's own power so the V96 diff is
+                                        // measured POST-deploy.
+                                        boolean v212V96Applicable = false;
+                                        float v212V96Friendly = 0.0f;
+                                        float v212V96Opp = 0.0f;
+                                        float v212V96DeployPower = 0.0f;
+                                        try {
+                                            String v212V96Opponent = gameState.getOpponent(context.getPlayerId());
+                                            for (PhysicalCard v212V96C : gameState.getCardsAtLocation(location)) {
+                                                if (v212V96C != null && v212V96Opponent.equals(v212V96C.getOwner())
+                                                        && !v212V96C.isUndercover()) {
+                                                    v212V96Applicable = true;
+                                                    break;
+                                                }
+                                            }
+                                            if (v212V96Applicable) {
+                                                v212V96Friendly = context.getGame().getModifiersQuerying()
+                                                    .getTotalPowerAtLocation(gameState, location,
+                                                        context.getPlayerId(), false, false);
+                                                v212V96Opp = context.getGame().getModifiersQuerying()
+                                                    .getTotalPowerAtLocation(gameState, location,
+                                                        v212V96Opponent, false, false);
+                                                if (v136DepBp.hasPowerAttribute()
+                                                        && v136DepBp.getPower() != null) {
+                                                    v212V96DeployPower = v136DepBp.getPower();
+                                                }
+                                            }
+                                        } catch (Exception v212V96E) { /* fail-open: not applicable */ }
                                         DeploySitingPolicy.Facts v212SitingCsFacts =
                                             new DeploySitingPolicy.Facts(
                                                 action.getActionId(), v136DeployingCard.getTitle(), title,
@@ -4666,7 +4756,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 v212V136CsScore, v212V193CsEligible,
                                                 v212V193FormationSupported,
                                                 v212V193CsWeight, v212V193CsGateCard,
-                                                false, 0.0f, 0.0f);
+                                                // V96 ADJUSTED 2026-08-08 (passivity fix, m01683) — was:
+                                                // false, 0.0f, 0.0f);
+                                                v212V96Applicable, v212V96Friendly,
+                                                v212V96Opp, v212V96DeployPower);
                                         PolicyContributionLedger v212SitingCsLedger =
                                             new PolicyContributionLedger(
                                                 "deploy-siting-cs-" + action.getActionId());
@@ -11861,9 +11954,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     fsDepBp.hasAbilityAttribute() ? fsDepBp.getAbility() : null,
                     deployingCard.isUndercover(),
                     location, fsForce, fsThisCost, fsBuddyCost, fsFlipGate);
+            // ADJUSTED 2026-08-08 (passivity fix, m01683/panel): the FS-L4
+            // HARD_BLOCK→DEFER downgrade means a DEFER_UNSUPPORTED_SOLO verdict also
+            // takes the planned row out of the admissible pool — the V297.1 release
+            // must fire for ANY verdict that does, or every alternative destination
+            // stays deferred behind an inadmissible planned target (the V163
+            // 'Veers never deployed' all-deferred synthetic-Pass class).
+            // return fsVerdict.constraint()
+            //         == com.gempukku.swccgo.ai.models.common.strategy
+            //             .FormationSafety.DeployConstraint.HARD_BLOCK;
             return fsVerdict.constraint()
                     == com.gempukku.swccgo.ai.models.common.strategy
-                        .FormationSafety.DeployConstraint.HARD_BLOCK;
+                        .FormationSafety.DeployConstraint.HARD_BLOCK
+                || fsVerdict.constraint()
+                    == com.gempukku.swccgo.ai.models.common.strategy
+                        .FormationSafety.DeployConstraint.DEFER_UNSUPPORTED_SOLO;
         } catch (Exception ignored) {
             return false;
         }

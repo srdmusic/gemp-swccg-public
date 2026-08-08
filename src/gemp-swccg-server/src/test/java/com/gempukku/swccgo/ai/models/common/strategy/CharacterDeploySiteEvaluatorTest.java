@@ -93,6 +93,35 @@ public class CharacterDeploySiteEvaluatorTest {
     }
 
     @Test
+    public void v136SectionADominanceOverpowerPassesDespiteWeakAbility() {
+        // V136 §A ADJUSTED 2026-08-08 (passivity fix, m01683): team power at 2x an
+        // occupied site is a viability PASS (+500) even with ability < 4 — the old
+        // -1500 contested-weak-solo wall blocked every overpower-the-weak-solo deploy.
+        PhysicalCard site = site("Contested Site");
+        PhysicalCard deploying = character("Dominant Body", ME, 2f, 6f, 2f, 4f);
+        setPower(site, 0f, 3f);
+
+        float score = evaluate(deploying, site, false,
+                Collections.emptyList(), 10, 4, 0, true);
+
+        assertScore(500f, score);
+    }
+
+    @Test
+    public void v136SectionAContestedWeakSoloBelowDominanceStillFails() {
+        // Companion boundary for the m01683 short-circuit: 6 power vs 4 opp power is
+        // under the 2x DOMINANCE_MULTIPLE — the legacy -1500 weak-solo wall holds.
+        PhysicalCard site = site("Contested Site");
+        PhysicalCard deploying = character("Ordinary Body", ME, 2f, 6f, 2f, 4f);
+        setPower(site, 0f, 4f);
+
+        float score = evaluate(deploying, site, false,
+                Collections.emptyList(), 10, 4, 0, true);
+
+        assertScore(-1500f, score);
+    }
+
+    @Test
     public void v181CloseFairFightReturnsDrainWeightedTwoHundred() {
         PhysicalCard site = site("Drain Two Site");
         PhysicalCard deploying = character("Fair Fighter", ME, 4f, 5f, 2f, 4f);

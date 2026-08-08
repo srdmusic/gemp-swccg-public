@@ -494,6 +494,11 @@ public class DeployPhasePlanner {
     private LocationCategories categorizeLocations(List<AiBoardAnalyzer.LocationAnalysis> locations,
                                                     String playerId) {
         LocationCategories cats = new LocationCategories();
+        // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): affordable-wave power from
+        // hand, computed once — opens the 'attack' category below. FINAL PLAN: attack was
+        // chosen 0 times in 225 logged plans: the LOW_ENEMY_THRESHOLD cap plus the
+        // our-icons gate made 'attack' unreachable against any real enemy stack.
+        float attackWave = attackWaveProjection(playerId);
 
         for (AiBoardAnalyzer.LocationAnalysis loc : locations) {
             // Skip locations we can't deploy to (no icons)
@@ -516,11 +521,38 @@ public class DeployPhasePlanner {
                 if (loc.getPowerAdvantage() >= RandoConfig.BATTLE_FAVORABLE_THRESHOLD) {
                     cats.crushableLocations.add(loc);
                 }
-            } else if (loc.theirPower > 0 && loc.ourPower == 0 && hasOurIcons) {
-                // BLEEDING - they have presence, we don't, but we have icons (they drain us)
-                cats.bleedLocations.add(loc);
-                if (loc.theirPower <= RandoConfig.LOW_ENEMY_THRESHOLD) {
-                    cats.attackTargets.add(loc);  // Low enemy = attack target
+            // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): enemy-held arm no longer
+            // requires our icons — a dominance-wave attack candidate needs no drain there.
+            // } else if (loc.theirPower > 0 && loc.ourPower == 0 && hasOurIcons) {
+            } else if (loc.theirPower > 0 && loc.ourPower == 0) {
+                if (hasOurIcons) {
+                    // BLEEDING - they have presence, we don't, but we have icons (they drain us)
+                    cats.bleedLocations.add(loc);
+                    if (loc.theirPower <= RandoConfig.LOW_ENEMY_THRESHOLD) {
+                        cats.attackTargets.add(loc);  // Low enemy = attack target
+                    }
+                }
+                // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): an ENEMY-held ground
+                // location is an attack candidate when the affordable hand wave projects
+                // 2x their weapon-adjusted power (FormationSafety.DOMINANCE_MULTIPLE, the
+                // V172 standard — no new constants). generateAttackPlan still re-verifies
+                // deployability and its +BATTLE_FAVORABLE_THRESHOLD combo goal.
+                // GATE ADJUSTED 2026-08-08 (passivity fix, m01683/panel): isGround() is
+                // subtype != SYSTEM, which admitted space SECTORS where characters cannot
+                // deploy, and required no battle/drain value. Require a SITE that is a
+                // battleground OR carries at least one of our force icons.
+                // if (loc.isGround() && !cats.attackTargets.contains(loc)) {
+                if (loc.isSite && (loc.isBattleground || loc.ourForceIcons > 0)
+                        && !cats.attackTargets.contains(loc)) {
+                    float attackOppEff = loc.theirPower
+                        + attackOppWeaponBonus(loc.location, playerId);
+                    if (attackWave >= com.gempukku.swccgo.ai.models.common.strategy
+                            .FormationSafety.DOMINANCE_MULTIPLE * attackOppEff) {
+                        cats.attackTargets.add(loc);
+                        LOG.warn("📋 ATTACK CANDIDATE: {} enemy power {} (eff {}) — hand wave {} projects ≥2x, pile on",
+                            loc.location.getTitle(), (int) loc.theirPower,
+                            (int) attackOppEff, (int) attackWave);
+                    }
                 }
             } else if (loc.theirPower == 0 && loc.ourPower == 0 && hasTheirIcons) {
                 // ESTABLISH - neither has presence but they have icons
@@ -541,6 +573,46 @@ public class DeployPhasePlanner {
         }
 
         return cats;
+    }
+
+    /** V201 (2026-08-08, passivity fix m01683): affordable-wave projection for attack
+     *  classification — top-power hand CHARACTERS within the current force pile, max 3
+     *  bodies (the plan-group cap). Deployability and the combo goal are re-verified by
+     *  generateAttackPlan before any instruction is emitted. */
+    private float attackWaveProjection(String playerId) {
+        float wave = 0f;
+        try {
+            GameState gs = currentGame.getGameState();
+            int budget = gs.getForcePileSize(playerId);
+            List<CardInfo> waveChars = new ArrayList<>();
+            for (PhysicalCard h : gs.getHand(playerId)) {
+                if (h == null || h.getBlueprint() == null) continue;
+                CardInfo info = new CardInfo(h);
+                if (info.isCharacter) waveChars.add(info);
+            }
+            waveChars.sort(Comparator.comparingInt((CardInfo c) -> c.power).reversed());
+            int bodies = 0;
+            for (CardInfo c : waveChars) {
+                if (bodies >= 3) break;
+                if (c.cost > budget) continue;
+                wave += c.power;
+                budget -= c.cost;
+                bodies++;
+            }
+        } catch (Exception e) { /* fail-open: 0 */ }
+        return wave;
+    }
+
+    /** V201 (2026-08-08, passivity fix m01683): opponent weapon-adjustment for the attack
+     *  classifier — the shared FormationSafety typed-weapon read. */
+    private float attackOppWeaponBonus(PhysicalCard location, String playerId) {
+        try {
+            GameState gs = currentGame.getGameState();
+            return com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
+                .weaponBonusAt(gs, location, gs.getOpponent(playerId));
+        } catch (Exception e) {
+            return 0f;
+        }
     }
 
     // =========================================================================
@@ -2309,7 +2381,32 @@ public class DeployPhasePlanner {
 
             OptimalCombination combo = findOptimalCombination(deployableHere, remaining, powerNeeded, true);
 
-            if (combo.achievesGoal && !combo.isEmpty()) {
+            // SOLO GUARD ADJUSTED 2026-08-08 (passivity fix, m01683/panel): a SINGLE-card
+            // attack combo must also satisfy weapon-adjusted dominance
+            // (FormationSafety.DOMINANCE_MULTIPLE, the V172 standard) — a lone body that
+            // merely clears the +BATTLE_FAVORABLE_THRESHOLD goal still gets isolated and
+            // overwhelmed at an enemy-held location. Multi-card combos keep the existing
+            // achievesGoal test unchanged.
+            boolean comboApproved = combo.achievesGoal && !combo.isEmpty();
+            if (comboApproved && combo.size() == 1) {
+                float attackOppEff = loc.theirPower
+                    + attackOppWeaponBonus(loc.location, currentPlayerId);
+                boolean soloDominance = combo.totalPower + loc.ourPower
+                    >= com.gempukku.swccgo.ai.models.common.strategy
+                        .FormationSafety.DOMINANCE_MULTIPLE * attackOppEff;
+                if (soloDominance) {
+                    LOG.warn("📋 SOLO GUARD WAIVED: dominance ≥2x — deploy and battle ({} power {} + ours {} vs enemy eff {} at {})",
+                        combo.cards.get(0).getTitle(), combo.totalPower,
+                        (int) loc.ourPower, (int) attackOppEff, loc.location.getTitle());
+                } else {
+                    comboApproved = false;
+                    LOG.info("📋 SOLO GUARD: single-card attack combo ({} power {}) below 2x enemy eff {} at {} — skip",
+                        combo.cards.get(0).getTitle(), combo.totalPower,
+                        (int) attackOppEff, loc.location.getTitle());
+                }
+            }
+            // if (combo.achievesGoal && !combo.isEmpty()) {  // ADJUSTED 2026-08-08 (passivity fix, m01683/panel): single-card dominance floor above
+            if (comboApproved) {
                 for (PhysicalCard card : combo.cards) {
                     CardInfo info = findCardInfo(available, card);
                     if (info != null) {

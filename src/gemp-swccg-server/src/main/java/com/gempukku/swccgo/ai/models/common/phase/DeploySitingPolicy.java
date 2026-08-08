@@ -60,7 +60,25 @@ public final class DeploySitingPolicy {
             String v193GateCardTitle,
             boolean v96Applicable,
             float friendlyPower,
-            float opponentPower) {
+            float opponentPower,
+            float deployingPower) {
+        // V96 ADJUSTED 2026-08-08 (passivity fix, m01683): legacy-signature
+        // constructor — deployingPower 0 preserves the pre-projection diff for
+        // callers that never carried the deploying card's power.
+        public Facts(
+                String actionId, String cardTitle, String siteTitle,
+                boolean evazanWithoutArmedFriend, FormationState formationState,
+                String formationReason, float v136Score, boolean v193Eligible,
+                boolean v193FormationSupported, float v193PlaybookWeight,
+                String v193GateCardTitle, boolean v96Applicable,
+                float friendlyPower, float opponentPower) {
+            this(actionId, cardTitle, siteTitle, evazanWithoutArmedFriend,
+                    formationState, formationReason, v136Score, v193Eligible,
+                    v193FormationSupported, v193PlaybookWeight,
+                    v193GateCardTitle, v96Applicable, friendlyPower,
+                    opponentPower, 0.0f);
+        }
+
         public Facts {
             Objects.requireNonNull(actionId, "actionId");
             cardTitle = cardTitle == null ? "" : cardTitle;
@@ -129,6 +147,11 @@ public final class DeploySitingPolicy {
                             + facts.siteTitle() + "' to enable '"
                             + facts.v193GateCardTitle() + "' (objective flip gate)"));
         }
+
+        // V96 ADJUSTED 2026-08-08 (passivity fix, m01683): wire CONCENTRATE into the
+        // destination route — the route that actually picks sites carried no V96 at all
+        // (its facts were hardcoded off at the CardSelection adapters; now populated).
+        addV96(operations, facts);
 
         return new PolicyResult("DEPLOY_SITING_DESTINATION_POLICY", operations);
     }
@@ -384,12 +407,19 @@ public final class DeploySitingPolicy {
         if (!facts.v96Applicable() || facts.opponentPower() <= 0.0f) {
             return;
         }
-        float difference = facts.friendlyPower() - facts.opponentPower();
+        // V96 ADJUSTED 2026-08-08 (passivity fix, m01683): project the DEPLOYING card
+        // into the diff — ask "would I overwhelm AFTER deploying", not the pre-deploy
+        // standoff (evaluateDirect callers pass deployingPower 0 → old behavior).
+        // float difference = facts.friendlyPower() - facts.opponentPower();
+        float difference = facts.friendlyPower() + facts.deployingPower()
+                - facts.opponentPower();
         if (difference >= -10.0f && difference <= 10.0f) {
             operations.add(addSiting(facts.actionId(), "V96", TraceOutputKind.BANDED,
                     500.0f,
                     String.format("V96 CONCENTRATE: %s contested (us %.0f vs them %.0f) — pile on for overflow battle damage!",
-                            facts.siteTitle(), facts.friendlyPower(), facts.opponentPower())));
+                            facts.siteTitle(),
+                            facts.friendlyPower() + facts.deployingPower(),
+                            facts.opponentPower())));
         } else if (difference > 10.0f) {
             operations.add(addSiting(facts.actionId(), "V96", TraceOutputKind.BANDED,
                     100.0f,

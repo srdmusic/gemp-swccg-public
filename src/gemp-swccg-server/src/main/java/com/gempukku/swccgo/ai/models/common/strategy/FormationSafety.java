@@ -276,6 +276,19 @@ public final class FormationSafety {
                         return new DeployVerdict(DeployConstraint.ALLOW,
                             "exact same-destination contested companion remains affordable");
                     }
+                    // FS-L4 ADJUSTED 2026-08-08 (passivity fix, m01683): when the fight is
+                    // WINNABLE (ourEff >= oppEff, weapon-adjusted opponent) a weak solo is a
+                    // deferrable choice, not a forbidden one — the unconditional HARD_BLOCK
+                    // removed contested rows the score race had already won (08-07 log: vetoed
+                    // contesting the bot's OWN objective site). ourEff < oppEff keeps the block.
+                    // return new DeployVerdict(DeployConstraint.HARD_BLOCK, String.format(
+                    //     "L4 WEAK SOLO INTO CONTESTED: ability %.0f alone into %s (their eff %.0f)",
+                    //     ability, destination.getTitle(), oppEff));
+                    if (ourEff >= oppEff) {
+                        return new DeployVerdict(DeployConstraint.DEFER_UNSUPPORTED_SOLO, String.format(
+                            "L4 WEAK SOLO INTO CONTESTED (winnable %.0f vs %.0f): defer, not block",
+                            ourEff, oppEff));
+                    }
                     return new DeployVerdict(DeployConstraint.HARD_BLOCK, String.format(
                         "L4 WEAK SOLO INTO CONTESTED: ability %.0f alone into %s (their eff %.0f)",
                         ability, destination.getTitle(), oppEff));
