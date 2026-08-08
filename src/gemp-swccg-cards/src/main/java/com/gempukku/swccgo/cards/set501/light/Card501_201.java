@@ -22,7 +22,6 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -57,28 +56,6 @@ public class Card501_201 extends AbstractNormalEffect {
         modifiers.add(new ResetPersonalForceGenerationModifier(self, 2, self.getOwner()));
         modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.occupiesWith(playerId, self, Filters.and(Filters.Rebel, Filters.with(self, Filters.Rebel))), playerId));
         return modifiers;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        final String opponent = game.getOpponent(playerId);
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.occupies(game, playerId, 3, Filters.battleground)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make opponent lose 1 Force");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, 1));
-            return Collections.singletonList(action);
-        }
-        return null;
     }
 
     @Override
