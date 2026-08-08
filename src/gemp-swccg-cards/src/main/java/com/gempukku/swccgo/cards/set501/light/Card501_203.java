@@ -45,7 +45,8 @@ public class Card501_203 extends AbstractUsedInterrupt {
 
         GameTextActionId gameTextActionId = GameTextActionId.A_NEW_HOPE__UPLOAD_LUKE_OR_LEIA;
 
-        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.canSpot(game, self, Filters.or(Filters.Alderaan_location, Filters.Tatooine_location))
+                    && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
 
             action.setText("Take Luke (or a Lars) or Leia (or Bail) into hand from Reserve Deck");
