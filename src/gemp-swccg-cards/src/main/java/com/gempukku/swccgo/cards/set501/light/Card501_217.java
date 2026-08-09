@@ -12,9 +12,11 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeExcludedFromBattle;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 
@@ -50,6 +52,7 @@ public class Card501_217 extends AbstractAlien {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
+        modifiers.add(new MayNotBeExcludedFromBattle(self, Filters.and(Filters.character, Filters.here(self))));
         return modifiers;
     }
 }
