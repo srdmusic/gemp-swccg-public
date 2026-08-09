@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
@@ -38,7 +38,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
  * Type: Effect
  * Title: Chewbacca Of Kashyyyk (V)
  */
-public class Card501_217 extends AbstractAlien {
+public class Card501_217 extends AbstractRebel {
     public Card501_217() {
         super(Side.LIGHT, 1, 4, 6, 2, 6, "Chewbacca Of Kashyyyk", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Wookiee scout. Volunteered for Han's Endor strike team. Keeps his distance, but doesn't look like he's keeping his distance. Always thinks with his stomach.");
