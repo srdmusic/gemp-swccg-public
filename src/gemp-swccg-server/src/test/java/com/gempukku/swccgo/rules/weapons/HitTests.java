@@ -21,6 +21,7 @@ public class HitTests {
                     put("blaster","1_152");
                     put("trap","5_055"); //It's A Trap
                     put("boushh","110_001");
+                    put("satm","2_057"); //Sorry About The Mess
                 }},
 				new HashMap<>()
 				{{
@@ -381,6 +382,51 @@ public class HitTests {
         scn.DSPass();
 
         assertTrue(scn.AwaitingLSControlPhaseActions());
+    }
+
+    @Test
+    public void HitEscortLostOutsideOfBattleReleasesCaptive() {
+        //Sorry About The Mess used to hit escort during Control Phase causes the captive to be released
+        var scn = GetScenario();
+
+        var trooper1 = scn.GetLSFiller(1);
+        var trooper2 = scn.GetLSFiller(2);
+        var blaster = scn.GetLSCard("blaster");
+        var satm = scn.GetLSCard("satm");
+
+        var eppVader = scn.GetDSCard("eppVader");
+
+        var site = scn.GetDSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLocation(site, eppVader, trooper1, trooper2);
+        scn.AttachCardsTo(trooper1, blaster);
+        scn.CaptureCardWith(eppVader, trooper2);
+        scn.MoveCardsToLSHand(satm);
+
+        scn.SkipToLSTurn(Phase.CONTROL);
+        scn.PrepareLSDestiny(7); //guarantee hit with blaster
+
+        scn.LSPlayCard(satm);
+        scn.LSChooseCard(blaster);
+
+        scn.DSPass(); //Playing Sorry About The Mess - Optional responses
+        scn.LSPass();
+
+        //only one target available - auto selected
+        //scn.DSChooseCard(eppVader);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.LSDecisionAvailable("Choose release option"));
+        scn.LSChoose("Rally");
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingDSControlPhaseActions());
+        assertTrue(scn.CardsAtLocation(site, trooper1));
+        assertTrue(scn.CardsAtLocation(site, trooper2));
+        assertEquals(Zone.TOP_OF_LOST_PILE,eppVader.getZone());
     }
 
 }
