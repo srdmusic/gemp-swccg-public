@@ -7,19 +7,26 @@ import java.util.List;
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeExcludedFromBattle;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -60,6 +67,52 @@ public class Card501_217 extends AbstractAlien {
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new MayNotBeExcludedFromBattle(self, Filters.and(Filters.character, Filters.here(self))));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Wuta)
+                || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.CHEWBACCAS_BOWCASTER))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy card from Reserve Deck");
+            action.setActionMsg("Deploy Wuta or Chewbacca's Bowcaster from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.Wuta, Filters.Chewbaccas_Bowcaster), Filters.here(self), true));
+            actions.add(action);
+        }
+
+        // Note: Intentionally shares OTHER_CARD_ACTION_1 with previous action, because they share a combined "once per turn"
+        // Check condition(s)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId, Persona.CHEWBACCAS_BOWCASTER))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy card from Lost Pile");
+            action.setActionMsg("Deploy Chewbacca's Bowcaster from Lost Pile");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Pay cost(s)
+            action.appendCost(
+                    new LoseForceEffect(action, playerId, 1, true));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardToTargetFromLostPileEffect(action, Filters.Chewbaccas_Bowcaster, Filters.here(self), false));
+            actions.add(action);
+        }
+
+        return actions;
     }
 
     @Override
