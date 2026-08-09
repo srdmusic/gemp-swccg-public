@@ -73,7 +73,7 @@ public class Card501_217 extends AbstractAlien {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId = GameTextActionId.CHEWBACCA_OF_KASHYYYK__DOWNLOAD_WUTA_OR_CHEWBACCAS_BOWCASTER;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
