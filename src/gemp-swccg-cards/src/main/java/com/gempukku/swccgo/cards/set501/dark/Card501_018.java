@@ -4,8 +4,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.conditions.AloneCondition;
-import com.gempukku.swccgo.cards.conditions.OnCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -18,9 +16,9 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.IconModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 
@@ -49,9 +47,12 @@ public class Card501_018 extends AbstractNormalEffect {
         List<Modifier> modifiers = new LinkedList<Modifier>();
 
         Condition sidiousAloneOnCoruscantCondition = new OnTableCondition(self, Filters.and(Filters.Sidious, Filters.alone, Filters.On_Coruscant));
+        Condition yourApprenticeInBattle = new OnTableCondition(self, Filters.and(Filters.your(self), Filters.Sith_Apprentice, Filters.participatingInBattle));
 
         modifiers.add(new IconModifier(self, Filters.sameLocationAs(self, Filters.Sidious), sidiousAloneOnCoruscantCondition, Icon.DARK_FORCE, 1));
         modifiers.add(new IconModifier(self, Filters.sameLocationAs(self, Filters.Sidious), sidiousAloneOnCoruscantCondition, Icon.LIGHT_FORCE, 1));
+        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Blast_The_Door_Kid, Filters.Its_A_Trap), yourApprenticeInBattle));
+
         return modifiers;
     }
 }
