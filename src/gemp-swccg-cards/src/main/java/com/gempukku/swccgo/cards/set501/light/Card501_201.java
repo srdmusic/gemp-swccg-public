@@ -6,11 +6,9 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -22,7 +20,6 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -38,7 +35,7 @@ public class Card501_201 extends AbstractNormalEffect {
     public Card501_201() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Commando_Training, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Han's Rebel strike team on the forest moon of Endor was highly trained in the use of blasters and explosives.");
-        setGameText("If your [Endor], [Set 3], or [Set 9] objective on table, deploy on table. Your personal Force generation = 2. During your control phase, if you occupy three battlegrounds, opponent loses 1 Force. Where you have two Rebels, you initiate battles for free. [Immune to Alter.]");
+        setGameText("If Rebel Strike Team or They Have No Idea We're Coming on table, deploy on table. Your personal Force generation = 2. You initiate battles for free where you have two Rebels. At end of opponent’s turn, if you occupy three battlegrounds, opponent loses 1 Force. [Immune to Alter.]");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_27);
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
@@ -47,7 +44,7 @@ public class Card501_201 extends AbstractNormalEffect {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.or(Icon.ENDOR, Icon.VIRTUAL_SET_3, Icon.VIRTUAL_SET_9), Filters.Objective));
+        return Filters.canSpot(game, self, Filters.or(Filters.Rebel_Strike_Team, Filters.They_Have_No_Idea_Were_Coming));
     }
 
     @Override
@@ -60,28 +57,6 @@ public class Card501_201 extends AbstractNormalEffect {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        final String opponent = game.getOpponent(playerId);
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.occupies(game, playerId, 3, Filters.battleground)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make opponent lose 1 Force");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, 1));
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         final String playerId = self.getOwner();
         final String opponent = game.getOpponent(playerId);
@@ -89,15 +64,11 @@ public class Card501_201 extends AbstractNormalEffect {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.isEndOfYourPhase(game, self, effectResult, Phase.CONTROL)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+        if (TriggerConditions.isEndOfOpponentsTurn(game, effectResult, playerId)
                 && GameConditions.occupies(game, playerId, 3, Filters.battleground)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 Force");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new LoseForceEffect(action, opponent, 1));
