@@ -4,8 +4,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
@@ -16,7 +19,10 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChoosePlayerBySideEffect;
 import com.gempukku.swccgo.logic.modifiers.IconModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -54,5 +60,64 @@ public class Card501_018 extends AbstractNormalEffect {
         modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Blast_The_Door_Kid, Filters.Its_A_Trap), yourApprenticeInBattle));
 
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.Sith_Apprentice, Filters.participatingInBattle))
+                && GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)) {
+
+            final String opponent = game.getOpponent(playerId);
+            boolean playerCanActivate = GameConditions.canActivateForce(game, playerId);
+            boolean opponentCanActivate = GameConditions.canActivateForce(game, opponent);
+
+            if (playerCanActivate && opponentCanActivate) {
+
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Choose player to activate Force");
+                // Update usage limit(s)
+                action.appendUsage(new OncePerBattleEffect(action));
+                // Choose target(s)
+                action.appendTargeting(
+                        new ChoosePlayerBySideEffect(action, playerId) {
+                            @Override
+                            protected void playerChosen(SwccgGame game, final String playerChosen) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new ActivateForceEffect(action, playerChosen, 1));
+                            }
+                        }
+                );
+                actions.add(action);
+            }
+            else if (playerCanActivate) {
+
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Activate 1 Force");
+                // Update usage limit(s)
+                action.appendUsage(new OncePerBattleEffect(action));
+                // Perform result(s)
+                action.appendEffect(
+                    new ActivateForceEffect(action, playerId, 1));                   
+                actions.add(action);
+            }
+            else if (opponentCanActivate) {
+
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Make opponent activate 1 Force");
+                // Update usage limit(s)
+                action.appendUsage(new OncePerBattleEffect(action));
+                // Perform result(s)
+                action.appendEffect(
+                    new ActivateForceEffect(action, opponent, 1));
+                actions.add(action);
+            }
+        }
+        return actions;
     }
 }
