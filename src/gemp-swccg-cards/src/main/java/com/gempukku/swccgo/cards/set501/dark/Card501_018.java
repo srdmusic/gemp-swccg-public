@@ -1,6 +1,12 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.conditions.AloneCondition;
+import com.gempukku.swccgo.cards.conditions.OnCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardOptionId;
@@ -12,6 +18,11 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.modifiers.IconModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+
 
 /**
  * Set: Playtesting
@@ -31,5 +42,16 @@ public class Card501_018 extends AbstractNormalEffect {
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
         return Filters.canSpot(game, self, Filters.Revenge_Of_The_Sith);
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+
+        Condition sidiousAloneOnCoruscantCondition = new OnTableCondition(self, Filters.and(Filters.Sidious, Filters.alone, Filters.On_Coruscant));
+
+        modifiers.add(new IconModifier(self, Filters.sameLocationAs(self, Filters.Sidious), sidiousAloneOnCoruscantCondition, Icon.DARK_FORCE, 1));
+        modifiers.add(new IconModifier(self, Filters.sameLocationAs(self, Filters.Sidious), sidiousAloneOnCoruscantCondition, Icon.LIGHT_FORCE, 1));
+        return modifiers;
     }
 }
