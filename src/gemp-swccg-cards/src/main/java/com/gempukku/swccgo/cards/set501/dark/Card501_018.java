@@ -70,7 +70,7 @@ public class Card501_018 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.Sith_Apprentice, Filters.participatingInBattle))
-                && GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)) {
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
             final String opponent = game.getOpponent(playerId);
             boolean playerCanActivate = GameConditions.canActivateForce(game, playerId);
