@@ -19,7 +19,6 @@ import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotCancelWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.LinkedList;
@@ -35,7 +34,7 @@ public class Card501_203 extends AbstractUsedInterrupt {
     public Card501_203() {
         super(Side.LIGHT, 4, Title.A_New_Hope, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("The heroes of the Rebellion know that where there is life, there is hope.");
-        setGameText("[Upload] Luke (or a Lars) or Leia (or Bail) with printed deploy < 4. OR For remainder of turn, opponent may not cancel battle destiny draws or character weapon destiny draws. OR If Luke or Leia in battle alone, draw one battle destiny if unable to otherwise.");
+        setGameText("For remainder of turn, opponent may not cancel battle destiny draws. OR If Luke or Leia in battle alone, draw one battle destiny if unable to otherwise. OR If an Alderaan or Tatooine location on table, ▲ Luke (or a Lars) or Leia (or Bail) with printed deploy < 4.");
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_27);
         setTestingText("A New Hope");
     }
@@ -46,7 +45,8 @@ public class Card501_203 extends AbstractUsedInterrupt {
 
         GameTextActionId gameTextActionId = GameTextActionId.A_NEW_HOPE__UPLOAD_LUKE_OR_LEIA;
 
-        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.canSpot(game, self, Filters.or(Filters.Alderaan_location, Filters.Tatooine_location))
+                    && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
 
             action.setText("Take Luke (or a Lars) or Leia (or Bail) into hand from Reserve Deck");
@@ -65,28 +65,23 @@ public class Card501_203 extends AbstractUsedInterrupt {
         }
 
         final String opponent = game.getOpponent(playerId);
-        final PlayInterruptAction protectBattleAndWeaponDestinyDrawsAction = new PlayInterruptAction(game, self);
-        protectBattleAndWeaponDestinyDrawsAction.setText("Affect battle and weapon destiny draws");
+        final PlayInterruptAction protectBattleDestinyDrawsAction = new PlayInterruptAction(game, self);
+        protectBattleDestinyDrawsAction.setText("Prevent canceling battle destiny draws");
 
         // Allow response(s)
-        protectBattleAndWeaponDestinyDrawsAction.allowResponses("Prevent opponent from canceling battle and character weapon destiny draws for remainder of turn",
-                new RespondablePlayCardEffect(protectBattleAndWeaponDestinyDrawsAction) {
+        protectBattleDestinyDrawsAction.allowResponses("Prevent opponent from canceling battle destiny draws for remainder of turn",
+                new RespondablePlayCardEffect(protectBattleDestinyDrawsAction) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
-                        protectBattleAndWeaponDestinyDrawsAction.appendEffect(
-                                new AddUntilEndOfTurnModifierEffect(protectBattleAndWeaponDestinyDrawsAction,
+                        protectBattleDestinyDrawsAction.appendEffect(
+                                new AddUntilEndOfTurnModifierEffect(protectBattleDestinyDrawsAction,
                                         new MayNotCancelBattleDestinyModifier(self, null, opponent),
                                         "Prevents "+opponent+" from canceling battle destiny draws")
-                        );
-                        protectBattleAndWeaponDestinyDrawsAction.appendEffect(
-                                new AddUntilEndOfTurnModifierEffect(protectBattleAndWeaponDestinyDrawsAction,
-                                        new MayNotCancelWeaponDestinyModifier(self, opponent, Filters.character_weapon),
-                                        "Prevents "+opponent+" from canceling character weapon destiny draws")
                         );
                     }
                 }
         );
-        actions.add(protectBattleAndWeaponDestinyDrawsAction);
+        actions.add(protectBattleDestinyDrawsAction);
 
         if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.or(Filters.Luke, Filters.Leia), Filters.alone))) {
             final PhysicalCard battleLocation = game.getGameState().getBattleLocation();
