@@ -2,7 +2,9 @@
 
 Date: 2026-08-12 PT
 
-Status: **UNCOMMITTED SOURCE REVIEW PACKET; NO PACKAGE, DEPLOYMENT, OR GAME**
+Status: **SOURCE COMMITTED, PACKAGED, DEPLOYED, AND AUTONOMOUSLY VALIDATED; NO PUSH**
+
+Sections 1 through 8 preserve the review-time design record. Section 9 records the later source, package, deployment, and live-validation result and supersedes the earlier delivery-state statements.
 
 ## 1. Frozen lineage
 
@@ -16,7 +18,7 @@ Status: **UNCOMMITTED SOURCE REVIEW PACKET; NO PACKAGE, DEPLOYMENT, OR GAME**
 | Test runtime | pinned image `sha256:3db65087c1a663b264017845ae5f67eef27b6a6aa4259f1c1efdb2dbda649a80`, Corretto Java 21.0.11 |
 | Test network | disabled |
 
-This packet does not claim a commit, packaged class, loaded JVM, completed game, database row, replay, deployment, push, or pull request.
+At review time, this packet did not claim a commit, packaged class, loaded JVM, completed game, database row, replay, deployment, push, or pull request. Those later gates are recorded in Section 9.
 
 ## 2. Endpoint contract
 
@@ -106,7 +108,7 @@ That ordering is safe for this path:
 - recorder and Hall result listeners use their captured game, participant, winner, loser, and recording state, not `AiRegistry`;
 - after the terminal callback, the iterative driver performs no further AI lookup or decision and exits when carry-out returns and `isFinished` becomes true.
 
-Registry removal may therefore precede later terminal listeners, but it cannot truncate final AI decision reasoning. The exact behavior still needs one natural end-to-end game to confirm live log and recording evidence.
+Registry removal may therefore precede later terminal listeners, but it cannot truncate final AI decision reasoning. Four later natural end-to-end games confirmed the live controller logs, recorder output, database rows, paired replay streams, and Hall cleanup.
 
 ## 7. Verification
 
@@ -154,10 +156,14 @@ Append-only documentation:
 
 Every production line outside the three named Java files is forbidden for this candidate. AI evaluators, AI strategy controllers, objective data, engine internals outside the mediator, card Java, client/UI, decks, database state, build/package artifacts, and deployment state are unchanged.
 
-## 9. Proof ceiling and next gate
+## 9. Delivery and proof ceiling
 
-Unit tests and source contracts prove the intended isolated lifecycle. They do not prove package inclusion, JVM loading, a natural controller-versus-controller finish, result-listener behavior under the real engine, recorder completion, database row truth, replay stream pairing, or strategy behavior.
+The implementation was committed as `fb53db8fb935360418701beceb03a1a14a759ddc`. Release correction `a5ad93b0ca7be62631b63ea99fcaf256ec196e2d` preserved the baseline fat-jar dependency entries. The pinned offline package passed with 34 focused tests and a full-reactor result of 3,392 tests, the same 7 baseline failures, 0 errors, and 26 skips.
 
-The next gate is lead review of this exact uncommitted packet. If approved, create one coherent local commit and stop. Packaging, deployment, restart, endpoint invocation, game creation, database writes, push, and pull request remain separate later gates.
+The deployed `web.jar` is 46,090,044 bytes with SHA-256 `917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf`. Relative to the sealed replay-repair artifact, 26,102 archive entries are identical, 13 changed, 3 were added, and none were removed. All 1,028 AI class entries are byte-identical. The running host and container bytes match that artifact. Immediate rollback remains the sealed `0fb13072fbcb386fada108609346dcaefceee09cf8acb0e5601a103943386602` jar.
 
-Rollback before commit is to discard only this allowlist from the isolated worktree. After commit, revert the one coherent implementation commit.
+The exact validator is committed as `1099637ef167585dc267f534796e620b68cb8d12`. It created five isolated controller-versus-controller games through the normal engine. Four ended naturally by Life Force depletion, DB `72279` through `72282`; DB `72283` ended by Chosen One concession and is classified only as a noncompetitive behavior fragment. Every created game produced one exact DB row, both recording-ID replay streams, controller registration logs, and clean Hall removal. No exact-game abort, timeout, AI-chain guard, or infrastructure failure occurred.
+
+The live behavior proof is intentionally partial. Batch 1 objective-critical eviction, Batch 3 score-zero telemetry, WMAOP fodder retention, shared V76, EOPS flip-gate control, classic Hunt Down compatibility, and formation-safety Pass behavior received selected or runtime proof. Batch 1 persistent response, Batch 2 isolated-packet react scoring, Batch 4 exact response banking, Batch 5 MWYHL, and `601_87` Legacy remain unproved or inapplicable under these fixtures. See `LIVE_VALIDATION_REPORT.md` and the three per-game audit reports for exact boundaries.
+
+No push or pull request was made. To remove only the harness, revert `a5ad93b0` and `fb53db8fb`. To restore the immediate pre-harness runtime, use the sealed `0fb13072` rollback jar with the preserved no-boot override after the normal zero-table gate.

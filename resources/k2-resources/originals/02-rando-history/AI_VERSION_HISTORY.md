@@ -10762,3 +10762,42 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     project Surefire version. This preserves the deployed JUnit/Hamcrest fat-jar
     entries instead of turning a test-harness change into an unrelated archive
     cleanup.
+
+  ==== CONTROLLED CHOSEN ONE VS RANDO LIVE VALIDATION (2026-08-12) ====
+
+    Harness source fb53db8fb and release correction a5ad93b0 were packaged
+    under pinned Java 21 and deployed through the preserved no-boot-flip path.
+    The live host, container, and sealed artifact all have SHA-256
+    917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf.
+    All 1,028 AI class entries remain byte-identical to the earlier sealed
+    replay-repair artifact. Immediate runtime rollback is the preserved
+    0fb13072fbcb386fada108609346dcaefceee09cf8acb0e5601a103943386602
+    jar. Validator source is 1099637ef.
+
+    DB 72279 through 72282 completed naturally by Life Force depletion. Each
+    run had exact Chosen One Light and Rando Dark controller registration,
+    exactly one new game_history row, both recording-ID replay files, matching
+    final public fingerprints, and clean Hall removal. Chosen won 72279 through
+    72281. Dark Rando naturally won 72282. DB 72283 ended by Chosen concession
+    and is retained only as a noncompetitive behavior fragment. An earlier 409
+    while operational play was closed created no game row or replay.
+
+    Live selected proof includes Batch 1 objective-critical eviction in 72282,
+    WMAOP FODDER_HOLD and shared V76 in 72280, EOPS flip-gate control in 72279,
+    and formation-safety Pass in 72281. Batch 3 telemetry repeatedly ran as
+    RAW_PREDICTOR_ONLY, UNKNOWN, score zero, so it remained behavior-neutral.
+
+    The campaign did not positively fire Batch 1 persistent response, Batch 2
+    isolated-packet immediate-react scoring, or Batch 4 V182 RESPONSE BANK.
+    The ordinary V182 BANK FORCE records in 72282 are the older generic rule.
+    Batch 5 MWYHL was unreachable because the endpoint fixes Rando as Dark, and
+    no available deck contained 601_87. Classic 213_31 Vader-only behavior was
+    selected and preserved. Four natural games establish lifecycle and branch
+    evidence, not a new win rate.
+
+    Exact evidence is in
+    outputs/chosen-rando-botgame-2026-08-12/LIVE_VALIDATION_REPORT.md, the three
+    game-audit reports, and evidence_reports. Final runtime checks showed HTTP
+    200, zero tables, zero Hall players, byte-identical host/container jars,
+    unchanged DB identity, zero restarts, zero OOM, and no exact-game abort,
+    timeout, AI-chain guard, or infrastructure error. No push or PR occurred.

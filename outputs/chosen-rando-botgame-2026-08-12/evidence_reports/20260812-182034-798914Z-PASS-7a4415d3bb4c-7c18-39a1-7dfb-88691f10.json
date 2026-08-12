@@ -1,0 +1,159 @@
+{
+  "authenticated": true,
+  "botgame_post_count": 1,
+  "contract": "chosen-rando-botgame-evidence-v1",
+  "finished_utc": "2026-08-12T18:20:34.798879+00:00",
+  "game_history": {
+    "end_ms": 1786558834506,
+    "end_utc": "2026-08-12T18:20:34.506000+00:00",
+    "format_name": "Open",
+    "game_history_id": 72280,
+    "lose_reason": "Life Force depleted",
+    "lose_recording_id": "mc1esrvx5pqjgnsv",
+    "loser": "~Rando_Cal",
+    "loser_deck_name": "Hunt Down V",
+    "start_ms": 1786558819613,
+    "start_utc": "2026-08-12T18:20:19.613000+00:00",
+    "win_reason": "Depleted opponent's Life Force",
+    "win_recording_id": "8h1m2ttm7buq3bjt",
+    "winner": "~The_Chosen_One",
+    "winner_deck_name": "1 Rey",
+    "winner_side": "Light"
+  },
+  "game_history_high_water_checked_utc": "2026-08-12T18:20:19.601000+00:00",
+  "game_history_high_water_mark": 72279,
+  "hall_check_1": {
+    "ai_tables_enabled": true,
+    "checked_utc": "2026-08-12T18:20:04.507000+00:00",
+    "finished_visible": 0,
+    "playing": 0,
+    "waiting": 0
+  },
+  "hall_check_2": {
+    "ai_tables_enabled": true,
+    "checked_utc": "2026-08-12T18:20:19.520000+00:00",
+    "finished_visible": 0,
+    "gap_seconds": 15.012922250010888,
+    "playing": 0,
+    "waiting": 0
+  },
+  "logs": {
+    "controller_anchors": [
+      {
+        "line": "2026-08-12 18:20:19,613  INFO HallServer:487 - BOTGAME AI REGISTERED gameId=7a4415d3bb4c-7c18-39a1-7dfb-88691f10 side=LIGHT playerId=~The_Chosen_One controllerClass=com.gempukku.swccgo.ai.models.chosenone.TheChosenOneAi deckOwner=asdf deck=1 Rey",
+        "line_number": 17356,
+        "line_sha256": "8f7c54c64c5870e50cae1cb0ed0344f2cd2f13efa4df084efe5fc4869203950d",
+        "path": "/Users/steve/gemp-swccg-public/logs/gemp-swccg.log",
+        "timestamp": "2026-08-12 18:20:19.613"
+      },
+      {
+        "line": "2026-08-12 18:20:19,613  INFO HallServer:491 - BOTGAME AI REGISTERED gameId=7a4415d3bb4c-7c18-39a1-7dfb-88691f10 side=DARK playerId=~Rando_Cal controllerClass=com.gempukku.swccgo.ai.models.rando.RandoCalAi deckOwner=asdf deck=Hunt Down V",
+        "line_number": 17357,
+        "line_sha256": "c910d09d41fe603424c7b71478034616fa11518c3f2cdbec4e366cf3e68a3844",
+        "path": "/Users/steve/gemp-swccg-public/logs/gemp-swccg.log",
+        "timestamp": "2026-08-12 18:20:19.613"
+      }
+    ],
+    "files_scanned": [
+      "/Users/steve/gemp-swccg-public/logs/gemp-swccg.log",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-07-31-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-07-31-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-01-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-01-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-03-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-03-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-04-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-04-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-05-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-05-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-06-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-06-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-07-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-07-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-08-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-08-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-10-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-10-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-12-2026-1.log.gz"
+    ]
+  },
+  "new_game_history_row_count": 1,
+  "post_completion_hall": {
+    "ai_tables_enabled": true,
+    "checked_utc": "2026-08-12T18:20:34.522000+00:00",
+    "finished_visible": 0,
+    "playing": 0,
+    "waiting": 0
+  },
+  "post_response_received_utc": "2026-08-12T18:20:34.519000+00:00",
+  "post_started_utc": "2026-08-12T18:20:19.601000+00:00",
+  "replays": {
+    "~Rando_Cal": {
+      "discarded_message_count": 0,
+      "final_message_count": 960,
+      "lose_reason": "Life Force depleted",
+      "loser": "~Rando_Cal",
+      "owner": "~Rando_Cal",
+      "participants": [
+        "~Rando_Cal",
+        "~The_Chosen_One"
+      ],
+      "path": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/mc1esrvx5pqjgnsv.xml.gz",
+      "public_sha256": "45a8383af741ccd7edde17468b75a94a3a9c87f1315d3cff7ab78a6fc4aa1919",
+      "raw_message_count": 960,
+      "recording_id": "mc1esrvx5pqjgnsv",
+      "segment_count": 1,
+      "win_reason": "Depleted opponent's Life Force",
+      "winner": "~The_Chosen_One"
+    },
+    "~The_Chosen_One": {
+      "discarded_message_count": 0,
+      "final_message_count": 960,
+      "lose_reason": "Life Force depleted",
+      "loser": "~Rando_Cal",
+      "owner": "~The_Chosen_One",
+      "participants": [
+        "~Rando_Cal",
+        "~The_Chosen_One"
+      ],
+      "path": "/Users/steve/gemp-swccg-public/replays/~The_Chosen_One/8h1m2ttm7buq3bjt.xml.gz",
+      "public_sha256": "45a8383af741ccd7edde17468b75a94a3a9c87f1315d3cff7ab78a6fc4aa1919",
+      "raw_message_count": 960,
+      "recording_id": "8h1m2ttm7buq3bjt",
+      "segment_count": 1,
+      "win_reason": "Depleted opponent's Life Force",
+      "winner": "~The_Chosen_One"
+    }
+  },
+  "request": {
+    "base_url": "http://localhost:17001",
+    "dark_deck": "Hunt Down V",
+    "dark_player": "~Rando_Cal",
+    "dark_skill": "RANDO",
+    "db_container": "gemp_swccg_db_1",
+    "deck_owner": "asdf",
+    "format_code": "open",
+    "light_deck": "1 Rey",
+    "light_player": "~The_Chosen_One",
+    "light_skill": "CHOSENONE",
+    "post_timeout_seconds": 1800,
+    "repo_root": "/Users/steve/gemp-swccg-public"
+  },
+  "runtime_game_id": "7a4415d3bb4c-7c18-39a1-7dfb-88691f10",
+  "started_utc": "2026-08-12T18:20:04.494408+00:00",
+  "status": "PASS",
+  "verified_invariants": [
+    "authenticated admin session",
+    "zero WAITING and zero PLAYING tables twice at least 15 seconds apart",
+    "read-only game_history high-water mark before POST",
+    "exactly one POST to /admin/botgame",
+    "CHOSENONE Light and RANDO Dark exact request",
+    "zero active Hall tables after synchronous response",
+    "exactly one new participant, deck, and time-matched game_history row",
+    "natural Life Force depletion terminal",
+    "recording-ID replay resolution without mtime",
+    "matching final-segment public replay fingerprints",
+    "exact gameId controller registration anchors",
+    "no exact-game abort or error log"
+  ]
+}

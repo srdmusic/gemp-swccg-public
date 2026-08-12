@@ -1,0 +1,52 @@
+{
+  "authenticated": true,
+  "botgame_post_count": 1,
+  "contract": "chosen-rando-botgame-evidence-v1",
+  "error": "game did not end by natural Life Force depletion; timeout, cancellation, and concession are rejected",
+  "finished_utc": "2026-08-12T18:25:53.943713+00:00",
+  "game_history_high_water_checked_utc": "2026-08-12T18:25:38.999000+00:00",
+  "game_history_high_water_mark": 72282,
+  "hall_check_1": {
+    "ai_tables_enabled": true,
+    "checked_utc": "2026-08-12T18:25:23.905000+00:00",
+    "finished_visible": 0,
+    "playing": 0,
+    "waiting": 0
+  },
+  "hall_check_2": {
+    "ai_tables_enabled": true,
+    "checked_utc": "2026-08-12T18:25:38.917000+00:00",
+    "finished_visible": 0,
+    "gap_seconds": 15.011266000001342,
+    "playing": 0,
+    "waiting": 0
+  },
+  "new_game_history_row_count": 1,
+  "post_completion_hall": {
+    "ai_tables_enabled": true,
+    "checked_utc": "2026-08-12T18:25:53.871000+00:00",
+    "finished_visible": 0,
+    "playing": 0,
+    "waiting": 0
+  },
+  "post_response_received_utc": "2026-08-12T18:25:53.869000+00:00",
+  "post_started_utc": "2026-08-12T18:25:39+00:00",
+  "request": {
+    "base_url": "http://localhost:17001",
+    "dark_deck": "MyLordIsThatLegal",
+    "dark_player": "~Rando_Cal",
+    "dark_skill": "RANDO",
+    "db_container": "gemp_swccg_db_1",
+    "deck_owner": "asdf",
+    "format_code": "open",
+    "light_deck": "OBI_MUN CORU",
+    "light_player": "~The_Chosen_One",
+    "light_skill": "CHOSENONE",
+    "post_timeout_seconds": 1800,
+    "repo_root": "/Users/steve/gemp-swccg-public"
+  },
+  "retry_instruction": "Do not retry this run automatically.",
+  "runtime_game_id": "9360e0f26d6d-e41a-5721-1756-b7691f10",
+  "started_utc": "2026-08-12T18:25:23.895151+00:00",
+  "status": "FAIL"
+}

@@ -1,0 +1,160 @@
+{
+  "authenticated": true,
+  "botgame_post_count": 1,
+  "contract": "chosen-rando-botgame-evidence-v1",
+  "finished_utc": "2026-08-12T18:25:01.152522+00:00",
+  "game_history": {
+    "end_ms": 1786559100841,
+    "end_utc": "2026-08-12T18:25:00.841000+00:00",
+    "format_name": "Open",
+    "game_history_id": 72282,
+    "lose_reason": "Life Force depleted",
+    "lose_recording_id": "azhk63rhjapg25kg",
+    "loser": "~The_Chosen_One",
+    "loser_deck_name": "1 Rey",
+    "start_ms": 1786559091173,
+    "start_utc": "2026-08-12T18:24:51.173000+00:00",
+    "win_reason": "Depleted opponent's Life Force",
+    "win_recording_id": "u8l2wwlozk6qby13",
+    "winner": "~Rando_Cal",
+    "winner_deck_name": "26SD D1 Tashima DS TDIGWATTv",
+    "winner_side": "Dark"
+  },
+  "game_history_high_water_checked_utc": "2026-08-12T18:24:51.164000+00:00",
+  "game_history_high_water_mark": 72281,
+  "hall_check_1": {
+    "ai_tables_enabled": true,
+    "checked_utc": "2026-08-12T18:24:36.072000+00:00",
+    "finished_visible": 0,
+    "playing": 0,
+    "waiting": 0
+  },
+  "hall_check_2": {
+    "ai_tables_enabled": true,
+    "checked_utc": "2026-08-12T18:24:51.086000+00:00",
+    "finished_visible": 0,
+    "gap_seconds": 15.013604624997242,
+    "playing": 0,
+    "waiting": 0
+  },
+  "logs": {
+    "controller_anchors": [
+      {
+        "line": "2026-08-12 18:24:51,173  INFO HallServer:487 - BOTGAME AI REGISTERED gameId=4bfb6bf5b40a-52f9-7cd1-0c12-f7691f10 side=LIGHT playerId=~The_Chosen_One controllerClass=com.gempukku.swccgo.ai.models.chosenone.TheChosenOneAi deckOwner=asdf deck=1 Rey",
+        "line_number": 16592,
+        "line_sha256": "38b112d960b458e07dc712f758acb34f5ef54e465dc4adbc0472fe2cd857ba67",
+        "path": "/Users/steve/gemp-swccg-public/logs/gemp-swccg.log",
+        "timestamp": "2026-08-12 18:24:51.173"
+      },
+      {
+        "line": "2026-08-12 18:24:51,173  INFO HallServer:491 - BOTGAME AI REGISTERED gameId=4bfb6bf5b40a-52f9-7cd1-0c12-f7691f10 side=DARK playerId=~Rando_Cal controllerClass=com.gempukku.swccgo.ai.models.rando.RandoCalAi deckOwner=asdf deck=26SD D1 Tashima DS TDIGWATTv",
+        "line_number": 16593,
+        "line_sha256": "bb8c6526771a0a9c04e6b7b298a12c65495941aabeb387926bf50967c66ba55e",
+        "path": "/Users/steve/gemp-swccg-public/logs/gemp-swccg.log",
+        "timestamp": "2026-08-12 18:24:51.173"
+      }
+    ],
+    "files_scanned": [
+      "/Users/steve/gemp-swccg-public/logs/gemp-swccg.log",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-07-31-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-07-31-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-01-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-01-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-03-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-03-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-04-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-04-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-05-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-05-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-06-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-06-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-07-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-07-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-08-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-08-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-10-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-10-2026-2.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-12-2026-1.log.gz",
+      "/Users/steve/gemp-swccg-public/logs/2026-08/app-08-12-2026-2.log.gz"
+    ]
+  },
+  "new_game_history_row_count": 1,
+  "post_completion_hall": {
+    "ai_tables_enabled": true,
+    "checked_utc": "2026-08-12T18:25:00.850000+00:00",
+    "finished_visible": 0,
+    "playing": 0,
+    "waiting": 0
+  },
+  "post_response_received_utc": "2026-08-12T18:25:00.848000+00:00",
+  "post_started_utc": "2026-08-12T18:24:51.164000+00:00",
+  "replays": {
+    "~Rando_Cal": {
+      "discarded_message_count": 0,
+      "final_message_count": 715,
+      "lose_reason": "Life Force depleted",
+      "loser": "~The_Chosen_One",
+      "owner": "~Rando_Cal",
+      "participants": [
+        "~Rando_Cal",
+        "~The_Chosen_One"
+      ],
+      "path": "/Users/steve/gemp-swccg-public/replays/~Rando_Cal/u8l2wwlozk6qby13.xml.gz",
+      "public_sha256": "f24489dfa1215c2507fb514fd818f601ec1a2c2778c12e3a6b3828cce99ffc6e",
+      "raw_message_count": 715,
+      "recording_id": "u8l2wwlozk6qby13",
+      "segment_count": 1,
+      "win_reason": "Depleted opponent's Life Force",
+      "winner": "~Rando_Cal"
+    },
+    "~The_Chosen_One": {
+      "discarded_message_count": 0,
+      "final_message_count": 715,
+      "lose_reason": "Life Force depleted",
+      "loser": "~The_Chosen_One",
+      "owner": "~The_Chosen_One",
+      "participants": [
+        "~Rando_Cal",
+        "~The_Chosen_One"
+      ],
+      "path": "/Users/steve/gemp-swccg-public/replays/~The_Chosen_One/azhk63rhjapg25kg.xml.gz",
+      "public_sha256": "f24489dfa1215c2507fb514fd818f601ec1a2c2778c12e3a6b3828cce99ffc6e",
+      "raw_message_count": 715,
+      "recording_id": "azhk63rhjapg25kg",
+      "segment_count": 1,
+      "win_reason": "Depleted opponent's Life Force",
+      "winner": "~Rando_Cal"
+    }
+  },
+  "request": {
+    "base_url": "http://localhost:17001",
+    "dark_deck": "26SD D1 Tashima DS TDIGWATTv",
+    "dark_player": "~Rando_Cal",
+    "dark_skill": "RANDO",
+    "db_container": "gemp_swccg_db_1",
+    "deck_owner": "asdf",
+    "format_code": "open",
+    "light_deck": "1 Rey",
+    "light_player": "~The_Chosen_One",
+    "light_skill": "CHOSENONE",
+    "post_timeout_seconds": 1800,
+    "repo_root": "/Users/steve/gemp-swccg-public"
+  },
+  "runtime_game_id": "4bfb6bf5b40a-52f9-7cd1-0c12-f7691f10",
+  "started_utc": "2026-08-12T18:24:36.054938+00:00",
+  "status": "PASS",
+  "verified_invariants": [
+    "authenticated admin session",
+    "zero WAITING and zero PLAYING tables twice at least 15 seconds apart",
+    "read-only game_history high-water mark before POST",
+    "exactly one POST to /admin/botgame",
+    "CHOSENONE Light and RANDO Dark exact request",
+    "zero active Hall tables after synchronous response",
+    "exactly one new participant, deck, and time-matched game_history row",
+    "natural Life Force depletion terminal",
+    "recording-ID replay resolution without mtime",
+    "matching final-segment public replay fingerprints",
+    "exact gameId controller registration anchors",
+    "no exact-game abort or error log"
+  ]
+}

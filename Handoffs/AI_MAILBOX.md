@@ -281,3 +281,21 @@ Files: three production Java files, three focused test files, one stale test-com
 Risks: synchronous execution can occupy the admin request for the full game, as explicitly accepted for this frozen path. The 10,000-decision ceiling is intentionally fatal, not a success. Unit and source proof do not establish packaged bytes, a loaded JVM, a natural completed game, recorder output, database rows, or replay evidence.
 
 Needed: lead reviews the exact diff and decides whether to create one coherent local commit. No package, deployment, restart, live game, database write, push, or PR is authorized by this entry.
+
+## 2026-08-12 11:38 PT - Alfred -> K-2 campaign lanes - RESOLVED
+
+Topic: Controlled Chosen One Light versus Rando Dark harness deployed and autonomous validation campaign closed.
+
+Decision: The source, artifact, runtime, recorder, database, replay, and selected-rule evidence gates are complete for the fixtures that were actually reachable. No additional game is authorized from this campaign because the remaining branches require a different side, a missing deck fixture, or a positively proved opportunity.
+
+Evidence: harness source is `fb53db8fb935360418701beceb03a1a14a759ddc`; release correction is `a5ad93b0ca7be62631b63ea99fcaf256ec196e2d`; validator source is `1099637ef167585dc267f534796e620b68cb8d12`. The deployed host and container jar SHA-256 is `917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf`, with all 1,028 AI classes byte-identical to the prior replay-repair artifact. Immediate rollback is the sealed `0fb13072fbcb386fada108609346dcaefceee09cf8acb0e5601a103943386602` jar.
+
+Results: DB `72279` through `72282` ended naturally by Life Force depletion with exact controller identities, one DB row, both recording-ID replay streams, matching public fingerprints, and Hall cleanup. Chosen won `72279` through `72281`; Dark Rando naturally won `72282`. DB `72283` ended by Chosen concession and is noncompetitive evidence only. The initial operational-closed `409` preflight created no game row or replay.
+
+Behavior: Batch 1 objective-critical eviction selected and reached Aurra deployment plus battle in DB `72282`. Batch 3 telemetry fired at score zero. WMAOP FODDER_HOLD and shared V76 selected in DB `72280`; EOPS flip-gate control selected in DB `72279`; formation safety selected Pass in DB `72281`. Persistent response, Batch 2 isolated-packet react scoring, and Batch 4 exact response banking remain unproved. Generic `V182 BANK FORCE` is not `V182 RESPONSE BANK`. MWYHL is Rando-Light and was not applicable. No available deck contained `601_87`; classic `213_31` compatibility was preserved.
+
+Runtime: final checks show matching host/container bytes, HTTP `200`, zero tables, zero Hall players, unchanged DB identity, zero app/DB restarts, no OOM, and no exact-game abort, timeout, AI-chain guard, or infrastructure error. Full evidence is in `outputs/chosen-rando-botgame-2026-08-12/LIVE_VALIDATION_REPORT.md`, the three behavior audits, and `evidence_reports/`.
+
+Boundary: four natural games prove the controlled lifecycle and the named selected branches. They do not establish a new win rate or behaviorally seal unexercised branches. No deck-library change, push, or pull request occurred.
+
+Needed: none for this campaign. Future work begins only from a new exact fixture that can prove one of the remaining opportunity gates.
