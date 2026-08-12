@@ -108,13 +108,13 @@ Batch 1 changed no engine, card, objective-profile JSON, client, database, deck,
 
 ## 4. Deterministic verification
 
-### Impacted ring
+### Pre-correction impacted ring
 
 Result: **201 passed, 0 failures, 0 errors, 0 skipped** across 24 Surefire class reports.
 
 This ring covers the new ledger/policy, real planner adapter, formation routes, exact wave lifecycle, both deployment-plan mirrors, both `CombinedEvaluator` bucket walks, objective participant and post-flip facts, Invasion, native `219_1`, planner characterization, destination characterization, source ownership, and Rando/Chosen One action-text parity.
 
-### Preserved Gate 0 compatibility ring
+### Pre-correction preserved Gate 0 compatibility ring
 
 Result: **225 passed, 0 failures, 0 errors, 0 skipped**.
 
@@ -138,9 +138,11 @@ No `219_1` card, engine, objective analyzer, or playbook behavior was changed. T
 
 Final integration verification found one false mandatory-objective edge. A counted-operative target is now mandatory only when its actor or companion was missing before the candidate and the exact planned group completes both roles. An already-complete target cannot gain false mandatory priority; missing-actor and missing-companion completion remain eligible. `DeployPlanRankingAdapterParityTest.completedCountedOperativeSiteCannotBecomeFalseMandatory` pins the selector boundary, and `LocalUprisingTwinsObjectiveBehaviorTest` pins the public-bot behavior that exposed it.
 
+Post-correction proof at frozen source commit `8d9e9c017022c9cb8f128f322f6e2daa213db473`: the independent pinned-Java-21 36-suite changed/adjacent ring passed `322/0/0/0`, including both corrections and the Local Uprising behavior smoke. The pinned full reactor ran 3,358 tests with 7 failures, 0 errors, and 26 skips. All seven failures are the exact one `DeployActionTextSourceParityTest`, two `DeployMapuzoPlanDestinationSourceParityTest`, and four `EndorOperationsCombinedEvaluatorDecisionTest` assertions independently reproduced on sealed e877; no new integration failure remained.
+
 ## 5. Proof ceiling and residual risks
 
-- No candidate `web.jar` has been packaged. Candidate-versus-normalized-e877 byte allowlisting remains pending.
+- A provisional offline package from source commit `8d9e9c017` succeeded during final verification, but the final documentation-child artifact and candidate-versus-normalized-e877 byte allowlist remain pending in this report snapshot.
 - No jar has been replaced, no JVM restarted, and no deployment occurred.
 - No live log or replay proves `deploy-persistent-response-selected`, `deploy-objective-critical-eviction-selected`, or the outer `PERSISTENT_RESPONSE` bucket fired.
 - Repeated cancellation remains unknowable through the current safe public AI source and is intentionally absent from production facts. Zero paid damage is not labeled cancellation.

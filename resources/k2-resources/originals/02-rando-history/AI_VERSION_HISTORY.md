@@ -10516,15 +10516,20 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     roles. An already-complete target cannot gain false mandatory priority;
     missing-actor and missing-companion completion remain eligible.
 
-    The final lane ring passed 201/0/0/0, and the preserved Gate 0 ring passed
-    225/0/0/0. Compile, diff, and mirror parity passed. Native 219_1 front,
-    near-miss, and back-stability contracts were added without card or objective
-    behavior changes. Base is exact e877d4b6. Batch 1 source commit is
-    a82c88dd6, followed by WMAOP boundary-test commit 6426d6deb. No candidate
-    jar, deployment, live tag firing, or replay proof exists yet. Revert
-    a82c88dd6 plus the final integration correction; after deployment, restore
-    the immutable pre-Batch1 e877 rollback packet documented in the
-    implementation report.
+    Before the correction, the lane ring passed 201/0/0/0 and the preserved
+    Gate 0 ring passed 225/0/0/0. Post-correction frozen source commit
+    8d9e9c017022c9cb8f128f322f6e2daa213db473 passed the independent pinned-
+    Java-21 36-suite changed/adjacent ring 322/0/0/0. Its full reactor ran
+    3,358 tests with only the exact 7 failures independently reproduced on
+    sealed e877, 0 errors, and 26 skips. Compile, diff, and mirror parity
+    passed. Native 219_1 front, near-miss, and back-stability contracts were
+    added without card or objective behavior changes. Base is exact e877d4b6.
+    Batch 1 source commit is a82c88dd6, followed by WMAOP boundary-test commit
+    6426d6deb. A provisional offline package succeeded from 8d9e9c017; final
+    artifact allowlisting, deployment, live tag firing, and replay proof remain
+    separate. Revert a82c88dd6 plus the final integration correction; after
+    deployment, restore the immutable pre-Batch1 e877 rollback packet
+    documented in the implementation report.
 
   ==== 601_87 HUNT DOWN LEGACY EXACT-FAMILY CORRECTION (2026-08-12, both bots) ====
 
