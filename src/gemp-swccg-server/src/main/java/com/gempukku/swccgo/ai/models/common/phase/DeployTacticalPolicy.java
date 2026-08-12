@@ -116,12 +116,49 @@ public final class DeployTacticalPolicy {
                 && facts.opponentEffectivePower() > 0.0f
                 && facts.ourPower() + facts.deployingPower()
                 >= 2.0f * facts.opponentEffectivePower();
+        boolean contactGapClosed = eligible
+                && hitAdjustedPower >= facts.opponentEffectivePower() - 2.0f;
         boolean waveViable = eligible && !soloDominant
                 && facts.handCharacterCount() >= 2
                 && facts.affordableBuddyCount() >= 1.0f
-                && hitAdjustedPower >= facts.opponentEffectivePower() - 2.0f;
+                && contactGapClosed;
         return new ContactAssessment(projectedPower, hitAdjustedPower,
-                soloDominant, waveViable);
+                contactGapClosed, soloDominant, waveViable);
+    }
+
+    /**
+     * Reuses the V171/V172 contact result for a complete response formation.
+     * Existing and planned ability are additional whole-formation evidence;
+     * no unit-count ceiling or second combat threshold is introduced here.
+     */
+    public static ResponseFormationAssessment
+            assessPersistentResponseFormation(ContactFacts facts,
+                                               float existingFriendlyAbility,
+                                               float plannedWaveAbility) {
+        Objects.requireNonNull(facts, "facts");
+        if (existingFriendlyAbility < 0.0f || plannedWaveAbility < 0.0f) {
+            throw new IllegalArgumentException(
+                    "formation ability must be nonnegative");
+        }
+        ContactAssessment contact = assessV171V172Contact(facts);
+        float projectedAbility = existingFriendlyAbility
+                + plannedWaveAbility;
+        ResponseFormationRoute route = ResponseFormationRoute.NONE;
+        if (contact.soloDominant()) {
+            route = ResponseFormationRoute.V172_SOLO;
+        } else if (contact.waveViable()) {
+            route = ResponseFormationRoute.V171_WAVE;
+        } else if (facts.ourPower() > 0.0f
+                && facts.deployingPower() + facts.affordableWavePower()
+                > 0.0f
+                && contact.contactGapClosed()
+                && projectedAbility >= 4.0f) {
+            route = ResponseFormationRoute
+                    .EXISTING_FORMATION_REINFORCEMENT;
+        }
+        return new ResponseFormationAssessment(route,
+                contact.projectedPower(), projectedAbility,
+                route != ResponseFormationRoute.NONE);
     }
 
     public static DrainContestEvaluation evaluateV53V51Drain(
@@ -201,6 +238,36 @@ public final class DeployTacticalPolicy {
                 facts.actionId(), facts.opponentId(), facts.locationTitle(),
                 facts.opponentPower(), facts.ourPower(), 0.0f,
                 facts.opponentDrain()));
+    }
+
+    /**
+     * Reuses the shipped V296 non-losing space-contact predicate for a whole
+     * already-generated space plan. No separate space-combat threshold lives
+     * in the persistent-response owner.
+     */
+    public static ResponseFormationAssessment
+            assessPersistentSpaceResponse(
+                    StarshipDrainContactFacts facts,
+                    boolean operationalPackage,
+                    float existingFriendlyAbility,
+                    float plannedWaveAbility) {
+        if (existingFriendlyAbility < 0.0f
+                || plannedWaveAbility < 0.0f) {
+            throw new IllegalArgumentException(
+                    "formation ability must be nonnegative");
+        }
+        DrainContestEvaluation contact = operationalPackage
+                ? evaluateStarshipDrainContact(facts)
+                : new DrainContestEvaluation(new PolicyResult(
+                    "DEPLOY_STARSHIP_DRAIN_CONTACT_POLICY", List.of()),
+                    List.of());
+        boolean viable = !contact.result().operations().isEmpty();
+        return new ResponseFormationAssessment(
+                viable ? ResponseFormationRoute.V296_SPACE_CONTACT
+                    : ResponseFormationRoute.NONE,
+                facts.ourPower() + facts.deployingPower(),
+                existingFriendlyAbility + plannedWaveAbility,
+                viable);
     }
 
     public static PolicyResult scoreV51VaderFlip(VaderFlipFacts facts) {
@@ -750,8 +817,30 @@ public final class DeployTacticalPolicy {
         }
     }
 
+    public enum ResponseFormationRoute {
+        V170_SPY,
+        V171_WAVE,
+        V172_SOLO,
+        V296_SPACE_CONTACT,
+        EXISTING_FORMATION_REINFORCEMENT,
+        EXISTING_LEGAL_ALTERNATIVE,
+        NOT_APPLICABLE,
+        NONE
+    }
+
+    public record ResponseFormationAssessment(
+            ResponseFormationRoute route,
+            float projectedFriendlyPower,
+            float projectedFriendlyAbility,
+            boolean viable) {
+        public ResponseFormationAssessment {
+            Objects.requireNonNull(route, "route");
+        }
+    }
+
     public record ContactAssessment(float projectedPower,
                                     float hitAdjustedPower,
+                                    boolean contactGapClosed,
                                     boolean soloDominant,
                                     boolean waveViable) {
         public boolean viable() {

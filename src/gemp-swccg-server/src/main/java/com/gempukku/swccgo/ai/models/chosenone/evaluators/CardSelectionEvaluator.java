@@ -39,6 +39,8 @@ import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidatePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
 import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
@@ -2312,6 +2314,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             context, gameState, playerId, deployingBlueprintId);
         DeploymentPlan deploymentPlanSnapshot = null;
         DeploymentInstruction plannedDeployInstruction = null;
+        PersistentResponsePolicy.Obligation persistentResponseObligation =
+                null;
 
         // V29.3: BLUEPRINT-BASED CARD TYPE DETECTION
         // The decision text "Choose where to deploy •Lobot, Lando's Broker" does NOT contain
@@ -2442,6 +2446,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 // only when it identifies one instruction; duplicate physical copies or
                 // an unknown source never inherit the first unrelated destination.
                 deploymentPlanSnapshot = currentPlan.assessmentCopy();
+                persistentResponseObligation = deploymentPlanSnapshot
+                    .getPersistentResponseObligation();
                 if (deployingBlueprintId != null) {
                     plannedDeployInstruction = objectiveProgressDeployingCard != null
                         ? deploymentPlanSnapshot.getInstructionForPhysicalCard(
@@ -2606,6 +2612,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         SwccgCardBlueprint blueprint = location.getBlueprint();
                         String title = location.getTitle();
                         String titleLower = title != null ? title.toLowerCase() : "";
+                        boolean persistentV166ContestScored = false;
                         action.setDisplayText("Deploy to " + (title != null ? title : "location"));
                         TdigwattObjectiveFactsReader
                             .readVirtualDeployProjection(
@@ -2977,10 +2984,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             "deploy-tactical-v166-" + action.getActionId());
                                         v166Ledger.register(
                                             DeployTacticalPolicy.scoreV166ContestDrain(v166Facts));
-                                        PolicyOperationAdapter.apply(action, v166Ledger);
-                                        float v166 = v166Ledger.orderedOperations().get(0).delta();
-                                        logger.warn("V166 CONTEST DRAIN (deploy): target={} oppDrain={} oppCards={} oppPower={} -> +{}",
-                                            title, v166OppDrain, v166OppCards, (int) v166TheirPower, (int) v166);
+                                        if (!v166Ledger.orderedOperations().isEmpty()) {
+                                            PolicyOperationAdapter.apply(action, v166Ledger);
+                                            persistentV166ContestScored = true;
+                                            float v166 = v166Ledger.orderedOperations().get(0).delta();
+                                            logger.warn("V166 CONTEST DRAIN (deploy): target={} oppDrain={} oppCards={} oppPower={} -> +{}",
+                                                title, v166OppDrain, v166OppCards, (int) v166TheirPower, (int) v166);
+                                        }
                                     } else {
                                         logger.warn("V177 V166 GATED: {} contest not survivable (proj {} vs {}) — deploy elsewhere",
                                             title, (int) (v166OurPow + v166ThisPow + v166Wave), (int) v166TheirPower);
@@ -3224,6 +3234,73 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     }
                                 }
                             } catch (Exception e) { logger.debug("V171 error: {}", e.getMessage()); }
+                        }
+
+                        if (persistentResponseObligation != null
+                                && objectiveProgressDeployingCard != null) {
+                            boolean exactInstruction =
+                                plannedDeployInstruction != null
+                                && plannedDeployInstruction
+                                    .getCardPermanentCardId() != null
+                                && plannedDeployInstruction
+                                    .getCardCurrentCardId() != null
+                                && objectiveProgressDeployingCard
+                                    .getPermanentCardId()
+                                    == plannedDeployInstruction
+                                        .getCardPermanentCardId()
+                                && objectiveProgressDeployingCard.getCardId()
+                                    == plannedDeployInstruction
+                                        .getCardCurrentCardId();
+                            boolean exactTargetRow =
+                                plannedDeployInstruction != null
+                                && cardId.equals(plannedDeployInstruction
+                                    .getTargetLocationId());
+                            int targetIndex = context.getCardIds()
+                                .indexOf(cardId);
+                            boolean opponentStillPresent =
+                                PersistentResponsePlanAdapter
+                                    .hasOpponentBattleParticipant(
+                                        context.getGame(), playerId,
+                                        context.getObjectiveAnalyzer(),
+                                        location);
+                            boolean persistentFactStillCurrent =
+                                context.getStrategyController() != null
+                                && context.getStrategyController()
+                                    .getPersistentResponseSnapshot()
+                                    .repeatedThreatAt(
+                                        location.getPermanentCardId())
+                                    .isPresent();
+                            boolean criticalRoleStillCurrent =
+                                PersistentResponsePlanAdapter
+                                    .matchesCurrentTargetRole(
+                                        context.getGame(), playerId,
+                                        context.getObjectiveAnalyzer(),
+                                        location,
+                                        persistentResponseObligation.role());
+                            PolicyContributionLedger persistentLedger =
+                                new PolicyContributionLedger(
+                                    "deploy-persistent-response-"
+                                        + action.getActionId());
+                            persistentLedger.register(
+                                PersistentResponsePolicy
+                                    .scoreSelectedResponseAction(
+                                        action.getActionId(),
+                                        persistentResponseObligation,
+                                        objectiveProgressDeployingCard
+                                            .getPermanentCardId(),
+                                        objectiveProgressDeployingCard
+                                            .getCardId(),
+                                        location.getPermanentCardId(),
+                                        exactInstruction, exactTargetRow,
+                                        targetIndex >= 0
+                                            && isCardSelectable(
+                                                context, targetIndex),
+                                        persistentV166ContestScored,
+                                        opponentStillPresent,
+                                        persistentFactStillCurrent,
+                                        criticalRoleStillCurrent));
+                            PolicyOperationAdapter.apply(
+                                action, persistentLedger);
                         }
 
                         // === V64 MAPUZO JEDI-ONLY RULE ===

@@ -10456,3 +10456,48 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     provides FLIP_OBSERVED. Fresh live replay firing remains separate. Nothing
     was pushed. Restore web.jar.pre-shadow-20260807-0922-2f03363b and revert
     64cc71fdf to remove only this seal.
+
+  ==== Rando Batch 1 persistent response and objective-critical eviction candidate (2026-08-12, both bots) ====
+
+    Shared PersistentResponsePolicy now records only final paid public
+    opponent drain damage, by permanent location and completed opponent turn.
+    Each bot hosts the state in StrategyController and observes it at the top
+    of every decide through trackGameState. The retained ForceDrainState
+    supplies exact getForcePaid after completion. Null events do not close a
+    turn, zero yield does not become cancellation, and state or counter
+    discontinuities reset fail closed.
+
+    Shared PersistentResponsePlanAdapter selects only existing legal,
+    available, exactly affordable, timely plans. Two consecutive paid-damage
+    turns can create a persistent response. Self-objective typed hard-loss,
+    active flip-gate, post-flip-protection, and missing-required-location facts
+    can create a critical eviction. A funded mandatory objective plan remains
+    first unless the response advances that same need. One-off drains,
+    ordinary sites, income-only targets, unknown cancellation, and speculative
+    relocation remain silent.
+
+    The exact selected same-target wave stores permanent/current physical card
+    IDs in deterministic order. Its front deploy bucket exposes only the next
+    exact currently offered member, then advances only after a proved
+    deployment at the exact target. Every remaining proved member may receive
+    deploy-persistent-response-selected +300 and, when currently typed
+    critical, deploy-objective-critical-eviction-selected +250 on its own
+    destination decision. V166 suppresses the overlapping +300; V170 spy gets
+    no Batch 1 addition. These rules never change planner score and never add a
+    hard veto or defer.
+
+    Ground feasibility reuses shipped V171/V172 contact math with existing
+    formation plus public printed planned facts. Space admission is only one
+    independently operational permanently piloted ship in an existing
+    space_bleed or space_reinforce plan that satisfies shipped V296. Unsupported,
+    mixed, multi-ship, inferred-crew, and modifier-dependent packages fail
+    closed. Rando and Chosen One use normalized thin adapters.
+
+    The final impacted ring passed 201/0/0/0, and the preserved Gate 0 ring
+    passed 225/0/0/0. Compile, diff, and mirror parity passed. Native 219_1
+    front, near-miss, and back-stability contracts were added without card or
+    objective behavior changes. Base is exact e877d4b6. No candidate jar,
+    commit, deployment, live tag firing, or replay proof exists yet. Revert the
+    eventual coherent Batch 1 commit; after any future deployment, restore the
+    immutable pre-Batch1 e877 rollback packet documented in the implementation
+    report.

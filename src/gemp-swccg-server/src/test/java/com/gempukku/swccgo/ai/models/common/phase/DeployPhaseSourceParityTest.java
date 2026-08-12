@@ -23,6 +23,72 @@ public class DeployPhaseSourceParityTest {
     }
 
     @Test
+    public void persistentResponseAdaptersStayNormalizedMirrors()
+            throws IOException {
+        assertEquals(normalize(strategySource("rando",
+                        "StrategyController.java")),
+                normalize(strategySource("chosenone",
+                        "StrategyController.java")));
+        assertEquals(normalize(strategySource("rando",
+                        "DeploymentPlan.java")),
+                normalize(strategySource("chosenone",
+                        "DeploymentPlan.java")));
+        assertNormalizedMirror("CardSelectionEvaluator.java");
+
+        String destination = evaluatorSource(
+                "rando", "CardSelectionEvaluator.java");
+        assertTrue(destination.contains(".scoreSelectedResponseAction("));
+        assertTrue(destination.contains(
+                "persistentV166ContestScored"));
+        assertTrue(destination.contains(
+                "getCardPermanentCardId()"));
+        assertTrue(destination.contains(
+                "getCardCurrentCardId()"));
+        assertTrue(destination.contains("isCardSelectable("));
+
+        String planner = strategySource(
+                "rando", "DeployPhasePlanner.java");
+        int selectionStart = planner.indexOf(
+                "private PersistentPlanSelection selectPersistentResponsePlan(");
+        assertTrue(selectionStart >= 0);
+        assertTrue(planner.contains(
+                "PersistentResponsePlanAdapter.select("));
+        int viewStart = planner.indexOf(
+                "private PersistentResponsePlanAdapter.PlanView", selectionStart);
+        assertTrue(viewStart > selectionStart);
+        assertFalse(planner.substring(selectionStart, viewStart)
+                .contains("!locationDeploys.isEmpty()"));
+        assertFalse(planner.contains("responseFormation("));
+        assertFalse(planner.contains("responseMode("));
+
+        String adapter = Files.readString(commonPhaseRoot().resolve(
+                "PersistentResponsePlanAdapter.java"));
+        assertTrue(adapter.contains("ordinaryBudgetAfterLocationPrelude"));
+        assertTrue(adapter.contains("objectiveBudgetAfterLocationPrelude"));
+        assertTrue(adapter.contains("findNextOfferedResponseAction("));
+        assertTrue(adapter.contains("plan.instructions().size()"));
+
+        String deploy = evaluatorSource("rando", "DeployEvaluator.java");
+        assertTrue(deploy.contains("prependPersistentResponseBucket("));
+        assertTrue(deploy.contains("PERSISTENT_RESPONSE bucket"));
+        assertTrue(deploy.contains(
+                "selectable.size() != actionIds.size()"));
+        assertTrue(deploy.contains(
+                "sourceCardIds.size() != actionIds.size()"));
+
+        String common = Files.readString(
+                commonPhaseRoot().resolve("PersistentResponsePolicy.java"));
+        assertTrue(common.contains("PolicyOperation.add("));
+        assertTrue(common.contains("exactTotalCost"));
+        assertFalse(common.contains("PolicyOperation.hardVeto("));
+        assertFalse(common.contains("PolicyOperation.defer("));
+        assertFalse(common.contains("STRATEGIC_INCOME"));
+        assertFalse(common.contains("RELOCATE_INCOME"));
+        assertFalse(common.contains("CancellationKnowledge"));
+        assertFalse(common.contains("replacementIncome"));
+    }
+
+    @Test
     public void deployPhaseScriptHasOneSharedOwnerAndThinBotFacades() throws IOException {
         String common = Files.readString(commonPhaseRoot().resolve("DeployPhaseScript.java"));
         assertTrue(common.contains("public abstract class DeployPhaseScript"));

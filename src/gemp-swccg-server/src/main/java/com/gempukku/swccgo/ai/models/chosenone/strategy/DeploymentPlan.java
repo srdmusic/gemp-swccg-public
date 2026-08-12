@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.ai.models.chosenone.strategy;
 
+import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +46,9 @@ public class DeploymentPlan {
     // Original plan cost (before any deployments)
     private int originalPlanCost = 0;
 
+    private PersistentResponsePolicy.Obligation
+        persistentResponseObligation;
+
     public DeploymentPlan(DeployStrategy strategy, String reason) {
         this.strategy = strategy;
         this.reason = reason;
@@ -65,6 +70,7 @@ public class DeploymentPlan {
         copy.forceAllowExtras = forceAllowExtras;
         copy.waitingForPlannedCards = waitingForPlannedCards;
         copy.originalPlanCost = originalPlanCost;
+        copy.persistentResponseObligation = persistentResponseObligation;
         return copy;
     }
 
@@ -200,6 +206,12 @@ public class DeploymentPlan {
         if (instruction != null) {
             instructions.remove(instruction);
             deploymentsMade++;
+            if (instruction.getCardPermanentCardId() != null
+                    && instruction.getCardCurrentCardId() != null) {
+                advancePersistentResponse(
+                        instruction.getCardPermanentCardId(),
+                        instruction.getCardCurrentCardId());
+            }
         }
     }
 
@@ -210,7 +222,53 @@ public class DeploymentPlan {
         if (exact != null) {
             instructions.remove(exact);
             deploymentsMade++;
+            advancePersistentResponse(permanentCardId, currentCardId);
         }
+    }
+
+    public boolean isPersistentResponseMember(
+            int permanentCardId, int currentCardId) {
+        return persistentResponseObligation != null
+                && persistentResponseObligation.responseActions().stream()
+                .anyMatch(action -> action.permanentCardId()
+                        == permanentCardId
+                        && action.currentCardId() == currentCardId);
+    }
+
+    /**
+     * Removes a stale exact instruction without promoting the next wave member.
+     * Used only when absence from hand is not proven to be deployment at target.
+     */
+    public void recordUnavailablePlannedCard(
+            int permanentCardId, int currentCardId, String blueprintId) {
+        DeploymentInstruction exact = getInstructionForPhysicalCard(
+                permanentCardId, currentCardId, blueprintId);
+        if (exact != null) {
+            instructions.remove(exact);
+        }
+        persistentResponseObligation = null;
+    }
+
+    private void advancePersistentResponse(
+            int permanentCardId, int currentCardId) {
+        if (persistentResponseObligation == null
+                || persistentResponseObligation.responseActions()
+                .isEmpty()) {
+            return;
+        }
+        List<PersistentResponsePolicy.DeployActionKey> remaining =
+                persistentResponseObligation.responseActions().stream()
+                .filter(action -> action.permanentCardId()
+                        != permanentCardId
+                        || action.currentCardId() != currentCardId)
+                .toList();
+        if (remaining.size()
+                == persistentResponseObligation.responseActions().size()) {
+            return;
+        }
+        persistentResponseObligation = remaining.isEmpty() ? null
+                : persistentResponseObligation
+                .withRemainingResponseActions(remaining);
     }
 
     /**
@@ -256,4 +314,14 @@ public class DeploymentPlan {
 
     public int getOriginalPlanCost() { return originalPlanCost; }
     public void setOriginalPlanCost(int originalPlanCost) { this.originalPlanCost = originalPlanCost; }
+
+    public PersistentResponsePolicy.Obligation
+    getPersistentResponseObligation() {
+        return persistentResponseObligation;
+    }
+
+    public void setPersistentResponseObligation(
+            PersistentResponsePolicy.Obligation obligation) {
+        persistentResponseObligation = obligation;
+    }
 }

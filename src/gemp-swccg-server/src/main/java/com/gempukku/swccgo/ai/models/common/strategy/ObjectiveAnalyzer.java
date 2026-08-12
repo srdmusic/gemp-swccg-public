@@ -3929,7 +3929,11 @@ public class ObjectiveAnalyzer {
         return false;
     }
 
-    private boolean hasOpponentBattleParticipantAt(
+    /**
+     * Exact physical opponent-presence fact for AI battle responses.
+     * Effects, weapons, and cards that cannot participate do not qualify.
+     */
+    public boolean hasOpponentBattleParticipantAt(
             SwccgGame game, String playerId,
             PhysicalCard location) {
         String opponent = game.getGameState().getOpponent(playerId);

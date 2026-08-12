@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.rando.strategy;
 
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
+import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
 import com.gempukku.swccgo.common.Side;
@@ -129,6 +130,8 @@ public class StrategyController {
     // =========================================================================
 
     private Side mySide;  // Set when game starts
+    private final PersistentResponsePolicy.State persistentResponseState =
+        new PersistentResponsePolicy.State();
 
     // Game state
     private boolean underBattleOrderRules = false;
@@ -198,6 +201,7 @@ public class StrategyController {
      * Reset strategy state for new game.
      */
     public void reset() {
+        persistentResponseState.reset();
         underBattleOrderRules = false;
         // V291 RETIRED (commented, not deleted): hasShieldsToPlay reset was write-only.
         offeredConcedeThisGame = false;
@@ -225,6 +229,20 @@ public class StrategyController {
         battlesLost = 0;
 
         LOG.info("StrategyController reset for new game");
+    }
+
+    public void observePersistentResponse(GameState gameState,
+                                          String playerId) {
+        persistentResponseState.observe(gameState, playerId);
+    }
+
+    public PersistentResponsePolicy.Snapshot
+            getPersistentResponseSnapshot() {
+        return persistentResponseState.snapshot();
+    }
+
+    public void resetPersistentResponse() {
+        persistentResponseState.reset();
     }
 
     /**

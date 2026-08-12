@@ -4,6 +4,8 @@ import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
 import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
@@ -65,6 +67,7 @@ public class DeployPhasePlanner {
     private boolean lastPlanHadActiveFlipGate = false;
     private boolean lastPlanHadFlipGateActorInHand = false;
     private String lastPlanPreFlipProgressFingerprint = "";
+    private long lastPlanPersistentResponseRevision = -1;
 
     // Board state reference for scoring
     private SwccgGame currentGame;
@@ -73,6 +76,7 @@ public class DeployPhasePlanner {
 
     // V21: Objective awareness for location prioritization
     private ObjectiveAnalyzer objectiveAnalyzer;
+    private StrategyController strategyController;
 
     public DeployPhasePlanner() {
         this(RandoConfig.DEPLOY_THRESHOLD, RandoConfig.BATTLE_FORCE_RESERVE);
@@ -92,6 +96,7 @@ public class DeployPhasePlanner {
         lastPlanHadActiveFlipGate = false;
         lastPlanHadFlipGateActorInHand = false;
         lastPlanPreFlipProgressFingerprint = "";
+        lastPlanPersistentResponseRevision = -1;
         currentGame = null;
         currentPlayerId = null;
     }
@@ -101,6 +106,10 @@ public class DeployPhasePlanner {
      */
     public void setObjectiveAnalyzer(ObjectiveAnalyzer analyzer) {
         this.objectiveAnalyzer = analyzer;
+    }
+
+    public void setStrategyController(StrategyController controller) {
+        strategyController = controller;
     }
 
     /**
@@ -143,6 +152,14 @@ public class DeployPhasePlanner {
         if (preFlipProgressFingerprint == null) {
             preFlipProgressFingerprint = "";
         }
+        PersistentResponsePolicy.Snapshot persistentSnapshot =
+                strategyController == null
+                        ? PersistentResponsePolicy.Snapshot.empty()
+                        : strategyController.getPersistentResponseSnapshot();
+        if (persistentSnapshot == null) {
+            persistentSnapshot = PersistentResponsePolicy.Snapshot.empty();
+        }
+        long persistentRevision = persistentSnapshot.revision();
 
         // If we already have a plan for this turn, return it
         if (currentPlan != null && lastPlanTurn == currentTurn) {
@@ -161,6 +178,12 @@ public class DeployPhasePlanner {
                         + "because structured pre-flip progress changed from {} to {}",
                     currentTurn, lastPlanPreFlipProgressFingerprint,
                     preFlipProgressFingerprint);
+            } else if (lastPlanPersistentResponseRevision
+                    != persistentRevision) {
+                LOG.warn("DEPLOY.PERSISTENT_RESPONSE.REPLAN: refreshing turn {} plan "
+                        + "because completed public drain evidence changed from revision {} to {}",
+                    currentTurn, lastPlanPersistentResponseRevision,
+                    persistentRevision);
             } else {
                 LOG.debug("📋 Returning cached plan for turn {} ({} instructions remaining)",
                     currentTurn, currentPlan.getInstructions().size());
@@ -305,11 +328,22 @@ public class DeployPhasePlanner {
             groundThreshold, spaceThreshold, allLocations, currentTurn, drainGap);
         allPlans.addAll(combinedPlans);
 
+        PersistentPlanSelection persistentSelection =
+            selectPersistentResponsePlan(
+                allPlans, allLocations,
+                Math.max(0, forceAfterLocations),
+                Math.max(0, objectiveFormationForceAfterLocations),
+                persistentSnapshot);
+
         // === SELECT BEST PLAN ===
-        DeploymentPlan bestPlan = selectBestPlan(allPlans, locationDeploys, currentTurn, lifeForce);
+        DeploymentPlan bestPlan = selectBestPlan(
+            allPlans, locationDeploys, currentTurn, lifeForce,
+            persistentSelection);
 
         // === EARLY GAME HOLD-BACK CHECK (at the END, like Python) ===
-        if (currentTurn <= RandoConfig.DEPLOY_EARLY_GAME_TURNS && bestPlan != null) {
+        if (!persistentResponseOverridesEarlyHold(persistentSelection)
+                && currentTurn <= RandoConfig.DEPLOY_EARLY_GAME_TURNS
+                && bestPlan != null) {
             float planScore = isObjectiveFlipGateFormationPlan(bestPlan)
                 ? scoreObjectiveFlipGateFormationPlan(bestPlan, allLocations, currentTurn)
                 : scorePlan(bestPlan, allLocations, currentTurn);
@@ -334,6 +368,7 @@ public class DeployPhasePlanner {
         lastPlanHadActiveFlipGate = hasActiveFlipGate;
         lastPlanHadFlipGateActorInHand = hasFlipGateActorInHand;
         lastPlanPreFlipProgressFingerprint = preFlipProgressFingerprint;
+        lastPlanPersistentResponseRevision = persistentRevision;
         logFinalPlan(bestPlan);
 
         return currentPlan;
@@ -2535,7 +2570,66 @@ public class DeployPhasePlanner {
         return plan;
     }
 
-    // =========================================================================
+    private record PersistentPlanSelection(
+            ScoredPlan scoredPlan,
+            PersistentResponsePolicy.Obligation obligation) {
+    }
+
+    private boolean persistentResponseOverridesEarlyHold(
+            PersistentPlanSelection selection) {
+        return selection != null
+            && selection.obligation().kind()
+                == PersistentResponsePolicy.CandidateKind.RESPONSE_TARGET;
+    }
+
+    /**
+     * Thin mirror adapter. All engine facts, formation proof, and typed ranking
+     * live in the shared PersistentResponsePlanAdapter.
+     */
+    private PersistentPlanSelection selectPersistentResponsePlan(
+            List<ScoredPlan> allPlans,
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations,
+            int ordinaryBudget,
+            int objectiveBudget,
+            PersistentResponsePolicy.Snapshot snapshot) {
+        if (allPlans == null || allPlans.isEmpty()
+                || allLocations == null || snapshot == null
+                || currentGame == null || currentPlayerId == null) {
+            return null;
+        }
+        List<PersistentResponsePlanAdapter.PlanView<ScoredPlan>> views =
+            allPlans.stream().map(this::persistentPlanView).toList();
+        Optional<PersistentResponsePlanAdapter.Selection<ScoredPlan>>
+            selected = PersistentResponsePlanAdapter.select(
+                new PersistentResponsePlanAdapter.Input<>(
+                    currentGame, currentPlayerId, objectiveAnalyzer,
+                    snapshot, allLocations, ordinaryBudget,
+                    objectiveBudget, views));
+        return selected.map(value -> new PersistentPlanSelection(
+                value.source(), value.obligation())).orElse(null);
+    }
+
+    private PersistentResponsePlanAdapter.PlanView<ScoredPlan>
+            persistentPlanView(ScoredPlan scoredPlan) {
+        List<PersistentResponsePlanAdapter.InstructionView> instructions =
+            scoredPlan.plan.getInstructions().stream()
+                .map(this::persistentInstructionView).toList();
+        return new PersistentResponsePlanAdapter.PlanView<>(
+            scoredPlan, scoredPlan.domain,
+            String.valueOf(scoredPlan.plan.getStrategy()),
+            instructions);
+    }
+
+    private PersistentResponsePlanAdapter.InstructionView
+            persistentInstructionView(
+                    DeploymentInstruction instruction) {
+        return new PersistentResponsePlanAdapter.InstructionView(
+            instruction.getCardPermanentCardId(),
+            instruction.getCardCurrentCardId(),
+            instruction.getTargetLocationId(),
+            instruction.getPriority());
+    }
+
     // PLAN SCORING (Item #21)
     // =========================================================================
 
@@ -2659,8 +2753,10 @@ public class DeployPhasePlanner {
     /**
      * Select the best plan from all generated plans.
      */
-    private DeploymentPlan selectBestPlan(List<ScoredPlan> allPlans, List<CardInfo> locationDeploys,
-                                           int turn, int lifeForce) {
+    private DeploymentPlan selectBestPlan(List<ScoredPlan> allPlans,
+                                           List<CardInfo> locationDeploys,
+                                           int turn, int lifeForce,
+                                           PersistentPlanSelection persistentSelection) {
         if (allPlans.isEmpty()) {
             // Just deploy locations if nothing else
             if (!locationDeploys.isEmpty()) {
@@ -2689,7 +2785,8 @@ public class DeployPhasePlanner {
                 i + 1, sp.domain, sp.score, sp.plan.getInstructions().size());
         }
 
-        ScoredPlan best = allPlans.get(0);
+        ScoredPlan best = persistentSelection != null
+            ? persistentSelection.scoredPlan() : allPlans.get(0);
 
         // Add location deploys to the best plan
         DeploymentPlan finalPlan = new DeploymentPlan(best.plan.getStrategy(), best.plan.getReason());
@@ -2703,6 +2800,10 @@ public class DeployPhasePlanner {
         }
         for (DeploymentInstruction inst : best.plan.getInstructions()) {
             finalPlan.addInstruction(inst);
+        }
+        if (persistentSelection != null) {
+            finalPlan.setPersistentResponseObligation(
+                persistentSelection.obligation());
         }
 
         return finalPlan;

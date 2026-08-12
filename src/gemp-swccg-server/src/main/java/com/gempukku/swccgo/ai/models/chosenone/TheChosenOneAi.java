@@ -283,6 +283,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
         this.objectiveAnalyzer = new ObjectiveAnalyzer();
         this.shieldStrategy = new ShieldStrategy();
         this.deployPhasePlanner = new DeployPhasePlanner();
+        this.deployPhasePlanner.setStrategyController(strategyController);
         this.deployPhaseScript = new DeployPhaseScript();
         this.deckOracle = new com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle();
         this.opponentDeckTracker = new com.gempukku.swccgo.ai.models.chosenone.strategy.OpponentDeckTracker();
@@ -2272,6 +2273,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
         // V194: game-scoped planning facts must not survive a rematch.
         if (this.currentGame != game) {
             activationAmountLatch.reset();
+            strategyController.resetPersistentResponse();
             // V295 RETIRED: objectiveHandler.reset();
             objectiveAnalyzer.reset();
             deployPhasePlanner.reset();
@@ -2693,6 +2695,8 @@ public class TheChosenOneAi extends HeuristicAiBase {
 
             LOG.info("New game started vs {} as {}", opponentName, mySide);
         }
+
+        strategyController.observePersistentResponse(gameState, playerId);
 
         // Turn changed
         int currentTurn = gameState.getPlayersLatestTurnNumber(playerId);

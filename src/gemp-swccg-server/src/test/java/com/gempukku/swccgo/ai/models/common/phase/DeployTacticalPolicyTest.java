@@ -171,6 +171,46 @@ public class DeployTacticalPolicyTest {
     }
 
     @Test
+    public void persistentResponseFormationReusesContactAndAddsExistingTotals() {
+        DeployTacticalPolicy.ResponseFormationAssessment reinforcement =
+                DeployTacticalPolicy.assessPersistentResponseFormation(
+                        new DeployTacticalPolicy.ContactFacts(
+                                "reinforce", "Theed Palace Throne Room",
+                                true, true, 1, 4.0f, 4.0f, 0.0f,
+                                0.0f, 0.0f, 8.0f, 4.0f, 0),
+                        3.0f, 1.0f);
+        assertEquals(DeployTacticalPolicy.ResponseFormationRoute
+                        .EXISTING_FORMATION_REINFORCEMENT,
+                reinforcement.route());
+
+        DeployTacticalPolicy.ResponseFormationAssessment isolated =
+                DeployTacticalPolicy.assessPersistentResponseFormation(
+                        new DeployTacticalPolicy.ContactFacts(
+                                "isolated", "Theed Palace Throne Room",
+                                true, true, 1, 0.0f, 3.0f, 0.0f,
+                                0.0f, 0.0f, 8.0f, 3.0f, 0),
+                        0.0f, 2.0f);
+        assertEquals(DeployTacticalPolicy.ResponseFormationRoute.NONE,
+                isolated.route());
+    }
+
+    @Test
+    public void persistentResponseHasNoThreeUnitCap() {
+        DeployTacticalPolicy.ResponseFormationAssessment fourUnitWave =
+                DeployTacticalPolicy.assessPersistentResponseFormation(
+                        new DeployTacticalPolicy.ContactFacts(
+                                "four-unit-wave", "Theed Palace Throne Room",
+                                true, true, 4, 0.0f, 3.0f, 9.0f,
+                                3.0f, 0.0f, 10.0f, 3.0f, 0),
+                        0.0f, 4.0f);
+        assertEquals(DeployTacticalPolicy.ResponseFormationRoute.V171_WAVE,
+                fourUnitWave.route());
+        assertTrue(fourUnitWave.viable());
+        assertEquals(12.0f, fourUnitWave.projectedFriendlyPower(), 0.0f);
+        assertEquals(4.0f, fourUnitWave.projectedFriendlyAbility(), 0.0f);
+    }
+
+    @Test
     public void v53SpyPowerPrecedesAndChangesTheV51DrainBand() {
         DeployTacticalPolicy.DrainContestEvaluation result = drainContest(
                 6.0f, 0.0f, 4.0f, 3.0f);
@@ -218,6 +258,54 @@ public class DeployTacticalPolicyTest {
                 DeployTacticalPolicy.DrainContestOutcome.REINFORCE_BATTLEGROUND);
         assertEmpty(starshipDrainContact(8.0f, 0.0f, 3.0f, 2.0f).result());
         assertEmpty(starshipDrainContact(8.0f, 0.0f, 10.0f, 0.0f).result());
+    }
+
+    @Test
+    public void persistentSpaceFormationReusesV296WithoutNewThreshold() {
+        DeployTacticalPolicy.ResponseFormationAssessment viable =
+                DeployTacticalPolicy.assessPersistentSpaceResponse(
+                        new DeployTacticalPolicy.StarshipDrainContactFacts(
+                                "space-plan", "opponent", "Kessel",
+                                8.0f, 0.0f, 10.0f, 2.0f),
+                        true,
+                        0.0f, 4.0f);
+        assertEquals(
+                DeployTacticalPolicy.ResponseFormationRoute
+                        .V296_SPACE_CONTACT,
+                viable.route());
+        assertTrue(viable.viable());
+        assertEquals(10.0f, viable.projectedFriendlyPower(), 0.0f);
+        assertEquals(4.0f, viable.projectedFriendlyAbility(), 0.0f);
+
+        DeployTacticalPolicy.ResponseFormationAssessment losing =
+                DeployTacticalPolicy.assessPersistentSpaceResponse(
+                        new DeployTacticalPolicy.StarshipDrainContactFacts(
+                                "space-plan", "opponent", "Kessel",
+                                8.0f, 0.0f, 7.0f, 2.0f),
+                        true,
+                        0.0f, 4.0f);
+        assertEquals(DeployTacticalPolicy.ResponseFormationRoute.NONE,
+                losing.route());
+        assertFalse(losing.viable());
+
+        DeployTacticalPolicy.ResponseFormationAssessment noDrain =
+                DeployTacticalPolicy.assessPersistentSpaceResponse(
+                        new DeployTacticalPolicy.StarshipDrainContactFacts(
+                                "space-plan", "opponent", "Kessel",
+                                8.0f, 0.0f, 10.0f, 0.0f),
+                        true,
+                        0.0f, 4.0f);
+        assertEquals(DeployTacticalPolicy.ResponseFormationRoute.NONE,
+                noDrain.route());
+
+        DeployTacticalPolicy.ResponseFormationAssessment unpiloted =
+                DeployTacticalPolicy.assessPersistentSpaceResponse(
+                        new DeployTacticalPolicy.StarshipDrainContactFacts(
+                                "space-plan", "opponent", "Kessel",
+                                8.0f, 0.0f, 10.0f, 2.0f),
+                        false, 0.0f, 0.0f);
+        assertEquals(DeployTacticalPolicy.ResponseFormationRoute.NONE,
+                unpiloted.route());
     }
 
     @Test

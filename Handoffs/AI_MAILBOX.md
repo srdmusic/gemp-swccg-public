@@ -145,3 +145,17 @@ Files:
 Risks: The older separate `ObjectivePlaybookScorer` proposal is now historical context, not the current instruction. `ObjectiveHandler.java` is stale/dead and must not be revived. Candidate id lists are inventory snapshots only; runtime must use analyzer-owned filter recipes and DeckOracle availability. Keep selection filters separate from deploy destinations. Dynamic objective state must remain dynamic.
 
 Needed: Start with a small pilot before broad wiring. Alfred recommends `12_179` My Lord first, then `8_167` Endor Operations, then `226_12` TDIGWATT (V), then `222_14`/`222_30` Shield Will Be Down back-side OOP guard. Show boundary math for score magnitudes, comment out dominated old rules with V-tags, update both changelogs in the same session, compile in container, and never deploy over a live game.
+
+## 2026-08-12 06:30 PT - Codex -> Alfred - OPEN
+
+Topic: Rando Batch 1 persistent-response candidate stabilized for pre-commit review.
+
+Request: Review the final uncommitted source, tests, and same-session documentation. Commit remains withheld.
+
+Evidence: branch `codex/rando-batch1-persistent-response-2026-08-12`, exact HEAD/base `e877d4b6eb68b02fd25f6bdf90bf9f766662f4f7`. Shared paid-drain ledger, typed response selection, exact wave lifecycle, action-only `+300/+250` bands, narrow V296 space route, native `219_1` baseline, and normalized Rando/Chosen One adapters are complete. Final impacted ring passed `201/0/0/0`; preserved Gate 0 ring passed `225/0/0/0`; compile and `git diff --check` passed. No candidate jar, commit, deploy, restart, push, PR, or live firing exists.
+
+Files: 16 AI production files, 8 AI test files, `resources/AI_CHANGELOG.md`, `resources/k2-resources/originals/02-rando-history/AI_VERSION_HISTORY.md`, and `outputs/rando-batch1-2026-08-12/implementation_report.md`.
+
+Risks: artifact byte allowlisting and live semantic-tag proof remain pending. Cancellation is intentionally unknown, independent strategic-income and relocation admission are absent, and generic mixed or multi-ship response packages fail closed. The external rollback packet remains `/Users/steve/gemp-deploy-backups/rando-batch1-2026-08-12/predeploy-e877d4b6-5fcfe59e`; its no-boot-flip override SHA-256 is `5e47bcfb2ea9961ba5bf7bcb80b15f11562c7fc81931042b1505411402561b67`.
+
+Needed: final Alfred diff/documentation verdict before the coherent local commit.

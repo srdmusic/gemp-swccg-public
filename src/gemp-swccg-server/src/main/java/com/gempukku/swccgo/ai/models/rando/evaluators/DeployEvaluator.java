@@ -34,6 +34,8 @@ import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
+import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFacts;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveScoringPolicy;
@@ -398,10 +400,35 @@ public class DeployEvaluator extends ActionEvaluator {
                         LOG.info("📋 Auto-detected deployment: {} left hand", instruction.getCardName());
                         if (instruction.getCardPermanentCardId() != null
                                 && instruction.getCardCurrentCardId() != null) {
-                            planner.recordDeployment(
-                                instruction.getCardPermanentCardId(),
-                                instruction.getCardCurrentCardId(),
-                                instruction.getCardBlueprintId());
+                            boolean responseMember =
+                                plan.isPersistentResponseMember(
+                                    instruction.getCardPermanentCardId(),
+                                    instruction.getCardCurrentCardId());
+                            boolean exactAtTarget = responseMember
+                                && plan.getPersistentResponseObligation()
+                                    != null
+                                && PersistentResponsePlanAdapter
+                                    .isExactCardInPlayAtPlannedTarget(
+                                        game,
+                                        instruction.getCardPermanentCardId(),
+                                        instruction.getCardCurrentCardId(),
+                                        instruction.getTargetLocationId(),
+                                        plan.getPersistentResponseObligation()
+                                            .responseTargetLocation()
+                                            .permanentCardId());
+                            if (!responseMember || exactAtTarget) {
+                                planner.recordDeployment(
+                                    instruction.getCardPermanentCardId(),
+                                    instruction.getCardCurrentCardId(),
+                                    instruction.getCardBlueprintId());
+                            } else {
+                                plan.recordUnavailablePlannedCard(
+                                    instruction.getCardPermanentCardId(),
+                                    instruction.getCardCurrentCardId(),
+                                    instruction.getCardBlueprintId());
+                                LOG.warn("Persistent response member {} left hand but was not proven at its exact target; cleared obligation",
+                                    instruction.getCardName());
+                            }
                         } else {
                             planner.recordDeployment(instruction.getCardBlueprintId());
                         }
@@ -5486,8 +5513,107 @@ public class DeployEvaluator extends ActionEvaluator {
             actions.add(action);
         }
 
+        prependPersistentResponseBucket(
+                context, plan, actions, availableForce);
         LOG.info("[DeployEvaluator] Evaluated {} deploy actions", actions.size());
         return actions;
+    }
+
+    /**
+     * Puts only the next exact proved response member ahead of the legacy DPS
+     * buckets. Missing, vetoed, deferred, stale, or ambiguous actions leave
+     * the original hierarchy untouched.
+     */
+    private void prependPersistentResponseBucket(
+            DecisionContext context, DeploymentPlan plan,
+            List<EvaluatedAction> evaluatedActions,
+            int availableForce) {
+        if (context == null || plan == null
+                || evaluatedActions == null) {
+            return;
+        }
+        PersistentResponsePolicy.Obligation obligation =
+                plan.getPersistentResponseObligation();
+        if (obligation == null || obligation.responseAction() == null) {
+            return;
+        }
+        PersistentResponsePolicy.DeployActionKey next =
+                obligation.responseAction();
+        DeploymentInstruction instruction =
+                plan.getInstructionForPhysicalCard(
+                        next.permanentCardId(), next.currentCardId(), null);
+        if (instruction == null) return;
+
+        List<String> actionIds = context.getActionIds();
+        List<String> actionTexts = context.getActionTexts();
+        List<String> sourceCardIds = context.getCardIds();
+        List<Boolean> selectable = context.getSelectable();
+        if (actionIds == null || actionTexts == null
+                || sourceCardIds == null || selectable == null
+                || actionTexts.size() != actionIds.size()
+                || sourceCardIds.size() != actionIds.size()
+                || selectable.size() != actionIds.size()) {
+            return;
+        }
+        List<PersistentResponsePlanAdapter.OuterActionView> offered =
+                new ArrayList<>();
+        for (int index = 0; index < actionIds.size(); index++) {
+            String actionId = actionIds.get(index);
+            EvaluatedAction evaluated = null;
+            boolean ambiguous = false;
+            for (EvaluatedAction candidate : evaluatedActions) {
+                if (candidate != null
+                        && actionId != null
+                        && actionId.equals(candidate.getActionId())) {
+                    if (evaluated != null) {
+                        ambiguous = true;
+                        break;
+                    }
+                    evaluated = candidate;
+                }
+            }
+            if (ambiguous || evaluated == null) continue;
+            String actionText = index < actionTexts.size()
+                    ? actionTexts.get(index) : null;
+            String sourceCardId = index < sourceCardIds.size()
+                    ? sourceCardIds.get(index) : null;
+            boolean offeredSelectable = Boolean.TRUE.equals(
+                    selectable.get(index));
+            offered.add(new PersistentResponsePlanAdapter.OuterActionView(
+                    actionId, actionText, sourceCardId,
+                    offeredSelectable, evaluated.isHardVetoed(),
+                    evaluated.isDeferred()));
+        }
+
+        var exactOffered = PersistentResponsePlanAdapter
+                .findNextOfferedResponseAction(
+                        context.getGame(), context.getPlayerId(),
+                        context.getObjectiveAnalyzer(),
+                        context.getStrategyController() != null
+                                ? context.getStrategyController()
+                                .getPersistentResponseSnapshot()
+                                : PersistentResponsePolicy.Snapshot.empty(),
+                        obligation,
+                        new PersistentResponsePlanAdapter.InstructionView(
+                                instruction.getCardPermanentCardId(),
+                                instruction.getCardCurrentCardId(),
+                                instruction.getTargetLocationId(),
+                                instruction.getPriority()),
+                        availableForce, offered);
+        if (exactOffered.isEmpty()) return;
+        var responseBucket = PersistentResponsePolicy
+                .prependResponseBucket(
+                        obligation, List.of(exactOffered.get()),
+                        context.getStepBuckets(),
+                        context.getStepBucketLabels());
+        if (responseBucket.isEmpty()) return;
+
+        context.setStepBuckets(responseBucket.get().buckets());
+        context.setStepBucketLabels(responseBucket.get().labels());
+        LOG.warn("B1 PERSISTENT_RESPONSE bucket: action={} target={}#{}",
+                responseBucket.get().actionId(),
+                obligation.responseTargetLocation().title(),
+                obligation.responseTargetLocation().permanentCardId());
     }
 
     private boolean applyRequiredCardInactivationVeto(
