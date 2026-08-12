@@ -253,24 +253,89 @@ public class ForceLossPolicyTest {
                 ForceLossFacts.ZoneBand.HAND, CardCategory.INTERRUPT,
                 false, false, false, false, false, true);
 
-        assertOperations(score(ForceLossPolicy.Route.STANDALONE,
-                        decision(5, 20, 8, 0, 2, false), wmaop, none()),
+        PolicyResult standalone = score(ForceLossPolicy.Route.STANDALONE,
+                decision(5, 20, 8, 0, 2, false), wmaop, none());
+        assertOperations(standalone,
                 op("V153-zone", 600.0f,
                         "V153 ZONE (HAND, lifeForce=8, protectChars=true)"),
                 op("WMAOP.FODDER_HOLD", 300.0f,
                         "WMAOP.FODDER_HOLD: 'We Must Accelerate Our Plans' is dead in hand (Blockade Flagship site on table) — preferred force-loss fodder +300"));
-        assertOperations(score(ForceLossPolicy.Route.COMBINED_BATTLE,
-                        decision(5, 20, 8, 0, 2, false), wmaop, none()),
+        assertFalse(hasRule(standalone, "WMAOP.LIVE_HOLD"));
+
+        PolicyResult combined = score(ForceLossPolicy.Route.COMBINED_BATTLE,
+                decision(5, 20, 8, 0, 2, false), wmaop, none());
+        assertOperations(combined,
                 op("V153-zone", 600.0f,
                         "V153 ZONE (HAND, lifeForce=8, protectChars=true)"),
                 op("WMAOP.FODDER_HOLD", 300.0f,
                         "WMAOP.FODDER_HOLD: 'We Must Accelerate Our Plans' is dead in hand (Blockade Flagship site on table) — preferred force-loss fodder +300"));
+        assertFalse(hasRule(combined, "WMAOP.LIVE_HOLD"));
 
         // Pre-directive nine-arg constructor keeps wmaopFodderHold=false.
         ForceLossFacts.CandidateFacts legacy = candidate(
                 "We Must Accelerate Our Plans", ForceLossFacts.ZoneBand.HAND,
                 "HAND", CardCategory.INTERRUPT, false, false, false, false, false);
         assertFalse(legacy.wmaopFodderHold());
+    }
+
+    @Test
+    public void wmaopLiveHoldProtectsTheUnspentHandToolOnBothRoutes() {
+        ForceLossFacts.CandidateFacts live = candidate(
+                "We Must Accelerate Our Plans", ForceLossFacts.ZoneBand.HAND,
+                "HAND", CardCategory.INTERRUPT,
+                false, false, false, false, false);
+
+        for (ForceLossPolicy.Route route : List.of(
+                ForceLossPolicy.Route.STANDALONE,
+                ForceLossPolicy.Route.COMBINED_BATTLE)) {
+            assertOperations(score(route,
+                            decision(5, 20, 8, 0, 2, false), live, none()),
+                    op("V153-zone", 600.0f,
+                            "V153 ZONE (HAND, lifeForce=8, protectChars=true)"),
+                    op("WMAOP.LIVE_HOLD", -300.0f,
+                            "WMAOP.LIVE_HOLD: 'We Must Accelerate Our Plans' still owes the Blockade Flagship site pull — keep the tool, lose something else"));
+        }
+    }
+
+    @Test
+    public void nonWmaopHandCardEmitsNeitherHoldArmOnBothRoutes() {
+        ForceLossFacts.CandidateFacts sense = candidate(
+                "Sense", ForceLossFacts.ZoneBand.HAND, "HAND",
+                CardCategory.INTERRUPT,
+                false, false, false, false, false);
+
+        for (ForceLossPolicy.Route route : List.of(
+                ForceLossPolicy.Route.STANDALONE,
+                ForceLossPolicy.Route.COMBINED_BATTLE)) {
+            PolicyResult result = score(route,
+                    decision(5, 20, 8, 0, 2, false), sense, none());
+            assertOperations(result,
+                    op("V153-zone", 600.0f,
+                            "V153 ZONE (HAND, lifeForce=8, protectChars=true)"));
+            assertFalse(hasRule(result, "WMAOP.FODDER_HOLD"));
+            assertFalse(hasRule(result, "WMAOP.LIVE_HOLD"));
+        }
+    }
+
+    @Test
+    public void reserveDeckWmaopEmitsNeitherHoldArmOnBothRoutes() {
+        ForceLossFacts.CandidateFacts reserve = candidate(
+                "We Must Accelerate Our Plans",
+                ForceLossFacts.ZoneBand.RESERVE, "RESERVE_DECK",
+                CardCategory.INTERRUPT,
+                false, false, false, false, false);
+
+        for (ForceLossPolicy.Route route : List.of(
+                ForceLossPolicy.Route.STANDALONE,
+                ForceLossPolicy.Route.COMBINED_BATTLE)) {
+            PolicyResult result = score(route,
+                    decision(5, 20, 8, 0, 2, false), reserve, none());
+            assertOperations(result,
+                    op("V153-zone", 400.0f,
+                            "V153 ZONE (RESERVE_DECK, lifeForce=8, protectChars=true)"));
+            assertFalse(hasRule(result, "WMAOP.FODDER_HOLD"));
+            assertFalse(hasRule(result, "WMAOP.LIVE_HOLD"));
+        }
     }
 
     @Test
@@ -419,6 +484,11 @@ public class ForceLossPolicyTest {
 
     private static ForceLossPolicy.ObjectiveFlags none() {
         return ForceLossPolicy.ObjectiveFlags.none();
+    }
+
+    private static boolean hasRule(PolicyResult result, String ruleId) {
+        return result.operations().stream().anyMatch(
+                operation -> ruleId.equals(operation.ruleArmId().id()));
     }
 
     private static Expected op(String ruleId, float delta, String reason) {

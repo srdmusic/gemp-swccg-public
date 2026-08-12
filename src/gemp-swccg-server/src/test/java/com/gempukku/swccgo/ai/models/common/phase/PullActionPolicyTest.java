@@ -141,6 +141,20 @@ public class PullActionPolicyTest {
         assertFalse(hasWmaopRule(result, "WMAOP.FODDER_HOLD"));
     }
 
+    @Test
+    public void wmaopSourceWithNonReserveActionTextEmitsNoWmaopOps() {
+        for (Phase phase : java.util.List.of(Phase.DEPLOY, Phase.MOVE)) {
+            for (boolean siteOnTable : java.util.List.of(false, true)) {
+                PullActionPolicy.Evaluation result = PullActionPolicy.evaluateParent(
+                        wmaopParent("Activate Force", phase, siteOnTable));
+
+                assertFalse(hasWmaopRule(result, "WMAOP.FODDER_HOLD"));
+                assertFalse(hasWmaopRule(result, "WMAOP.DEPLOY_ONLY"));
+                assertFalse(hasWmaopRule(result, "WMAOP.BLOCKADE_ONLY"));
+            }
+        }
+    }
+
     // WMAOP 2026-08-08 (Steve directive): parent facts for a We Must
     // Accelerate Our Plans action — modeled on CaptureObjectivePullPolicyTest.
     private static PullActionFacts.Parent wmaopParent(
