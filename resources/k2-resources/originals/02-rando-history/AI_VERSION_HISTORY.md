@@ -10725,3 +10725,34 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     engine Java, objective data, deck, database, package, deployment, restart,
     push, or PR changed. Revert 1768e0977 to remove only this candidate. Batch
     1, WMAOP, 601_87, and earlier objective behavior remain independent.
+
+  ==== CONTROLLED CHOSEN ONE LIGHT VS RANDO DARK BOT-GAME HARNESS (2026-08-12) ====
+
+    A hidden admin POST now creates exactly ~The_Chosen_One with
+    TheChosenOneAi on Light and ~Rando_Cal with RandoCalAi on Dark. It uses
+    existing Hall format, ownership, full deck, and side validation, plus
+    shutdown, operational, AI-enabled, zero-awaiting-table, and one-active-
+    game gates. The normal SwccgoServer.createNewGame recording and history
+    path remains authoritative. Cleanup and notification listeners, exact AI
+    registration, and RunningTable publication all precede synchronous start;
+    the Hall write lock is released before start. Natural finish,
+    cancellation, partial setup failure, start failure, and unfinished return
+    clean both Hall and registry state. No public UI, AwaitingTable,
+    BotStatsGameResultListener, timer disable, or new thread was added.
+
+    SwccgGameMediator now uses an iterative driver only for exactly two
+    participants when both are registered AI controllers. It passes the old
+    50-decision recursion limit, credits clocks, and has a 10,000 accepted-
+    decision guard. Checked invalid answers, missing decisions or controllers,
+    runtime failures, and guard exhaustion publish a visible failure when
+    possible, invoke ordinary abort, and throw. The ordinary mixed human/AI
+    helper and legacy entry body remain byte-identical to base.
+
+    Pinned offline Java 21 verification passed 34 focused tests: 11 mediator,
+    13 Hall, and 10 endpoint tests. Base is
+    970851a7c853c073bebe4d3164428dca661a740e; the implementation commit is the
+    commit containing this entry. Production scope is exactly
+    AdminRequestHandler, HallServer, and SwccgGameMediator. AI evaluators,
+    objective data, card Java, decks, and database state are unchanged. No
+    package, deploy, restart, game, push, or replay proof occurred. Revert the
+    commit containing this entry to remove only this harness.

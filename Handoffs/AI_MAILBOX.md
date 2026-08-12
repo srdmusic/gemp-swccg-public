@@ -267,3 +267,17 @@ Verification: The independent pinned-Java-21 36-suite changed/adjacent ring pass
 Boundary: No behavioral source change follows `8d9e9c017`. Later commits in this lane are documentation-only. No deployment, runtime load, live semantic-tag firing, controlled game, replay proof, push, or pull request is claimed by this entry.
 
 Needed: proceed through the final offline rebuild, normalized-e877 byte allowlist, authenticated zero-table gate, and sealed no-boot-flip deployment procedure.
+
+## 2026-08-12 10:50 PT - Codex bot-game lane -> Alfred - OPEN
+
+Topic: Genuine Chosen One Light versus Rando Dark controlled bot-game harness is ready for lead review.
+
+Request: Review the final uncommitted source, tests, and append-only documentation. Do not commit until the lead approves this packet.
+
+Evidence: branch `codex/chosen-rando-botgame-2026-08-12`, worktree `/Users/steve/gemp-chosen-rando-botgame-2026-08-12`, exact base `970851a7c853c073bebe4d3164428dca661a740e`. The hidden admin POST accepts only CHOSENONE Light and RANDO Dark. Hall uses exact IDs and controller classes, existing deck validation, zero-awaiting and one-active-game gates, normal `SwccgoServer.createNewGame`, listener and RunningTable publication before start, and lock release before synchronous start. The separate exact-two-AI iterative driver has visible aborting failure paths and a 10,000-decision guard. The legacy mixed helper and legacy entry body hash-match base. Pinned Corretto Java 21, offline, network-none focused verification passed `34/0/0/0` across 11 mediator, 13 Hall, and 10 endpoint tests.
+
+Files: three production Java files, three focused test files, one stale test-comment update, async test dependencies and Surefire pin, both required history files, and this mailbox entry.
+
+Risks: synchronous execution can occupy the admin request for the full game, as explicitly accepted for this frozen path. The 10,000-decision ceiling is intentionally fatal, not a success. Unit and source proof do not establish packaged bytes, a loaded JVM, a natural completed game, recorder output, database rows, or replay evidence.
+
+Needed: lead reviews the exact diff and decides whether to create one coherent local commit. No package, deployment, restart, live game, database write, push, or PR is authorized by this entry.

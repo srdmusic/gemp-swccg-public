@@ -55,6 +55,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class SwccgGameMediator {
     private static final Logger LOG = LogManager.getLogger(SwccgGameMediator.class);
     private static final int MAX_AI_CHAIN = 50;
+    private static final int MAX_ALL_AI_DECISIONS = 10000;
+
+    private static final class AllAiGameFailure extends IllegalStateException {
+        private AllAiGameFailure(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
     private int aiChainCounter = 0;
 
     private Map<String, GameCommunicationChannel> _communicationChannels = Collections.synchronizedMap(new HashMap<String, GameCommunicationChannel>());
@@ -1003,6 +1011,24 @@ public class SwccgGameMediator {
         }
     }
 
+    public void abortGame(String reason) {
+        _writeLock.lock();
+        try {
+            String message = "Game " + _gameId + " aborted: " + reason;
+            LOG.error(message);
+            try {
+                if (_swccgoGame.getGameState() != null) {
+                    _swccgoGame.getGameState().sendMessage(message);
+                }
+            } catch (RuntimeException messageFailure) {
+                LOG.error("Game " + _gameId + " could not publish its abort message", messageFailure);
+            }
+            _swccgoGame.abortGame();
+        } finally {
+            _writeLock.unlock();
+        }
+    }
+
     public void cleanup() {
         _writeLock.lock();
         try {
@@ -1257,6 +1283,11 @@ public class SwccgGameMediator {
     }
 
     private void startClocksForUsersPendingDecision() {
+        if (allParticipantsAreAi()) {
+            driveAllAiDecisionsUntilFinished();
+            return;
+        }
+
         long currentTime = System.currentTimeMillis();
         // Copy to avoid ConcurrentModification when AI decisions resolve immediately
         Set<String> users = new HashSet<String>(_userFeedback.getUsersPendingDecision());
@@ -1264,6 +1295,109 @@ public class SwccgGameMediator {
             _decisionQuerySentTimes.put(user, currentTime);
             maybeLetAiPlay(user);
         }
+    }
+
+    private boolean allParticipantsAreAi() {
+        if (_playersPlaying.size() != 2) {
+            return false;
+        }
+        for (SwccgGameParticipant participant : _playersPlaying) {
+            if (!AiRegistry.isAi(_gameId, participant.getPlayerId())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void driveAllAiDecisionsUntilFinished() {
+        int decisions = 0;
+        while (true) {
+            String playerId = null;
+            try {
+                if (_swccgoGame.isFinished()) {
+                    return;
+                }
+                if (decisions >= MAX_ALL_AI_DECISIONS) {
+                    throw allAiFailure("AI decision guard exhausted after " + MAX_ALL_AI_DECISIONS
+                            + " accepted decisions", null);
+                }
+
+                for (String pendingPlayer : new HashSet<String>(_userFeedback.getUsersPendingDecision())) {
+                    if (isPlayerPlaying(pendingPlayer) && AiRegistry.isAi(_gameId, pendingPlayer)) {
+                        playerId = pendingPlayer;
+                        break;
+                    }
+                }
+                if (playerId == null) {
+                    throw allAiFailure("game is unfinished but no AI decision is pending", null);
+                }
+
+                AwaitingDecision decision = _userFeedback.getAwaitingDecision(playerId);
+                if (decision == null) {
+                    throw allAiFailure("pending player " + playerId + " has no awaiting decision", null);
+                }
+                SwccgAiController ai = AiRegistry.get(_gameId, playerId);
+                if (ai == null) {
+                    throw allAiFailure("pending player " + playerId + " has no registered AI controller", null);
+                }
+
+                _decisionQuerySentTimes.put(playerId, System.currentTimeMillis());
+                ai.setGame(_swccgoGame);
+                String answer = ai.decide(playerId, decision, _swccgoGame.getGameState());
+
+                _userFeedback.participantDecided(playerId);
+                decision.decisionMade(answer);
+                addTimeSpentOnDecisionToUserClock(playerId);
+
+                String chatMessage = ai.getChatMessage();
+                if (chatMessage != null && !chatMessage.isEmpty()) {
+                    if (_chatRoom != null) {
+                        try {
+                            _chatRoom.sendMessage(playerId, chatMessage, true);
+                        } catch (PrivateInformationException | ChatCommandErrorException e) {
+                            _swccgoGame.getGameState().sendMessage(playerId + ": " + chatMessage);
+                        }
+                    } else {
+                        _swccgoGame.getGameState().sendMessage(playerId + ": " + chatMessage);
+                    }
+                }
+
+                _swccgoGame.carryOutPendingActionsUntilDecisionNeeded();
+                decisions++;
+            } catch (AllAiGameFailure e) {
+                throw e;
+            } catch (DecisionResultInvalidException e) {
+                throw allAiFailure("engine rejected AI response from " + playerId + ": "
+                        + e.getWarningMessage(), e);
+            } catch (RuntimeException e) {
+                throw allAiFailure("runtime failure while resolving AI decision for " + playerId
+                        + ": " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private AllAiGameFailure allAiFailure(String reason, Throwable cause) {
+        String message = "All-AI game " + _gameId + " aborted: " + reason;
+        AllAiGameFailure failure = new AllAiGameFailure(message, cause);
+        if (cause == null) {
+            LOG.error(message);
+        } else {
+            LOG.error(message, cause);
+        }
+        try {
+            if (_swccgoGame.getGameState() != null) {
+                _swccgoGame.getGameState().sendMessage(message);
+            }
+        } catch (RuntimeException messageFailure) {
+            LOG.error("All-AI game " + _gameId + " could not publish its abort message", messageFailure);
+        }
+        try {
+            _swccgoGame.abortGame();
+        } catch (RuntimeException abortFailure) {
+            LOG.error("All-AI game " + _gameId + " failed during abort", abortFailure);
+            failure.addSuppressed(abortFailure);
+        }
+        return failure;
     }
 
     private void addTimeSpentOnDecisionToUserClock(String participantId) {

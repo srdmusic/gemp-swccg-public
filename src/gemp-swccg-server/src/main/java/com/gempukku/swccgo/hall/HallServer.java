@@ -5,6 +5,7 @@ import com.gempukku.swccgo.ai.AiRegistry;
 import com.gempukku.swccgo.ai.SwccgAiController;
 import com.gempukku.swccgo.ai.models.AdvancedAi;
 import com.gempukku.swccgo.ai.models.BeginnerAi;
+import com.gempukku.swccgo.ai.models.chosenone.TheChosenOneAi;
 import com.gempukku.swccgo.ai.models.rando.RandoCalAi;
 import com.gempukku.swccgo.bot.BotStatsGameResultListener;
 import com.gempukku.swccgo.chat.ChatCommandCallback;
@@ -33,6 +34,8 @@ import com.gempukku.swccgo.logic.vo.SwccgDeck;
 import com.gempukku.swccgo.service.AdminService;
 import com.gempukku.swccgo.tournament.*;
 import com.gempukku.util.SwccgUuid;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -41,9 +44,17 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class HallServer extends AbstractServer {
+    private static final Logger LOG = LogManager.getLogger(HallServer.class);
     private static final String AI_BEGINNER_ID = "~OzzelBot";
     private static final String AI_ADVANCED_ID = "~YodaBot";
     private static final String AI_ELITE_ID = "~Rando_Cal";
+    private static final String AI_CHOSEN_ONE_ID = "~The_Chosen_One";
+
+    public static class BotGameInputException extends HallException {
+        public BotGameInputException(String message) {
+            super(message);
+        }
+    }
 
     private final int _playerInactivityPeriod = 1000 * 60; // 60 seconds
     private final long _scheduledTournamentLoadTime = 1000 * 60 * 60 * 24 * 7; // Week
@@ -396,6 +407,173 @@ public class HallServer extends AbstractServer {
             return rando;
         }
         return new BeginnerAi();
+    }
+
+    public String createChosenOneVsRandoGame(String formatCode, String lightDeckName,
+            String darkDeckName, Player deckOwner) throws HallException {
+        SwccgGameMediator gameMediator = null;
+        String tableId = null;
+        String gameId = null;
+
+        _hallDataAccessLock.writeLock().lock();
+        try {
+            if (_shutdown) {
+                throw new HallException("Server is in shutdown mode. No games may be started.");
+            }
+            if (!_operational) {
+                throw new HallException("Server is not yet in operational mode.");
+            }
+            if (!_aiTablesEnabled) {
+                throw new HallException("Bot tables are currently disabled");
+            }
+            if (!_awaitingTables.isEmpty()) {
+                throw new HallException("A table is already awaiting players. Controlled bot games run alone.");
+            }
+            for (RunningTable runningTable : _runningTables.values()) {
+                SwccgGameMediator runningGame = runningTable.getSwccgoGameMediator();
+                if (runningGame != null && !runningGame.isFinished()) {
+                    throw new HallException("A game is already active. Controlled bot games run one at a time.");
+                }
+            }
+            if (deckOwner == null) {
+                throw new BotGameInputException("Deck owner player is required");
+            }
+
+            SwccgFormat format = _formatLibrary.getHallFormats().get(formatCode);
+            if (format == null) {
+                throw new BotGameInputException("This format is not supported: " + formatCode);
+            }
+
+            SwccgDeck lightDeck = validateBotGameDeck(format, deckOwner, lightDeckName, Side.LIGHT);
+            SwccgDeck darkDeck = validateBotGameDeck(format, deckOwner, darkDeckName, Side.DARK);
+
+            TheChosenOneAi chosenOne = new TheChosenOneAi();
+            chosenOne.setDeckName(lightDeckName);
+            RandoCalAi rando = new RandoCalAi();
+            rando.setDeckName(darkDeckName);
+
+            SwccgGameParticipant[] participants = new SwccgGameParticipant[]{
+                    new SwccgGameParticipant(AI_CHOSEN_ONE_ID, lightDeck),
+                    new SwccgGameParticipant(AI_ELITE_ID, darkDeck)
+            };
+            tableId = new SwccgUuid().generateNewTableId();
+            gameMediator = _swccgoServer.createNewGame(format, null, null, participants,
+                    true, true, true, true, true, false,
+                    300, 60, false, _inGameStatisticsEnabled, _bonusAbilitiesEnabled);
+            gameId = gameMediator.getGameId();
+
+            final String cleanupTableId = tableId;
+            final String cleanupGameId = gameId;
+            gameMediator.addGameResultListener(new GameResultListener() {
+                @Override
+                public void gameFinished(String winnerPlayerId, String winReason,
+                        Map<String, String> loserPlayerIdsWithReasons, String winnerSide, String loserSide) {
+                    cleanupChosenOneRandoGame(cleanupTableId, cleanupGameId);
+                }
+
+                @Override
+                public void gameCancelled() {
+                    cleanupChosenOneRandoGame(cleanupTableId, cleanupGameId);
+                }
+            });
+            gameMediator.addGameResultListener(_notifyHallListeners);
+
+            AiRegistry.register(gameId, AI_CHOSEN_ONE_ID, chosenOne);
+            AiRegistry.register(gameId, AI_ELITE_ID, rando);
+            if (AiRegistry.get(gameId, AI_CHOSEN_ONE_ID) != chosenOne
+                    || AiRegistry.get(gameId, AI_ELITE_ID) != rando) {
+                throw new IllegalStateException("Exact bot controller registration failed");
+            }
+            LOG.info("BOTGAME AI REGISTERED gameId={} side=LIGHT playerId={} controllerClass={}"
+                            + " deckOwner={} deck={}",
+                    gameId, AI_CHOSEN_ONE_ID, TheChosenOneAi.class.getName(),
+                    deckOwner.getName(), lightDeckName);
+            LOG.info("BOTGAME AI REGISTERED gameId={} side=DARK playerId={} controllerClass={}"
+                            + " deckOwner={} deck={}",
+                    gameId, AI_ELITE_ID, RandoCalAi.class.getName(),
+                    deckOwner.getName(), darkDeckName);
+
+            ChatRoomMediator gameChatRoom = _swccgoServer.getGameChatRoom(gameId);
+            if (gameChatRoom != null) {
+                gameMediator.setChatRoom(gameChatRoom);
+            }
+
+            _runningTables.put(tableId, new RunningTable(gameMediator, format.getName(), null,
+                    "Chosen One (Light) vs Rando (Dark)", null, null));
+            hallChanged();
+        } catch (RuntimeException e) {
+            if (gameMediator != null && !gameMediator.isFinished()) {
+                try {
+                    gameMediator.abortGame("bot game setup failed: " + e.getMessage());
+                } catch (RuntimeException abortFailure) {
+                    e.addSuppressed(abortFailure);
+                }
+            }
+            cleanupChosenOneRandoGame(tableId, gameId);
+            HallException failure = new HallException("Bot game setup failed: " + e.getMessage());
+            failure.initCause(e);
+            throw failure;
+        } finally {
+            _hallDataAccessLock.writeLock().unlock();
+        }
+
+        try {
+            gameMediator.startGame();
+            if (!gameMediator.isFinished()) {
+                gameMediator.abortGame("all-AI start returned before the game finished");
+                throw new HallException("Bot game did not finish during synchronous AI play");
+            }
+            return gameId;
+        } catch (HallException e) {
+            cleanupChosenOneRandoGame(tableId, gameId);
+            throw e;
+        } catch (RuntimeException e) {
+            if (!gameMediator.isFinished()) {
+                try {
+                    gameMediator.abortGame("bot game start failed: " + e.getMessage());
+                } catch (RuntimeException abortFailure) {
+                    e.addSuppressed(abortFailure);
+                }
+            }
+            cleanupChosenOneRandoGame(tableId, gameId);
+            HallException failure = new HallException("Bot game start failed: " + e.getMessage());
+            failure.initCause(e);
+            throw failure;
+        }
+    }
+
+    private SwccgDeck validateBotGameDeck(SwccgFormat format, Player deckOwner,
+            String deckName, Side requiredSide) throws BotGameInputException {
+        SwccgDeck deck;
+        try {
+            deck = validateUserAndDeck(format, deckOwner, deckName,
+                    _allCardsCollectionType, false, null);
+        } catch (HallException e) {
+            BotGameInputException failure = new BotGameInputException(e.getMessage());
+            failure.initCause(e);
+            throw failure;
+        }
+        if (deck.getSide(_library) != requiredSide) {
+            throw new BotGameInputException(requiredSide.getHumanReadable()
+                    + " deck '" + deckName + "' is not a "
+                    + requiredSide.getHumanReadable() + " Side deck");
+        }
+        return deck;
+    }
+
+    private void cleanupChosenOneRandoGame(String tableId, String gameId) {
+        _hallDataAccessLock.writeLock().lock();
+        try {
+            boolean removed = tableId != null && _runningTables.remove(tableId) != null;
+            if (gameId != null) {
+                AiRegistry.unregisterGame(gameId);
+            }
+            if (removed) {
+                hallChanged();
+            }
+        } finally {
+            _hallDataAccessLock.writeLock().unlock();
+        }
     }
 
     public void setPrivateGames(boolean enabled) {

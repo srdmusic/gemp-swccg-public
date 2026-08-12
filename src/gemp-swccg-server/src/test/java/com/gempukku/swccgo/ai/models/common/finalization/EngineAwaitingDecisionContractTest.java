@@ -24,18 +24,20 @@ import static org.junit.Assert.fail;
  * ({@link #fcMultipleChoiceBounds_checkedAfterF1}) and NOT weakened — it stays
  * {@code @Ignore}d until the F1 engine repair (a separate commit) lands.
  *
- * ── Pinned mediator P0 evidence (SwccgGameMediator.maybeLetAiPlay, source-anchored
- * here because the F2 test seam — package-private mediator constructor — is an
- * ENGINE change held for Steve's explicit approval and is NOT part of this lane):
- *  - AI success path (SwccgGameMediator.java:1299-1325) calls
+ * ── Pinned mixed human/AI mediator P0 evidence
+ * (SwccgGameMediator.maybeLetAiPlay):
+ *  - The mixed-path AI success path calls
  *    carryOutPendingActionsUntilDecisionNeeded + startClocksForUsersPendingDecision
- *    but NEVER addTimeSpentOnDecisionToUserClock (defined :1269; called on the
- *    human paths :1032-:1145) — the AI's pending timer stays active.
- *  - A checked DecisionResultInvalidException (:1327-1329) only calls
+ *    but NEVER addTimeSpentOnDecisionToUserClock, so the AI's pending timer stays
+ *    active.
+ *  - A checked DecisionResultInvalidException only calls
  *    sendAwaitingDecision — the decision is requeued but NOTHING reschedules or
  *    retries the AI: the game strands until an external event.
- *  - MAX_AI_CHAIN exhaustion (:1285-1287) returns silently — no visible terminal
+ *  - MAX_AI_CHAIN exhaustion returns silently, with no visible terminal
  *    failure.
+ * The exact two-participant all-AI bot-game path is intentionally separate: it
+ * iterates beyond MAX_AI_CHAIN, credits clocks, and visibly aborts on rejection or
+ * guard exhaustion without changing this ordinary mixed path.
  * The executable retry fixtures (SwccgGameMediatorAiRetryTest) belong to F2. ──
  */
 public class EngineAwaitingDecisionContractTest {

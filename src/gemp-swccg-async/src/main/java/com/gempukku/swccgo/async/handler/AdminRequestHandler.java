@@ -17,6 +17,7 @@ import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.formats.SwccgoFormatLibrary;
 import com.gempukku.swccgo.game.state.SortPlayerByName;
+import com.gempukku.swccgo.hall.HallException;
 import com.gempukku.swccgo.hall.HallServer;
 import com.gempukku.swccgo.league.*;
 import com.gempukku.swccgo.service.AdminService;
@@ -136,6 +137,8 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             purgeInGameStatisticListeners(request, responseWriter);
 		} else if (uri.equals("/league/deckcheck") && request.method() == HttpMethod.POST) {
             deckCheck(request, responseWriter);
+        } else if (uri.equals("/botgame") && request.method() == HttpMethod.POST) {
+            createChosenOneVsRandoGame(request, responseWriter);
         } else {
             responseWriter.writeError(404);
         }
@@ -1156,6 +1159,56 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
 
         responseWriter.writeHtmlResponse("In game statistics tracking removed from " + count +
                 " active games<br>In game statistics tracking enabled: " + _hallServer.inGameStatisticsEnabled());
+    }
+
+    private void createChosenOneVsRandoGame(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+        validateAdmin(request);
+
+        HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
+        try {
+            String format = requiredBotGameParameter(postDecoder, "format");
+            String lightSkill = requiredBotGameParameter(postDecoder, "lightSkill");
+            String lightDeck = requiredBotGameParameter(postDecoder, "lightDeck");
+            String darkSkill = requiredBotGameParameter(postDecoder, "darkSkill");
+            String darkDeck = requiredBotGameParameter(postDecoder, "darkDeck");
+            String deckOwnerName = requiredBotGameParameter(postDecoder, "deckOwner");
+
+            if (!"CHOSENONE".equals(lightSkill)) {
+                throw new HttpProcessingException(400,
+                        "Parameter 'lightSkill' must be exactly CHOSENONE");
+            }
+            if (!"RANDO".equals(darkSkill)) {
+                throw new HttpProcessingException(400,
+                        "Parameter 'darkSkill' must be exactly RANDO");
+            }
+
+            Player deckOwner = _playerDAO.getPlayer(deckOwnerName);
+            if (deckOwner == null) {
+                throw new HttpProcessingException(404,
+                        "Deck owner player not found: " + deckOwnerName);
+            }
+
+            try {
+                String gameId = _hallServer.createChosenOneVsRandoGame(
+                        format, lightDeck, darkDeck, deckOwner);
+                responseWriter.writeHtmlResponse("OK gameId=" + gameId);
+            } catch (HallServer.BotGameInputException e) {
+                throw new HttpProcessingException(400, e.getMessage());
+            } catch (HallException e) {
+                throw new HttpProcessingException(409, e.getMessage());
+            }
+        } finally {
+            postDecoder.destroy();
+        }
+    }
+
+    private String requiredBotGameParameter(HttpPostRequestDecoder postDecoder, String name)
+            throws Exception {
+        String value = getFormParameterSafely(postDecoder, name);
+        if (StringUtils.isBlank(value)) {
+            throw new HttpProcessingException(400, "Parameter '" + name + "' cannot be blank.");
+        }
+        return value;
     }
 
     private void deckCheck(HttpRequest request, ResponseWriter responseWriter) throws Exception {
