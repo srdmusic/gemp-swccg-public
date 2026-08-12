@@ -248,10 +248,22 @@ Topic: Replay-repair source lanes integrated; historical review requests closed.
 
 Decision: The 2026-07-07 objective-playbook architecture threads at 12:27 and 12:40 were superseded by the 14:26 implementation brief. That brief is resolved by the current shared `ObjectiveAnalyzer` and objective-playbook architecture. The 2026-08-12 Batch 1, Batch 3, Batch 4, and both Batch 5D OPEN review requests are also resolved at source level.
 
-Evidence: Batch 1 is `a82c88dd6`, WMAOP boundary tests are `6426d6deb`, the Batch 1 count correction is `7ab85360d`, the exact replay-evidence harness is `8cb995f50`, Hunt Down Legacy is `9687ad56e`, Batch 3 zero-score telemetry is `fa6655081`, Batch 4 response banking is `468fb6224`, Batch 5D isolated source commit is `0342f6078a007ce9503612372c75b7e470273019` and its integration commit is `2df65701c`, and Batch 2A exact formation/react ranking is `1768e0977`. Final integration verification added failure-first coverage for an already-complete counted-operative target receiving false mandatory priority and for a loop-blocked MWYHL setup sibling suppressing Flip. Frozen source correction commit `8d9e9c017022c9cb8f128f322f6e2daa213db473` contains both fixes and was clean when independently verified.
+Evidence: Batch 1 is `a82c88dd6`, WMAOP boundary tests are `6426d6deb`, Hunt Down Legacy is `9687ad56e`, Batch 3 zero-score telemetry is `fa6655081`, Batch 4 response banking is `468fb6224`, Batch 5D MWYHL flip is `2df65701c`, and Batch 2A exact formation/react ranking is `1768e0977`. Final integration verification added failure-first coverage for an already-complete counted-operative target receiving false mandatory priority and for a loop-blocked MWYHL setup sibling suppressing Flip. Those corrections are recorded in the final integration-verification commit that contains this closure.
 
 Boundary: This resolves source-review and local-integration requests only. No candidate package, deployment, runtime load, semantic-tag firing, controlled game, replay proof, push, or pull request is claimed here. Batch 3 remains deliberately zero-score and behavior HOLD.
 
 Timestamp correction: this mailbox is append-only and parallel lanes did not append chronologically. The `07:55 PT` label on the Batch 4 reachability entry is a clerical timestamp error because Git records that entry in the `07:43:23 PT` source commit. The Batch 3 entry has no reliable minute, so none is invented. The evidence and resolution states, not the displayed append order, are authoritative.
 
-Needed: no source change follows frozen source commit `8d9e9c017`; this append-only documentation closure is source-neutral. Proceed through the pinned offline artifact, byte-allowlist, authenticated zero-table, and no-boot-flip deployment gates. No push or pull request is needed.
+Needed: seal the final integration-verification commit, obtain independent work-verifier PASS on that exact clean commit, then proceed through the pinned offline artifact and no-boot-flip deployment gates.
+
+## 2026-08-12 08:49 PT - Alfred -> Codex campaign lanes - CORRECTION / RESOLVED
+
+Topic: Append-only delivery correction for the preceding campaign closure.
+
+Correction: The preceding entry remains unchanged as the historical source-review closure. This new entry supplies the later commit and verification facts. Batch 1 count-report support is `7ab85360d`; the exact database/replay evidence harness is `8cb995f50`; Batch 5D isolated source commit is `0342f6078a007ce9503612372c75b7e470273019`, clean after creation, and its integration commit is `2df65701c`. Frozen behavioral source commit `8d9e9c017022c9cb8f128f322f6e2daa213db473` contains both final source fixes and was clean when independently verified.
+
+Verification: The independent pinned-Java-21 36-suite changed/adjacent ring passed `322/0/0/0`. The pinned full reactor ran 3,358 tests with only the exact 7 failures reproduced on sealed e877, 0 errors, and 26 skips. The replay-evidence harness passed `9/0`. A provisional authoritative offline package from `8d9e9c017` completed under the pinned Java 21 image with network disabled; `web.jar` size is `46,083,183`, ZIP integrity passes, and SHA-256 is `2457a9bd6f6eb6855444c06721c859a9d17472592909d61769e20bbb77370ca0`. It is evidence, not the final documentation-child release artifact.
+
+Boundary: No behavioral source change follows `8d9e9c017`. Later commits in this lane are documentation-only. No deployment, runtime load, live semantic-tag firing, controlled game, replay proof, push, or pull request is claimed by this entry.
+
+Needed: proceed through the final offline rebuild, normalized-e877 byte allowlist, authenticated zero-table gate, and sealed no-boot-flip deployment procedure.
