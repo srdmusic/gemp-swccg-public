@@ -11,8 +11,9 @@ shipped. The larger exact simultaneous resolver experiment passed focused tests 
 because no production exact-facts producer could reach it. Exact survivor scoring remains HOLD on
 an engine-owned facts seam. Existing Formation Safety, V76, Phase 3, objective, must-fight,
 V61/V61b, V27, V25, and Pass behavior is unchanged. No engine, card, objective data, deck, or
-database source changed. No package, deployment, restart, live game, push, or PR occurred. See the
-2026-08-12 AI_CHANGELOG and Batch 3 implementation report.
+database source changed. Source and integration commit is fa66550815f17e1670cc7946b6ba3354d486038a.
+No package, deployment, restart, live game, push, or PR occurred. See the 2026-08-12 AI_CHANGELOG
+and Batch 3 implementation report.
 
   ==== V232 AI-ONLY MOVE WEAPON-HUNTER POLICY OWNER (2026-07-19, both bots) ====
 Shared MoveWeaponHunterPolicy now owns the duplicated V29.7 attached-weapon classification,
@@ -10473,7 +10474,7 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     was pushed. Restore web.jar.pre-shadow-20260807-0922-2f03363b and revert
     64cc71fdf to remove only this seal.
 
-  ==== Rando Batch 1 persistent response and objective-critical eviction candidate (2026-08-12, both bots) ====
+  ==== Rando Batch 1 persistent response and objective-critical eviction source integration (2026-08-12, both bots) ====
 
     Shared PersistentResponsePolicy now records only final paid public
     opponent drain damage, by permanent location and completed opponent turn.
@@ -10509,14 +10510,21 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     mixed, multi-ship, inferred-crew, and modifier-dependent packages fail
     closed. Rando and Chosen One use normalized thin adapters.
 
-    The final impacted ring passed 201/0/0/0, and the preserved Gate 0 ring
-    passed 225/0/0/0. Compile, diff, and mirror parity passed. Native 219_1
-    front, near-miss, and back-stability contracts were added without card or
-    objective behavior changes. Base is exact e877d4b6. No candidate jar,
-    commit, deployment, live tag firing, or replay proof exists yet. Revert the
-    eventual coherent Batch 1 commit; after any future deployment, restore the
-    immutable pre-Batch1 e877 rollback packet documented in the implementation
-    report.
+    Final integration verification closed one mandatory-selector edge. A
+    counted-operative target is mandatory only when actor or companion was
+    missing before the candidate and the exact planned group completes both
+    roles. An already-complete target cannot gain false mandatory priority;
+    missing-actor and missing-companion completion remain eligible.
+
+    The final lane ring passed 201/0/0/0, and the preserved Gate 0 ring passed
+    225/0/0/0. Compile, diff, and mirror parity passed. Native 219_1 front,
+    near-miss, and back-stability contracts were added without card or objective
+    behavior changes. Base is exact e877d4b6. Batch 1 source commit is
+    a82c88dd6, followed by WMAOP boundary-test commit 6426d6deb. No candidate
+    jar, deployment, live tag firing, or replay proof exists yet. Revert
+    a82c88dd6 plus the final integration correction; after deployment, restore
+    the immutable pre-Batch1 e877 rollback packet documented in the
+    implementation report.
 
   ==== 601_87 HUNT DOWN LEGACY EXACT-FAMILY CORRECTION (2026-08-12, both bots) ====
 
@@ -10551,11 +10559,11 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Test-first failure was observed. Before the local commit, the focused ring
     passed 66/0/0/0 and the broader affected/parity ring passed 187/0/0/0.
     Clean server-reactor compile and diff checks passed from exact base
-    6426d6deb. No package, deployment, runtime load, or replay firing proof
-    exists yet. Revert the
-    eventual coherent 601_87 exact-family commit. Batch 1, WMAOP, and generic
-    Hunt Down family behavior remain independent.
-  ==== V182 exact response-bank extension candidate (2026-08-12, both bots) ====
+    6426d6deb. Source and integration commit is 9687ad56e. No package,
+    deployment, runtime load, or replay firing proof exists yet. Revert
+    9687ad56e. Batch 1, WMAOP, and generic Hunt Down family behavior remain
+    independent.
+  ==== V182 exact response-bank source integration (2026-08-12, both bots) ====
 
     A Draw-phase extension now protects only an exact current Batch 1 response
     obligation. The existing Obligation carries a minimal five-field proof
@@ -10604,10 +10612,11 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     non-response recordDeployment. It also proves fresh next-turn selection
     from retained exact-cost Force and the concrete V59 transition from -1450
     to +50 after additional activation. Focused tests passed 65/0/0/0 and the
-    impacted ring passed 117/0/0/0. Compile, diff, and
-    mirrored-source parity passed from exact base 6426d6deb. No commit, jar,
-    deploy, restart, push, PR, live firing, or replay proof exists.
-  ==== BATCH 5D EXACT MWYHL FLIP CANDIDATE (2026-08-12, both bots) ====
+    impacted ring passed 117/0/0/0. Compile, diff, and mirrored-source parity
+    passed from exact base 6426d6deb. Source and integration commit is
+    468fb6224. No jar, deploy, restart, push, PR, live firing, or replay proof
+    exists. Revert 468fb6224 to remove this extension.
+  ==== BATCH 5D EXACT MWYHL FLIP SOURCE INTEGRATION (2026-08-12, both bots) ====
 
     Replay DB rows 72166, 72159, 72202, 72233, and 72234 show the
     Mind What You Have Learned (V) flip bridging Dagobah setup into ordinary
@@ -10617,12 +10626,14 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
 
     New pure ObjectiveFlipActionPolicy recognizes only trimmed Flip from the
     owned, in-play, unflipped 225_53 front. A same-source front-only Effect or
-    Dagobah-location pull suppresses Flip only when the owner's Reserve Deck
-    contains the exact matching currently legal and affordable paid deploy.
-    Wise Advice and Yoda's Hope are the only Effect targets. Unknown, absent,
-    illegal, and unaffordable candidates do not suppress. Otherwise one
-    OBJECTIVE.MWYHL.FLIP +600 objective-intent band is applied, and each
-    mirrored ActionText adapter returns before generic dispatch.
+    Dagobah-location pull suppresses Flip only when its exact action ID and
+    text are not loop-blocked and the owner's Reserve Deck contains the exact
+    matching currently legal and affordable paid deploy. Wise Advice and
+    Yoda's Hope are the only Effect targets. A blocked sibling keeps its
+    existing loop veto and cannot suppress OBJECTIVE.MWYHL.FLIP +600. Unknown,
+    absent, illegal, and unaffordable candidates do not suppress. Otherwise
+    the one objective-intent band is applied, and each mirrored ActionText
+    adapter returns before generic dispatch.
 
     Loop-prevention vetoes remain first. The +600 band beats Pass +5 by 595,
     matches the existing post-flip payoff-start magnitude, and remains below
@@ -10636,21 +10647,26 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
 
     Failure-first compile evidence proved the policy absent. Parent review
     caught and corrected the offer-only stranding risk and eager Reserve scan.
-    The final focused ring passed 13/0/0/0, and the impacted ActionText,
+    The amended focused ring passed 14/0/0/0, and the five-class integration
+    correction ring passed 80/0/0/0. The original impacted ActionText,
     objective-policy, and source-ownership ring passed 311/0/0/0. The sole
     failure in the 316-test inclusive ring is
     the known DeployActionTextSourceParityTest ownership assertion, which also
     fails unchanged at clean base fa6655081. Server-reactor compile, diff
     check, and normalized full-file bot parity passed.
 
-    Production scope is one shared AI policy and two mirrored ActionText
-    adapters. No engine Java, card Java, objective data, deck, database, build,
-    package, deployment, restart, or game state changed. Base is exact
-    fa66550815f17e1670cc7946b6ba3354d486038a. The lead-approved coherent local
-    commit proves source only; no runtime load, rule firing, or replay proof
-    exists yet. Revert that Batch 5D commit without affecting Batch 1, WMAOP,
-    Hunt Down Legacy, or Batch 3.
-  ==== RANDO BATCH 2A EXACT-TARGET FORMATION AND PROVEN IMMEDIATE-REACT CANDIDATE (2026-08-12, both bots) ====
+    Final integration verification added the failure-first
+    blockedUsefulSetupCannotSuppressFlipForEitherBot regression and closed the
+    blocked-sibling ordering edge in both mirrors. Production scope is one
+    shared AI policy and two mirrored ActionText adapters. No engine Java,
+    card Java, objective data, deck, database, build, package, deployment,
+    restart, or game state changed. Base is exact
+    fa66550815f17e1670cc7946b6ba3354d486038a. Isolated source commit is
+    0342f6078a007ce9503612372c75b7e470273019, integrated as 2df65701c. Source
+    proof only exists; no runtime load, rule firing, or replay proof exists yet.
+    Revert 2df65701c plus the final integration correction without affecting
+    Batch 1, WMAOP, Hunt Down Legacy, or Batch 3.
+  ==== RANDO BATCH 2A EXACT-TARGET FORMATION AND PROVEN IMMEDIATE-REACT SOURCE INTEGRATION (2026-08-12, both bots) ====
 
     Both deploy planners now rank the complete current plus planned formation
     at each exact target. Existing friendly cards affect the established or
@@ -10693,15 +10709,14 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     passed 58/0/0/0. The expanded deploy, formation, Endor, plan-copy, and
     mirror ring passed 113/0/0/0. Clean server-reactor compile, normalized
     Rando and Chosen One equality, and diff checks passed from exact base
-    9687ad56e. The listed verification preceded the eventual local
-    implementation commit. No package, deployment, runtime load, game, log,
-    or replay firing proof exists.
+    9687ad56e. Isolated source commit is
+    476f26dada7ce332f7f76dd2565ce4b0776b8948, integrated as 1768e0977. No
+    package, deployment, runtime load, game, log, or replay firing proof exists.
 
     Scope is the shared deploy ranker, one common public-board reader,
     mirrored deploy planners and instruction value objects, AI tests, these
     two history files, and the implementation report. No
     FormationSafety, per-action evaluator, StrategyController, card Java,
     engine Java, objective data, deck, database, package, deployment, restart,
-    push, or PR changed. Revert the eventual coherent Batch 2A implementation
-    commit to remove only this candidate. Batch 1, WMAOP, 601_87, and earlier
-    objective behavior remain independent.
+    push, or PR changed. Revert 1768e0977 to remove only this candidate. Batch
+    1, WMAOP, 601_87, and earlier objective behavior remain independent.

@@ -1,9 +1,9 @@
 # Batch 2A implementation report
 
 Date: 2026-08-12
-Base: `9687ad56e27bed4b82c929f718d7bea9b0b6f10d`
+Implementation base: `9687ad56e27bed4b82c929f718d7bea9b0b6f10d`
 Branch: `codex/rando-batch2-exact-formation-react`
-Status: implemented and verified in an isolated worktree; this report records the pre-commit review snapshot
+Status: source committed as `476f26dada7ce332f7f76dd2565ce4b0776b8948` and integrated as `1768e0977`; artifact and runtime proof pending
 
 ## Implemented scope
 
@@ -59,7 +59,7 @@ No generic topology or adjacency model, counterdeploy envelope, ordinary next-tu
 - Normalized Rando and Chosen One instruction-object equality: passed.
 - Allowlist, whitespace, and diff checks: passed.
 
-These checks precede the eventual local implementation commit. No package, deployment, restart, runtime load, game, log, replay firing, push, or pull request proof exists.
+These lane checks preceded source commit `476f26dada7ce332f7f76dd2565ce4b0776b8948`, integrated as `1768e0977`. No package, deployment, restart, runtime load, game, log, replay firing, push, or pull request proof exists yet.
 
 ## Changed paths
 

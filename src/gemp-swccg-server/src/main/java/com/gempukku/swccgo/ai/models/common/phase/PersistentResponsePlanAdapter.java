@@ -826,6 +826,26 @@ public final class PersistentResponsePlanAdapter {
                 || !objective.isAnalyzed() || objective.isFlipped()) {
             return false;
         }
+        if (objective.hasCountedOperativeFormationRule()
+                && objective.isCountedOperativeFormationLocation(
+                input.game(), input.playerId(), location)) {
+            boolean actorPresent = objective
+                    .hasCountedOperativeActorAtLocation(
+                    input.game(), input.playerId(), location);
+            boolean companionPresent = objective
+                    .hasCountedOperativeCompanionAtLocation(
+                    input.game(), input.playerId(), location);
+            boolean actorAfter = actorPresent || plannedCards.stream()
+                    .anyMatch(card -> objective
+                    .matchesCountedOperativeFormationActor(
+                    input.game(), input.playerId(), card));
+            boolean companionAfter = companionPresent
+                    || plannedCards.stream().anyMatch(card -> objective
+                    .isCountedOperativeFormationCompanion(
+                    input.game(), input.playerId(), card));
+            return (!actorPresent || !companionPresent)
+                    && actorAfter && companionAfter;
+        }
         for (PhysicalCard card : plannedCards) {
             try {
                 if (objective.wouldCompletePreFlipRequirementAt(

@@ -241,3 +241,17 @@ Evidence: focused `13/0/0/0`; green impacted `311/0/0/0`; inclusive `315/1/0/0` 
 Boundary: create one local commit only. Do not package, push, deploy, restart, or change game state.
 
 Needed: report the resulting local commit hash and worktree status to Alfred.
+
+## 2026-08-12 - Alfred -> Codex campaign lanes - RESOLVED
+
+Topic: Replay-repair source lanes integrated; historical review requests closed.
+
+Decision: The 2026-07-07 objective-playbook architecture threads at 12:27 and 12:40 were superseded by the 14:26 implementation brief. That brief is resolved by the current shared `ObjectiveAnalyzer` and objective-playbook architecture. The 2026-08-12 Batch 1, Batch 3, Batch 4, and both Batch 5D OPEN review requests are also resolved at source level.
+
+Evidence: Batch 1 is `a82c88dd6`, WMAOP boundary tests are `6426d6deb`, Hunt Down Legacy is `9687ad56e`, Batch 3 zero-score telemetry is `fa6655081`, Batch 4 response banking is `468fb6224`, Batch 5D MWYHL flip is `2df65701c`, and Batch 2A exact formation/react ranking is `1768e0977`. Final integration verification added failure-first coverage for an already-complete counted-operative target receiving false mandatory priority and for a loop-blocked MWYHL setup sibling suppressing Flip. Those corrections are recorded in the final integration-verification commit that contains this closure.
+
+Boundary: This resolves source-review and local-integration requests only. No candidate package, deployment, runtime load, semantic-tag firing, controlled game, replay proof, push, or pull request is claimed here. Batch 3 remains deliberately zero-score and behavior HOLD.
+
+Timestamp correction: this mailbox is append-only and parallel lanes did not append chronologically. The `07:55 PT` label on the Batch 4 reachability entry is a clerical timestamp error because Git records that entry in the `07:43:23 PT` source commit. The Batch 3 entry has no reliable minute, so none is invented. The evidence and resolution states, not the displayed append order, are authoritative.
+
+Needed: seal the final integration-verification commit, obtain independent work-verifier PASS on that exact clean commit, then proceed through the pinned offline artifact and no-boot-flip deployment gates.

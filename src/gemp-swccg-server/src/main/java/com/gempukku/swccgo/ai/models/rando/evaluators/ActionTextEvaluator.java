@@ -521,7 +521,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             exactMwyhlFrontFlip
                                     && hasUsefulMwyhlFrontSetupAction(
                                             context, actionSource, cardId,
-                                            actionTexts, cardIds)));
+                                            actionIds, actionTexts, cardIds,
+                                            blocked)));
             if (!objectiveFlip.operations().isEmpty()) {
                 PolicyContributionLedger objectiveFlipLedger =
                         new PolicyContributionLedger(
@@ -5664,14 +5665,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
             DecisionContext context,
             PhysicalCard actionSource,
             String sourceCardId,
+            List<String> actionIds,
             List<String> actionTexts,
-            List<String> sourceCardIds) {
+            List<String> sourceCardIds,
+            Set<String> blockedResponses) {
         if (context == null || context.getGame() == null
                 || context.getGameState() == null
                 || context.getGame().getModifiersQuerying() == null
                 || context.getPlayerId() == null
                 || actionSource == null || sourceCardId == null
-                || actionTexts == null || sourceCardIds == null) {
+                || actionIds == null || actionTexts == null
+                || sourceCardIds == null || blockedResponses == null) {
             return false;
         }
         try {
@@ -5686,10 +5690,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
             }
             Filter deployable = Filters.deployable(
                     liveSource, null, false, 0.0f);
-            int count = Math.min(
-                    actionTexts.size(), sourceCardIds.size());
+            int count = Math.min(actionIds.size(), Math.min(
+                    actionTexts.size(), sourceCardIds.size()));
             for (int i = 0; i < count; i++) {
                 if (!sourceCardId.equals(sourceCardIds.get(i))) {
+                    continue;
+                }
+                if (blockedResponses.contains(actionIds.get(i))
+                        || blockedResponses.contains(actionTexts.get(i))) {
                     continue;
                 }
                 ObjectiveFlipActionPolicy.FrontSetupKind kind =

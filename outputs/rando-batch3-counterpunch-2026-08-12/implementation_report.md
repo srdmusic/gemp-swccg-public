@@ -5,13 +5,15 @@ Branch: `codex/rando-batch3-exact-retention-telemetry`
 Exact base: `6426d6deb463ee19190bcdead5b3bfe2d2d5dff7`
 Worktree: `/Users/steve/gemp-rando-batch3-2026-08-12`
 
+Source and integration commit: `fa66550815f17e1670cc7946b6ba3354d486038a`
+
 ## Result
 
 The Batch 3 candidate implements telemetry plumbing and an executable zero-score boundary. It does not change battle selection.
 
 Both public bots now expose expected friendly and opponent battle destiny from values the predictor already generated. The shared coordinator reuses the one V76 prediction for a named target, reads typed retention telemetry once after V61 and before V27, and applies an empty policy result. Every public retention route is `RAW_PREDICTOR_ONLY` or `UNKNOWN`, with contribution `0`.
 
-No exact-retention penalty, expected-collapse heuristic, positive bonus, engine facts reader, or card-specific inference shipped.
+No exact-retention penalty, expected-collapse heuristic, positive bonus, engine facts reader, or card-specific inference was added.
 
 ## Simplicity checkpoint
 
@@ -66,4 +68,4 @@ Expected predictor means cannot substitute for those facts. Replays DB72184, DB7
 - Server and dependencies compile with tests skipped.
 - `git diff --check` passes.
 
-No package, artifact, deployment, restart, live game, push, PR, engine Java, card Java, objective data, deck, or database change was made. The verification listed above preceded the local commit.
+No package, artifact, deployment, restart, live game, push, PR, engine Java, card Java, objective data, deck, or database change was made. The verification listed above preceded source and integration commit `fa66550815f17e1670cc7946b6ba3354d486038a`.

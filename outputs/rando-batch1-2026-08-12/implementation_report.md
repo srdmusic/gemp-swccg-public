@@ -2,7 +2,7 @@
 
 Date: 2026-08-12 PT
 
-Status: **PRE-COMMIT SOURCE CANDIDATE GO; PACKAGE, DEPLOYMENT, AND LIVE FIRING PENDING**
+Status: **SOURCE COMMITTED AND INTEGRATED; ARTIFACT, DEPLOYMENT, AND LIVE FIRING PENDING**
 
 ## 1. Lineage and rollback seal
 
@@ -10,7 +10,9 @@ Status: **PRE-COMMIT SOURCE CANDIDATE GO; PACKAGE, DEPLOYMENT, AND LIVE FIRING P
 |---|---|
 | Worktree | `/Users/steve/gemp-rando-batch1-2026-08-12` |
 | Branch | `codex/rando-batch1-persistent-response-2026-08-12` |
-| Base and current HEAD | `e877d4b6eb68b02fd25f6bdf90bf9f766662f4f7` |
+| Exact implementation base | `e877d4b6eb68b02fd25f6bdf90bf9f766662f4f7` |
+| Batch 1 source commit | `a82c88dd6` |
+| Integration branch | `codex/rando-replay-repairs-integration-2026-08-12` |
 | Parent | `955962555a94094663c0b58d7177ffef9bae46b5` |
 | Canonical baseline tag | `rando-batch1-baseline-e877d4b6-2026-08-12`, peeled to exact e877 |
 | Additional preserved tag | `codex/rando-batch1-baseline-e877d4b6-2026-08-12`, peeled to exact e877 |
@@ -132,7 +134,9 @@ These two reported rings overlap and must not be summed as unique tests. The fin
 - back stability with Thrawn plus one artwork, then flip-back at zero artwork outside battle; and
 - independent missing-Thrawn flip-back.
 
-No `219_1` card, engine, objective analyzer, or playbook behavior was changed.
+No `219_1` card, engine, objective analyzer, or playbook behavior was changed. The separate WMAOP boundary-test commit `6426d6deb` is integrated after Batch 1 and remains behavior-neutral.
+
+Final integration verification found one false mandatory-objective edge. A counted-operative target is now mandatory only when its actor or companion was missing before the candidate and the exact planned group completes both roles. An already-complete target cannot gain false mandatory priority; missing-actor and missing-companion completion remain eligible. `DeployPlanRankingAdapterParityTest.completedCountedOperativeSiteCannotBecomeFalseMandatory` pins the selector boundary, and `LocalUprisingTwinsObjectiveBehaviorTest` pins the public-bot behavior that exposed it.
 
 ## 5. Proof ceiling and residual risks
 
@@ -149,14 +153,13 @@ No `219_1` card, engine, objective analyzer, or playbook behavior was changed.
 
 Before deployment, rollback is simply the exact e877 source lineage plus the untouched original live jar in the external packet. After any future deployment, rollback must use the hashed `compose.no-boot-flip.yml` override so the server remains non-operational until jar, JVM, log, database, and gameplay-switch checks pass; `shutdown=false` must be last. An ordinary compose restart or `up` is unsafe because the base `boot-flip.sh` automatically reopens gameplay after HTTP becomes available.
 
-The next authorized sequence is:
+The remaining authorized sequence is:
 
-1. Alfred reviews this stabilized diff and documentation.
-2. Create the coherent local Batch 1 commit, without pushing.
-3. Cherry-pick the separate test-only WMAOP boundary commit and rerun its impacted suites.
-4. Build normalized e877 and Batch 1 artifacts with the same pinned image `sha256:3db65087c1a663b264017845ae5f67eef27b6a6aa4259f1c1efdb2dbda649a80`, dedicated cache, read-only root, and final offline package.
-5. Byte-verify candidate changes against the normalized e877 build, and record normalized-e877 versus original-live compiler drift separately.
-6. Complete Alfred review and independent work-verifier PASS before any deployment.
-7. If deployed, collect fresh location-scoped logs and controlled replay evidence for both semantic rule IDs and the exact target identity.
+1. Commit the final integration-verification corrections locally, without pushing.
+2. Obtain an independent work-verifier PASS on that exact clean commit.
+3. Build the normalized e877 and final integration artifacts with the same pinned image `sha256:3db65087c1a663b264017845ae5f67eef27b6a6aa4259f1c1efdb2dbda649a80`, dedicated cache, read-only root, and final offline package.
+4. Byte-verify candidate changes against the normalized e877 build, and record normalized-e877 versus original-live compiler drift separately.
+5. Freeze the hall and deploy only with the sealed no-boot-flip override, then verify exact bytes, fresh JVM, database continuity, HTTP, logs, and settings before reopening.
+6. Collect exact database-paired, location-scoped logs and final-segment replay evidence for the semantic rule IDs and target identity when the required opportunities occur.
 
-Current verdict: **source/test candidate GO for commit review; artifact and live behavior remain HOLD**. No live firing is claimed.
+Current verdict: **source committed and integrated; artifact and live behavior remain HOLD**. No live firing is claimed.

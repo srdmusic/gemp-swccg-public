@@ -2,11 +2,11 @@
 
 Date: 2026-08-12
 
-Status: uncommitted candidate, ready for root review
+Status: source committed and integrated as `468fb6224`; artifact and runtime proof pending
 
 Branch: `codex/rando-batch4-response-bank`
 
-Exact base and HEAD: `6426d6deb463ee19190bcdead5b3bfe2d2d5dff7`
+Exact implementation base: `6426d6deb463ee19190bcdead5b3bfe2d2d5dff7`
 
 ## Outcome
 
@@ -211,6 +211,6 @@ source-owned V59 score clearing after additional activation.
 
 ## Scope and Delivery State
 
-No engine Java, card Java, objective data, decks, database state, packaging, deployment, server restart, push, or PR was touched. No commit has been created. There is no jar, fresh-JVM, live-log, or replay proof for this candidate.
+No engine Java, card Java, objective data, decks, database state, packaging, deployment, server restart, push, or PR was touched. Source commit `468fb6224` is integrated. There is no candidate jar, fresh-JVM, live-log, or replay proof yet.
 
-Revert before commit by discarding only this isolated-worktree diff. After a future coherent commit, revert that commit to return to exact base `6426d6deb463ee19190bcdead5b3bfe2d2d5dff7`.
+Revert `468fb6224` to remove this slice and return its behavior to exact base `6426d6deb463ee19190bcdead5b3bfe2d2d5dff7`.

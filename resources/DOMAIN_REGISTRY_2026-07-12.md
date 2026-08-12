@@ -1,6 +1,6 @@
 # RANDO DOMAIN REGISTRY — 2026-07-12 (phase-reorg BATCH 0)
 
-Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner per domain** is the migration law this document encodes; every later batch keys on it. Objective-XOR is domain-scoped: a rule is owned by EITHER the objective brain (objective-intent, via `ObjectiveAnalyzer.getDeployObjectiveAdjustments()`) OR its phase pipeline — never both.
+Authoritative LIVE V-tag inventory grouped into semantic domains at the frozen 2026-07-13 snapshot. **One owner per domain** is the migration law this document encodes; every later batch keys on it. Objective-XOR is domain-scoped: a rule is owned by EITHER the objective brain (objective-intent, via `ObjectiveAnalyzer.getDeployObjectiveAdjustments()`) OR its phase pipeline, never both. The post-snapshot candidate-owner amendment below is authoritative for the named integration branch but is not folded into the historical 367-arm count until packaged and runtime identity are proved.
 
 - Built at HEAD `5ab16f8ac` (2026-07-12, batch-1 hotfixes included). Branch `rando-consolidation-2026-06-23`.
 - **AMENDED 2026-07-13** (gate `5e290559c`; evidence `Handoffs/CODEX_DOMAIN_REGISTRY_GATE_5E290559C_2026-07-13.md` + arm enumeration `Handoffs/CODEX_DOMAIN_REGISTRY_AMBIGUITY_RESOLUTION_2026-07-13.md`): the 13 ex-AMBIG summary rows are split into **21 exact arms** (authority table §5); V172 solo-dominance corrected to its live **+600** score; FS-enforcement re-homed solo-formation → loop-safety (generic constraint infrastructure, not formation-owned); §1/§2/§4/§7 tables and counts regenerated from the post-split inventory. All 21 arms re-verified against the live tree at HEAD `5240f36c6`: markers `grep -cF` counted per bot file, magnitudes read from the live `addReasoning`/`hardVeto` calls, no enclosing `if (false` on any arm, both bots checked.
@@ -11,6 +11,18 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 - **Anchor semantics**: `FILE:line` = first live occurrence of the base tag in that file at HEAD (block may start at a nearby comment); multi-arm tags share the base-tag anchor — grep the arm's log string for the exact block. Manifest 07-06 line refs inside Trigger text have drifted; re-grep before moving code.
 - File abbrevs: ATE=ActionTextEvaluator CSE=CardSelectionEvaluator DE=DeployEvaluator ME=MoveEvaluator BE=BattleEvaluator DrE=DrawEvaluator PE=PassEvaluator FAE=ForceActivationEvaluator CE=CombinedEvaluator DPP=DeployPhasePlanner DPS=DeployPhaseScript OA=bot-local ObjectiveAnalyzer facade SS=ShieldStrategy DO=DeckOracle SC=StrategyController AA=ActionAudit RCA=RandoCalAi DC=DecisionContext DSf=DecisionSafety / shared common: cOA=ObjectiveAnalyzer CDSE=CharacterDeploySiteEvaluator FS=FormationSafety FRS=ForceReserveService MF=MaintenanceFacts MP=MovePredicates ShF=ShieldFacts ShP=ShieldPolicy. The file IS the decision route (ATE=text-ranked top-level, CSE=card-selection prompts, DE=deploy scoring, ME=move destinations, BE=initiation, CE=merge/select).
 - Every rando evaluator has a **chosenone mirror**; `common/strategy` files are SHARED (no mirror drift). "Both bots" applies to every row unless noted.
+
+## 2026-08-12 post-snapshot candidate-owner amendment
+
+These five semantic operations are source-reachable on `codex/rando-replay-repairs-integration-2026-08-12`. They are registered separately so the historical 2026-07-13 census remains reproducible. Do not label them LIVE or revise the global arm totals until the exact candidate artifact is packaged, loaded in a fresh JVM, and verified. A future full registry regeneration must reconcile all post-snapshot work rather than assuming the total is simply 367 plus five.
+
+| Semantic owner | Domain | KIND | Magnitude / control | Source owner | Exact boundary | Status |
+|---|---|---|---|---|---|---|
+| `deploy-persistent-response-selected` | deploy-siting | BANDED | ADD `+300` | `PersistentResponsePolicy` | Exact selected member of a current persistent paid-drain response wave; V166 suppresses its overlapping contribution | SOURCE_REACHABLE; package/runtime proof pending |
+| `deploy-objective-critical-eviction-selected` | deploy-siting | BANDED | ADD `+250` | `PersistentResponsePolicy` | Exact selected response member at a currently typed objective-critical target | SOURCE_REACHABLE; package/runtime proof pending |
+| `deploy-plan-ranking-isolated-packet` | deploy-sequencing | ORDERING | ADD `-150` once per target | `DeployPlanRankingPolicy` | Empty target with a positive future drain and one proved public immediate react at least twice the complete post-deploy power; narrow objective/Spy waivers only | SOURCE_REACHABLE; package/runtime proof pending |
+| `V182-response-bank` | draw-count | VETO-class | ADD `-300`, then policy return | `DrawPhasePolicy` | Exact current non-mandatory response funding only; full live revalidation and Piett bypass | SOURCE_REACHABLE; package/runtime proof pending |
+| `OBJECTIVE.MWYHL.FLIP` | objective-intent | BANDED | ADD `+600`, then adapter return | `ObjectiveFlipActionPolicy` | Exact owned in-play unflipped `225_53` front; only an unblocked useful paid front-only setup suppresses | SOURCE_REACHABLE; package/runtime proof pending |
 
 ## 1. Domain overview
 

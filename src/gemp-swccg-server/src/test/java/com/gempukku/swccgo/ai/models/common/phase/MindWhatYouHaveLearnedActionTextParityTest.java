@@ -12,6 +12,7 @@ import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -114,6 +115,40 @@ public class MindWhatYouHaveLearnedActionTextParityTest {
                 ObjectiveFlipActionPolicy.MWYHL_FLIP_RULE_ID));
         assertTrue(rando.get(1).getScore() >= 100.0f);
         assertTrue(rando.get(1).getScore() > rando.get(0).getScore());
+    }
+
+    @Test
+    public void blockedUsefulSetupCannotSuppressFlipForEitherBot() {
+        GameState gameState = gameState();
+        PhysicalCard objective = objective(
+                PLAYER_ID, "225_53", Zone.SIDE_OF_TABLE, false);
+        when(gameState.findCardById(53)).thenReturn(objective);
+        SwccgGame game = gameWithDeployableReserve(
+                gameState, objective,
+                List.of(effect("Wise Advice")), true);
+        List<String> actionTexts = List.of(
+                "Flip", "Deploy Effect from Reserve Deck");
+        List<String> sourceIds = List.of("53", "53");
+        var randoContext = randoContext(
+                gameState, game, actionTexts, sourceIds);
+        var chosenContext = chosenContext(
+                gameState, game, actionTexts, sourceIds);
+        randoContext.setBlockedResponses(Set.of("setup"));
+        chosenContext.setBlockedResponses(Set.of("setup"));
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators
+                .ActionTextEvaluator().evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                .ActionTextEvaluator().evaluate(chosenContext);
+
+        assertEquals(600.0f, rando.get(0).getScore(), 0.0f);
+        assertEquals(rando.get(0).getScore(), chosen.get(0).getScore(), 0.0f);
+        assertEquals(rando.get(0).getReasoning(),
+                chosen.get(0).getReasoning());
+        assertTrue(rando.get(0).getReasoning().toString().contains(
+                ObjectiveFlipActionPolicy.MWYHL_FLIP_RULE_ID));
+        assertTrue(rando.get(1).getScore() < -100.0f);
+        assertEquals(rando.get(1).getScore(), chosen.get(1).getScore(), 0.0f);
     }
 
     @Test

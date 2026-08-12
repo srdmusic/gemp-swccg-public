@@ -1292,6 +1292,76 @@ public class DeployPlanRankingAdapterParityTest {
     }
 
     @Test
+    public void completedCountedOperativeSiteCannotBecomeFalseMandatory() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard site = locationCard(
+                "7_121", "Counted operative site", 500,
+                CardSubtype.SITE);
+        PhysicalCard companion = character(
+                "1_19", "Formation companion", 20, 3, 4, 2);
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getCurrentPlayerId()).thenReturn("player");
+        when(gameState.getCurrentPhase()).thenReturn(Phase.DEPLOY);
+        when(gameState.getOpponent("player")).thenReturn("opponent");
+        when(gameState.getHand("player")).thenReturn(List.of(companion));
+        when(modifiers.isDeployableToTarget(
+                any(), any(), any(), anyBoolean(), any(), anyBoolean(),
+                anyFloat(), any(), any(), any(), any(), any(), any(),
+                anyBoolean(), anyFloat())).thenReturn(true);
+        when(modifiers.getDeployCost(
+                gameState, companion, companion, site,
+                false, null, false, 0.0f, null, true))
+                .thenReturn(2.0f);
+
+        var analyzer = mock(
+                com.gempukku.swccgo.ai.models.common.strategy
+                        .ObjectiveAnalyzer.class);
+        when(analyzer.isAnalyzed()).thenReturn(true);
+        when(analyzer.isFlipped()).thenReturn(false);
+        when(analyzer.isMissingPreFlipRequirementAt(
+                game, "player", site)).thenReturn(true);
+        when(analyzer.hasCountedOperativeFormationRule())
+                .thenReturn(true);
+        when(analyzer.isCountedOperativeFormationLocation(
+                game, "player", site)).thenReturn(true);
+        when(analyzer.hasCountedOperativeActorAtLocation(
+                game, "player", site)).thenReturn(true);
+        when(analyzer.hasCountedOperativeCompanionAtLocation(
+                game, "player", site)).thenReturn(true);
+        when(analyzer.isCountedOperativeFormationCompanion(
+                game, "player", companion)).thenReturn(true);
+
+        var plan = new PersistentResponsePlanAdapter.PlanView<>(
+                "ordinary-complete-site", "ground_establish", "establish",
+                List.of(new PersistentResponsePlanAdapter.InstructionView(
+                        20, 1020, "500", 1)));
+        AiBoardAnalyzer.LocationAnalysis siteFacts =
+                new AiBoardAnalyzer.LocationAnalysis(
+                        site, 3.0f, 0.0f, 4.0f, 0.0f,
+                        1, 1, 1, 0,
+                        AiBoardAnalyzer.ContestStatus.WINNING, true);
+        var input = new PersistentResponsePlanAdapter.Input<>(
+                game, "player", analyzer,
+                PersistentResponsePolicy.Snapshot.empty(),
+                List.of(siteFacts), 5, 5, List.of(plan));
+
+        assertTrue("An already-complete counted site must leave legacy plan "
+                        + "ranking in control",
+                PersistentResponsePlanAdapter.select(input).isEmpty());
+
+        when(analyzer.hasCountedOperativeCompanionAtLocation(
+                game, "player", site)).thenReturn(false);
+        var requiredCompanion = PersistentResponsePlanAdapter.select(input)
+                .orElseThrow();
+        assertEquals("ordinary-complete-site", requiredCompanion.source());
+        assertEquals("funded-mandatory-objective",
+                requiredCompanion.obligation().reasonCode());
+    }
+
+    @Test
     public void sharedAdapterMapsV170FormationToSpyMode() {
         AiBoardAnalyzer.LocationAnalysis target =
                 location("Persistent lane", 3.0f, 0, 1);

@@ -2,7 +2,7 @@
 
 Date: 2026-08-12 PT
 
-Status: **LEAD-APPROVED SOURCE CANDIDATE; LOCAL COHERENT COMMIT AUTHORIZED; ARTIFACT AND LIVE BEHAVIOR PENDING**
+Status: **SOURCE COMMITTED AND INTEGRATED; ARTIFACT AND LIVE BEHAVIOR PENDING**
 
 ## 1. Lineage and scope
 
@@ -10,7 +10,9 @@ Status: **LEAD-APPROVED SOURCE CANDIDATE; LOCAL COHERENT COMMIT AUTHORIZED; ARTI
 |---|---|
 | Worktree | `/Users/steve/gemp-rando-batch5-mwyhl-flip-2026-08-12` |
 | Branch | `codex/rando-batch5-mwyhl-flip` |
-| Exact integration base and pre-commit HEAD | `fa66550815f17e1670cc7946b6ba3354d486038a` |
+| Exact implementation base | `fa66550815f17e1670cc7946b6ba3354d486038a` |
+| Isolated source commit | `0342f6078a007ce9503612372c75b7e470273019` |
+| Integration commit | `2df65701c` |
 | Research input | `/Users/steve/gemp-swccg-public/outputs/rando-batch5-light-doctrine-2026-08-12/research_packet.md` |
 | Implemented slice | Batch 5D only, exact Mind What You Have Learned (V) flip |
 
@@ -82,10 +84,10 @@ The rule cannot override a loop hard veto because loop safety executes first and
 
 Failure-first evidence: the three requested tests were written before production. Their first compile failed because `ObjectiveFlipActionPolicy` did not exist.
 
-Focused result: **13 passed, 0 failures, 0 errors, 0 skipped**.
+Focused result after the final blocked-sibling regression: **14 passed, 0 failures, 0 errors, 0 skipped**.
 
 - policy exact positive, negative, front-setup classification, and Bespin exclusion cases: 5
-- live mirrored ActionText adapter decisions, including useful, absent, unaffordable, wrong-source, and Bespin boundaries: 6
+- live mirrored ActionText adapter decisions, including useful, blocked, absent, unaffordable, wrong-source, and Bespin boundaries: 7
 - source ownership, ordering, purity, and normalized full-file parity: 2
 
 Impacted green ring:
@@ -99,7 +101,7 @@ excluding the known baseline DeployActionTextSourceParityTest failure
 
 Result: **311 passed, 0 failures, 0 errors, 0 skipped**.
 
-The first inclusive impacted run exposed null blueprint handling in unrelated action-source mocks. Both adapters were corrected before normalization. Parent review then exposed two further risks: offered text did not prove a usable setup target, and the first adapter shape scanned Reserve for every action. The final reader requires an exact matching currently deployable paid card and is called only for an exact qualified Flip. The final inclusive run passed 315 of 316 tests. Its sole failure was `DeployActionTextSourceParityTest.deployParentAndDestinationAdaptersHaveNoHiddenScores`. Running that exact five-test suite in the untouched integration worktree at `fa6655081` produced the same one failure, proving it is a pre-existing baseline condition.
+The first inclusive impacted run exposed null blueprint handling in unrelated action-source mocks. Both adapters were corrected before normalization. Parent review then exposed two further risks: offered text did not prove a usable setup target, and the first adapter shape scanned Reserve for every action. The final reader requires an exact matching currently deployable paid card and is called only for an exact qualified Flip. Final integration verification found one more ordering edge: a useful setup sibling already blocked by loop prevention was still suppressing Flip. A setup sibling now suppresses only when neither its exact action ID nor its action text is in `blockedResponses`; the blocked sibling keeps its existing loop veto and cannot strand Flip. `MindWhatYouHaveLearnedActionTextParityTest.blockedUsefulSetupCannotSuppressFlipForEitherBot` pins both mirrors. The amended five-class integration correction ring passed `80/0/0/0`. The original inclusive run passed 315 of 316 tests. Its sole failure was `DeployActionTextSourceParityTest.deployParentAndDestinationAdaptersHaveNoHiddenScores`. Running that exact five-test suite in the untouched integration worktree at `fa6655081` produced the same one failure, proving it is a pre-existing baseline condition.
 
 Additional checks:
 
@@ -114,6 +116,6 @@ Host Maven used Homebrew JDK 25 for this source/test gate. The lead's final inte
 
 This candidate proves pure policy output and mirrored adapter selection. It does not yet prove native card execution, packaged class bytes, a loaded JVM, semantic-tag firing, or final-segment replay behavior.
 
-The lead reviewed the exact diff and authorized one coherent local Batch 5D commit containing this report. Its hash is reported separately after creation so the report does not attempt to embed its own changing object ID. Revert that one commit to remove this slice. If it reaches a future combined deployment, the lead must use the already-sealed e877 rollback packet and no-boot-flip procedure documented by Gate 0.
+The lead-reviewed source was committed as `0342f6078a007ce9503612372c75b7e470273019` and integrated as `2df65701c`. The blocked-sibling ordering correction is recorded in the final integration-verification commit containing this amended report. Revert `2df65701c` plus that correction to remove this slice. If it reaches the combined deployment, use the already-sealed e877 rollback packet and no-boot-flip procedure documented by Gate 0.
 
-Current verdict: **Batch 5D source and tests passed Alfred review. Local commit is authorized. Package, deployment, and live behavior remain pending.**
+Current verdict: **Batch 5D source is committed and integrated. Package, deployment, and live behavior remain pending.**
