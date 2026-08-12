@@ -25,12 +25,26 @@ public class DeployPlanRankingSourceOwnershipTest {
         String[] retained = {
                 "if (plan == null || plan.getInstructions().isEmpty())",
                 "Map<String, Integer> powerByLocation = new HashMap<>()",
-                "Map<String, Integer> abilityByLocation = new HashMap<>()",
+                "Map<String, Float> abilityByLocation = new HashMap<>()",
                 "for (DeploymentInstruction inst : plan.getInstructions())",
-                "if (ability == 0)",
-                "ability = Math.min(inst.getPowerContribution(), 3)",
+                "inst.getAbilityContribution(), Float::sum",
                 "for (Map.Entry<String, Integer> entry : powerByLocation.entrySet())",
                 "for (AiBoardAnalyzer.LocationAnalysis loc : locations)",
+                "float postOurPower = targetLoc.ourPower + plannedPower",
+                "float postOurAbility = targetLoc.ourAbility + plannedAbility",
+                "targetLoc.theirCardCount == 0",
+                "PublicImmediateReactAnalyzer.analyze(",
+                "EndorOperationsTacticalPolicy.isBunkerGarrisonPlan(",
+                "hasPlannedSpyAtTarget(plan, locId)",
+                "card.getBlueprint().hasKeyword(Keyword.SPY)",
+                "inst.setAbilityContribution(\n            instructionAbilityContribution(card))",
+                "shipInstruction.setAbilityContribution(\n                instructionAbilityContribution(best.ship.card))",
+                "pilotInstruction.setAbilityContribution(\n                    instructionAbilityContribution(best.pilot.card))",
+                "shipAbility + pilotAbility",
+                "boolean includePermanentPilots = category == CardCategory.STARSHIP",
+                "|| category == CardCategory.VEHICLE",
+                "float ability = exactAbility(card, includePermanentPilots)",
+                "Float.isFinite(ability) && ability > 0.0f",
                 ".isObjectiveRelevantLocation(\n                                targetLoc.location, currentGame,",
                 ".getLocationObjectiveBonus(\n                                    targetLoc.location, currentGame,",
                 "LOG.warn(\"V22 PLAN SCORE: {} is objective-relevant, +{} to plan score\", locTitle, objBonus);",
@@ -52,6 +66,7 @@ public class DeployPlanRankingSourceOwnershipTest {
                 "score -= 20 + (ourPower * 2)",
                 "float establishBonus = 40",
                 "establishBonus -= 500",
+                "ability = Math.min(inst.getPowerContribution(), 3)",
                 "scorePlan(executorPlan, allLocations, turn) + 200.0f"};
         String[] internalReasons = {
                 "Base power value",
@@ -102,6 +117,40 @@ public class DeployPlanRankingSourceOwnershipTest {
         assertFalse(applySide.contains("deploy-plan-ranking"));
     }
 
+    @Test
+    public void publicReactReaderUsesOnlyExactPublicExecutableEvidence()
+            throws IOException {
+        String reader = commonStrategySource(
+                "PublicImmediateReactAnalyzer.java");
+        for (String required : new String[]{
+                "AiBoardAnalyzer.getCardCountAtLocation(",
+                "getForceDrainAmount(",
+                "isProhibitedFromForceDrainingAtLocation(",
+                "ModifierType.MAY_NOT_REACT",
+                "ModifierType.MAY_NOT_REACT_TO_LOCATION",
+                "ModifierType.MAY_MOVE_AS_REACT_TO_LOCATION",
+                "ModifierType.MAY_MOVE_OTHER_CARD_AS_REACT_TO_LOCATION",
+                "Filters.sameCardId(target)",
+                "getMoveUsingLandspeedAction(",
+                "getMoveUsingHyperspeedAction(",
+                "getMoveWithoutUsingHyperspeedAction(",
+                "getMoveUsingSectorMovementAction(",
+                "getLandAction(",
+                "getTakeOffAction(",
+                "getEnterStarshipOrVehicleSiteAction(",
+                "getExitStarshipOrVehicleSiteAction(",
+                "FormationSafety.weaponBonusOf(",
+                "Float.isFinite(effectivePower)"}) {
+            assertTrue(required, reader.contains(required));
+        }
+        for (String forbidden : new String[]{
+                "getMoveAsReactAction(", "getMoveAsReactOption(",
+                "getHand(", "getReserveDeck(", "getUsedPile(",
+                "setBattleOrForceDrainLocation", "mayForceDrain("}) {
+            assertFalse(forbidden, reader.contains(forbidden));
+        }
+    }
+
     private static String plannerSource(String bot) throws IOException {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models")
@@ -111,6 +160,12 @@ public class DeployPlanRankingSourceOwnershipTest {
     private static String commonPhaseSource(String file) throws IOException {
         return Files.readString(mainJavaRoot().resolve(
                 "com/gempukku/swccgo/ai/models/common/phase").resolve(file));
+    }
+
+    private static String commonStrategySource(String file) throws IOException {
+        return Files.readString(mainJavaRoot().resolve(
+                "com/gempukku/swccgo/ai/models/common/strategy")
+                .resolve(file));
     }
 
     private static Path mainJavaRoot() {

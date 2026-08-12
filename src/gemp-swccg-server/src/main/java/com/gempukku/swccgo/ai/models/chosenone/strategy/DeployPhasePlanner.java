@@ -7,10 +7,12 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
 import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.strategy.PublicImmediateReactAnalyzer;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.ai.models.chosenone.RandoLogger;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
@@ -1637,7 +1639,8 @@ public class DeployPhasePlanner {
                     continue;
                 }
                 EndorSystemPackage candidate = new EndorSystemPackage(
-                        ship, pilot, pairCost, pilotAbility,
+                        ship, pilot, pairCost,
+                        shipAbility + pilotAbility,
                         ship.power + pilot.power);
                 if (isBetterEndorSystemPackage(candidate, best)) {
                     best = candidate;
@@ -1654,7 +1657,7 @@ public class DeployPhasePlanner {
                 plan.getInstructions().get(plan.getInstructions().size() - 1);
         shipInstruction.setDeployCost(best.cost);
         shipInstruction.setAbilityContribution(
-                (int) Math.ceil(best.combinedAbility));
+                instructionAbilityContribution(best.ship.card));
         if (best.pilot != null) {
             shipInstruction.setVerifiedCrewPackage(true);
             addCardToPlan(plan, best.pilot.card, endor, 2,
@@ -1662,6 +1665,8 @@ public class DeployPhasePlanner {
             DeploymentInstruction pilotInstruction =
                     plan.getInstructions().get(plan.getInstructions().size() - 1);
             pilotInstruction.setDeployCost(0);
+            pilotInstruction.setAbilityContribution(
+                    instructionAbilityContribution(best.pilot.card));
             pilotInstruction.setAboardShipName(best.ship.name);
             pilotInstruction.setAboardShipBlueprintId(best.ship.blueprintId);
             pilotInstruction.setAboardShipCardId(
@@ -2560,6 +2565,8 @@ public class DeployPhasePlanner {
                 inst.setCardCurrentCardId(bestPilot.card.getCardId());
                 inst.setDeployCost(bestPilot.cost);
                 inst.setPowerContribution(bestPilot.power);
+                inst.setAbilityContribution(
+                    instructionAbilityContribution(bestPilot.card));
                 plan.addInstruction(inst);
 
                 remaining -= bestPilot.cost;
@@ -2645,7 +2652,7 @@ public class DeployPhasePlanner {
 
         List<DeployPlanRankingPolicy.InstructionFacts> instructionFacts = new ArrayList<>();
         Map<String, Integer> powerByLocation = new HashMap<>();
-        Map<String, Integer> abilityByLocation = new HashMap<>();
+        Map<String, Float> abilityByLocation = new HashMap<>();
 
         int instructionIndex = 0;
         for (DeploymentInstruction inst : plan.getInstructions()) {
@@ -2655,17 +2662,8 @@ public class DeployPhasePlanner {
             // Track by location
             if (inst.getTargetLocationId() != null) {
                 powerByLocation.merge(inst.getTargetLocationId(), inst.getPowerContribution(), Integer::sum);
-
-                // V32: Use actual ability contribution instead of estimating from power.
-                // Previous code used MIN(power, 4) which is wrong — a character with
-                // power 7 and ability 1 would be estimated as ability 4, causing the
-                // planner to think it reached the battle destiny threshold when it didn't.
-                int ability = inst.getAbilityContribution();
-                if (ability == 0) {
-                    // Fallback: if ability wasn't set, use conservative estimate
-                    ability = Math.min(inst.getPowerContribution(), 3);
-                }
-                abilityByLocation.merge(inst.getTargetLocationId(), ability, Integer::sum);
+                abilityByLocation.merge(inst.getTargetLocationId(),
+                    inst.getAbilityContribution(), Float::sum);
             }
         }
 
@@ -2674,8 +2672,9 @@ public class DeployPhasePlanner {
         int locationIndex = 0;
         for (Map.Entry<String, Integer> entry : powerByLocation.entrySet()) {
             String locId = entry.getKey();
-            int ourPower = entry.getValue();
-            int ourAbility = abilityByLocation.getOrDefault(locId, 0);
+            int plannedPower = entry.getValue();
+            float plannedAbility = abilityByLocation.getOrDefault(
+                locId, 0.0f);
 
             // Find location
             AiBoardAnalyzer.LocationAnalysis targetLoc = null;
@@ -2687,6 +2686,9 @@ public class DeployPhasePlanner {
             }
 
             if (targetLoc == null) continue;
+
+            float postOurPower = targetLoc.ourPower + plannedPower;
+            float postOurAbility = targetLoc.ourAbility + plannedAbility;
 
             // V22: Objective-relevant location bonus for plan scoring
             boolean objectiveRelevant = false;
@@ -2707,10 +2709,35 @@ public class DeployPhasePlanner {
                 }
             }
 
+            boolean formationPenaltyExempt =
+                isObjectiveFlipGateFormationPlan(plan)
+                || EndorOperationsTacticalPolicy.isBunkerGarrisonPlan(
+                    plan.getReason())
+                || hasPlannedSpyAtTarget(plan, locId);
+            boolean triggerKnowable = false;
+            boolean exposureProven = false;
+            float strongestReactPower = 0.0f;
+            if (targetLoc.theirCardCount == 0
+                    && !formationPenaltyExempt
+                    && currentGame != null
+                    && currentPlayerId != null) {
+                PublicImmediateReactAnalyzer.Exposure exposure =
+                    PublicImmediateReactAnalyzer.analyze(
+                        currentGame, currentPlayerId,
+                        targetLoc.location, true);
+                triggerKnowable = exposure.triggerKnowable();
+                exposureProven = exposure.exposureProven();
+                strongestReactPower =
+                    exposure.strongestMoverEffectivePower();
+            }
+
             locationFacts.add(new DeployPlanRankingPolicy.LocationFacts(
-                "location-" + locationIndex++, ourPower, ourAbility,
-                targetLoc.theirPower, targetLoc.ourForceIcons,
-                targetLoc.theirForceIcons, objectiveRelevant, objectiveBonus));
+                "location-" + locationIndex++, postOurPower,
+                postOurAbility, targetLoc.theirPower,
+                targetLoc.ourForceIcons, targetLoc.theirForceIcons,
+                targetLoc.theirCardCount, objectiveRelevant, objectiveBonus,
+                triggerKnowable, exposureProven, strongestReactPower,
+                formationPenaltyExempt));
         }
 
         return DeployPlanRankingPolicy.apply(0.0f,
@@ -2748,6 +2775,32 @@ public class DeployPhasePlanner {
                     "V297 objective flip-gate formation")
                 || plan.getReason().startsWith(
                     "Objective counted-operative formations"));
+    }
+
+    private boolean hasPlannedSpyAtTarget(
+            DeploymentPlan plan, String targetLocationId) {
+        if (plan == null || targetLocationId == null
+                || currentGame == null
+                || currentGame.getGameState() == null) {
+            return false;
+        }
+        for (DeploymentInstruction instruction : plan.getInstructions()) {
+            if (!targetLocationId.equals(instruction.getTargetLocationId())
+                    || instruction.getCardCurrentCardId() == null) {
+                continue;
+            }
+            try {
+                PhysicalCard card = currentGame.getGameState().findCardById(
+                    instruction.getCardCurrentCardId());
+                if (card != null && card.getBlueprint() != null
+                        && card.getBlueprint().hasKeyword(Keyword.SPY)) {
+                    return true;
+                }
+            } catch (RuntimeException e) {
+                return false;
+            }
+        }
+        return false;
     }
 
     /**
@@ -2840,7 +2893,21 @@ public class DeployPhasePlanner {
         inst.setCardCurrentCardId(card.getCardId());
         inst.setDeployCost(cost);
         inst.setPowerContribution(power);
+        inst.setAbilityContribution(
+            instructionAbilityContribution(card));
         plan.addInstruction(inst);
+    }
+
+    private float instructionAbilityContribution(PhysicalCard card) {
+        if (card == null || card.getBlueprint() == null) {
+            return 0;
+        }
+        CardCategory category = card.getBlueprint().getCardCategory();
+        boolean includePermanentPilots = category == CardCategory.STARSHIP
+            || category == CardCategory.VEHICLE;
+        float ability = exactAbility(card, includePermanentPilots);
+        return Float.isFinite(ability) && ability > 0.0f
+            ? ability : 0.0f;
     }
 
     private CardInfo findCardInfo(List<CardInfo> cards, PhysicalCard card) {

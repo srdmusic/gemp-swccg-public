@@ -16,7 +16,7 @@ public class DeploymentInstruction {
     private String reason;
     private int powerContribution = 0;
     private int deployCost = 0;
-    private int abilityContribution = 0;   // For battle destiny eligibility
+    private float abilityContribution = 0; // For battle destiny eligibility
 
     // Backup target if primary is unavailable
     private String backupLocationId;
@@ -105,8 +105,8 @@ public class DeploymentInstruction {
     public int getDeployCost() { return deployCost; }
     public void setDeployCost(int deployCost) { this.deployCost = deployCost; }
 
-    public int getAbilityContribution() { return abilityContribution; }
-    public void setAbilityContribution(int abilityContribution) { this.abilityContribution = abilityContribution; }
+    public float getAbilityContribution() { return abilityContribution; }
+    public void setAbilityContribution(float abilityContribution) { this.abilityContribution = abilityContribution; }
 
     public String getBackupLocationId() { return backupLocationId; }
     public void setBackupLocationId(String backupLocationId) { this.backupLocationId = backupLocationId; }

@@ -174,6 +174,9 @@ public class EndorOperationsEndorSystemPlannerTest {
                     invokeString(instructions.get(0), "getTargetLocationName"));
             assertEquals(bot.name(), 3,
                     invokeInt(instructions.get(0), "getDeployCost"));
+            assertEquals(bot.name(), 1.0f,
+                    invokeFloat(instructions.get(0),
+                            "getAbilityContribution"), 0.0f);
 
             Object shortForce = invokeEopPlan(
                     harness, List.of(shipInfo), Collections.emptyList(), 2);
@@ -221,6 +224,14 @@ public class EndorOperationsEndorSystemPlannerTest {
                     invokeString(instructions.get(1), "getCardBlueprintId"));
             assertEquals(bot.name(), String.valueOf(EXTERNAL_PILOT_SHIP_ID),
                     invokeString(instructions.get(1), "getAboardShipCardId"));
+            float shipAbility = invokeFloat(instructions.get(0),
+                    "getAbilityContribution");
+            float pilotAbility = invokeFloat(instructions.get(1),
+                    "getAbilityContribution");
+            assertEquals(bot.name(), 0.0f, shipAbility, 0.0f);
+            assertEquals(bot.name(), 2.0f, pilotAbility, 0.0f);
+            assertEquals(bot.name(), 2.0f,
+                    shipAbility + pilotAbility, 0.0f);
 
             Object noPackage = invokeEopPlan(
                     harness,
@@ -237,6 +248,39 @@ public class EndorOperationsEndorSystemPlannerTest {
             assertTrue(bot.name(),
                     groundEstablishCardNames(groundPlans)
                             .contains("Admiral Ozzel"));
+        }
+    }
+
+    @Test
+    public void permanentPilotShipAndExternalPilotOwnAbilityOnceEach()
+            throws Exception {
+        for (Bot bot : Bot.values()) {
+            Harness harness = harness(bot);
+            Object shipInfo = harness.cardInfo(
+                    SELF_PILOTED_SHIP_BP, SELF_PILOTED_SHIP_ID);
+            Object pilotInfo = harness.cardInfo(
+                    ALTERNATE_PILOT_BP, ALTERNATE_PILOT_ID);
+            PhysicalCard ship = physicalCard(shipInfo);
+            PhysicalCard pilot = physicalCard(pilotInfo);
+            harness.setAbility(ship, true, 1.0f);
+            harness.setAbility(pilot, false, 2.0f);
+            harness.setDeployCost(
+                    ship, harness.endor.location, 6.0f);
+            harness.setPairCost(
+                    ship, pilot, harness.endor.location, 5.0f);
+
+            Object funded = invokeEopPlan(
+                    harness, List.of(shipInfo), List.of(pilotInfo), 5);
+            List<?> instructions = instructions(funded);
+            assertEquals(bot.name(), 2, instructions.size());
+            float shipAbility = invokeFloat(instructions.get(0),
+                    "getAbilityContribution");
+            float pilotAbility = invokeFloat(instructions.get(1),
+                    "getAbilityContribution");
+            assertEquals(bot.name(), 1.0f, shipAbility, 0.0f);
+            assertEquals(bot.name(), 2.0f, pilotAbility, 0.0f);
+            assertEquals(bot.name(), 3.0f,
+                    shipAbility + pilotAbility, 0.0f);
         }
     }
 
@@ -469,6 +513,13 @@ public class EndorOperationsEndorSystemPlannerTest {
     private static int invokeInt(Object target, String methodName)
             throws Exception {
         return (Integer) target.getClass()
+                .getMethod(methodName)
+                .invoke(target);
+    }
+
+    private static float invokeFloat(Object target, String methodName)
+            throws Exception {
+        return (Float) target.getClass()
                 .getMethod(methodName)
                 .invoke(target);
     }

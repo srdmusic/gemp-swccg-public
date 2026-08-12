@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
+import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Icon;
@@ -12,6 +13,8 @@ import com.gempukku.swccgo.game.PhysicalCardVisitor;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.framework.StartingSetup;
+import com.gempukku.swccgo.framework.VirtualTableScenario;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import org.junit.Test;
 
@@ -19,6 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,7 +77,7 @@ public class DeployPlanRankingAdapterParityTest {
     }
 
     @Test
-    public void v32FallbackRemainsPerInstructionBeforeAggregation()
+    public void zeroAbilityNoLongerFallsBackToEstimatedPower()
             throws Exception {
         var randoPlan = randoPlan(
                 randoInstruction(String.valueOf(LOCATION_ID), 2, 0),
@@ -87,8 +91,158 @@ public class DeployPlanRankingAdapterParityTest {
         float rando = scoreRando(newRandoPlanner(), randoPlan, locations);
         float chosen = scoreChosen(newChosenPlanner(), chosenPlan, locations);
 
-        assertBits(38.0f, rando);
+        assertBits(-15.0f, rando);
         assertBits(rando, chosen);
+    }
+
+    @Test
+    public void bothBotsUseEngineAbilityForCharactersAndPermanentPilots()
+            throws Exception {
+        VirtualTableScenario scn = new VirtualTableScenario(
+                new HashMap<>(),
+                new HashMap<>() {{
+                    put("character", "1_174");
+                    put("vehicle", "202_15");
+                    put("starship", "202_13");
+                    put("fractional", "7_312");
+                    put("unpiloted-vehicle", "8_169");
+                    put("unpiloted-starship", "1_306");
+                }},
+                10, 10,
+                StartingSetup.DefaultLSGroundLocation,
+                StartingSetup.DefaultDSGroundLocation,
+                StartingSetup.NoLSStartingInterrupts,
+                StartingSetup.NoDSStartingInterrupts,
+                StartingSetup.NoLSShields,
+                StartingSetup.NoDSShields,
+                VirtualTableScenario.Open);
+        scn.StartGame();
+        var target = AiBoardAnalyzer.analyzeLocation(
+                scn.game(), "Dark Side Player", "Light Side Player",
+                scn.GetDSStartingLocation(), Side.DARK);
+        List<PhysicalCard> cards = List.of(
+                scn.GetDSCard("character"),
+                scn.GetDSCard("vehicle"),
+                scn.GetDSCard("starship"),
+                scn.GetDSCard("fractional"),
+                scn.GetDSCard("unpiloted-vehicle"),
+                scn.GetDSCard("unpiloted-starship"));
+
+        var randoPlanner = newRandoPlanner();
+        configurePlannerState(
+                randoPlanner, scn.game(), "Dark Side Player");
+        var randoPlan = randoPlan();
+        for (PhysicalCard card : cards) {
+            addCardToPlan(randoPlanner, randoPlan, card, target);
+        }
+
+        var chosenPlanner = newChosenPlanner();
+        configurePlannerState(
+                chosenPlanner, scn.game(), "Dark Side Player");
+        var chosenPlan = chosenPlan();
+        for (PhysicalCard card : cards) {
+            addCardToPlan(chosenPlanner, chosenPlan, card, target);
+        }
+
+        List<Float> expected = List.of(
+                2.0f, 2.0f, 2.0f, 0.25f, 0.0f, 0.0f);
+        assertEquals(expected, randoPlan.getInstructions().stream()
+                .map(instruction -> instruction.getAbilityContribution())
+                .toList());
+        assertEquals(expected, chosenPlan.getInstructions().stream()
+                .map(instruction -> instruction.getAbilityContribution())
+                .toList());
+    }
+
+    @Test
+    public void bothBotsUseExistingExactTargetFormationInLegacyScore()
+            throws Exception {
+        var randoPlan = randoPlan(
+                randoInstruction(String.valueOf(LOCATION_ID), 4, 2));
+        var chosenPlan = chosenPlan(
+                chosenInstruction(String.valueOf(LOCATION_ID), 4, 2));
+        List<AiBoardAnalyzer.LocationAnalysis> locations = List.of(
+                locationWithFormation("Existing formation",
+                        4.0f, 2.0f, 4.0f, 1));
+
+        float rando = scoreRando(newRandoPlanner(), randoPlan, locations);
+        float chosen = scoreChosen(newChosenPlanner(), chosenPlan, locations);
+
+        assertBits(123.0f, rando);
+        assertBits(rando, chosen);
+    }
+
+    @Test
+    public void bothBotsApplyPublicReactPenaltyAndExactPlanWaivers()
+            throws Exception {
+        VirtualTableScenario scn = hothReactScenario();
+        var target = scn.GetDSStartingLocation();
+        var source = scn.GetLSCard("source");
+        var react = scn.GetLSCard("react");
+        var spy = scn.GetDSCard("spy");
+        scn.StartGame();
+        scn.MoveCardsToTopOfLSForcePile(scn.GetLSFiller(1));
+        scn.MoveLocationToTable(source);
+        scn.MoveCardsToLocation(source, react);
+        AiBoardAnalyzer.LocationAnalysis emptyTarget =
+                AiBoardAnalyzer.analyzeLocation(
+                        scn.game(), "Dark Side Player", "Light Side Player",
+                        target, Side.DARK);
+
+        var randoPlanner = newRandoPlanner();
+        var chosenPlanner = newChosenPlanner();
+        configurePlannerState(randoPlanner, scn.game(), "Dark Side Player");
+        configurePlannerState(chosenPlanner, scn.game(), "Dark Side Player");
+
+        var randoExposed = randoPlan(
+                randoInstruction(String.valueOf(target.getCardId()), 3, 4));
+        var chosenExposed = chosenPlan(
+                chosenInstruction(String.valueOf(target.getCardId()), 3, 4));
+        assertBits(-34.0f,
+                scoreRando(randoPlanner, randoExposed, List.of(emptyTarget)));
+        assertBits(-34.0f,
+                scoreChosen(chosenPlanner, chosenExposed, List.of(emptyTarget)));
+
+        randoExposed.setReason("V297 objective flip-gate formation test");
+        chosenExposed.setReason("V297 objective flip-gate formation test");
+        assertBits(116.0f,
+                scoreRando(randoPlanner, randoExposed, List.of(emptyTarget)));
+        assertBits(116.0f,
+                scoreChosen(chosenPlanner, chosenExposed, List.of(emptyTarget)));
+
+        randoExposed.setReason(
+                EndorOperationsTacticalPolicy.bunkerGarrisonPlanReason());
+        chosenExposed.setReason(
+                EndorOperationsTacticalPolicy.bunkerGarrisonPlanReason());
+        assertBits(116.0f,
+                scoreRando(randoPlanner, randoExposed, List.of(emptyTarget)));
+        assertBits(116.0f,
+                scoreChosen(chosenPlanner, chosenExposed, List.of(emptyTarget)));
+
+        var randoSpyInstruction = randoInstruction(
+                String.valueOf(target.getCardId()), 3, 4);
+        randoSpyInstruction.setCardCurrentCardId(spy.getCardId());
+        var chosenSpyInstruction = chosenInstruction(
+                String.valueOf(target.getCardId()), 3, 4);
+        chosenSpyInstruction.setCardCurrentCardId(spy.getCardId());
+        assertBits(116.0f, scoreRando(randoPlanner,
+                randoPlan(randoSpyInstruction), List.of(emptyTarget)));
+        assertBits(116.0f, scoreChosen(chosenPlanner,
+                chosenPlan(chosenSpyInstruction), List.of(emptyTarget)));
+
+        AiBoardAnalyzer.LocationAnalysis contestedTarget =
+                new AiBoardAnalyzer.LocationAnalysis(
+                        target, 0.0f, 1.0f, 0.0f, 1.0f,
+                        2, 1, 0, 1,
+                        AiBoardAnalyzer.ContestStatus.LOSING, true);
+        assertBits(121.0f, scoreRando(randoPlanner,
+                randoPlan(randoInstruction(
+                        String.valueOf(target.getCardId()), 3, 4)),
+                List.of(contestedTarget)));
+        assertBits(121.0f, scoreChosen(chosenPlanner,
+                chosenPlan(chosenInstruction(
+                        String.valueOf(target.getCardId()), 3, 4)),
+                List.of(contestedTarget)));
     }
 
     @Test
@@ -183,8 +337,10 @@ public class DeployPlanRankingAdapterParityTest {
         assertEquals("293", randoPlan.getInstructions().get(1).getTargetLocationId());
         assertEquals("293", chosenPlan.getInstructions().get(0).getTargetLocationId());
         assertEquals("293", chosenPlan.getInstructions().get(1).getTargetLocationId());
-        assertEquals(2, randoPlan.getInstructions().get(0).getAbilityContribution());
-        assertEquals(2, randoPlan.getInstructions().get(1).getAbilityContribution());
+        assertEquals(2.0f, randoPlan.getInstructions().get(0)
+                .getAbilityContribution(), 0.0f);
+        assertEquals(2.0f, randoPlan.getInstructions().get(1)
+                .getAbilityContribution(), 0.0f);
         assertEquals(randoPlan.getReason(), chosenPlan.getReason());
         assertTrue(scoreRandoFormation(randoPlanner, randoPlan, fixture.locations())
                 >= com.gempukku.swccgo.ai.models.rando.RandoConfig.DEPLOY_EARLY_GAME_THRESHOLD);
@@ -1801,12 +1957,18 @@ public class DeployPlanRankingAdapterParityTest {
 
     private static void configurePlannerState(Object planner, SwccgGame game)
             throws Exception {
+        configurePlannerState(planner, game, "player");
+    }
+
+    private static void configurePlannerState(
+            Object planner, SwccgGame game, String playerId)
+            throws Exception {
         Field gameField = planner.getClass().getDeclaredField("currentGame");
         gameField.setAccessible(true);
         gameField.set(planner, game);
         Field playerField = planner.getClass().getDeclaredField("currentPlayerId");
         playerField.setAccessible(true);
-        playerField.set(planner, "player");
+        playerField.set(planner, playerId);
     }
 
     private static Object invokeFormationPlan(
@@ -1947,6 +2109,10 @@ public class DeployPlanRankingAdapterParityTest {
         when(gameState.getPlayerLifeForce("opponent")).thenReturn(30);
         when(gameState.getHand("player")).thenReturn(List.of(actor, buddy));
         when(gameState.getAllPermanentCards()).thenReturn(List.of());
+        when(modifiers.getAbility(gameState, actor, false))
+                .thenReturn(2.0f);
+        when(modifiers.getAbility(gameState, buddy, false))
+                .thenReturn(2.0f);
         when(gameState.getLocationsInOrder()).thenAnswer(
                 ignored -> locations.get());
         when(gameState.getCardsAtLocation(any(PhysicalCard.class)))
@@ -2229,6 +2395,55 @@ public class DeployPlanRankingAdapterParityTest {
                 card, 0.0f, theirPower, 0.0f, 0.0f,
                 ourIcons, theirIcons, 0, 0,
                 AiBoardAnalyzer.ContestStatus.UNCONTESTED, true);
+    }
+
+    private static AiBoardAnalyzer.LocationAnalysis locationWithFormation(
+            String title, float ourPower, float ourAbility,
+            float theirPower, int theirCardCount) {
+        PhysicalCard card = mock(PhysicalCard.class);
+        when(card.getCardId()).thenReturn(LOCATION_ID);
+        when(card.getTitle()).thenReturn(title);
+        return new AiBoardAnalyzer.LocationAnalysis(
+                card, ourPower, theirPower, ourAbility, 0.0f,
+                0, 0, ourPower > 0.0f ? 1 : 0, theirCardCount,
+                AiBoardAnalyzer.ContestStatus.UNCONTESTED, true);
+    }
+
+    private static VirtualTableScenario hothReactScenario() {
+        return new VirtualTableScenario(
+                new HashMap<>() {{
+                    put("react", "224_23");
+                    put("source", "3_63");
+                }},
+                new HashMap<>() {{
+                    put("spy", "2_107");
+                }},
+                10, 10,
+                StartingSetup.DefaultLSGroundLocation,
+                StartingSetup.DSStartingLocation("3_144"),
+                StartingSetup.NoLSStartingInterrupts,
+                StartingSetup.NoDSStartingInterrupts,
+                StartingSetup.NoLSShields,
+                StartingSetup.NoDSShields,
+                VirtualTableScenario.Open);
+    }
+
+    private static void addCardToPlan(
+            Object planner,
+            Object plan,
+            PhysicalCard card,
+            AiBoardAnalyzer.LocationAnalysis target) throws Exception {
+        Method addCard = null;
+        for (Method candidate : planner.getClass().getDeclaredMethods()) {
+            if (candidate.getName().equals("addCardToPlan")
+                    && candidate.getParameterCount() == 5) {
+                addCard = candidate;
+                break;
+            }
+        }
+        assertNotNull(addCard);
+        addCard.setAccessible(true);
+        addCard.invoke(planner, plan, card, target, 1, "test ability");
     }
 
     private static float scoreRando(

@@ -10650,3 +10650,58 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     commit proves source only; no runtime load, rule firing, or replay proof
     exists yet. Revert that Batch 5D commit without affecting Batch 1, WMAOP,
     Hunt Down Legacy, or Batch 3.
+  ==== RANDO BATCH 2A EXACT-TARGET FORMATION AND PROVEN IMMEDIATE-REACT CANDIDATE (2026-08-12, both bots) ====
+
+    Both deploy planners now rank the complete current plus planned formation
+    at each exact target. Existing friendly cards affect the established or
+    contested formation without earning the planned-card base score twice.
+    Every generic helper instruction and the manual repilot route now queries
+    current engine ability, including permanent pilots for starships and
+    vehicles but not inventing them for characters. Ability contributions
+    remain floats end to end, so fractional values such as 0.25 are not
+    rounded into false formation strength. The two existing character-
+    formation routes retain their explicit CardInfo ability. EOP ship and
+    pilot instructions own their separate real contributions, for example
+    [1.0, 2.0], so a recomputed pilot instruction cannot carry ability the
+    deployed ship already contributes.
+
+    The integrated base had no producer for the previously approved
+    deploy-plan-ranking-isolated-packet operation. Batch 2A adds that semantic
+    ADD -150 as NEW behavior, not as a refinement of shipped code. It may fire
+    once per empty target only when a public in-play immediate move-as-react
+    route is positively proven and the strongest single mover has positive
+    effective power at least twice the full unrounded post-deploy power. A
+    power-zero opponent card still makes the target contested for this rule.
+
+    The common reader requires a positive legal future bot drain, current
+    opponent absence, live modifier permission, exact mover and target
+    filters, no mover-wide or target-wide react prohibition, current Force
+    affordability, and an exact route through one of the eight public
+    movement factories. Only landspeed receives the modifier's react-cost
+    change, matching AbstractDeployable. Hidden cards, ordinary movement,
+    passengers, joined reacts, remote formation power, and summed movers do
+    not qualify.
+
+    Exact V297 formation plans, the exact EOP Bunker garrison plan, and a
+    planned Spy at that target are the only waivers. Generic objective
+    relevance is not. The small packet scores -77 versus 83 for the larger
+    safe packet. Consolidation scores 85 versus -200 for two exposed splits.
+    The existing contested example remains 123. The float boundary is silent
+    at 9.999 and fires at 10.0 against post power 5.
+
+    The focused policy, adapter, source-ownership, public-react, and EOP ring
+    passed 58/0/0/0. The expanded deploy, formation, Endor, plan-copy, and
+    mirror ring passed 113/0/0/0. Clean server-reactor compile, normalized
+    Rando and Chosen One equality, and diff checks passed from exact base
+    9687ad56e. The listed verification preceded the eventual local
+    implementation commit. No package, deployment, runtime load, game, log,
+    or replay firing proof exists.
+
+    Scope is the shared deploy ranker, one common public-board reader,
+    mirrored deploy planners and instruction value objects, AI tests, these
+    two history files, and the implementation report. No
+    FormationSafety, per-action evaluator, StrategyController, card Java,
+    engine Java, objective data, deck, database, package, deployment, restart,
+    push, or PR changed. Revert the eventual coherent Batch 2A implementation
+    commit to remove only this candidate. Batch 1, WMAOP, 601_87, and earlier
+    objective behavior remain independent.

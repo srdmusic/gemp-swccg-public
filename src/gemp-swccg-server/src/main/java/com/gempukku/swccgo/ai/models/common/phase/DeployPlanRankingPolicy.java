@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.strategy.FormationSafety;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
@@ -51,7 +52,8 @@ public final class DeployPlanRankingPolicy {
             }
 
             if (location.theirPower() > 0) {
-                int advantage = location.ourPower() - (int) location.theirPower();
+                int legacyOurPower = (int) location.ourPower();
+                int advantage = legacyOurPower - (int) location.theirPower();
                 int denyDrainBonus = location.ourForceIcons() > 0
                         ? location.ourForceIcons() * 20 : 0;
                 int winControlBonus = advantage > 0
@@ -84,7 +86,7 @@ public final class DeployPlanRankingPolicy {
                 } else {
                     add(operations, location.contributionId(),
                             "deploy-plan-ranking-vulnerable",
-                            -(20 + location.ourPower() * 2),
+                            -(20 + legacyOurPower * 2),
                             "Vulnerable");
                 }
             } else {
@@ -103,6 +105,19 @@ public final class DeployPlanRankingPolicy {
                 add(operations, location.contributionId(),
                         "deploy-plan-ranking-establish", establishBonus,
                         "EMPTY/ESTABLISH LOCATION");
+            }
+
+            if (location.theirCardCount() == 0
+                    && location.triggerKnowable()
+                    && location.immediateReactExposureProven()
+                    && !location.formationPenaltyExempt()
+                    && location.strongestImmediateReactEffectivePower() > 0.0f
+                    && location.strongestImmediateReactEffectivePower()
+                    >= FormationSafety.DOMINANCE_MULTIPLE
+                    * location.ourPower()) {
+                add(operations, location.contributionId(),
+                        "deploy-plan-ranking-isolated-packet", -150.0f,
+                        "Proven immediate react dominates empty target packet");
             }
         }
 
@@ -165,22 +180,50 @@ public final class DeployPlanRankingPolicy {
     }
 
     public record LocationFacts(String contributionId,
-                                int ourPower,
-                                int ourAbility,
+                                float ourPower,
+                                float ourAbility,
                                 float theirPower,
                                 int ourForceIcons,
                                 int theirForceIcons,
+                                int theirCardCount,
                                 boolean objectiveRelevant,
-                                float objectiveBonus) {
+                                float objectiveBonus,
+                                boolean triggerKnowable,
+                                boolean immediateReactExposureProven,
+                                float strongestImmediateReactEffectivePower,
+                                boolean formationPenaltyExempt) {
         public LocationFacts {
             contributionId = requireNonBlank(
                     contributionId, "contributionId");
-            if (!Float.isFinite(theirPower)) {
-                throw new IllegalArgumentException("theirPower must be finite");
+            if (!Float.isFinite(ourPower)
+                    || !Float.isFinite(ourAbility)
+                    || !Float.isFinite(theirPower)
+                    || !Float.isFinite(strongestImmediateReactEffectivePower)) {
+                throw new IllegalArgumentException(
+                        "formation and react values must be finite");
+            }
+            if (theirCardCount < 0) {
+                throw new IllegalArgumentException(
+                        "theirCardCount must be nonnegative");
             }
             if (!Float.isFinite(objectiveBonus)) {
                 throw new IllegalArgumentException("objectiveBonus must be finite");
             }
+        }
+
+        public LocationFacts(String contributionId,
+                             float ourPower,
+                             float ourAbility,
+                             float theirPower,
+                             int ourForceIcons,
+                             int theirForceIcons,
+                             boolean objectiveRelevant,
+                             float objectiveBonus) {
+            this(contributionId, ourPower, ourAbility, theirPower,
+                    ourForceIcons, theirForceIcons,
+                    theirPower > 0.0f ? 1 : 0,
+                    objectiveRelevant, objectiveBonus,
+                    false, false, 0.0f, false);
         }
     }
 

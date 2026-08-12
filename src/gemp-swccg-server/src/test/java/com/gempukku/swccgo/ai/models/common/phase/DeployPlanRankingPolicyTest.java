@@ -132,6 +132,85 @@ public class DeployPlanRankingPolicyTest {
     }
 
     @Test
+    public void existingFriendlyFormationCrossesLegacyDominanceWithoutNewScoreTower() {
+        PolicyResult result = DeployPlanRankingPolicy.evaluate(
+                List.of(instruction("instruction", 4)),
+                List.of(reactLocation("target", 8.0f, 4.0f, 4.0f,
+                        1, true, true, 16.0f, false)));
+
+        assertBits(123.0f, DeployPlanRankingPolicy.apply(0.0f, result));
+        assertEquals(0, countRule(result,
+                "deploy-plan-ranking-isolated-packet"));
+    }
+
+    @Test
+    public void existingTokenDoesNotHideStillDominatedReinforcement() {
+        PolicyResult small = DeployPlanRankingPolicy.evaluate(
+                List.of(instruction("small-instruction", 4)),
+                List.of(reactLocation("small-target", 5.0f, 4.0f, 0.0f,
+                        0, true, true, 10.0f, false)));
+        PolicyResult mass = DeployPlanRankingPolicy.evaluate(
+                List.of(instruction("mass-instruction", 9)),
+                List.of(reactLocation("mass-target", 10.0f, 4.0f, 0.0f,
+                        0, true, true, 10.0f, false)));
+
+        assertBits(-77.0f, DeployPlanRankingPolicy.apply(0.0f, small));
+        assertEquals(1, countRule(small,
+                "deploy-plan-ranking-isolated-packet"));
+        assertBits(83.0f, DeployPlanRankingPolicy.apply(0.0f, mass));
+        assertEquals(0, countRule(mass,
+                "deploy-plan-ranking-isolated-packet"));
+    }
+
+    @Test
+    public void equalTotalPowerConsolidationBeatsTwoReactExposedPackets() {
+        List<DeployPlanRankingPolicy.InstructionFacts> instructions = List.of(
+                instruction("instruction-0", 5),
+                instruction("instruction-1", 5));
+        PolicyResult consolidated = DeployPlanRankingPolicy.evaluate(
+                instructions,
+                List.of(reactLocation("target", 10.0f, 4.0f, 0.0f,
+                        0, true, true, 10.0f, false)));
+        PolicyResult split = DeployPlanRankingPolicy.evaluate(
+                instructions,
+                List.of(
+                        reactLocation("target-0", 5.0f, 2.0f, 0.0f,
+                                0, true, true, 10.0f, false),
+                        reactLocation("target-1", 5.0f, 2.0f, 0.0f,
+                                0, true, true, 10.0f, false)));
+
+        assertBits(85.0f, DeployPlanRankingPolicy.apply(0.0f, consolidated));
+        assertEquals(0, countRule(consolidated,
+                "deploy-plan-ranking-isolated-packet"));
+        assertBits(-200.0f, DeployPlanRankingPolicy.apply(0.0f, split));
+        assertEquals(2, countRule(split,
+                "deploy-plan-ranking-isolated-packet"));
+    }
+
+    @Test
+    public void immediateReactDominanceBoundaryIsInclusiveAndUnrounded() {
+        PolicyResult below = DeployPlanRankingPolicy.evaluate(
+                List.of(instruction("below-instruction", 4)),
+                List.of(reactLocation("below-target", 5.0f, 4.0f, 0.0f,
+                        0, true, true, 9.999f, false)));
+        PolicyResult equal = DeployPlanRankingPolicy.evaluate(
+                List.of(instruction("equal-instruction", 4)),
+                List.of(reactLocation("equal-target", 5.0f, 4.0f, 0.0f,
+                        0, true, true, 10.0f, false)));
+        PolicyResult friendlyDominant = DeployPlanRankingPolicy.evaluate(
+                List.of(instruction("dominant-instruction", 9)),
+                List.of(reactLocation("dominant-target", 10.0f, 4.0f, 0.0f,
+                        0, true, true, 5.0f, false)));
+
+        assertEquals(0, countRule(below,
+                "deploy-plan-ranking-isolated-packet"));
+        assertEquals(1, countRule(equal,
+                "deploy-plan-ranking-isolated-packet"));
+        assertEquals(0, countRule(friendlyDominant,
+                "deploy-plan-ranking-isolated-packet"));
+    }
+
+    @Test
     public void rejectsDuplicateContributionIdsBeforeLedgerRegistration() {
         assertThrows(IllegalArgumentException.class, () ->
                 DeployPlanRankingPolicy.evaluate(
@@ -171,6 +250,24 @@ public class DeployPlanRankingPolicyTest {
                 contributionId, ourPower, ourAbility, theirPower,
                 ourForceIcons, theirForceIcons,
                 objectiveRelevant, objectiveBonus);
+    }
+
+    private static DeployPlanRankingPolicy.LocationFacts reactLocation(
+            String contributionId, float postOurPower, float postOurAbility,
+            float theirPower, int theirCardCount, boolean triggerKnowable,
+            boolean exposureProven, float strongestReactPower,
+            boolean formationPenaltyExempt) {
+        return new DeployPlanRankingPolicy.LocationFacts(
+                contributionId, postOurPower, postOurAbility, theirPower,
+                0, 0, theirCardCount, false, 0.0f,
+                triggerKnowable, exposureProven, strongestReactPower,
+                formationPenaltyExempt);
+    }
+
+    private static long countRule(PolicyResult result, String ruleId) {
+        return result.operations().stream()
+                .filter(operation -> ruleId.equals(operation.ruleArmId().id()))
+                .count();
     }
 
     private static void assertOperations(
