@@ -39,11 +39,17 @@ public class BattlePredictor {
         float wins = 0f;
         int totalDamageDealt = 0;
         int totalDamageTaken = 0;
+        int totalMyBattleDestiny = 0;
+        int totalOpponentBattleDestiny = 0;
 
         // Run simulations
         for (int i = 0; i < SIMULATIONS; i++) {
-            int myTotal = myPower + simulateDestiny(myDestinyDraws);
-            int oppTotal = oppPower + simulateDestiny(oppDestinyDraws);
+            int myBattleDestiny = simulateDestiny(myDestinyDraws);
+            int opponentBattleDestiny = simulateDestiny(oppDestinyDraws);
+            int myTotal = myPower + myBattleDestiny;
+            int oppTotal = oppPower + opponentBattleDestiny;
+            totalMyBattleDestiny += myBattleDestiny;
+            totalOpponentBattleDestiny += opponentBattleDestiny;
 
             if (myTotal > oppTotal) {
                 wins++;
@@ -59,8 +65,14 @@ public class BattlePredictor {
         float winRate = wins / SIMULATIONS;
         float avgDamageDealt = (float) totalDamageDealt / SIMULATIONS;
         float avgDamageTaken = (float) totalDamageTaken / SIMULATIONS;
+        float avgMyBattleDestiny =
+                (float) totalMyBattleDestiny / SIMULATIONS;
+        float avgOpponentBattleDestiny =
+                (float) totalOpponentBattleDestiny / SIMULATIONS;
         
-        return new BattleOutcome(winRate, avgDamageDealt, avgDamageTaken);
+        return new BattleOutcome(
+                winRate, avgDamageDealt, avgDamageTaken,
+                avgMyBattleDestiny, avgOpponentBattleDestiny);
     }
     
     /**
@@ -79,11 +91,16 @@ public class BattlePredictor {
         float wins = 0f;
         int totalDamageDealt = 0;
         int totalDamageTaken = 0;
+        int totalMyBattleDestiny = 0;
+        int opponentBattleDestiny =
+                Math.round(knownOppDestinyAvg * oppDestinyDraws);
 
         for (int i = 0; i < SIMULATIONS; i++) {
-            int myTotal = myPower + simulateDestiny(myDestinyDraws);
+            int myBattleDestiny = simulateDestiny(myDestinyDraws);
+            int myTotal = myPower + myBattleDestiny;
             // Use known average for opponent instead of random
-            int oppTotal = oppPower + Math.round(knownOppDestinyAvg * oppDestinyDraws);
+            int oppTotal = oppPower + opponentBattleDestiny;
+            totalMyBattleDestiny += myBattleDestiny;
 
             if (myTotal > oppTotal) {
                 wins++;
@@ -98,8 +115,12 @@ public class BattlePredictor {
         float winRate = wins / SIMULATIONS;
         float avgDamageDealt = (float) totalDamageDealt / SIMULATIONS;
         float avgDamageTaken = (float) totalDamageTaken / SIMULATIONS;
+        float avgMyBattleDestiny =
+                (float) totalMyBattleDestiny / SIMULATIONS;
 
-        return new BattleOutcome(winRate, avgDamageDealt, avgDamageTaken);
+        return new BattleOutcome(
+                winRate, avgDamageDealt, avgDamageTaken,
+                avgMyBattleDestiny, opponentBattleDestiny);
     }
 
     /**
@@ -151,7 +172,10 @@ public class BattlePredictor {
             damageTaken = oppTotal - myTotal;
         }
 
-        return new BattleOutcome(winRate, damageDealt, damageTaken);
+        return new BattleOutcome(
+                winRate, damageDealt, damageTaken,
+                Math.round(myDestinyAvg * myDestinyDraws),
+                Math.round(oppDestinyAvg * oppDestinyDraws));
     }
 
     /**
@@ -285,11 +309,28 @@ public class BattlePredictor {
         
         /** Average damage we'll take if we lose */
         public final float expectedDamageTaken;
+
+        /** Average total battle destiny added to our power */
+        public final float expectedMyBattleDestiny;
+
+        /** Average total battle destiny added to opponent power */
+        public final float expectedOpponentBattleDestiny;
         
         public BattleOutcome(float winProb, float damageDealt, float damageTaken) {
+            this(winProb, damageDealt, damageTaken, Float.NaN, Float.NaN);
+        }
+
+        public BattleOutcome(
+                float winProb,
+                float damageDealt,
+                float damageTaken,
+                float myBattleDestiny,
+                float opponentBattleDestiny) {
             this.winProbability = winProb;
             this.expectedDamageDealt = damageDealt;
             this.expectedDamageTaken = damageTaken;
+            this.expectedMyBattleDestiny = myBattleDestiny;
+            this.expectedOpponentBattleDestiny = opponentBattleDestiny;
         }
         
         /**

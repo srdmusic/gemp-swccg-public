@@ -1,3 +1,19 @@
+  ==== BATCH 3 BATTLE-RETENTION TELEMETRY BOUNDARY (2026-08-12, both bots) ====
+The replay audit proposed post-battle survivor awareness, but current prebattle AI source cannot
+produce exact attrition, forfeiture, immunity, dependency, weapon, response, or lethal facts. Both
+BattlePredictor mirrors now return expected friendly and opponent battle destiny from the values
+already generated, with no new random call and unchanged call order. Legacy three-field outcomes
+remain compatible and mark destiny telemetry unknown. Both adapters copy the fields and the shared
+coordinator reuses its one cached named-target V76 prediction after V61 and before V27. The typed
+facts reader returns RAW_PREDICTOR_ONLY or UNKNOWN, and the policy always emits zero operations.
+Locationless and power-zero routes remain silent. No exact-collapse or expected-collapse score
+shipped. The larger exact simultaneous resolver experiment passed focused tests but was removed
+because no production exact-facts producer could reach it. Exact survivor scoring remains HOLD on
+an engine-owned facts seam. Existing Formation Safety, V76, Phase 3, objective, must-fight,
+V61/V61b, V27, V25, and Pass behavior is unchanged. No engine, card, objective data, deck, or
+database source changed. No package, deployment, restart, live game, push, or PR occurred. See the
+2026-08-12 AI_CHANGELOG and Batch 3 implementation report.
+
   ==== V232 AI-ONLY MOVE WEAPON-HUNTER POLICY OWNER (2026-07-19, both bots) ====
 Shared MoveWeaponHunterPolicy now owns the duplicated V29.7 attached-weapon classification,
 effective-power facts, strict target viability, ordered scoring, first-best selection, exact reasons,

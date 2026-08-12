@@ -287,6 +287,8 @@ Authoritative LIVE V-tag inventory grouped into semantic domains. **One owner pe
 
 **V208 owner note:** `BattleDecisionPolicy` is the canonical owner of the former `BattleEvaluator` stream for both bots. The V25 `ActionTextEvaluator` ladder intentionally remains a separate contribution, so the two streams still sum. Row anchors below describe the historical source locations; the shared policy is the live score owner for the BE arms.
 
+**Batch 3 HOLD note, 2026-08-12:** `BattleRetentionFactsReader` records named-target predictor destiny telemetry after V61 and before V27, but can produce only `RAW_PREDICTOR_ONLY` or `UNKNOWN`. `BattleRetentionPolicy` emits no operations. Therefore this registry remains at 12 live battle-initiation rules. The proposed `B3-retention-exact-collapse -500` arm is not registered and is not live until an engine-owned exact simultaneous-loss facts producer exists.
+
 | Tag/arm | Arm of | Sect | Anchor | KIND | Magnitude / verdict | Trigger | Status |
 |---|---|---|---|---|---|---|---|
 | V22.4-initiation-guard | V22.4 | BATTLE-1 | BE:16 | BANDED | -800 danger / location-tier scoring | Location-specific battle evaluation + suicidal-location catastrophic-power guard (BattleEvaluator 146-551). Referenced by V164a boundary | LIVE |

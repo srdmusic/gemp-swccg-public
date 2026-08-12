@@ -3,10 +3,14 @@ package com.gempukku.swccgo.ai.models.common.phase;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -92,6 +96,77 @@ public class BattleInitiationSourceParityTest {
         }
     }
 
+    @Test
+    public void retentionGateIsAfterReserveAndBeforeV27() throws IOException {
+        String coordinator = coordinatorSource();
+        int reserve = coordinator.indexOf(
+                "BattleInitiationPolicy.reserve(");
+        int retention = coordinator.indexOf(
+                "context.readBattleRetentionFacts(");
+        int v27 = coordinator.indexOf(
+                "// === V27: BATTLE INTERRUPT FORCE RESERVATION ===");
+
+        assertTrue(reserve >= 0);
+        assertTrue(retention > reserve);
+        assertTrue(v27 > retention);
+        assertTrue(coordinator.contains(
+                "BattleRetentionPolicy.evaluate(retentionFacts)"));
+    }
+
+    @Test
+    public void phaseThreeConfidenceBlockIsByteStable()
+            throws IOException, NoSuchAlgorithmException {
+        String coordinator = coordinatorSource();
+        int start = coordinator.indexOf(
+                "                                    // === V76/V25 RECONCILIATION ===");
+        int end = coordinator.indexOf(
+                "                                    boolean exactStructuredPreFlipTarget",
+                start);
+        String phaseThreeWithSeparator = coordinator.substring(start, end);
+        assertTrue(phaseThreeWithSeparator.endsWith("\n\n"));
+        String phaseThree = phaseThreeWithSeparator.substring(
+                0, phaseThreeWithSeparator.length() - 1);
+
+        assertEquals(
+                "8b97976005012b75aacff7afc109165b20c6414c98625194d2a22db71181dca8",
+                sha256(phaseThree));
+    }
+
+    @Test
+    public void predictorMirrorsAndRandomCallOrderRemainExact()
+            throws IOException {
+        String rando = predictorSource("rando")
+                .replace("models.rando", "models.BOT");
+        String chosen = predictorSource("chosenone")
+                .replace("models.chosenone", "models.BOT");
+
+        assertEquals(rando, chosen);
+        assertEquals(2, occurrences(rando,
+                "int myBattleDestiny = simulateDestiny(myDestinyDraws);"));
+        assertEquals(1, occurrences(rando,
+                "int opponentBattleDestiny = simulateDestiny(oppDestinyDraws);"));
+        int friendly = rando.indexOf(
+                "int myBattleDestiny = simulateDestiny(myDestinyDraws);");
+        int opponent = rando.indexOf(
+                "int opponentBattleDestiny = simulateDestiny(oppDestinyDraws);");
+        assertTrue(friendly >= 0 && opponent > friendly);
+    }
+
+    @Test
+    public void retentionUsesCachedPredictionAndPublicRouteCannotScore()
+            throws IOException {
+        String coordinator = coordinatorSource();
+        String reader = Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models/common/phase")
+                .resolve("BattleRetentionFactsReader.java"));
+
+        assertTrue(coordinator.contains(
+                "selectedRetentionPredictionGate"));
+        assertFalse(reader.contains("predictBattle("));
+        assertFalse(reader.contains("Knowledge.EXACT"));
+        assertTrue(reader.contains("Knowledge.RAW_PREDICTOR_ONLY"));
+    }
+
     private static String coordinatorSource() throws IOException {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models/common/phase")
@@ -108,6 +183,28 @@ public class BattleInitiationSourceParityTest {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models")
                 .resolve(bot).resolve("evaluators/BattleEvaluator.java"));
+    }
+
+    private static String predictorSource(String bot) throws IOException {
+        return Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models")
+                .resolve(bot).resolve("evaluators/BattlePredictor.java"));
+    }
+
+    private static int occurrences(String source, String needle) {
+        return (source.length() - source.replace(needle, "").length())
+                / needle.length();
+    }
+
+    private static String sha256(String value)
+            throws NoSuchAlgorithmException {
+        byte[] digest = MessageDigest.getInstance("SHA-256")
+                .digest(value.getBytes(StandardCharsets.UTF_8));
+        StringBuilder result = new StringBuilder();
+        for (byte item : digest) {
+            result.append(String.format("%02x", item));
+        }
+        return result.toString();
     }
 
     private static Path mainJavaRoot() {

@@ -71,6 +71,13 @@ public final class BattleDecisionPolicy {
         int getCriticalLifeForce();
         Prediction predictBattle(int myPower, int myDestinyDraws,
                                  int opponentPower, int opponentDestinyDraws);
+        default BattleRetentionPolicy.Facts readBattleRetentionFacts(
+                String actionId,
+                PhysicalCard target,
+                PredictionGate predictionGate) {
+            return BattleRetentionFactsReader.read(
+                    actionId, target, predictionGate);
+        }
         Logger getLogger();
     }
 
@@ -78,12 +85,27 @@ public final class BattleDecisionPolicy {
         public final float winProbability;
         public final float expectedDamageDealt;
         public final float expectedDamageTaken;
+        public final float expectedMyBattleDestiny;
+        public final float expectedOpponentBattleDestiny;
 
         public Prediction(float winProbability, float expectedDamageDealt,
                           float expectedDamageTaken) {
+            this(winProbability, expectedDamageDealt, expectedDamageTaken,
+                    Float.NaN, Float.NaN);
+        }
+
+        public Prediction(
+                float winProbability,
+                float expectedDamageDealt,
+                float expectedDamageTaken,
+                float expectedMyBattleDestiny,
+                float expectedOpponentBattleDestiny) {
             this.winProbability = winProbability;
             this.expectedDamageDealt = expectedDamageDealt;
             this.expectedDamageTaken = expectedDamageTaken;
+            this.expectedMyBattleDestiny = expectedMyBattleDestiny;
+            this.expectedOpponentBattleDestiny =
+                    expectedOpponentBattleDestiny;
         }
     }
 
@@ -388,6 +410,8 @@ public final class BattleDecisionPolicy {
                 boolean foundAnyContestedLocation = false;
                 boolean checkedSpecificLocation = false;
                 Float selectedBattlePowerMargin = null;
+                PhysicalCard selectedRetentionTarget = null;
+                PredictionGate selectedRetentionPredictionGate = null;
 
                 if (game != null && gameState != null) {
                     String playerId = context.getPlayerId();
@@ -695,6 +719,7 @@ public final class BattleDecisionPolicy {
 
                                 if (ourPower > 0 && theirPower > 0) {
                                     foundAnyContestedLocation = true;
+                                    selectedRetentionTarget = targetLocation;
                                     boolean formationSafetyVeto = false;
                                     boolean predictorSafe = false;
                                     // ADDED 2026-08-08 (passivity fix, m01683): retain the
@@ -738,6 +763,8 @@ public final class BattleDecisionPolicy {
                                         }
                                         Prediction v76Outcome =
                                             predictionGate.prediction();
+                                        selectedRetentionPredictionGate =
+                                            predictionGate;
 
                                         logger.warn("V76 BATTLE PREDICT at {}: winRate={} avgDamageTaken={} avgDamageDealt={} (myPow={} draws={} vs oppPow={} draws={})",
                                             targetLocation.getTitle(),
@@ -1363,6 +1390,38 @@ public final class BattleDecisionPolicy {
                     logger.warn("V61 RESERVE EMPTY: Blocking battle initiation — Reserve=0!");
                 } else if (reserveDecision.branch() == BattleInitiationPolicy.ReserveBranch.CRITICAL) {
                     logger.warn("V61 RESERVE CRITICAL: 1 card in reserve — heavy penalty -400");
+                }
+
+                // B3 retention telemetry: the public initiation surface exposes
+                // predictor averages, not exact simultaneous damage/attrition facts.
+                // The typed policy therefore emits no score.
+                if (selectedRetentionTarget != null) {
+                    BattleRetentionPolicy.Facts retentionFacts =
+                        context.readBattleRetentionFacts(
+                            actionId,
+                            selectedRetentionTarget,
+                            selectedRetentionPredictionGate);
+                    BattleRetentionPolicy.Evaluation retention =
+                        BattleRetentionPolicy.evaluate(retentionFacts);
+                    action.apply(retention.result());
+                    if (retentionFacts != null
+                            && retentionFacts.knowledge()
+                                == BattleRetentionPolicy.Knowledge
+                                    .RAW_PREDICTOR_ONLY
+                            && retentionFacts.telemetry() != null) {
+                        BattleRetentionPolicy.PredictionTelemetry telemetry =
+                            retentionFacts.telemetry();
+                        logger.info(
+                            "B3 RETENTION TELEMETRY at {}: knowledge={} assessment={} winRate={} expectedDamage={}/{} expectedDestiny={}/{} score=0",
+                            selectedRetentionTarget.getTitle(),
+                            retentionFacts.knowledge(),
+                            retention.assessment(),
+                            String.format("%.2f", telemetry.winProbability()),
+                            String.format("%.1f", telemetry.expectedDamageDealt()),
+                            String.format("%.1f", telemetry.expectedDamageTaken()),
+                            String.format("%.1f", telemetry.expectedMyBattleDestiny()),
+                            String.format("%.1f", telemetry.expectedOpponentBattleDestiny()));
+                    }
                 }
 
                 // === V27: BATTLE INTERRUPT FORCE RESERVATION ===

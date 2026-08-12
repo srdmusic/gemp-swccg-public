@@ -58,10 +58,31 @@ public class BattlePredictorGradedWinRateTest {
     }
 
     @Test
+    public void fullIntelReturnsRoundedExpectedDestinyAndPreservesLegacyOutcome() {
+        BattlePredictor.BattleOutcome outcome =
+                BattlePredictor.predictBattleFullIntel(
+                        10, 2, 3.4f, 10, 3, 2.6f);
+
+        assertEquals(7.0f, outcome.expectedMyBattleDestiny, EPSILON);
+        assertEquals(8.0f, outcome.expectedOpponentBattleDestiny, EPSILON);
+
+        BattlePredictor.BattleOutcome legacy =
+                new BattlePredictor.BattleOutcome(0.5f, 1.0f, 2.0f);
+        assertEquals(0.5f, legacy.winProbability, EPSILON);
+        assertEquals(1.0f, legacy.expectedDamageDealt, EPSILON);
+        assertEquals(2.0f, legacy.expectedDamageTaken, EPSILON);
+        assertTrue(Float.isNaN(legacy.expectedMyBattleDestiny));
+        assertTrue(Float.isNaN(legacy.expectedOpponentBattleDestiny));
+    }
+
+    @Test
     public void monteCarloTiesCountAsHalfWin() {
         // Zero draws on both sides makes every simulation deterministic.
-        assertEquals(0.5f, BattlePredictor.predictBattle(
-                5, 0, 5, 0).winProbability, EPSILON);
+        BattlePredictor.BattleOutcome zeroDraws =
+                BattlePredictor.predictBattle(5, 0, 5, 0);
+        assertEquals(0.5f, zeroDraws.winProbability, EPSILON);
+        assertEquals(0.0f, zeroDraws.expectedMyBattleDestiny, EPSILON);
+        assertEquals(0.0f, zeroDraws.expectedOpponentBattleDestiny, EPSILON);
         assertEquals(1.0f, BattlePredictor.predictBattle(
                 10, 0, 5, 0).winProbability, EPSILON);
         assertEquals(0.0f, BattlePredictor.predictBattle(
@@ -71,14 +92,23 @@ public class BattlePredictorGradedWinRateTest {
     @Test
     public void chosenOneMirrorGradesIdentically() {
         for (int myPower : new int[] {0, 6, 10, 12, 16, 100}) {
-            assertEquals(
+            BattlePredictor.BattleOutcome rando =
                     BattlePredictor.predictBattleFullIntel(
-                            myPower, 1, 3.0f, 10, 1, 3.0f).winProbability,
-                    com.gempukku.swccgo.ai.models.chosenone.evaluators
+                            myPower, 1, 3.0f, 10, 1, 3.0f);
+            com.gempukku.swccgo.ai.models.chosenone.evaluators
+                    .BattlePredictor.BattleOutcome chosen =
+                        com.gempukku.swccgo.ai.models.chosenone.evaluators
                             .BattlePredictor.predictBattleFullIntel(
-                                    myPower, 1, 3.0f, 10, 1, 3.0f)
-                            .winProbability,
-                    EPSILON);
+                                    myPower, 1, 3.0f, 10, 1, 3.0f);
+            assertEquals(rando.winProbability, chosen.winProbability, EPSILON);
+            assertEquals(rando.expectedDamageDealt,
+                    chosen.expectedDamageDealt, EPSILON);
+            assertEquals(rando.expectedDamageTaken,
+                    chosen.expectedDamageTaken, EPSILON);
+            assertEquals(rando.expectedMyBattleDestiny,
+                    chosen.expectedMyBattleDestiny, EPSILON);
+            assertEquals(rando.expectedOpponentBattleDestiny,
+                    chosen.expectedOpponentBattleDestiny, EPSILON);
         }
         assertEquals(0.5f,
                 com.gempukku.swccgo.ai.models.chosenone.evaluators

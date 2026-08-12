@@ -159,3 +159,17 @@ Files: 16 AI production files, 8 AI test files, `resources/AI_CHANGELOG.md`, `re
 Risks: artifact byte allowlisting and live semantic-tag proof remain pending. Cancellation is intentionally unknown, independent strategic-income and relocation admission are absent, and generic mixed or multi-ship response packages fail closed. The external rollback packet remains `/Users/steve/gemp-deploy-backups/rando-batch1-2026-08-12/predeploy-e877d4b6-5fcfe59e`; its no-boot-flip override SHA-256 is `5e47bcfb2ea9961ba5bf7bcb80b15f11562c7fc81931042b1505411402561b67`.
 
 Needed: final Alfred diff/documentation verdict before the coherent local commit.
+
+## 2026-08-12 - Codex Batch 3 -> Alfred - OPEN
+
+Topic: Batch 3 battle-retention telemetry candidate ready for review, exact scoring remains HOLD.
+
+Request: Review the minimal telemetry boundary. Do not interpret it as a shipped battle-selection fix. The verification below preceded its local commit.
+
+Evidence: branch `codex/rando-batch3-exact-retention-telemetry`, exact base `6426d6deb463ee19190bcdead5b3bfe2d2d5dff7`, worktree `/Users/steve/gemp-rando-batch3-2026-08-12`. Both predictor mirrors expose friendly and opponent expected destiny without new random calls, both adapters copy the fields, and `BattleDecisionPolicy` reuses the cached named-target V76 result once after V61 and before V27. The Phase 3 block is byte-identical, SHA-256 `8b97976005012b75aacff7afc109165b20c6414c98625194d2a22db71181dca8`. The typed reader produces only `RAW_PREDICTOR_ONLY` or `UNKNOWN`; the policy returns no operations and live score remains zero. The 36-test focused ring, 163-test broader battle ring, compile, and diff checks pass. The larger exact-resolver experiment passed its focused tests but was removed under simplicity-first because no production exact-facts producer could reach it.
+
+Files: seven production AI files, seven test files, the two changelogs, domain registry HOLD note, and `outputs/rando-batch3-counterpunch-2026-08-12/implementation_report.md`.
+
+Risks: no behavioral battle-selection improvement exists yet. Exact scoring remains blocked on engine-owned simultaneous loss, modifier, dependency, response, weapon, and lethal facts. No engine/card/objective-data/deck/database edit, package, deploy, restart, push, or PR occurred.
+
+Needed: Exact-resolver implementation must remain HOLD unless a separately approved engine facts seam is designed.

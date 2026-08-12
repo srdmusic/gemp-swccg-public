@@ -140,7 +140,11 @@ public class BattleEvaluator extends ActionEvaluator {
                     myPower, myDestinyDraws, opponentPower, opponentDestinyDraws,
                     context.getDeckOracle(), context.getOpponentDeckTracker());
                 return new BattleDecisionPolicy.Prediction(
-                    outcome.winProbability, outcome.expectedDamageDealt, outcome.expectedDamageTaken);
+                    outcome.winProbability,
+                    outcome.expectedDamageDealt,
+                    outcome.expectedDamageTaken,
+                    outcome.expectedMyBattleDestiny,
+                    outcome.expectedOpponentBattleDestiny);
             }
 
             @Override

@@ -380,6 +380,110 @@ public class BattleDecisionPolicyTest {
     }
 
     @Test
+    public void namedRetentionTelemetryUsesCachedPredictionAndScoresZero() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard location = mock(PhysicalCard.class);
+        AtomicInteger predictions = new AtomicInteger();
+        AtomicInteger retentionReads = new AtomicInteger();
+
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getOpponent("bot")).thenReturn("opponent");
+        when(gameState.getTopLocations()).thenReturn(List.of(location));
+        when(gameState.getCardsAtLocation(location)).thenReturn(List.of());
+        when(gameState.getAllPermanentCards()).thenReturn(List.of());
+        when(location.getCardId()).thenReturn(7);
+        when(location.getTitle()).thenReturn("Exact Test Site");
+        when(modifiers.getTotalPowerAtLocation(
+                any(), any(), anyString(), anyBoolean(), anyBoolean()))
+                .thenReturn(8.0f);
+        when(modifiers.getTotalAbilityAtLocation(
+                any(), anyString(), any())).thenReturn(4.0f);
+        BattleDecisionPolicy.Context base = context(
+                gameState, game, List.of("battle"),
+                List.of("Initiate battle"), List.of("7"), predictions);
+        BattleDecisionPolicy.Context telemetry = new DelegatingContext(base) {
+            @Override
+            public BattleRetentionPolicy.Facts readBattleRetentionFacts(
+                    String actionId,
+                    PhysicalCard target,
+                    BattleDecisionPolicy.PredictionGate predictionGate) {
+                retentionReads.incrementAndGet();
+                assertEquals(location, target);
+                assertTrue(predictionGate != null);
+                return rawRetentionFacts(actionId);
+            }
+        };
+
+        BattleDecisionPolicy.ScoredAction baseline =
+                BattleDecisionPolicy.evaluate(base).get(0);
+        predictions.set(0);
+        BattleDecisionPolicy.ScoredAction result =
+                BattleDecisionPolicy.evaluate(telemetry).get(0);
+
+        assertEquals(1, predictions.get());
+        assertEquals(1, retentionReads.get());
+        assertEquals(score(baseline), score(result), 0.0f);
+        assertEquals(-1, contributionIndexByReason(
+                result.contributions(), "B3"));
+    }
+
+    @Test
+    public void locationlessAndPowerZeroRoutesNeverReadRetentionFacts() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard location = mock(PhysicalCard.class);
+        PhysicalCard opponentCard = mock(PhysicalCard.class);
+        AtomicInteger predictions = new AtomicInteger();
+        AtomicInteger retentionReads = new AtomicInteger();
+
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getOpponent("bot")).thenReturn("opponent");
+        when(gameState.getTopLocations()).thenReturn(List.of(location));
+        when(gameState.getCardsAtLocation(location))
+                .thenReturn(List.of(opponentCard));
+        when(gameState.getAllPermanentCards())
+                .thenReturn(List.of(opponentCard));
+        when(location.getCardId()).thenReturn(7);
+        when(location.getTitle()).thenReturn("Hidden Site");
+        when(opponentCard.getOwner()).thenReturn("opponent");
+        when(modifiers.getTotalPowerAtLocation(
+                any(), any(), anyString(), anyBoolean(), anyBoolean()))
+                .thenAnswer(invocation ->
+                        "bot".equals(invocation.getArgument(2))
+                                ? 10.0f : 8.0f);
+        when(modifiers.getTotalAbilityAtLocation(
+                any(), anyString(), any())).thenReturn(4.0f);
+
+        BattleDecisionPolicy.Context locationlessBase = context(
+                gameState, game, List.of("battle"),
+                List.of("Initiate battle"), List.of(""), predictions);
+        BattleDecisionPolicy.Context locationless =
+                countingRetentionContext(
+                        locationlessBase, retentionReads);
+        BattleDecisionPolicy.evaluate(locationless);
+        assertEquals(0, retentionReads.get());
+        assertEquals(0, predictions.get());
+
+        when(modifiers.getTotalPowerAtLocation(
+                any(), any(), anyString(), anyBoolean(), anyBoolean()))
+                .thenAnswer(invocation ->
+                        "bot".equals(invocation.getArgument(2))
+                                ? 10.0f : 0.0f);
+        BattleDecisionPolicy.Context powerZeroBase = context(
+                gameState, game, List.of("battle"),
+                List.of("Initiate battle"), List.of("7"), predictions);
+        BattleDecisionPolicy.Context powerZero =
+                countingRetentionContext(powerZeroBase, retentionReads);
+        BattleDecisionPolicy.evaluate(powerZero);
+
+        assertEquals(0, retentionReads.get());
+        assertEquals(1, predictions.get());
+    }
+
+    @Test
     public void routingMatchesBattleDecisionContract() {
         AtomicInteger predictions = new AtomicInteger();
         assertTrue(BattleDecisionPolicy.canEvaluate(context(
@@ -463,6 +567,31 @@ public class BattleDecisionPolicyTest {
         return -1;
     }
 
+    private static BattleDecisionPolicy.Context countingRetentionContext(
+            BattleDecisionPolicy.Context base,
+            AtomicInteger retentionReads) {
+        return new DelegatingContext(base) {
+            @Override
+            public BattleRetentionPolicy.Facts readBattleRetentionFacts(
+                    String actionId,
+                    PhysicalCard target,
+                    BattleDecisionPolicy.PredictionGate predictionGate) {
+                retentionReads.incrementAndGet();
+                return rawRetentionFacts(actionId);
+            }
+        };
+    }
+
+    private static BattleRetentionPolicy.Facts rawRetentionFacts(
+            String actionId) {
+        return new BattleRetentionPolicy.Facts(
+                actionId,
+                BattleRetentionPolicy.Knowledge.RAW_PREDICTOR_ONLY,
+                new BattleRetentionPolicy.PredictionTelemetry(
+                        0.75f, 3.0f, 1.0f, 3.0f, 3.0f),
+                "test-raw");
+    }
+
     private static BattleDecisionPolicy.Context context(
             GameState gameState, SwccgGame game, List<String> actionIds,
             List<String> actionTexts, List<String> cardIds, AtomicInteger predictions) {
@@ -518,6 +647,14 @@ public class BattleDecisionPolicyTest {
         @Override public int getCriticalLifeForce() { return delegate.getCriticalLifeForce(); }
         @Override public BattleDecisionPolicy.Prediction predictBattle(int a, int b, int c, int d) {
             return delegate.predictBattle(a, b, c, d);
+        }
+        @Override
+        public BattleRetentionPolicy.Facts readBattleRetentionFacts(
+                String actionId,
+                PhysicalCard target,
+                BattleDecisionPolicy.PredictionGate predictionGate) {
+            return delegate.readBattleRetentionFacts(
+                    actionId, target, predictionGate);
         }
         @Override public Logger getLogger() { return delegate.getLogger(); }
     }
