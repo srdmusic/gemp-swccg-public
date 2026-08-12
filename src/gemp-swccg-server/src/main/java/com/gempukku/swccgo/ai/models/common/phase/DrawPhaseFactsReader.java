@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -28,6 +29,65 @@ public final class DrawPhaseFactsReader {
     }
 
     public record ForceStarved(int deployablePower, int minCostForThresholdPower) {
+    }
+
+    public record BoardUnits(int ourUnits, int opponentUnits) {
+        public boolean behindOnBoard() {
+            return ourUnits + 1 < opponentUnits;
+        }
+    }
+
+    public static boolean isOrdinaryStockForcePileDraw(String actionText) {
+        return actionText != null && "Draw card into hand from Force Pile"
+                .equalsIgnoreCase(actionText.trim());
+    }
+
+    /**
+     * Shared public-state definition previously duplicated in both bot
+     * coordinators. Only owned in-play characters, starships, and vehicles
+     * count; unknown state fails closed to an even board.
+     */
+    public static BoardUnits inspectBoardUnits(
+            GameState gameState, String playerId) {
+        if (gameState == null || playerId == null) {
+            return new BoardUnits(0, 0);
+        }
+        String opponentId;
+        try {
+            opponentId = gameState.getOpponent(playerId);
+        } catch (RuntimeException ignored) {
+            return new BoardUnits(0, 0);
+        }
+        if (opponentId == null) {
+            return new BoardUnits(0, 0);
+        }
+        int ourUnits = 0;
+        int opponentUnits = 0;
+        try {
+            for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                if (card == null) continue;
+                Zone zone = card.getZone();
+                if (zone == null || !zone.isInPlay()
+                        || card.getBlueprint() == null) {
+                    continue;
+                }
+                CardCategory category = card.getBlueprint()
+                        .getCardCategory();
+                if (category != CardCategory.CHARACTER
+                        && category != CardCategory.STARSHIP
+                        && category != CardCategory.VEHICLE) {
+                    continue;
+                }
+                if (playerId.equals(card.getOwner())) {
+                    ourUnits++;
+                } else if (opponentId.equals(card.getOwner())) {
+                    opponentUnits++;
+                }
+            }
+        } catch (RuntimeException ignored) {
+            return new BoardUnits(0, 0);
+        }
+        return new BoardUnits(ourUnits, opponentUnits);
     }
 
     public static int calculateForceGeneration(SwccgGame game, GameState gameState,

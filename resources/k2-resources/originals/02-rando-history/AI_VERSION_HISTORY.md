@@ -10555,3 +10555,55 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     exists yet. Revert the
     eventual coherent 601_87 exact-family commit. Batch 1, WMAOP, and generic
     Hunt Down family behavior remain independent.
+  ==== V182 exact response-bank extension candidate (2026-08-12, both bots) ====
+
+    A Draw-phase extension now protects only an exact current Batch 1 response
+    obligation. The existing Obligation carries a minimal five-field proof
+    after a non-mandatory response wins typed co-ranking with legal, available,
+    exactly affordable, timely, whole-formation-viable execution. Draw does
+    not create or infer a plan.
+
+    Before suppressing a draw, the adapter rechecks the same player turn and
+    threat revision, exact permanent target, every permanent/current hand-card
+    identity, direct deployability, recomputed whole cost, live response
+    reason, and the same formation route. Advancing one response action clears
+    the proof. Unknown, stale, missing, incomplete, changed-cost, and
+    changed-route proofs are inert. Funded mandatory
+    objective selections publish no response bank.
+
+    The state has a narrow reachable lifecycle. An exact response can be
+    selectable, legal, affordable, and not hard-vetoed or deferred while its
+    outer deploy score is below the bucket's -100 viability floor. The current
+    +50 parent envelope plus additive V59 maintenance-holistic -1500 produces
+    -1450. Batch 1 still prepends it, but the bucket walker can take a later
+    free location prelude. Recording that non-response deployment preserves
+    the untouched response obligation. If the response remains all-bad,
+    Deploy passes and the exact proof reaches Draw. Deploying a response member
+    or losing its exact card instead clears the proof. This score veto can be
+    transient. Retaining exact-cost Force remains sufficient input for a fresh
+    next-turn selection, and later activation can clear the same V59 holistic
+    shortfall. The Draw rule does not claim current-turn execution or guarantee
+    next-turn execution.
+
+    The new V182-response-bank arm recognizes only the exact ordinary stock
+    Force-pile draw while the bot trails by at least two owned in-play units.
+    Hand 0 through 2 retains V42 repair. At hand 3 through 5, banking occurs
+    only at exact funding, because one draw would leave cost minus one. Hand 6
+    or more banks the funded response. Piett's V24.10 dig bypasses this arm.
+    The one new contribution is -300 followed by an early return. Existing
+    V182 and every old magnitude and ordering boundary remain unchanged.
+
+    Shared DrawPhaseFactsReader now owns stock-action recognition and the
+    board-unit count previously duplicated by the bot coordinators. Candidate
+    facts do not prove generic combo intent, so no generic combo cache, title
+    exception, burst counter, or stale Draw plan was introduced.
+
+    Eight packet tests cover the action, board, hand, Force, Piett,
+    earlier-rule, and complete live invalidation boundaries. A ninth lifecycle
+    test reaches the real Draw evaluator through bucket fallthrough and a
+    non-response recordDeployment. It also proves fresh next-turn selection
+    from retained exact-cost Force and the concrete V59 transition from -1450
+    to +50 after additional activation. Focused tests passed 65/0/0/0 and the
+    impacted ring passed 117/0/0/0. Compile, diff, and
+    mirrored-source parity passed from exact base 6426d6deb. No commit, jar,
+    deploy, restart, push, PR, live firing, or replay proof exists.

@@ -78,6 +78,87 @@ public class DrawPhasePolicyTest {
     }
 
     @Test
+    public void fundedResponseStopsStockDrawAtRepairedHand() {
+        Facts facts = responseFacts(6, 12, 5);
+
+        List<PolicyOperation> operations = assess(facts, false).operations();
+
+        assertIds(operations, "V182-response-bank");
+        assertBits(-300.0f, operations.get(0).delta());
+        assertEquals("ADD", operations.get(0).kind().name());
+        assertFalse(facts.reserveRead);
+    }
+
+    @Test
+    public void sequentialHandAndForceBoundaryPreservesRepairAndSurplus() {
+        Facts handTwo = responseFacts(2, 5, 5);
+        assertFalse(hasId(assess(handTwo, false),
+                "V182-response-bank"));
+        assertTrue(hasId(assess(handTwo, false), "V42-draw"));
+
+        for (int hand : new int[]{3, 5}) {
+            assertTrue(hasId(assess(responseFacts(hand, 5, 5), false),
+                    "V182-response-bank"));
+            assertFalse(hasId(assess(responseFacts(hand, 6, 5), false),
+                    "V182-response-bank"));
+        }
+        assertTrue(hasId(assess(responseFacts(6, 12, 5), false),
+                "V182-response-bank"));
+    }
+
+    @Test
+    public void missingCurrentResponseProofIsInert() {
+        Facts candidate = responseFacts(6, 12, 5);
+        candidate.responseBank = null;
+        Facts control = responseFacts(6, 12, 5);
+        control.behindOnBoard = false;
+
+        List<PolicyOperation> candidateOperations =
+                assess(candidate, false).operations();
+        List<PolicyOperation> controlOperations =
+                assess(control, false).operations();
+
+        assertEquals(controlOperations.stream()
+                        .map(operation -> operation.ruleArmId().id()).toList(),
+                candidateOperations.stream()
+                        .map(operation -> operation.ruleArmId().id()).toList());
+        assertEquals(controlOperations.stream()
+                        .map(operation -> Float.floatToRawIntBits(
+                                operation.delta())).toList(),
+                candidateOperations.stream()
+                        .map(operation -> Float.floatToRawIntBits(
+                                operation.delta())).toList());
+    }
+
+    @Test
+    public void piettDigExplicitlyBypassesResponseBank() {
+        Facts facts = responseFacts(6, 5, 5);
+        facts.piett = true;
+
+        PolicyResult result = assess(facts, false);
+
+        assertFalse(hasId(result, "V182-response-bank"));
+        assertBits(150.0f, byId(result, "V24.10-dig").delta());
+    }
+
+    @Test
+    public void maintenanceLifeAndHandLimitKeepEarlierOwnership() {
+        Facts maintenance = responseFacts(6, 5, 5);
+        maintenance.maintenance = 5;
+        assertIds(assess(maintenance, false).operations(),
+                "V58-maintenance-floor");
+
+        Facts criticalLife = responseFacts(6, 3, 3);
+        criticalLife.reserve = 2;
+        assertIds(assess(criticalLife, false).operations(),
+                "DRAW-critical-life");
+
+        Facts handLimit = responseFacts(16, 5, 5);
+        assertIds(assess(handLimit, false).operations(),
+                "DRAW-hand-limit");
+    }
+
+    @Test
     public void forceStarvedShortfallReturnsAfterBothLegacyPenalties() {
         Facts facts = new Facts();
         facts.hand = 6;
@@ -189,6 +270,23 @@ public class DrawPhasePolicyTest {
                 .findFirst().orElseThrow();
     }
 
+    private static boolean hasId(PolicyResult result, String id) {
+        return result.operations().stream().anyMatch(
+                operation -> operation.ruleArmId().id().equals(id));
+    }
+
+    private static Facts responseFacts(int hand, int force, int cost) {
+        Facts facts = new Facts();
+        facts.hand = hand;
+        facts.force = force;
+        facts.behindOnBoard = true;
+        facts.responseBank = new PersistentResponsePolicy
+                .ResponseBankDetails(3, 1, cost,
+                DeployTacticalPolicy.ResponseFormationRoute.V171_WAVE,
+                "ground_response");
+        return facts;
+    }
+
     private static void assertIds(List<PolicyOperation> operations, String... ids) {
         assertEquals(List.of(ids), operations.stream()
                 .map(operation -> operation.ruleArmId().id()).toList());
@@ -225,6 +323,9 @@ public class DrawPhasePolicyTest {
         private int forceReserve;
         private boolean offensiveBankRead;
         private boolean reserveRead;
+        private boolean ordinaryStockDraw = true;
+        private boolean behindOnBoard;
+        private PersistentResponsePolicy.ResponseBankDetails responseBank;
 
         @Override public boolean hasBoardState() { return hasBoard; }
         @Override public int handSize() { return hand; }
@@ -240,6 +341,19 @@ public class DrawPhasePolicyTest {
         @Override public int offensiveBank(int forcePile, int forceGeneration) {
             offensiveBankRead = true;
             return bank;
+        }
+
+        @Override public boolean ordinaryStockForcePileDraw() {
+            return ordinaryStockDraw;
+        }
+
+        @Override public boolean behindOnBoard() {
+            return behindOnBoard;
+        }
+
+        @Override public PersistentResponsePolicy.ResponseBankDetails
+                currentResponseBank() {
+            return responseBank;
         }
 
         @Override public DrawPhasePolicy.HoldBack holdBack() { return holdBack; }

@@ -173,3 +173,30 @@ Files: seven production AI files, seven test files, the two changelogs, domain r
 Risks: no behavioral battle-selection improvement exists yet. Exact scoring remains blocked on engine-owned simultaneous loss, modifier, dependency, response, weapon, and lethal facts. No engine/card/objective-data/deck/database edit, package, deploy, restart, push, or PR occurred.
 
 Needed: Exact-resolver implementation must remain HOLD unless a separately approved engine facts seam is designed.
+## 2026-08-12 07:25 PT - Codex -> Alfred - INFO
+
+Topic: Batch 4 V182 exact response-bank candidate is ready for root pre-commit review.
+
+Request: Review the uncommitted minimum viable diff against the Batch 4 research packet and exact post-Batch1/WMAOP base. No incremental hostile review is requested.
+
+Evidence: branch `codex/rando-batch4-response-bank`, exact base and HEAD `6426d6deb463ee19190bcdead5b3bfe2d2d5dff7`. The implementation extends Batch 1's existing typed `Obligation`; it adds no StrategyController cache or generic snapshot framework. A non-mandatory selected executable response can publish a minimal five-field bank proof. Draw revalidates exact cards, permanent target, whole cost, response reason, formation route, turn, and threat revision before the one `V182-response-bank -300` early return. Hand 0 through 2 repair, hand 3 through 5 exact-surplus boundary, hand 6 bank, ordinary stock-action recognition, shared board deficit, Piett bypass, mandatory-objective fail-closed behavior, and stale-proof invalidation are covered. Focused ring passed `64/0/0/0`; impacted ring passed `116/0/0/0`; compile, diff check, and mirror/source ownership passed.
+
+Files: eight AI production files, four AI test files, both required AI histories, this mailbox, and `outputs/rando-batch4-draw-economy-2026-08-12/implementation_report.md`.
+
+Risks: CandidateFacts does not prove generic combo intent, so only Piett receives an explicit dig bypass and funded mandatory objective selections publish no bank. No jar, commit, deploy, restart, push, PR, or live behavior proof exists.
+
+Needed: root reviews the final packet and decides whether to commit. No implementation action should be taken from this mailbox entry alone.
+
+## 2026-08-12 07:55 PT - Codex -> Alfred - RESOLVED
+
+Topic: Batch 4 deploy-to-Draw reachability challenge.
+
+Request: None. Recording the resolved root review question before commit review.
+
+Evidence: the proof is narrowly reachable without a movement seam. `DeployEvaluator` prepends an exact offered response when it is selectable, legal, affordable, timely, and not hard-vetoed or deferred, but bucket admission has no score-floor check. `CombinedEvaluator` rejects an admissible first bucket below `-100` and walks later buckets. The concrete test uses the current deploy envelope `+50` plus additive V59 maintenance-holistic `-1500`, yielding `-1450` without a hard veto or defer. A free location prelude wins, and `DeploymentPlan.recordDeployment` preserves the obligation because the deployed card is not a response member. The still-all-bad response then loses to legal Pass. Exact cards, target, whole cost, turn, and threat remain current at Draw. `ResponseBankReachabilityTest.allBadResponseSurvivesPreludeDeploymentAndBanksAtDraw` executes actual typed selection, bucket prepend, threshold walk, non-response record, live revalidation, and the actual Draw evaluator, ending at `V182 RESPONSE BANK -300`. It then proves the retained exact cost is sufficient for fresh turn-4 selection and that additional activation changes the same source-owned V59 example from `-1450` to `+50`. This establishes a transient current-turn score veto, not current-turn executability or guaranteed next-turn execution. Focused tests passed `65/0/0/0`; impacted tests passed `117/0/0/0`.
+
+Files: `ResponseBankReachabilityTest.java`, the same eight production AI files, and the updated Batch 4 report and histories.
+
+Risks: the reachable seam is narrow and deploy-only. Deploying any response member clears the bank, and missing, moved, unaffordable, changed-target, changed-route, changed-turn, or changed-threat evidence remains inert. No plan-linked movement seam exists or is claimed.
+
+Needed: root completes pre-commit review. No jar, commit, deploy, restart, push, or PR exists.

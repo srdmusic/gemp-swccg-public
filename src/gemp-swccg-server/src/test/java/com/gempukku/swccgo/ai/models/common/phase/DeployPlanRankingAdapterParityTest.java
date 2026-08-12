@@ -903,6 +903,74 @@ public class DeployPlanRankingAdapterParityTest {
     }
 
     @Test
+    public void responseBankRevalidatesExactCardsTargetCostTurnThreatAndRoute() {
+        ResponseBankFixture fixture = responseBankFixture();
+        fixture.phase().set(Phase.DRAW);
+
+        assertNotNull(fixture.obligation().responseBank());
+        assertEquals(4, fixture.obligation().responseBank()
+                .wholeResponseForceCost());
+        assertNull(fixture.obligation().withRemainingResponseActions(List.of(
+                new PersistentResponsePolicy.DeployActionKey(
+                        11, 1011))).responseBank());
+        assertTrue(PersistentResponsePlanAdapter.isCurrentResponseBank(
+                fixture.game(), "player", fixture.analyzer(),
+                PersistentResponsePolicy.Snapshot.empty(),
+                fixture.obligation(), 3));
+
+        fixture.hand().set(List.of(fixture.lead()));
+        assertFalse(PersistentResponsePlanAdapter.isCurrentResponseBank(
+                fixture.game(), "player", fixture.analyzer(),
+                PersistentResponsePolicy.Snapshot.empty(),
+                fixture.obligation(), 3));
+        fixture.hand().set(List.of(fixture.lead(), fixture.buddy()));
+
+        when(fixture.modifiers().getDeployCost(
+                fixture.gameState(), fixture.buddy(), fixture.buddy(),
+                fixture.target(), false, null, false, 0.0f, null, true))
+                .thenReturn(3.0f);
+        assertFalse(PersistentResponsePlanAdapter.isCurrentResponseBank(
+                fixture.game(), "player", fixture.analyzer(),
+                PersistentResponsePolicy.Snapshot.empty(),
+                fixture.obligation(), 3));
+        when(fixture.modifiers().getDeployCost(
+                fixture.gameState(), fixture.buddy(), fixture.buddy(),
+                fixture.target(), false, null, false, 0.0f, null, true))
+                .thenReturn(2.0f);
+
+        when(fixture.gameState().findCardByPermanentId(LOCATION_ID))
+                .thenReturn(null);
+        assertFalse(PersistentResponsePlanAdapter.isCurrentResponseBank(
+                fixture.game(), "player", fixture.analyzer(),
+                PersistentResponsePolicy.Snapshot.empty(),
+                fixture.obligation(), 3));
+        when(fixture.gameState().findCardByPermanentId(LOCATION_ID))
+                .thenReturn(fixture.target());
+
+        assertFalse(PersistentResponsePlanAdapter.isCurrentResponseBank(
+                fixture.game(), "player", fixture.analyzer(),
+                new PersistentResponsePolicy.Snapshot(1, 0, Map.of()),
+                fixture.obligation(), 3));
+        assertFalse(PersistentResponsePlanAdapter.isCurrentResponseBank(
+                fixture.game(), "player", fixture.analyzer(),
+                PersistentResponsePolicy.Snapshot.empty(),
+                fixture.obligation(), 4));
+
+        PersistentResponsePolicy.ResponseBankDetails bank =
+                fixture.obligation().responseBank();
+        PersistentResponsePolicy.Obligation wrongRoute = fixture.obligation()
+                .withResponseBank(new PersistentResponsePolicy
+                        .ResponseBankDetails(
+                        bank.selectionTurn(), bank.threatRevision(),
+                        bank.wholeResponseForceCost(),
+                        DeployTacticalPolicy.ResponseFormationRoute.V172_SOLO,
+                        bank.planDomain()));
+        assertFalse(PersistentResponsePlanAdapter.isCurrentResponseBank(
+                fixture.game(), "player", fixture.analyzer(),
+                PersistentResponsePolicy.Snapshot.empty(), wrongRoute, 3));
+    }
+
+    @Test
     public void autoAdvanceRequiresExactCardInPlayAtExactTarget() {
         GameState gameState = mock(GameState.class);
         SwccgGame game = mock(SwccgGame.class);
@@ -1032,6 +1100,7 @@ public class DeployPlanRankingAdapterParityTest {
                 mandatoryWinner.obligation().kind());
         assertEquals("funded-mandatory-objective",
                 mandatoryWinner.obligation().reasonCode());
+        assertNull(mandatoryWinner.obligation().responseBank());
 
         when(analyzer.hasOpponentBattleParticipantAt(
                 game, "player", naboo)).thenReturn(true);
@@ -1063,6 +1132,7 @@ public class DeployPlanRankingAdapterParityTest {
                         .MISSING_REQUIRED_LOCATION,
                 sameTargetWinner.obligation().role());
         assertEquals(250, sameTargetWinner.obligation().criticalBonus());
+        assertNull(sameTargetWinner.obligation().responseBank());
     }
 
     @Test
@@ -1928,6 +1998,89 @@ public class DeployPlanRankingAdapterParityTest {
         when(blueprint.getCardCategory()).thenReturn(CardCategory.LOCATION);
         when(blueprint.getCardSubtype()).thenReturn(subtype);
         return location;
+    }
+
+    private static ResponseBankFixture responseBankFixture() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard target = locationCard(
+                "1_999", "Current hard-loss site", LOCATION_ID,
+                CardSubtype.SITE);
+        PhysicalCard lead = character(
+                "1_101", "Lead", 10, 4, 2, 2);
+        PhysicalCard buddy = character(
+                "1_102", "Buddy", 11, 4, 2, 2);
+        AtomicReference<Phase> phase = new AtomicReference<>(Phase.DEPLOY);
+        AtomicReference<List<PhysicalCard>> hand = new AtomicReference<>(
+                List.of(lead, buddy));
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getCurrentPlayerId()).thenReturn("player");
+        when(gameState.getCurrentPhase()).thenAnswer(
+                ignored -> phase.get());
+        when(gameState.getPlayersLatestTurnNumber("player")).thenReturn(3);
+        when(gameState.getOpponent("player")).thenReturn("opponent");
+        when(gameState.getSide("player")).thenReturn(Side.DARK);
+        when(gameState.getForcePileSize("player")).thenReturn(4);
+        when(gameState.getHand("player")).thenAnswer(
+                ignored -> hand.get());
+        when(gameState.findCardByPermanentId(LOCATION_ID))
+                .thenReturn(target);
+        when(gameState.getCardsAtLocation(target)).thenReturn(List.of());
+        when(modifiers.isDeployableToTarget(
+                any(), any(), any(), anyBoolean(), any(), anyBoolean(),
+                anyFloat(), any(), any(), any(), any(), any(), any(),
+                anyBoolean(), anyFloat())).thenReturn(true);
+        when(modifiers.getDeployCost(gameState, lead, lead, target,
+                false, null, false, 0.0f, null, true)).thenReturn(2.0f);
+        when(modifiers.getDeployCost(gameState, buddy, buddy, target,
+                false, null, false, 0.0f, null, true)).thenReturn(2.0f);
+
+        var analyzer = mock(
+                com.gempukku.swccgo.ai.models.common.strategy
+                        .ObjectiveAnalyzer.class);
+        when(analyzer.isAnalyzed()).thenReturn(true);
+        when(analyzer.isObjectiveHardLossDefenseLocation(
+                game, "player", target)).thenReturn(true);
+        when(analyzer.hasOpponentBattleParticipantAt(
+                game, "player", target)).thenReturn(true);
+        var plan = new PersistentResponsePlanAdapter.PlanView<>(
+                "hard-loss-response", "ground_response", "reinforce",
+                List.of(
+                        new PersistentResponsePlanAdapter.InstructionView(
+                                10, 1010, String.valueOf(LOCATION_ID), 1),
+                        new PersistentResponsePlanAdapter.InstructionView(
+                                11, 1011, String.valueOf(LOCATION_ID), 2)));
+        AiBoardAnalyzer.LocationAnalysis viable =
+                new AiBoardAnalyzer.LocationAnalysis(
+                        target, 0.0f, 4.0f, 0.0f, 2.0f,
+                        1, 1, 0, 1,
+                        AiBoardAnalyzer.ContestStatus.LOSING, true);
+        PersistentResponsePolicy.Obligation obligation =
+                PersistentResponsePlanAdapter.select(
+                        new PersistentResponsePlanAdapter.Input<>(
+                                game, "player", analyzer,
+                                PersistentResponsePolicy.Snapshot.empty(),
+                                List.of(viable), 10, 10, List.of(plan)))
+                        .orElseThrow().obligation();
+        return new ResponseBankFixture(
+                gameState, game, modifiers, analyzer, target, lead, buddy,
+                phase, hand, obligation);
+    }
+
+    private record ResponseBankFixture(
+            GameState gameState,
+            SwccgGame game,
+            ModifiersQuerying modifiers,
+            com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer
+                    analyzer,
+            PhysicalCard target,
+            PhysicalCard lead,
+            PhysicalCard buddy,
+            AtomicReference<Phase> phase,
+            AtomicReference<List<PhysicalCard>> hand,
+            PersistentResponsePolicy.Obligation obligation) {
     }
 
     private static PhysicalCard character(

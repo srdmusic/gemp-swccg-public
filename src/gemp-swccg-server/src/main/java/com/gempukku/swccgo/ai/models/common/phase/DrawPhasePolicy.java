@@ -44,6 +44,9 @@ public final class DrawPhasePolicy {
         int maintenanceObligation();
         int forceGeneration();
         int offensiveBank(int forcePile, int forceGeneration);
+        boolean ordinaryStockForcePileDraw();
+        boolean behindOnBoard();
+        PersistentResponsePolicy.ResponseBankDetails currentResponseBank();
         HoldBack holdBack();
         DrawPhaseFactsReader.ExpensiveCards expensiveCards(int forcePile);
         DrawPhaseFactsReader.ForceStarved forceStarved();
@@ -157,6 +160,43 @@ public final class DrawPhasePolicy {
             }
         }
 
+        boolean piettRead = false;
+        boolean piettNeedsDig = false;
+        if (handSize > 2 && facts.ordinaryStockForcePileDraw()
+                && facts.behindOnBoard()) {
+            PersistentResponsePolicy.ResponseBankDetails responseBank =
+                    facts.currentResponseBank();
+            if (responseBank != null
+                    && forcePile
+                    >= responseBank.wholeResponseForceCost()) {
+                piettNeedsDig = facts.piettNeedsDig();
+                piettRead = true;
+                boolean repairedHandBanks = handSize >= 6;
+                boolean smallHandCrossesBudget = handSize <= 5
+                        && forcePile
+                        <= responseBank.wholeResponseForceCost();
+                if (!piettNeedsDig
+                        && (repairedHandBanks
+                        || smallHandCrossesBudget)) {
+                    add(operations, actionId, "V182-response-bank",
+                            TraceDomainId.DRAW_COUNT,
+                            TraceOutputKind.VETO, VERY_BAD_DELTA * 2f,
+                            "V182 RESPONSE BANK: exact selected response "
+                                    + "costs "
+                                    + responseBank
+                                    .wholeResponseForceCost()
+                                    + " force; hand " + handSize
+                                    + " is repaired, so preserve the response");
+                    logger.warn("V182 RESPONSE BANK: responseCost={} "
+                                    + "forcePile={} hand={}; suppress stock "
+                                    + "draw, keep exact response funded",
+                            responseBank.wholeResponseForceCost(),
+                            forcePile, handSize);
+                    return result(operations);
+                }
+            }
+        }
+
         HoldBack holdBack = facts.holdBack();
         if (holdBack != null && holdBack.active()) {
             String reason = holdBack.reason().toLowerCase();
@@ -236,7 +276,10 @@ public final class DrawPhasePolicy {
             }
         }
 
-        if (facts.piettNeedsDig()) {
+        if (!piettRead) {
+            piettNeedsDig = facts.piettNeedsDig();
+        }
+        if (piettNeedsDig) {
             float piettBonus = turnNumber <= 2 ? 200.0f : turnNumber <= 4 ? 150.0f : 80.0f;
             add(operations, actionId, "V24.10-dig", TraceDomainId.DECK_PLAYBOOK,
                     TraceOutputKind.BANDED, piettBonus,

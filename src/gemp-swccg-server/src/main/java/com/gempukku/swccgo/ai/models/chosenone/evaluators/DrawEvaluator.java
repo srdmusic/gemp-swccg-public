@@ -1,15 +1,18 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.DrawPhasePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DrawReserveLegacyReader;
+import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
+import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
-import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseFactsReader;
-import com.gempukku.swccgo.ai.models.common.phase.DrawPhasePolicy;
-import com.gempukku.swccgo.ai.models.common.phase.DrawReserveLegacyReader;
-import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -92,14 +95,15 @@ public class DrawEvaluator extends ActionEvaluator {
                     actionId, ActionType.DRAW, 0.0f, actionText);
             ledger.register(DrawPhasePolicy.assess(actionId, actionText,
                     blocked.contains(actionId) || blocked.contains(actionText),
-                    facts(context), logger));
+                    facts(context, actionText), logger));
             PolicyOperationAdapter.apply(action, ledger);
             actions.add(action);
         }
         return actions;
     }
 
-    private DrawPhasePolicy.Facts facts(DecisionContext context) {
+    private DrawPhasePolicy.Facts facts(
+            DecisionContext context, String actionText) {
         return new DrawPhasePolicy.Facts() {
             @Override public boolean hasBoardState() {
                 return context.getGameState() != null;
@@ -148,6 +152,22 @@ public class DrawEvaluator extends ActionEvaluator {
                         forcePile, forceGeneration, logger);
             }
 
+            @Override public boolean ordinaryStockForcePileDraw() {
+                return DrawPhaseFactsReader
+                        .isOrdinaryStockForcePileDraw(actionText);
+            }
+
+            @Override public boolean behindOnBoard() {
+                return DrawPhaseFactsReader.inspectBoardUnits(
+                        context.getGameState(), context.getPlayerId())
+                        .behindOnBoard();
+            }
+
+            @Override public PersistentResponsePolicy.ResponseBankDetails
+                    currentResponseBank() {
+                return DrawEvaluator.this.currentResponseBank(context);
+            }
+
             @Override public DrawPhasePolicy.HoldBack holdBack() {
                 return readHoldBack(context);
             }
@@ -168,6 +188,29 @@ public class DrawEvaluator extends ActionEvaluator {
                 return calculateForceToReserve(context);
             }
         };
+    }
+
+    private PersistentResponsePolicy.ResponseBankDetails
+    currentResponseBank(DecisionContext context) {
+        StrategyController controller = context.getStrategyController();
+        ObjectiveAnalyzer objective = context.getObjectiveAnalyzer();
+        if (controller == null || objective == null) {
+            return null;
+        }
+        DeploymentPlan currentPlan = context.getDeployPhasePlanner() != null
+                ? context.getDeployPhasePlanner().getCurrentPlan() : null;
+        PersistentResponsePolicy.Obligation currentObligation =
+                currentPlan != null
+                ? currentPlan.getPersistentResponseObligation() : null;
+        try {
+            return PersistentResponsePlanAdapter.isCurrentResponseBank(
+                    context.getGame(), context.getPlayerId(), objective,
+                    controller.getPersistentResponseSnapshot(),
+                    currentObligation, context.getTurnNumber())
+                    ? currentObligation.responseBank() : null;
+        } catch (RuntimeException ignored) {
+            return null;
+        }
     }
 
     private int calculateForceToReserve(DecisionContext context) {

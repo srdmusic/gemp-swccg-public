@@ -24,6 +24,7 @@ import com.gempukku.swccgo.ai.models.common.phase.CaptureDeployBudgetFactsReader
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.CoordinatorPosturePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
@@ -3119,8 +3120,11 @@ public class TheChosenOneAi extends HeuristicAiBase {
             int selfLifeForce = safeLifeForce(gameState, playerId);
             int opponentLifeForce = opponent != null ? safeLifeForce(gameState, opponent) : selfLifeForce;
 
-            int selfUnits = countUnitsInPlay(gameState, playerId);
-            int opponentUnits = opponent != null ? countUnitsInPlay(gameState, opponent) : selfUnits;
+            DrawPhaseFactsReader.BoardUnits boardUnits =
+                DrawPhaseFactsReader.inspectBoardUnits(
+                    gameState, playerId);
+            int selfUnits = boardUnits.ourUnits();
+            int opponentUnits = boardUnits.opponentUnits();
 
             Set<String> handTitles = new HashSet<>();
             buildHandTitles(gameState, playerId, handTitles);
@@ -3156,26 +3160,6 @@ public class TheChosenOneAi extends HeuristicAiBase {
             } catch (RuntimeException e) {
                 // Ignore
             }
-        }
-
-        private static int countUnitsInPlay(GameState gameState, String playerId) {
-            if (playerId == null || gameState == null) return 0;
-            int count = 0;
-            for (PhysicalCard card : gameState.getAllPermanentCards()) {
-                if (card == null) continue;
-                Zone zone = card.getZone();
-                if (zone == null || !zone.isInPlay()) continue;
-                if (!playerId.equals(card.getOwner())) continue;
-
-                SwccgCardBlueprint blueprint = card.getBlueprint();
-                if (blueprint == null) continue;
-                CardCategory category = blueprint.getCardCategory();
-                if (category == CardCategory.CHARACTER || category == CardCategory.STARSHIP
-                        || category == CardCategory.VEHICLE) {
-                    count++;
-                }
-            }
-            return count;
         }
 
         boolean matchesHandTitle(String text) {

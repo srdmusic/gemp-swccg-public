@@ -322,6 +322,26 @@ public final class PersistentResponsePolicy {
 
     }
 
+    /** Minimum immutable Draw-phase proof attached to a selected obligation. */
+    public record ResponseBankDetails(
+            int selectionTurn,
+            long threatRevision,
+            int wholeResponseForceCost,
+            DeployTacticalPolicy.ResponseFormationRoute route,
+            String planDomain) {
+        public ResponseBankDetails {
+            if (threatRevision < 0) {
+                throw new IllegalArgumentException(
+                        "threatRevision must be nonnegative");
+            }
+            requirePositive(selectionTurn, "selectionTurn");
+            requirePositive(wholeResponseForceCost,
+                    "wholeResponseForceCost");
+            Objects.requireNonNull(route, "route");
+            planDomain = requireNonBlank(planDomain, "planDomain");
+        }
+    }
+
     public record ExecutionProof(boolean legal,
                                  boolean available,
                                  boolean affordable,
@@ -435,7 +455,23 @@ public final class PersistentResponsePolicy {
                              Mode mode,
                              int persistentBonus,
                              int criticalBonus,
-                             String reasonCode) {
+                             String reasonCode,
+                             ResponseBankDetails responseBank) {
+        public Obligation(CandidateKey candidateKey,
+                          CandidateKind kind,
+                          List<DeployActionKey> responseActions,
+                          LocationKey threatLocation,
+                          LocationKey responseTargetLocation,
+                          TargetRole role,
+                          Mode mode,
+                          int persistentBonus,
+                          int criticalBonus,
+                          String reasonCode) {
+            this(candidateKey, kind, responseActions, threatLocation,
+                    responseTargetLocation, role, mode, persistentBonus,
+                    criticalBonus, reasonCode, null);
+        }
+
         public Obligation {
             Objects.requireNonNull(candidateKey, "candidateKey");
             Objects.requireNonNull(kind, "kind");
@@ -473,7 +509,13 @@ public final class PersistentResponsePolicy {
                 List<DeployActionKey> remaining) {
             return new Obligation(candidateKey, kind, remaining,
                     threatLocation, responseTargetLocation, role, mode,
-                    persistentBonus, criticalBonus, reasonCode);
+                    persistentBonus, criticalBonus, reasonCode, null);
+        }
+
+        public Obligation withResponseBank(ResponseBankDetails details) {
+            return new Obligation(candidateKey, kind, responseActions,
+                    threatLocation, responseTargetLocation, role, mode,
+                    persistentBonus, criticalBonus, reasonCode, details);
         }
     }
 

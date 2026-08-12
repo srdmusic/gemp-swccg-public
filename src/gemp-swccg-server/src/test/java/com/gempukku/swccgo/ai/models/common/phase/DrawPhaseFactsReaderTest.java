@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.PhysicalCardVisitor;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
@@ -73,6 +74,61 @@ public class DrawPhaseFactsReaderTest {
         assertFalse(expensive.expensiveCardInHand());
         assertEquals(0, starved.deployablePower());
         assertEquals(999, starved.minCostForThresholdPower());
+    }
+
+    @Test
+    public void onlyExactOrdinaryStockDrawMatchesResponseBankRoute() {
+        assertTrue(DrawPhaseFactsReader.isOrdinaryStockForcePileDraw(
+                "Draw card into hand from Force Pile"));
+        for (String other : List.of(
+                "Draw top card of Reserve Deck",
+                "Draw destiny",
+                "Draw weapon destiny",
+                "Search Reserve Deck and take a card into hand",
+                "Draw card from Force Pile using an Effect")) {
+            assertFalse(other, DrawPhaseFactsReader
+                    .isOrdinaryStockForcePileDraw(other));
+        }
+    }
+
+    @Test
+    public void boardDeficitCountsOnlyOwnedInPlayUnits() {
+        GameState gameState = mock(GameState.class);
+        when(gameState.getOpponent("us")).thenReturn("them");
+        PhysicalCard oursOne = boardCard(
+                "us", Zone.AT_LOCATION, CardCategory.CHARACTER);
+        PhysicalCard oursTwo = boardCard(
+                "us", Zone.AT_LOCATION, CardCategory.STARSHIP);
+        PhysicalCard oursThree = boardCard(
+                "us", Zone.AT_LOCATION, CardCategory.VEHICLE);
+        PhysicalCard theirsOne = boardCard(
+                "them", Zone.AT_LOCATION, CardCategory.CHARACTER);
+        PhysicalCard theirsTwo = boardCard(
+                "them", Zone.AT_LOCATION, CardCategory.STARSHIP);
+        PhysicalCard theirsThree = boardCard(
+                "them", Zone.AT_LOCATION, CardCategory.VEHICLE);
+        PhysicalCard theirsFour = boardCard(
+                "them", Zone.AT_LOCATION, CardCategory.CHARACTER);
+        PhysicalCard ignoredEffect = boardCard(
+                "them", Zone.AT_LOCATION, CardCategory.EFFECT);
+        PhysicalCard ignoredHandUnit = boardCard(
+                "them", Zone.HAND, CardCategory.CHARACTER);
+
+        when(gameState.getAllPermanentCards()).thenReturn(List.of(
+                oursOne, oursTwo, theirsOne, theirsTwo, theirsThree,
+                theirsFour, ignoredEffect, ignoredHandUnit));
+        DrawPhaseFactsReader.BoardUnits twoVersusFour =
+                DrawPhaseFactsReader.inspectBoardUnits(gameState, "us");
+        assertEquals(2, twoVersusFour.ourUnits());
+        assertEquals(4, twoVersusFour.opponentUnits());
+        assertTrue(twoVersusFour.behindOnBoard());
+
+        when(gameState.getAllPermanentCards()).thenReturn(List.of(
+                oursOne, oursTwo, oursThree, theirsOne, theirsTwo,
+                theirsThree, theirsFour, ignoredEffect,
+                ignoredHandUnit));
+        assertFalse(DrawPhaseFactsReader.inspectBoardUnits(
+                gameState, "us").behindOnBoard());
     }
 
     @Test
@@ -169,5 +225,16 @@ public class DrawPhaseFactsReaderTest {
                     throw new UnsupportedOperationException(
                             "Unexpected PhysicalCard call: " + method.getName());
                 });
+    }
+
+    private static PhysicalCard boardCard(
+            String owner, Zone zone, CardCategory category) {
+        PhysicalCard card = mock(PhysicalCard.class);
+        SwccgCardBlueprint blueprint = mock(SwccgCardBlueprint.class);
+        when(card.getOwner()).thenReturn(owner);
+        when(card.getZone()).thenReturn(zone);
+        when(card.getBlueprint()).thenReturn(blueprint);
+        when(blueprint.getCardCategory()).thenReturn(category);
+        return card;
     }
 }

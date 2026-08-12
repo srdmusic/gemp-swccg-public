@@ -23,6 +23,48 @@ public class DeployPhaseSourceParityTest {
     }
 
     @Test
+    public void drawEvaluatorsStayNormalizedMirrors() throws IOException {
+        assertNormalizedMirror("DrawEvaluator.java");
+    }
+
+    @Test
+    public void drawResponseBankHasOneSharedOwnerAndNoCoordinatorCache()
+            throws IOException {
+        String draw = Files.readString(
+                commonPhaseRoot().resolve("DrawPhasePolicy.java"));
+        int legacyV182 = draw.indexOf("\"V182\"");
+        int responseBank = draw.indexOf("\"V182-response-bank\"");
+        int holdBack = draw.indexOf("HoldBack holdBack =", responseBank);
+        assertTrue(legacyV182 >= 0);
+        assertTrue(responseBank > legacyV182);
+        assertTrue(holdBack > responseBank);
+        assertEquals(responseBank, draw.lastIndexOf(
+                "\"V182-response-bank\""));
+
+        String policy = Files.readString(commonPhaseRoot().resolve(
+                "PersistentResponsePolicy.java"));
+        String adapter = Files.readString(commonPhaseRoot().resolve(
+                "PersistentResponsePlanAdapter.java"));
+        assertTrue(policy.contains("record ResponseBankDetails("));
+        assertTrue(policy.contains("ResponseBankDetails responseBank"));
+        assertTrue(adapter.contains("isCurrentResponseBank("));
+        assertFalse(adapter.contains("burst"));
+
+        for (String bot : new String[]{"rando", "chosenone"}) {
+            String controller = strategySource(
+                    bot, "StrategyController.java");
+            assertFalse(controller.contains("ResponseBank"));
+            String coordinator = botSource(bot,
+                    bot.equals("rando")
+                            ? "RandoCalAi.java" : "TheChosenOneAi.java");
+            assertTrue(coordinator.contains(
+                    "DrawPhaseFactsReader.inspectBoardUnits("));
+            assertFalse(coordinator.contains(
+                    "private static int countUnitsInPlay("));
+        }
+    }
+
+    @Test
     public void persistentResponseAdaptersStayNormalizedMirrors()
             throws IOException {
         assertEquals(normalize(strategySource("rando",
@@ -196,6 +238,13 @@ public class DeployPhaseSourceParityTest {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models")
                 .resolve(bot).resolve("strategy").resolve(fileName));
+    }
+
+    private static String botSource(String bot, String fileName)
+            throws IOException {
+        return Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models")
+                .resolve(bot).resolve(fileName));
     }
 
     private static Path commonPhaseRoot() {

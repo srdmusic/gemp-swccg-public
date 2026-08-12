@@ -6,6 +6,7 @@ import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -99,7 +100,8 @@ public final class PersistentResponsePlanAdapter {
     }
 
     private record Candidate<P>(P source,
-                                PersistentResponsePolicy.CandidateFacts facts) {
+                                PersistentResponsePolicy.CandidateFacts facts,
+                                PlanView<P> plan) {
     }
 
     /** Selects the exact source plan identified by the shared typed policy. */
@@ -147,10 +149,114 @@ public final class PersistentResponsePlanAdapter {
         if (obligation.isEmpty()) return Optional.empty();
         Candidate<P> selected = byKey.get(
                 obligation.get().candidateKey());
-        return selected != null
-                ? Optional.of(new Selection<>(
-                        selected.source(), obligation.get()))
-                : Optional.empty();
+        if (selected == null) return Optional.empty();
+        PersistentResponsePolicy.Obligation selectedObligation =
+                obligation.get();
+        PersistentResponsePolicy.ResponseBankDetails responseBank =
+                responseBankDetails(input, selected, selectedObligation);
+        if (responseBank != null) {
+            selectedObligation = selectedObligation.withResponseBank(
+                    responseBank);
+        }
+        return Optional.of(new Selection<>(selected.source(),
+                selectedObligation));
+    }
+
+    /** Attaches only a non-mandatory response that won typed co-ranking. */
+    private static <P> PersistentResponsePolicy.ResponseBankDetails
+    responseBankDetails(Input<P> input, Candidate<P> selected,
+                        PersistentResponsePolicy.Obligation obligation) {
+        PersistentResponsePolicy.CandidateFacts facts = selected.facts();
+        PersistentResponsePolicy.ExecutionProof execution =
+                facts.execution();
+        if (facts.kind()
+                != PersistentResponsePolicy.CandidateKind.RESPONSE_TARGET
+                || facts.fundedMandatoryObjective()
+                || !"selected-executable-response".equals(
+                obligation.reasonCode())
+                || !execution.executable()
+                || execution.exactTotalCost() <= 0
+                || !facts.formation().responseViable()) {
+            return null;
+        }
+        GameState state = input.game().getGameState();
+        int selectionTurn = state != null
+                ? state.getPlayersLatestTurnNumber(input.playerId()) : 0;
+        if (selectionTurn <= 0) return null;
+        return new PersistentResponsePolicy.ResponseBankDetails(
+                selectionTurn,
+                input.snapshot().revision(),
+                execution.exactTotalCost(), facts.formation().route(),
+                selected.plan().domain());
+    }
+
+    /** Revalidates every fact the Draw phase can still prove. */
+    public static boolean isCurrentResponseBank(
+            SwccgGame game, String playerId,
+            ObjectiveAnalyzer objectiveAnalyzer,
+            PersistentResponsePolicy.Snapshot threatSnapshot,
+            PersistentResponsePolicy.Obligation obligation,
+            int currentTurn) {
+        PersistentResponsePolicy.ResponseBankDetails bank =
+                obligation != null ? obligation.responseBank() : null;
+        if (game == null || playerId == null || objectiveAnalyzer == null
+                || threatSnapshot == null || bank == null
+                || bank.selectionTurn() != currentTurn
+                || bank.threatRevision() != threatSnapshot.revision()) {
+            return false;
+        }
+        GameState state = game.getGameState();
+        if (state == null || state.getCurrentPhase() != Phase.DRAW
+                || !playerId.equals(state.getCurrentPlayerId())
+                || state.getPlayersLatestTurnNumber(playerId) != currentTurn
+                || state.getForcePileSize(playerId)
+                < bank.wholeResponseForceCost()) {
+            return false;
+        }
+        PhysicalCard target = state.findCardByPermanentId(
+                obligation.responseTargetLocation().permanentCardId());
+        if (target == null
+                || !hasCurrentResponseReason(game, playerId,
+                objectiveAnalyzer, threatSnapshot, obligation, target)) {
+            return false;
+        }
+        String targetCardId = String.valueOf(target.getCardId());
+
+        List<InstructionView> instructions = new ArrayList<>();
+        List<PhysicalCard> cards = new ArrayList<>();
+        int totalCost = 0;
+        int priority = 0;
+        for (PersistentResponsePolicy.DeployActionKey action
+                : obligation.responseActions()) {
+            InstructionView instruction = new InstructionView(
+                    action.permanentCardId(), action.currentCardId(),
+                    targetCardId, priority++);
+            PhysicalCard card = cardByIdentity(state, playerId,
+                    instruction);
+            Integer cost = card != null
+                    && canDeployPaidDirectly(game, card, target)
+                    ? exactDeployCost(game, card, target) : null;
+            if (cost == null) return false;
+            totalCost += cost;
+            instructions.add(instruction);
+            cards.add(card);
+        }
+        if (totalCost != bank.wholeResponseForceCost()) return false;
+
+        String opponent = state.getOpponent(playerId);
+        Side side = state.getSide(playerId);
+        if (opponent == null || side == null) return false;
+        AiBoardAnalyzer.LocationAnalysis currentTarget =
+                AiBoardAnalyzer.analyzeLocation(
+                        game, playerId, opponent, target, side);
+        PlanView<String> plan = new PlanView<>(
+                obligation.candidateKey().value(), bank.planDomain(),
+                "response-bank-recheck", instructions);
+        PersistentResponsePolicy.FormationProof formation =
+                assessFormation(game, playerId, currentTarget, plan,
+                        instructions, cards, true);
+        return formation.responseViable()
+                && formation.route() == bank.route();
     }
 
     /**
@@ -364,7 +470,8 @@ public final class PersistentResponsePlanAdapter {
                                         : 0,
                                 strategicIncome, 0, 0,
                                 true, mandatory, execution, formation);
-                candidates.add(new Candidate<>(plan.source(), facts));
+                candidates.add(new Candidate<>(plan.source(), facts,
+                        plan));
             } else if (mandatory) {
                 PersistentResponsePolicy.LocationKey locationKey =
                         locationKey(target.location);
@@ -381,7 +488,8 @@ public final class PersistentResponsePlanAdapter {
                                 role, 0, 0, strategicIncome, 0, 0,
                                 false, true, execution,
                                 emptyFormation());
-                candidates.add(new Candidate<>(plan.source(), facts));
+                candidates.add(new Candidate<>(plan.source(), facts,
+                        plan));
             }
         }
         return candidates;
@@ -440,7 +548,8 @@ public final class PersistentResponsePlanAdapter {
                                             .ResponseFormationRoute
                                             .EXISTING_LEGAL_ALTERNATIVE,
                                     false));
-            alternatives.add(new Candidate<>(plan.source(), facts));
+            alternatives.add(new Candidate<>(plan.source(), facts,
+                    plan));
         }
         return alternatives;
     }
