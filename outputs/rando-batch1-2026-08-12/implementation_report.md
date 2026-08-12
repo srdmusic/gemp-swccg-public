@@ -28,8 +28,8 @@ The canonical breadcrumb was completed after the initial uncommitted shared-poli
 
 `trackGameState` is the first behavior-bearing call inside every bot `decide()` after optional trace setup. It invokes `StrategyController.observePersistentResponse` on every decision for Rando and Chosen One. Anchors:
 
-- `RandoCalAi.java:588`, observation at `:2850`
-- `TheChosenOneAi.java:588`, observation at `:2699`
+- `RandoCalAi.java:589`, observation at `:2851`
+- `TheChosenOneAi.java:589`, observation at `:2700`
 - mirrored `StrategyController` owns the per-game `PersistentResponsePolicy.State`
 
 The ledger retains the actual mutable `ForceDrainState` while the event is active. When the state changes or becomes null, it reads final `ForceDrainState.getForcePaid()` (`PersistentResponsePolicy.java:171`). It never records announced total, unpaid remaining liability, or `paid + remaining`. Null finalizes one token but does not close the opponent turn, so multiple drains in one turn aggregate without prematurely expiring another lane.
@@ -104,7 +104,7 @@ Documentation files, 4 total:
 - this report
 - `Handoffs/AI_MAILBOX.md`
 
-No engine, card, objective-profile JSON, client, database, deck, shield, WMAOP, `601_87`, or unrelated objective source changed. The separate WMAOP boundary commit `30b1709661a9bd0bd0ce80b3cc87ce440b9d8901` has not been cherry-picked into this dirty worktree.
+Batch 1 changed no engine, card, objective-profile JSON, client, database, deck, shield, WMAOP, `601_87`, or unrelated objective source. The separate WMAOP boundary tests were later integrated as `6426d6deb`; they did not change production behavior.
 
 ## 4. Deterministic verification
 
@@ -155,11 +155,9 @@ Before deployment, rollback is simply the exact e877 source lineage plus the unt
 
 The remaining authorized sequence is:
 
-1. Commit the final integration-verification corrections locally, without pushing.
-2. Obtain an independent work-verifier PASS on that exact clean commit.
-3. Build the normalized e877 and final integration artifacts with the same pinned image `sha256:3db65087c1a663b264017845ae5f67eef27b6a6aa4259f1c1efdb2dbda649a80`, dedicated cache, read-only root, and final offline package.
-4. Byte-verify candidate changes against the normalized e877 build, and record normalized-e877 versus original-live compiler drift separately.
-5. Freeze the hall and deploy only with the sealed no-boot-flip override, then verify exact bytes, fresh JVM, database continuity, HTTP, logs, and settings before reopening.
-6. Collect exact database-paired, location-scoped logs and final-segment replay evidence for the semantic rule IDs and target identity when the required opportunities occur.
+1. Build the final integration artifact with the same pinned image `sha256:3db65087c1a663b264017845ae5f67eef27b6a6aa4259f1c1efdb2dbda649a80`, normalized e877 cache, read-only root, and final offline package.
+2. Byte-verify candidate changes against the normalized e877 build, and record normalized-e877 versus original-live compiler drift separately.
+3. Freeze the hall and deploy only with the sealed no-boot-flip override, then verify exact bytes, fresh JVM, database continuity, HTTP, logs, and settings before reopening.
+4. Collect exact database-paired, location-scoped logs and final-segment replay evidence for the semantic rule IDs and target identity when the required opportunities occur.
 
 Current verdict: **source committed and integrated; artifact and live behavior remain HOLD**. No live firing is claimed.
