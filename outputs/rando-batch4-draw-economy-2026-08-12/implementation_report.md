@@ -211,6 +211,6 @@ source-owned V59 score clearing after additional activation.
 
 ## Scope and Delivery State
 
-No engine Java, card Java, objective data, decks, database state, packaging, deployment, server restart, push, or PR was touched. Source commit `468fb6224` is integrated. There is no candidate jar, fresh-JVM, live-log, or replay proof yet.
+No engine Java, card Java, objective data, decks, or database state was touched by this slice. Source commit `468fb6224` is integrated. The combined integration now has an offline JDK 21 candidate package; final artifact sealing, fresh-JVM, live-log, and replay proof remain campaign-level gates outside this slice. No deployment, server restart, push, or PR was performed here.
 
 Revert `468fb6224` to remove this slice and return its behavior to exact base `6426d6deb463ee19190bcdead5b3bfe2d2d5dff7`.
