@@ -127,6 +127,8 @@ Additional checks passed:
 
 The first pinned offline run exposed a missing Surefire provider in the normalized dependency cache. The exact provider already present in the host Maven cache was copied into the established writable normalized cache, then the authoritative run completed with network disabled. This was dependency-cache normalization, not a source or online test change.
 
+The first package comparison also caught Maven dependency mediation removing the JUnit 4.10 and Hamcrest 1.1 entries already present in the deployed fat jar. The corrected async test setup keeps JUnit runtime-scoped at exact 4.10, keeps Mockito test-only, and uses a JUnit-4.10-compatible exception helper. This preserves those baseline archive entries byte-for-byte and avoids an unrelated runtime-archive cleanup.
+
 ## 8. Exact allowlist
 
 Production Java, exactly three:

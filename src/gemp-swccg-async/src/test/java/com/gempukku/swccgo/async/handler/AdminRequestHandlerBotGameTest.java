@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -69,7 +69,7 @@ public class AdminRequestHandlerBotGameTest {
 
     @Test
     public void missingSessionIsUnauthorized() throws Exception {
-        HttpProcessingException failure = assertThrows(HttpProcessingException.class,
+        HttpProcessingException failure = expectHttpProcessingException(
                 () -> invoke(VALID_FORM, null));
 
         assertEquals(401, failure.getStatus());
@@ -79,7 +79,7 @@ public class AdminRequestHandlerBotGameTest {
 
     @Test
     public void nonAdminIsForbidden() throws Exception {
-        HttpProcessingException failure = assertThrows(HttpProcessingException.class,
+        HttpProcessingException failure = expectHttpProcessingException(
                 () -> invoke(VALID_FORM, userSession));
 
         assertEquals(403, failure.getStatus());
@@ -92,7 +92,7 @@ public class AdminRequestHandlerBotGameTest {
         String missingDeckOwner = "format=open&lightSkill=CHOSENONE&lightDeck=Chosen+Light"
                 + "&darkSkill=RANDO&darkDeck=Rando+Dark";
 
-        HttpProcessingException failure = assertThrows(HttpProcessingException.class,
+        HttpProcessingException failure = expectHttpProcessingException(
                 () -> invoke(missingDeckOwner, adminSession));
 
         assertEquals(400, failure.getStatus());
@@ -104,7 +104,7 @@ public class AdminRequestHandlerBotGameTest {
     public void lightSkillMustBeExactChosenOne() throws Exception {
         String wrongSkill = VALID_FORM.replace("lightSkill=CHOSENONE", "lightSkill=RANDO");
 
-        HttpProcessingException failure = assertThrows(HttpProcessingException.class,
+        HttpProcessingException failure = expectHttpProcessingException(
                 () -> invoke(wrongSkill, adminSession));
 
         assertEquals(400, failure.getStatus());
@@ -116,7 +116,7 @@ public class AdminRequestHandlerBotGameTest {
     public void darkSkillMustBeExactRando() throws Exception {
         String wrongSkill = VALID_FORM.replace("darkSkill=RANDO", "darkSkill=CHOSENONE");
 
-        HttpProcessingException failure = assertThrows(HttpProcessingException.class,
+        HttpProcessingException failure = expectHttpProcessingException(
                 () -> invoke(wrongSkill, adminSession));
 
         assertEquals(400, failure.getStatus());
@@ -128,7 +128,7 @@ public class AdminRequestHandlerBotGameTest {
     public void missingDeckOwnerIsNotFound() throws Exception {
         when(playerDao.getPlayer("deck-owner")).thenReturn(null);
 
-        HttpProcessingException failure = assertThrows(HttpProcessingException.class,
+        HttpProcessingException failure = expectHttpProcessingException(
                 () -> invoke(VALID_FORM, adminSession));
 
         assertEquals(404, failure.getStatus());
@@ -142,7 +142,7 @@ public class AdminRequestHandlerBotGameTest {
                 "open", "Chosen Light", "Rando Dark", deckOwner))
                 .thenThrow(new HallServer.BotGameInputException("invalid deck"));
 
-        HttpProcessingException failure = assertThrows(HttpProcessingException.class,
+        HttpProcessingException failure = expectHttpProcessingException(
                 () -> invoke(VALID_FORM, adminSession));
 
         assertEquals(400, failure.getStatus());
@@ -154,7 +154,7 @@ public class AdminRequestHandlerBotGameTest {
                 "open", "Chosen Light", "Rando Dark", deckOwner))
                 .thenThrow(new HallException("another game is active"));
 
-        HttpProcessingException failure = assertThrows(HttpProcessingException.class,
+        HttpProcessingException failure = expectHttpProcessingException(
                 () -> invoke(VALID_FORM, adminSession));
 
         assertEquals(409, failure.getStatus());
@@ -200,6 +200,20 @@ public class AdminRequestHandlerBotGameTest {
         } finally {
             request.release();
         }
+    }
+
+    private HttpProcessingException expectHttpProcessingException(ThrowingAction action) throws Exception {
+        try {
+            action.run();
+        } catch (HttpProcessingException e) {
+            return e;
+        }
+        fail("Expected HttpProcessingException");
+        return null;
+    }
+
+    private interface ThrowingAction {
+        void run() throws Exception;
     }
 
     private static Player player(String name, String type) {

@@ -10756,3 +10756,9 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     objective data, card Java, decks, and database state are unchanged. No
     package, deploy, restart, game, push, or replay proof occurred. Revert the
     commit containing this entry to remove only this harness.
+
+    Release correction: the async module keeps JUnit runtime-scoped at the
+    already-packaged 4.10 version, uses test-only Mockito, and pins the existing
+    project Surefire version. This preserves the deployed JUnit/Hamcrest fat-jar
+    entries instead of turning a test-harness change into an unrelated archive
+    cleanup.
