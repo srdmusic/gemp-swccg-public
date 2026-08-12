@@ -108,7 +108,7 @@ No engine, card, objective-profile JSON, client, database, deck, shield, WMAOP, 
 
 ### Impacted ring
 
-Result: **201 passed, 0 failures, 0 errors, 0 skipped** across 25 suites.
+Result: **201 passed, 0 failures, 0 errors, 0 skipped** across 24 Surefire class reports.
 
 This ring covers the new ledger/policy, real planner adapter, formation routes, exact wave lifecycle, both deployment-plan mirrors, both `CombinedEvaluator` bucket walks, objective participant and post-flip facts, Invasion, native `219_1`, planner characterization, destination characterization, source ownership, and Rando/Chosen One action-text parity.
 
