@@ -10607,3 +10607,46 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     impacted ring passed 117/0/0/0. Compile, diff, and
     mirrored-source parity passed from exact base 6426d6deb. No commit, jar,
     deploy, restart, push, PR, live firing, or replay proof exists.
+  ==== BATCH 5D EXACT MWYHL FLIP CANDIDATE (2026-08-12, both bots) ====
+
+    Replay DB rows 72166, 72159, 72202, 72233, and 72234 show the
+    Mind What You Have Learned (V) flip bridging Dagobah setup into ordinary
+    board pressure. Card source 225_53 offers Flip only after the unchanged
+    engine proves the objective can flip, Luke is on Dagobah, and it is the
+    owner's turn. The unchanged back source performs the required return.
+
+    New pure ObjectiveFlipActionPolicy recognizes only trimmed Flip from the
+    owned, in-play, unflipped 225_53 front. A same-source front-only Effect or
+    Dagobah-location pull suppresses Flip only when the owner's Reserve Deck
+    contains the exact matching currently legal and affordable paid deploy.
+    Wise Advice and Yoda's Hope are the only Effect targets. Unknown, absent,
+    illegal, and unaffordable candidates do not suppress. Otherwise one
+    OBJECTIVE.MWYHL.FLIP +600 objective-intent band is applied, and each
+    mirrored ActionText adapter returns before generic dispatch.
+
+    Loop-prevention vetoes remain first. The +600 band beats Pass +5 by 595,
+    matches the existing post-flip payoff-start magnitude, and remains below
+    mandatory objective and setup bands at +10000 or +12000. Existing pull
+    scoring puts each proved useful front setup action above the silent Flip.
+    The Bespin pull never suppresses because the same source action survives
+    on the back face and its once-per-turn offer can recur. Reserve feasibility
+    is read only for an exact qualified Flip. No Luke, target, formation,
+    deploy-cost, react, -3, objective-profile, or unrelated scoring behavior
+    was added.
+
+    Failure-first compile evidence proved the policy absent. Parent review
+    caught and corrected the offer-only stranding risk and eager Reserve scan.
+    The final focused ring passed 13/0/0/0, and the impacted ActionText,
+    objective-policy, and source-ownership ring passed 311/0/0/0. The sole
+    failure in the 316-test inclusive ring is
+    the known DeployActionTextSourceParityTest ownership assertion, which also
+    fails unchanged at clean base fa6655081. Server-reactor compile, diff
+    check, and normalized full-file bot parity passed.
+
+    Production scope is one shared AI policy and two mirrored ActionText
+    adapters. No engine Java, card Java, objective data, deck, database, build,
+    package, deployment, restart, or game state changed. Base is exact
+    fa66550815f17e1670cc7946b6ba3354d486038a. The lead-approved coherent local
+    commit proves source only; no runtime load, rule firing, or replay proof
+    exists yet. Revert that Batch 5D commit without affecting Batch 1, WMAOP,
+    Hunt Down Legacy, or Batch 3.

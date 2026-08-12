@@ -31,6 +31,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MassassiObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NabooDuelObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.OnTheVergeObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ObjectiveFlipActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveHardLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
@@ -54,6 +55,8 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
@@ -482,6 +485,52 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     actions.add(action);
                     continue;
                 }
+            }
+
+            String objectiveFlipSourceBlueprint = actionSource == null
+                    ? null : actionSource.getBlueprintId(true);
+            String objectiveFlipSourceBlueprintBase =
+                    objectiveFlipSourceBlueprint == null
+                            ? null
+                            : CARD_LIBRARY.stripBlueprintModifiers(
+                                    objectiveFlipSourceBlueprint);
+            boolean objectiveFlipSourceOwned = actionSource != null
+                    && context.getPlayerId() != null
+                    && context.getPlayerId().equals(
+                            actionSource.getOwner());
+            boolean objectiveFlipSourceInPlay = actionSource != null
+                    && actionSource.getZone() != null
+                    && actionSource.getZone().isInPlay();
+            boolean objectiveFlipSourceFlipped = actionSource != null
+                    && actionSource.isFlipped();
+            boolean exactMwyhlFrontFlip =
+                    "225_53".equals(objectiveFlipSourceBlueprintBase)
+                            && objectiveFlipSourceOwned
+                            && objectiveFlipSourceInPlay
+                            && !objectiveFlipSourceFlipped
+                            && actionText != null
+                            && "Flip".equals(actionText.trim());
+            PolicyResult objectiveFlip = ObjectiveFlipActionPolicy.score(
+                    actionId,
+                    new ObjectiveFlipActionPolicy.Facts(
+                            objectiveFlipSourceBlueprintBase,
+                            objectiveFlipSourceOwned,
+                            objectiveFlipSourceInPlay,
+                            objectiveFlipSourceFlipped,
+                            actionText,
+                            exactMwyhlFrontFlip
+                                    && hasUsefulMwyhlFrontSetupAction(
+                                            context, actionSource, cardId,
+                                            actionTexts, cardIds)));
+            if (!objectiveFlip.operations().isEmpty()) {
+                PolicyContributionLedger objectiveFlipLedger =
+                        new PolicyContributionLedger(
+                                "objective-flip-" + actionId);
+                objectiveFlipLedger.register(objectiveFlip);
+                PolicyOperationAdapter.apply(
+                        action, objectiveFlipLedger);
+                actions.add(action);
+                continue;
             }
 
             if (exactAgentsOfBlackSunBountyMove) {
@@ -5610,6 +5659,69 @@ public class ActionTextEvaluator extends ActionEvaluator {
     }
 
     // ========== Helper Methods ==========
+
+    private static boolean hasUsefulMwyhlFrontSetupAction(
+            DecisionContext context,
+            PhysicalCard actionSource,
+            String sourceCardId,
+            List<String> actionTexts,
+            List<String> sourceCardIds) {
+        if (context == null || context.getGame() == null
+                || context.getGameState() == null
+                || context.getGame().getModifiersQuerying() == null
+                || context.getPlayerId() == null
+                || actionSource == null || sourceCardId == null
+                || actionTexts == null || sourceCardIds == null) {
+            return false;
+        }
+        try {
+            PhysicalCard liveSource = context.getGameState()
+                    .findCardByPermanentId(
+                            actionSource.getPermanentCardId());
+            List<PhysicalCard> reserve = context.getGameState()
+                    .getReserveDeck(context.getPlayerId());
+            if (liveSource == null || reserve == null
+                    || reserve.isEmpty()) {
+                return false;
+            }
+            Filter deployable = Filters.deployable(
+                    liveSource, null, false, 0.0f);
+            int count = Math.min(
+                    actionTexts.size(), sourceCardIds.size());
+            for (int i = 0; i < count; i++) {
+                if (!sourceCardId.equals(sourceCardIds.get(i))) {
+                    continue;
+                }
+                ObjectiveFlipActionPolicy.FrontSetupKind kind =
+                        ObjectiveFlipActionPolicy
+                                .classifyPriorityFrontSetupAction(
+                                        actionTexts.get(i));
+                Filter target = switch (kind) {
+                    case EFFECT -> Filters.or(
+                            Filters.Wise_Advice,
+                            Filters.Yodas_Hope);
+                    case DAGOBAH_LOCATION ->
+                            Filters.Dagobah_location;
+                    case NONE -> null;
+                };
+                if (target == null) {
+                    continue;
+                }
+                Filter useful = Filters.and(target, deployable);
+                for (PhysicalCard candidate : reserve) {
+                    if (candidate != null && useful.accepts(
+                            context.getGameState(),
+                            context.getGame().getModifiersQuerying(),
+                            candidate)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // Unknown setup feasibility must not strand the exact Flip.
+        }
+        return false;
+    }
 
     private void applyResponsePolicy(
             EvaluatedAction action,
