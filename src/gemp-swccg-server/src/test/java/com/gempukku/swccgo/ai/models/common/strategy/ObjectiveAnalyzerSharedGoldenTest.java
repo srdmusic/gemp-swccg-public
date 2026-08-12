@@ -156,6 +156,56 @@ public class ObjectiveAnalyzerSharedGoldenTest {
     }
 
     @Test
+    public void huntDownIdentitySeparatesFamilyMembershipFromVaderRequirement() {
+        String vaderFront = "Flip this card if Vader is at a battleground site.";
+        String vaderBack = "Flip this card if Vader is not on table.";
+
+        for (String blueprintId : List.of(
+                "7_297", "7_297_BACK", "213_31", "213_31_BACK")) {
+            ObjectiveAnalyzer analyzer = analyzed(
+                    blueprintId, "Hunt Down And Destroy The Jedi",
+                    vaderFront, vaderBack);
+
+            assertTrue(blueprintId, analyzer.isHuntDownV());
+            assertTrue(blueprintId,
+                    analyzer.isVaderRequiredHuntDownObjective());
+            assertFalse(blueprintId,
+                    analyzer.isLegacyHuntDownObjective());
+            assertTrue(blueprintId, analyzer.huntDownNeedsVader());
+            assertTrue(blueprintId, analyzer.huntDownFlipBackNoVader());
+        }
+
+        String legacyFront = "Flip this card if Galen or Vader at a battleground site"
+                + " and opponent does not have a unique character of ability > 3"
+                + " present at a battleground site.";
+        String legacyBack = "Flip this card if opponent has a unique character"
+                + " of ability > 3 present at a battleground site.";
+        for (String blueprintId : List.of(
+                "601_87", "601_87_BACK", "601_087", "601_087_BACK")) {
+            ObjectiveAnalyzer analyzer = analyzed(
+                    blueprintId, "Hunt Down And Destroy The Jedi (Legacy)",
+                    legacyFront, legacyBack);
+
+            assertTrue(blueprintId, analyzer.isHuntDownV());
+            assertTrue(blueprintId,
+                    analyzer.isLegacyHuntDownObjective());
+            assertFalse(blueprintId,
+                    analyzer.isVaderRequiredHuntDownObjective());
+            assertFalse(blueprintId, analyzer.huntDownNeedsVader());
+            assertFalse(blueprintId, analyzer.huntDownFlipBackNoVader());
+        }
+
+        ObjectiveAnalyzer falseSibling = analyzed(
+                "test_vader_battleground", "Unrelated Objective",
+                vaderFront, vaderBack);
+        assertFalse(falseSibling.isHuntDownV());
+        assertFalse(falseSibling.isVaderRequiredHuntDownObjective());
+        assertFalse(falseSibling.isLegacyHuntDownObjective());
+        assertFalse(falseSibling.huntDownNeedsVader());
+        assertTrue(falseSibling.huntDownFlipBackNoVader());
+    }
+
+    @Test
     public void iwtmUsesBattlegroundsForLiveRelevanceButNotSetupSystemName() {
         ObjectiveAnalyzer iwtm = analyzed("208_57", "I Want That Map",
                 "Deploy Tuanul Village. Flip this card if your First Order characters control two battlegrounds.");
@@ -243,6 +293,17 @@ public class ObjectiveAnalyzerSharedGoldenTest {
         Object byTitle = findProfile.invoke(analyzer, "unknown_blueprint", "The Hidden Path");
         assertEquals("My Lord, Is That Legal?", profileField(byBlueprint, "label"));
         assertEquals("The Hidden Path", profileField(byTitle, "label"));
+
+        Object legacy = findProfile.invoke(
+                analyzer, "601_087", "unrelated title");
+        assertEquals(List.of(
+                        "601_87", "601_87_BACK",
+                        "601_087", "601_087_BACK"),
+                profileValue(legacy, "blueprintIds"));
+        assertEquals(List.of("rogue shadow"),
+                profileValue(legacy, "pullableCards"));
+        assertEquals(null, profileValue(legacy, "flipGateSite"));
+        assertEquals(null, profileValue(legacy, "actorLocationRules"));
     }
 
     @Test
@@ -349,14 +410,28 @@ public class ObjectiveAnalyzerSharedGoldenTest {
     }
 
     private static String profileField(Object profile, String name) throws Exception {
+        return (String) profileValue(profile, name);
+    }
+
+    private static Object profileValue(Object profile, String name) throws Exception {
         Field field = profile.getClass().getDeclaredField(name);
         field.setAccessible(true);
-        return (String) field.get(profile);
+        return field.get(profile);
     }
 
     private static ObjectiveAnalyzer analyzed(String blueprintId, String title, String gameText) {
         ObjectiveAnalyzer analyzer = new com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer();
         analyze(analyzer, blueprintId, title, gameText);
+        return analyzer;
+    }
+
+    private static ObjectiveAnalyzer analyzed(
+            String blueprintId, String title, String gameText,
+            String backGameText) {
+        ObjectiveAnalyzer analyzer =
+                new com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer();
+        analyze(analyzer, blueprintId, title, gameText,
+                backGameText, false);
         return analyzer;
     }
 
@@ -375,8 +450,16 @@ public class ObjectiveAnalyzerSharedGoldenTest {
     private static void analyze(
             ObjectiveAnalyzer analyzer, String blueprintId, String title,
             String gameText, boolean flipped) {
+        analyze(analyzer, blueprintId, title, gameText,
+                "Flip this card if the back condition is met.", flipped);
+    }
+
+    private static void analyze(
+            ObjectiveAnalyzer analyzer, String blueprintId, String title,
+            String gameText, String backGameText, boolean flipped) {
         SwccgCardBlueprint front = blueprint(title, gameText, CardCategory.OBJECTIVE);
-        SwccgCardBlueprint back = blueprint(title + " Back", "Flip this card if the back condition is met.", CardCategory.OBJECTIVE);
+        SwccgCardBlueprint back = blueprint(
+                title + " Back", backGameText, CardCategory.OBJECTIVE);
         PhysicalCard objective = card(front, back, blueprintId, PLAYER_ID,
                 Zone.SIDE_OF_TABLE, flipped);
         GameState gameState = mock(GameState.class);

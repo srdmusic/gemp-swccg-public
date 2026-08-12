@@ -321,10 +321,12 @@ public final class DeployTacticalPolicy {
         if (facts.opponentPower() >= 6.0f) {
             score += 100.0f;
         }
-        if (facts.jediPresent() && facts.deployingVader()) {
+        if (facts.priorityTargetPresent()
+                && facts.deployingPrimaryHunter()) {
             score += 600.0f;
         }
-        if (facts.jediPresent() && facts.deployingInquisitor()) {
+        if (facts.priorityTargetPresent()
+                && facts.deployingInquisitor()) {
             score += 250.0f;
         }
         if (facts.hatredPresent() && facts.deployingInquisitor()) {
@@ -334,7 +336,7 @@ public final class DeployTacticalPolicy {
         add(operations, facts.actionId(), "V34", score, String.format(
                 "V34 DIRECT ENGAGE: Deploy %s to %s (opp power %.0f%s%s) — contest!",
                 facts.cardTitle(), facts.locationTitle(), facts.opponentPower(),
-                facts.jediPresent() ? " JEDI" : "",
+                facts.priorityTargetPresent() ? " PRIORITY TARGET" : "",
                 facts.hatredPresent() ? " HATRED" : ""));
         return new PolicyResult("DEPLOY_V34_DIRECT_ENGAGE_POLICY", operations);
     }
@@ -924,9 +926,9 @@ public final class DeployTacticalPolicy {
     public record DirectEngageFacts(String actionId, String cardTitle,
                                     String locationTitle,
                                     float opponentPower,
-                                    boolean jediPresent,
+                                    boolean priorityTargetPresent,
                                     boolean hatredPresent,
-                                    boolean deployingVader,
+                                    boolean deployingPrimaryHunter,
                                     boolean deployingInquisitor,
                                     float inquisitorHatredScore) {
         public DirectEngageFacts {

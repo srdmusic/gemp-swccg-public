@@ -5180,7 +5180,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         //   - Non-Vader characters get heavy penalty (-200) to save Force for Vader
                         //   - Exception: Inquisitors still get a small allowance since they help battle destiny
                         if (isCharacter && !earlySpyDetected && locObjAnalyzer != null
-                            && locObjAnalyzer.isAnalyzed() && locObjAnalyzer.isHuntDownV()) {
+                            && locObjAnalyzer.isAnalyzed()
+                            && locObjAnalyzer
+                                .isVaderRequiredHuntDownObjective()) {
                             try {
                                 boolean vaderOnTable = locObjAnalyzer.isVaderOnTable(gameState, playerId);
                                 boolean preFlip = !locObjAnalyzer.isFlipped();
@@ -11921,7 +11923,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                 boolean huntDown = context.getObjectiveAnalyzer() != null
                         && context.getObjectiveAnalyzer().isAnalyzed()
-                        && context.getObjectiveAnalyzer().isHuntDownV();
+                        && context.getObjectiveAnalyzer()
+                            .isVaderRequiredHuntDownObjective();
                 applySetupContributions(action,
                         SetupPolicy.startingEffectDeck(cardTitle, huntDown));
 

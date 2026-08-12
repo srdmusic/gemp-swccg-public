@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
+import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
@@ -69,6 +71,8 @@ public class HuntDownLegacyObjectiveEngineContractTest {
         return new VirtualTableScenario(
                 new HashMap<>() {{
                     put("luke", "1_19");
+                    put("leia", "1_17");
+                    put("wookiee", "7_50");
                 }},
                 new HashMap<>() {{
                     put("galen", "601_81");
@@ -78,6 +82,28 @@ public class HuntDownLegacyObjectiveEngineContractTest {
                 // Chasm Walkway (both force icons) is the battleground where
                 // everything happens: Imperial City has no Light icon and is
                 // NOT a battleground.
+                StartingSetup.DefaultLSGroundLocation,
+                HDADTJ_LEGACY,
+                StartingSetup.NoLSStartingInterrupts,
+                StartingSetup.NoDSStartingInterrupts,
+                StartingSetup.NoLSShields,
+                StartingSetup.NoDSShields,
+                VirtualTableScenario.Open
+        );
+    }
+
+    private VirtualTableScenario legacyActorScenario() {
+        return new VirtualTableScenario(
+                new HashMap<>() {{
+                    put("luke", "1_19");
+                }},
+                new HashMap<>() {{
+                    put("galen", "601_81");
+                    put("vader", "1_168");
+                    put("trooper", "204_40");
+                }},
+                24,
+                24,
                 StartingSetup.DefaultLSGroundLocation,
                 HDADTJ_LEGACY,
                 StartingSetup.NoLSStartingInterrupts,
@@ -170,6 +196,73 @@ public class HuntDownLegacyObjectiveEngineContractTest {
     }
 
     @Test
+    public void hdadtjlBlockerRequiresBothUniquenessAndAbilityAboveThree() {
+        var scn = legacyScenario();
+        var objective = scn.GetDSCard("objective");
+        var chasm = scn.GetLSStartingLocation();
+        var galen = scn.GetDSCard("galen");
+        var leia = scn.GetLSCard("leia");
+        var wookiee = scn.GetLSCard("wookiee");
+        var pulse = scn.GetDSFiller(1);
+
+        scn.MoveCardsToDSHand(pulse);
+        scn.StartGame();
+        scn.MoveCardsToLocation(chasm, galen, leia, wookiee);
+
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertFalse("Unique ability 3 and non-unique ability 4 are not blockers",
+                analyzer.isPreFlipGlobalBlockerAt(
+                        scn.game(), VirtualTableScenario.DS, chasm));
+
+        scn.DSActivateForceCheat(12);
+        scn.SkipToPhase(Phase.DEPLOY);
+        scn.DSDeployCardAndPassResponses(pulse, chasm);
+        assertTrue("Neither negative-boundary character may block the flip",
+                objective.isFlipped());
+    }
+
+    @Test
+    public void hdadtjlGalenAndVaderAreEqualTypedHuntersAgainstTheExactBlocker() {
+        var scn = legacyActorScenario();
+        var chasm = scn.GetLSStartingLocation();
+        var galen = scn.GetDSCard("galen");
+        var vader = scn.GetDSCard("vader");
+        var trooper = scn.GetDSCard("trooper");
+        var luke = scn.GetLSCard("luke");
+
+        scn.StartGame();
+        scn.MoveCardsToLocation(chasm, luke);
+
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertTrue(analyzer.isPreFlipGlobalBlockerAt(
+                scn.game(), VirtualTableScenario.DS, chasm));
+
+        boolean galenQualifies = analyzer
+                .qualifiesPreFlipRuntimeActorAtLocation(
+                        scn.game(), VirtualTableScenario.DS, galen, chasm);
+        boolean vaderQualifies = analyzer
+                .qualifiesPreFlipRuntimeActorAtLocation(
+                        scn.game(), VirtualTableScenario.DS, vader, chasm);
+        boolean trooperQualifies = analyzer
+                .qualifiesPreFlipRuntimeActorAtLocation(
+                        scn.game(), VirtualTableScenario.DS, trooper, chasm);
+
+        assertTrue(galenQualifies);
+        assertTrue(vaderQualifies);
+        assertFalse(trooperQualifies);
+        assertEquals(1000.0f, typedActorScore(galenQualifies), 0.0f);
+        assertEquals(1000.0f, typedActorScore(vaderQualifies), 0.0f);
+        assertEquals(0.0f, typedActorScore(trooperQualifies), 0.0f);
+        assertEquals(850.0f, directEngageScore(galenQualifies), 0.0f);
+        assertEquals(850.0f, directEngageScore(vaderQualifies), 0.0f);
+        assertEquals(250.0f, directEngageScore(trooperQualifies), 0.0f);
+    }
+
+    @Test
     public void hdadtjlProfileRulesTrackTheEngineLawNotTheClassicHijack() {
         var scn = legacyScenario();
         var chasm = scn.GetLSStartingLocation();
@@ -182,6 +275,12 @@ public class HuntDownLegacyObjectiveEngineContractTest {
                 .ObjectiveAnalyzer();
         analyzer.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
         assertTrue("Profile must hydrate for 601_87", analyzer.isAnalyzed());
+        assertTrue(analyzer.isHuntDownV());
+        assertTrue(analyzer.isLegacyHuntDownObjective());
+        assertFalse(analyzer.isVaderRequiredHuntDownObjective());
+        assertFalse(analyzer.huntDownNeedsVader());
+        assertFalse(analyzer.isObjectiveRelevantLocation(
+                "Coruscant: Imperial City"));
 
         var preFlip = analyzer.assessFlipLocationRules(
                 scn.game(), VirtualTableScenario.DS, "preFlip", "flip");
@@ -208,5 +307,22 @@ public class HuntDownLegacyObjectiveEngineContractTest {
                 scn.game(), VirtualTableScenario.DS, "postFlip", "flipBack");
         assertEquals("The back encodes one two-route anyOf rule", 1,
                 postFlip.size());
+    }
+
+    private static float typedActorScore(boolean qualifies) {
+        return DeployObjectiveSitingPolicy
+                .scoreActorRuntimeLocation("deploy", qualifies)
+                .operations().stream()
+                .map(operation -> operation.delta())
+                .reduce(0.0f, Float::sum);
+    }
+
+    private static float directEngageScore(boolean primaryHunter) {
+        return DeployTacticalPolicy.scoreV34DirectEngage(
+                        new DeployTacticalPolicy.DirectEngageFacts(
+                                "deploy", "Hunter", "Chasm Walkway",
+                                5.99f, true, false,
+                                primaryHunter, false, 300.0f))
+                .operations().get(0).delta();
     }
 }

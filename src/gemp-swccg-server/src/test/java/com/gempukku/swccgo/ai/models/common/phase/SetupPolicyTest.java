@@ -162,6 +162,9 @@ public class SetupPolicyTest {
         assertContribution(SetupPolicy.startingEffectDeck(
                         "I Am Your Father", true).get(0),
                 SetupPolicy.Branch.EFFECT_HUNT_DOWN_REQUIRED, 500.0f);
+        assertTrue("Legacy Hunt Down must bypass the Vader-deck whitelist",
+                SetupPolicy.startingEffectDeck(
+                        "A Sith's Plans", false).isEmpty());
     }
 
     @Test

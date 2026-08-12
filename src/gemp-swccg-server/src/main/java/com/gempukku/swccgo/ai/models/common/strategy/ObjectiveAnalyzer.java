@@ -192,7 +192,7 @@ public class ObjectiveAnalyzer {
 
     // V25: Hunt Down V awareness
     private boolean isHuntDownV = false;
-    private boolean huntDownNeedsVader = false;       // Vader required at battleground to flip
+    private boolean huntDownNeedsVader = false;       // Exact classic/virtual Vader requirement
     private boolean huntDownFlipBackNoVader = false;   // Flips back if Vader not on table
 
     // V160 (Steve, 2026-05-29): Shield Will Be Down In Moments awareness
@@ -369,6 +369,11 @@ public class ObjectiveAnalyzer {
 
             this.objectiveTitle = title;
             this.objectiveBlueprintId = bpId;
+            this.isHuntDownV = isClassicHuntDownObjective()
+                    || isVirtualHuntDownObjective()
+                    || isLegacyHuntDownObjective();
+            this.huntDownNeedsVader =
+                    isVaderRequiredHuntDownObjective();
             // V86/V88/V121 CONSOLIDATED (2026-07-07): compute objective-identity flags from the
             // title HERE (before parseGameText's no-flip early return) so they are set for EVERY
             // objective, flip-parsed or not. Exact substring semantics preserved verbatim from the
@@ -23719,6 +23724,16 @@ public class ObjectiveAnalyzer {
         return "213_31".equals(objectiveBlueprintId)
                 || "213_31_BACK".equals(objectiveBlueprintId);
     }
+    public boolean isLegacyHuntDownObjective() {
+        return "601_87".equals(objectiveBlueprintId)
+                || "601_87_BACK".equals(objectiveBlueprintId)
+                || "601_087".equals(objectiveBlueprintId)
+                || "601_087_BACK".equals(objectiveBlueprintId);
+    }
+    public boolean isVaderRequiredHuntDownObjective() {
+        return isClassicHuntDownObjective()
+                || isVirtualHuntDownObjective();
+    }
     public boolean hasClassicHuntDownMaulDuelException(
             SwccgGame game, String playerId, PhysicalCard actionSource) {
         if (!analyzed || !isClassicHuntDownObjective()
@@ -26077,14 +26092,6 @@ public class ObjectiveAnalyzer {
                     addLocationFragment("rebel base");
                 }
             }
-        }
-
-        // V25: Hunt Down V — detect "Vader is at a battleground site" flip condition
-        // The flip condition text is: "Vader is at a battleground site unless Luke, a Jedi, or a Padawan at a battleground site"
-        if (condLower.contains("vader") && condLower.contains("battleground")) {
-            isHuntDownV = true;
-            huntDownNeedsVader = true;
-            LOG.warn("\uD83C\uDFAF [ObjectiveAnalyzer] V25: Hunt Down V objective detected! Vader MUST be deployed to flip.");
         }
 
         // V160 (Steve, 2026-05-29): Shield Will Be Down In Moments \u2014 Hoth invasion deck.

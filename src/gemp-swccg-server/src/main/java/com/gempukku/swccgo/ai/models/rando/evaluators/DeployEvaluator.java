@@ -2872,7 +2872,9 @@ public class DeployEvaluator extends ActionEvaluator {
                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer vaderFlipAnalyzer =
                             context.getObjectiveAnalyzer();
                         if (vaderFlipAnalyzer != null && vaderFlipAnalyzer.isAnalyzed()
-                            && vaderFlipAnalyzer.isHuntDownV() && !vaderFlipAnalyzer.isFlipped()) {
+                            && vaderFlipAnalyzer
+                                .isVaderRequiredHuntDownObjective()
+                            && !vaderFlipAnalyzer.isFlipped()) {
                             String vfPid = context.getPlayerId();
                             PhysicalCard vfTarget = null;
                             for (PhysicalCard vfLoc : gameState.getTopLocations()) {
@@ -2968,7 +2970,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                             v50Turn, card.getTitle(), locCard.getTitle(), (int)totalOurPowerAfterDeploy, (int)oppPowerHere);
                                     }
 
-                                    // V35: Check for Jedi at this location — Vader/Inquisitor bonuses
+                                    // V35: Check the current priority target and exact primary hunter.
                                     com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer
                                         v35Objective =
                                             context.getObjectiveAnalyzer();
@@ -2977,7 +2979,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                         && v35Objective.isAnalyzed()
                                         && v35Objective.isHuntDownV()
                                         && !v35Objective.isFlipped();
-                                    boolean v35JediHere =
+                                    boolean v35PriorityTargetHere =
                                         v35UsesObjectiveBlocker
                                         && v35Objective
                                             .isPreFlipGlobalBlockerAt(
@@ -2992,7 +2994,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                                 if (!v35UsesObjectiveBlocker
                                                         && isJediOrPadawan(
                                                             lcTitle)) {
-                                                    v35JediHere = true;
+                                                    v35PriorityTargetHere = true;
                                                 }
                                                 java.util.List<PhysicalCard> stacked = gameState.getStackedCards(lc);
                                                 if (stacked != null && !stacked.isEmpty()) v35HatredHere = true;
@@ -3003,14 +3005,21 @@ public class DeployEvaluator extends ActionEvaluator {
                                     String deployCardLower = card.getTitle() != null ? card.getTitle().toLowerCase(Locale.ROOT) : "";
                                     boolean deploysVader =
                                         isVader(game, gameState, card);
-                                    if (v35JediHere && deploysVader) {
-                                        // V35.8: Raised from +350 to +600 — killing Jedi is THE objective
-                                        // of Hunt Down. Opponent loses extra Force when Jedi dies.
-                                        LOG.warn("V35.8 HUNT JEDI DEPLOY: Vader to {} with JEDI! (+600)",
-                                            locCard.getTitle());
+                                    boolean deploysPrimaryHunter =
+                                        v35UsesObjectiveBlocker
+                                            ? v35Objective
+                                                .qualifiesPreFlipRuntimeActorAtLocation(
+                                                    game, playerId,
+                                                    card, locCard)
+                                            : deploysVader;
+                                    if (v35PriorityTargetHere
+                                            && deploysPrimaryHunter) {
+                                        LOG.warn("V35.8 PRIORITY TARGET DEPLOY: {} to {} (+600)",
+                                            card.getTitle(), locCard.getTitle());
                                     }
-                                    if (v35JediHere && isInquisitor(deployCardLower)) {
-                                        LOG.warn("V35 INQUISITOR vs JEDI: {} to {} (+250)", card.getTitle(), locCard.getTitle());
+                                    if (v35PriorityTargetHere
+                                            && isInquisitor(deployCardLower)) {
+                                        LOG.warn("V35 INQUISITOR vs PRIORITY TARGET: {} to {} (+250)", card.getTitle(), locCard.getTitle());
                                     }
                                     if (v35HatredHere && isInquisitor(deployCardLower)) {
                                         LOG.warn("V35 INQUISITOR+HATRED: {} to {} with hatred (+{})",
@@ -3021,8 +3030,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                         DeployTacticalPolicy.scoreV34DirectEngage(
                                             new DeployTacticalPolicy.DirectEngageFacts(
                                                 actionId, card.getTitle(), locCard.getTitle(),
-                                                oppPowerHere, v35JediHere, v35HatredHere,
-                                                deploysVader,
+                                                oppPowerHere,
+                                                v35PriorityTargetHere,
+                                                v35HatredHere,
+                                                deploysPrimaryHunter,
                                                 isInquisitor(deployCardLower),
                                                 (float) RandoConfig.SCORE_INQUISITOR_HATRED_SYNERGY));
                                     applySharedPolicy(action, decisionId, actionId,

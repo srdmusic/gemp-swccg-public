@@ -7661,7 +7661,9 @@
       "loaderEnabled": true,
       "blueprintIds": [
         "601_87",
-        "601_87_BACK"
+        "601_87_BACK",
+        "601_087",
+        "601_087_BACK"
       ],
       "titleFragments": [
         "hunt down and destroy the jedi",
@@ -7670,7 +7672,7 @@
       "locationFragments": [],
       "requiredCardsOnTable": [],
       "pullableCards": [
-        "601_95"
+        "rogue shadow"
       ],
       "flipGateSite": null,
       "flipGateCardIds": [],

@@ -345,11 +345,16 @@ public class DeployTacticalPolicyTest {
                 false, false, 300.0f), 250.0f);
         assertDelta(directEngage(6.0f, false, false,
                 false, false, 300.0f), 350.0f);
+        assertDelta(directEngage(5.99f, true, false,
+                true, false, 300.0f), 850.0f);
+        assertDelta(directEngage(6.0f, true, false,
+                true, false, 300.0f), 950.0f);
 
         PolicyResult allBonuses = directEngage(6.0f, true, true,
                 true, true, 300.0f);
         assertOperation(allBonuses, "V34", 1500.0f,
-                "V34 DIRECT ENGAGE: Deploy Darth Vader to Cloud City: Guest Quarters (opp power 6 JEDI HATRED) — contest!");
+                "V34 DIRECT ENGAGE: Deploy Darth Vader to Cloud City: Guest Quarters"
+                        + " (opp power 6 PRIORITY TARGET HATRED) \u2014 contest!");
     }
 
     @Test
@@ -684,16 +689,17 @@ public class DeployTacticalPolicyTest {
     }
 
     private static PolicyResult directEngage(float opponentPower,
-                                             boolean jediPresent,
+                                             boolean priorityTargetPresent,
                                              boolean hatredPresent,
-                                             boolean deployingVader,
+                                             boolean deployingPrimaryHunter,
                                              boolean deployingInquisitor,
                                              float hatredScore) {
         return DeployTacticalPolicy.scoreV34DirectEngage(
                 new DeployTacticalPolicy.DirectEngageFacts(
                         "deploy-42", "Darth Vader",
                         "Cloud City: Guest Quarters", opponentPower,
-                        jediPresent, hatredPresent, deployingVader,
+                        priorityTargetPresent, hatredPresent,
+                        deployingPrimaryHunter,
                         deployingInquisitor, hatredScore));
     }
 

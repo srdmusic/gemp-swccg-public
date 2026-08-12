@@ -10501,3 +10501,41 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     eventual coherent Batch 1 commit; after any future deployment, restore the
     immutable pre-Batch1 e877 rollback packet documented in the implementation
     report.
+
+  ==== 601_87 HUNT DOWN LEGACY EXACT-FAMILY CORRECTION (2026-08-12, both bots) ====
+
+    Source law makes 601_87 a Hunt Down family member but not a Vader-required
+    sibling. Its front accepts Galen or Vader at any battleground site. Its
+    exact blocker is an opposing unique character of ability above 3 at a
+    battleground site. The back flips for that blocker or when neither Galen
+    nor Vader remains. Classic 7_297 and virtual 213_31 remain Vader-required.
+
+    ObjectiveAnalyzer now derives family and Vader-required truth from exact
+    blueprint families. Broad Hunt Down lightsaber, drain, grouping, movement,
+    and actual-Vader behavior remains unchanged. Only the starting-effect
+    whitelist, V25 save-for-Vader scorer, and V51 Vader-flip bonus use the
+    narrower predicate. Direct engagement keeps the family-wide typed blocker
+    and resolves the primary hunter through the typed actor rule, so Legacy
+    Galen and Vader are equal. The non-Hunt Down Vader-versus-Jedi fallback is
+    preserved. Rando and Chosen One remain normalized mirrors.
+
+    No score magnitude changed. Legacy Galen and Vader each use the existing
+    +1000 typed actor-location contribution, without the false V25 -200/+400
+    or V51 +900 sibling bands. Direct engagement remains +250 base, +100 at
+    opponent power 6, +600 for the priority target plus primary hunter, +250
+    for the priority target plus Inquisitor, and the existing Hatred synergy.
+
+    The Legacy profile now recognizes padded and unpadded front/back IDs and
+    stores the dormant named front pull as rogue shadow. Pullable-card profile
+    hydration stays disabled. Imperial City remains setup-only, with no live
+    actor-location route. The broad back tutor remains fail-open to dead-search
+    classification. Card Java, engine Java, decks, database, build, package,
+    deployment, restart, and game state are untouched.
+
+    Test-first failure was observed. Before the local commit, the focused ring
+    passed 66/0/0/0 and the broader affected/parity ring passed 187/0/0/0.
+    Clean server-reactor compile and diff checks passed from exact base
+    6426d6deb. No package, deployment, runtime load, or replay firing proof
+    exists yet. Revert the
+    eventual coherent 601_87 exact-family commit. Batch 1, WMAOP, and generic
+    Hunt Down family behavior remain independent.
