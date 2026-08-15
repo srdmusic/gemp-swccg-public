@@ -6,7 +6,7 @@ Branch: `codex/objective-score-cap-2026-08-15`
 
 Exact base: `efbb36723cd0ce9e33efb42764c2217126f6ea26`
 
-Current source state: included in the local source commit containing this report
+Current source state: local source commit `2d143e1695dc63eca695c11de411788048b6e233`
 
 Highest proof gate: `SOURCE_TESTED`
 
@@ -151,7 +151,7 @@ Excluded:
 
 | Gate | Status | Evidence |
 |---|---|---|
-| Source migration | PASS | Local source commit containing this report; exact parent base `efbb36723cd0ce9e33efb42764c2217126f6ea26` |
+| Source migration | PASS | Exact local source commit `2d143e1695dc63eca695c11de411788048b6e233`; exact parent base `efbb36723cd0ce9e33efb42764c2217126f6ea26` |
 | Sole executable positive `+6000` audit | PASS | Zero executable positive hits; historical comments and intentional `-6000` activation logic remain |
 | Positive objective exact `+300` contract | PASS | Final focused ring `126/0/0/0` |
 | Signed per-action objective ceiling | PASS | Focused policy, battle, plan-ranking, adapter, and merge contracts included in `126/0/0/0` |
@@ -179,4 +179,4 @@ The four baseline failures are `classicActorsMoveToOpenThirdSiteWithTypedProgres
 
 ## Revert
 
-The candidate is locally committed and undeployed. Revert the local source commit containing this report to remove the migration. A runtime rollback is unnecessary unless a later package is deployed.
+The candidate is locally committed and undeployed. Revert local source commit `2d143e1695dc63eca695c11de411788048b6e233` to remove the migration. A runtime rollback is unnecessary unless a later package is deployed.

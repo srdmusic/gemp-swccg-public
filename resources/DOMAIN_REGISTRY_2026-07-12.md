@@ -26,7 +26,7 @@ These five semantic operations are source-reachable on `codex/rando-replay-repai
 
 ## 2026-08-15 objective-score candidate amendment
 
-The frozen 367-arm census and the 2026-08-12 rows above remain historical snapshots. The candidate below changes current score ownership without rewriting those counts. Do not label these rows LIVE until an exact artifact is packaged, loaded in a fresh JVM, and behaviorally exercised.
+The frozen 367-arm census and the 2026-08-12 rows above remain historical snapshots. The source-tested amendment below changes current score ownership without rewriting those counts. Do not label these rows LIVE until an exact artifact is packaged, loaded in a fresh JVM, and behaviorally exercised.
 
 | Semantic owner | Domain | KIND | Magnitude / control | Source owner | Exact boundary | Status |
 |---|---|---|---|---|---|---|

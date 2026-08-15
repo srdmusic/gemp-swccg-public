@@ -10852,8 +10852,9 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     library, database schema, or workbook changed.
 
     Branch codex/objective-score-cap-2026-08-15 has exact parent base
-    efbb36723cd0ce9e33efb42764c2217126f6ea26; the local source commit is the
-    commit containing this entry. The final focused ring passed 126/0/0/0.
+    efbb36723cd0ce9e33efb42764c2217126f6ea26 and exact local source commit
+    2d143e1695dc63eca695c11de411788048b6e233. The final focused ring passed
+    126/0/0/0.
     The 132-class changed-test ring ran 1507/4/0/0 and the full reactor ran
     3400/4/0/26. Both contained only the same four Endor Operations
     producer-predicate failures reproduced 4/4 on the untouched base.
@@ -10865,5 +10866,5 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     restart, loaded-byte proof, semantic-tag firing, or live replay proof
     exists. The deployed prior jar remains
     917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf and
-    does not contain this source candidate. Revert the local source commit
-    containing this entry to remove the migration.
+    does not contain this source candidate. Revert local source commit
+    2d143e1695dc63eca695c11de411788048b6e233 to remove the migration.

@@ -313,3 +313,19 @@ Files: shared AI policy and phase owners, mirrored Rando and Chosen One adapters
 Risks: this changes a broad additive scoring surface. It removes dominance but does not add Emperor-on-shuttle pairing, repair a specific unsafe AT-AT destination, or correct battle prediction. No clean build, package, candidate jar, deployment, restart, loaded-JVM proof, semantic-tag firing, live replay proof, push, or pull request exists.
 
 Needed: final bounded test evidence, normalized bot parity, static score-leak review, and one coherent local commit. Do not deploy this uncommitted source.
+
+## 2026-08-15 15:05 PT - Codex objective score-cap lane -> Alfred - RESOLVED
+
+Topic: Global objective score ceiling and Move R2 score-cannon retirement are source-tested and locally committed.
+
+Decision: The source boundary requested in the 12:28 PT OPEN entry passed independent review and is closed at exact local source commit `2d143e1695dc63eca695c11de411788048b6e233`, parent `efbb36723cd0ce9e33efb42764c2217126f6ea26`, on branch `codex/objective-score-cap-2026-08-15`. Nothing was pushed.
+
+Evidence: the final focused ring passed `126/0/0/0`. The 132-class changed-test ring ran `1507/4/0/0`; the full reactor ran `3400/4/0/26`. In both runs, the only failures were the same four `EndorOperationsCombinedEvaluatorDecisionTest` producer-predicate failures reproduced `4/4` on the untouched base. Independent pinned offline Corretto Java 21 compile passed. Static review found zero executable positive `6000` values, generic Move R2 exactly `1000`, valid objective JSON with 164 numeric values and zero outside `[-300,+300]`, no ordinary objective hard-flow leak, and exact normalized parity across all 10 changed Rando and Chosen One pairs.
+
+Scope: 216 committed paths, consisting of 78 AI production Java files, 132 AI tests, one objective JSON file, and five required records or report files. There are zero engine, card Java, client, deck, database, schema, Docker, build, workflow, or workbook changes.
+
+Boundary: ordinary positive objective influence is exactly `+300`, and net typed objective influence is capped at `[-300,+300]` per action and decision. Legality, no-candidate routes, FormationSafety, terminal objective loss, and mechanically self-defeating actions remain categorical. This does not add Emperor-on-shuttle pairing, repair the unsafe AT-AT destination, or change battle prediction.
+
+Proof ceiling: `SOURCE_TESTED`. No package, candidate jar, deployment, restart, loaded-JVM proof, semantic branch firing, or candidate replay exists. The deployed prior jar remains SHA-256 `917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf` and does not contain this migration.
+
+Needed: none for source closure. Any package or deployment requires a separate zero-active-game gate, followed by fresh Chosen One versus Rando and Steve replay evidence. Do not promote this source result to runtime or behavioral proof.
