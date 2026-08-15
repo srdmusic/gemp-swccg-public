@@ -206,7 +206,7 @@ public final class PullSpecificActionPolicy {
             PullSpecificActionFacts.HuntDownLocationDownload facts) {
         Objects.requireNonNull(facts, "facts");
         return facts.targetAvailable()
-                ? one(facts.actionId(),
+                ? oneObjective(facts.actionId(),
                     "PULL.OBJECTIVE.HUNT_DOWN_LOCATION_DOWNLOAD",
                     TraceOutputKind.ORDERING, 300.0f,
                     "Use the objective action to deploy an eligible battleground site")
@@ -279,9 +279,9 @@ public final class PullSpecificActionPolicy {
                     "V29.7 NO TARGET: No admirals/generals in Reserve Deck — skip!");
         }
         if (facts.bespinChainActive()) {
-            return one(facts.actionId(), "PULL-executor-chain",
+            return oneObjective(facts.actionId(), "PULL-executor-chain",
                     TraceOutputKind.ORDERING, 300.0f,
-                    "CRITICAL: Admiral pilot enables Executor deploy to Bespin — must pull T1!");
+                    "OBJECTIVE: prefer an admiral pilot for the Executor-to-Bespin route (+300 bounded preference)");
         }
         return one(facts.actionId(), "V29.7-admiral-general-first",
                 TraceOutputKind.ORDERING, 250.0f,
@@ -309,6 +309,15 @@ public final class PullSpecificActionPolicy {
                                     TraceOutputKind outputKind,
                                     float delta, String reason) {
         return result(List.of(add(actionId, rule, outputKind, delta, reason)));
+    }
+
+    private static PolicyResult oneObjective(
+            String actionId, String rule, TraceOutputKind outputKind,
+            float delta, String reason) {
+        return result(List.of(PolicyOperation.add(
+                actionId, TraceRuleId.of(rule),
+                TraceDomainId.OBJECTIVE_INTENT, outputKind,
+                delta, reason)));
     }
 
     private static PolicyResult result(List<PolicyOperation> operations) {

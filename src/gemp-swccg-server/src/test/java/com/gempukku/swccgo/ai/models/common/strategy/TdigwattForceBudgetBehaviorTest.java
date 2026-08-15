@@ -19,6 +19,7 @@ import static com.gempukku.swccgo.framework.TestBase.DS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -26,9 +27,8 @@ import static org.mockito.Mockito.mock;
  * Cross-phase Force-budget proof for the virtual TDIGWATT objective.
  *
  * <p>Battle Order makes the offered drain cost the entire three-card Force
- * pile. Both mirrored evaluators must categorically reject that exact spend,
- * both public bots must choose the source-granted Lando move instead, and the
- * native move must then spend its real one-Force cost.</p>
+ * pile. Both mirrored evaluators must apply the bounded objective reserve
+ * preference, while the native move still spends its real one-Force cost.</p>
  */
 public class TdigwattForceBudgetBehaviorTest {
     private static final String LANDO_MOVE =
@@ -139,19 +139,19 @@ public class TdigwattForceBudgetBehaviorTest {
         EvaluationView drain =
                 evaluateActionTextBoth(
                     scn, analyzers, drainAction.actionId());
-        assertTrue(
-                "The exact three-Force drain must be a categorical veto",
+        assertFalse(
+                "The exact three-Force drain has a bounded preference",
                 drain.hardVeto());
-        assertEquals(FORCE_RESERVE_REASON, drain.vetoReason());
+        assertNull(drain.vetoReason());
         assertTrue(
-                "The veto must remain visible in evaluator reasoning",
+                "The bounded reserve must remain visible in reasoning",
                 drain.reasoning().contains(
-                    "HARD VETO: " + FORCE_RESERVE_REASON));
+                    FORCE_RESERVE_REASON + " (-300.0)"));
 
         EvaluationView combined =
                 evaluateCombinedBoth(scn, analyzers);
         assertEquals(
-                "The exact Lando route must beat the vetoed drain and Pass",
+                "The exact Lando route beats the bounded drain preference and Pass",
                 landoAction.actionId(), combined.actionId());
         assertFalse(combined.hardVeto());
 

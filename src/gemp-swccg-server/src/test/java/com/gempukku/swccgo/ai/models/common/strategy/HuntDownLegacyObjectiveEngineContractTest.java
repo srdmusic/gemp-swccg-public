@@ -254,8 +254,8 @@ public class HuntDownLegacyObjectiveEngineContractTest {
         assertTrue(galenQualifies);
         assertTrue(vaderQualifies);
         assertFalse(trooperQualifies);
-        assertEquals(1000.0f, typedActorScore(galenQualifies), 0.0f);
-        assertEquals(1000.0f, typedActorScore(vaderQualifies), 0.0f);
+        assertEquals(300.0f, typedActorScore(galenQualifies), 0.0f);
+        assertEquals(300.0f, typedActorScore(vaderQualifies), 0.0f);
         assertEquals(0.0f, typedActorScore(trooperQualifies), 0.0f);
         assertEquals(850.0f, directEngageScore(galenQualifies), 0.0f);
         assertEquals(850.0f, directEngageScore(vaderQualifies), 0.0f);

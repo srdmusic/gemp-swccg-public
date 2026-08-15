@@ -48,7 +48,8 @@ public class BattleForfeitSourceOwnershipTest {
         assertTrue(policy.contains("PILOT ON SHIP - forfeit first!"));
         assertTrue(policy.contains("V139 High power - prefer keeping for battle"));
         assertTrue(policy.contains("V139 VALUABLE UNIQUE - never forfeit unless forced"));
-        assertTrue(policy.contains("OBJECTIVE CRITICAL - NEVER FORFEIT!"));
+        assertTrue(policy.contains(
+                "OBJECTIVE CRITICAL: prefer to retain (-300 objective preference)"));
         assertTrue(policy.contains("PolicyOperation.hardVeto("));
         assertFalse(policy.contains("defer("));
         for (String forbidden : new String[] {

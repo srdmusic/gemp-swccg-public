@@ -63,7 +63,7 @@ import java.util.Set;
 //
 // T4.1 MOVE CLOBBER LADDER (2026-07-06, spec: T4_Boundary_Tables_2026-07-06.md §T4.1 + orchestrator
 // rulings L1-L4): every move action is scored as fine-grained deltas as before, but now carries a
-// RANK (R4 mandatory transit +20000 / R3 survival +12000 / R2 doctrine +6000 / R1 default 0) and
+// RANK (R4 mandatory transit +20000 / R3 survival +12000 / R2 tactical doctrine +1000 / R1 default 0) and
 // veto flags, applied by a FINALIZER just before actions.add(). Fines are clamped to ±2800
 // ("LADDER CLAMP"); a NEGATIVE clamp hit demotes the claim one band, R2→R1 / R3→R2 ("LADDER
 // DEMOTE", ruling L1). R2 claims need strength: own fine >= +200 OR drain-delta >= 2 (ruling L2).
@@ -112,12 +112,11 @@ public class MoveEvaluator extends ActionEvaluator {
 
     // ═══ T4.1 per-action ladder state (reset via ladderResetForAction at each action) ═══
     private int ladderRank;                    // 1..4, max of matched rank-predicates, default 1
-    private boolean ladderVetoHard;            // absolute veto class (V47/V49/V135/V60-landspeed/V38.3-Castle)
+    private boolean ladderVetoHard;            // absolute veto class (V47/V49/V135/unsafe V38.3 Castle routes)
     private String ladderVetoHardReason;
     private boolean ladderCanWinVeto;          // V137 winnability failed shared canWinAt — L3: battle-seeking R2 only
     private String ladderCanWinVetoReason;
     private boolean ladderBattleSeekingClaim;  // an accepted hunt/contest/attack R2 claim exists (L3 veto scope)
-    private boolean ladderMandatoryTransit;    // set ONLY by the specific V53b transit claim identities (L3 carve-out key)
     private boolean ladderWrongDirVeto;        // V38.3 wrong-direction — deferred so the transit carve-out can suppress it
     private String ladderWrongDirVetoReason;
     private boolean ladderRankMoveRan;         // rankMoveFromLocation executed (gates the finalizer's default -50)
@@ -147,18 +146,10 @@ public class MoveEvaluator extends ActionEvaluator {
         ladderCanWinVeto = false;
         ladderCanWinVetoReason = null;
         ladderBattleSeekingClaim = false;
-        ladderMandatoryTransit = false;
         ladderWrongDirVeto = false;
         ladderWrongDirVetoReason = null;
         ladderRankMoveRan = false;
         ladderSpyBlockedDestination = false;
-    }
-
-    /** R4 claim — MANDATORY TRANSIT. Keyed claim identity (V53b arms only) also arms the V38.3 carve-out (ruling L3). */
-    private void ladderClaimR4Transit(String tag) {
-        ladderRank = MoveLadderPolicy.claimR4(ladderRank);
-        ladderMandatoryTransit = true;
-        logger.info("LADDER: R4 TRANSIT claim by {}", tag);
     }
 
     /** R3 claim — SURVIVAL (retreat/escape). Not subject to the L2 strength gate. */
@@ -194,24 +185,21 @@ public class MoveEvaluator extends ActionEvaluator {
         return false;
     }
 
-    /**
-     * Ruling L4: first-use band-integrity assertion. Recomputes the R1 ceiling vs the
-     * R2 floor from the live constants and logger.error's on inversion (no crash).
-     */
-    private void ladderAssertBandsOnce() {
+    private void addObjectiveContribution(
+            EvaluatedAction action, String reason, float delta,
+            String ruleId, TraceOutputKind outputKind) {
+        action.addReasoning(reason, delta, TraceRuleId.of(ruleId),
+            TraceDomainId.OBJECTIVE_INTENT, outputKind);
+    }
+
+    /** Report the intentional overlap between tactical R2 and ordinary R1 scoring once. */
+    private void ladderReportBandsOnce() {
         if (ladderBandsChecked) return;
         ladderBandsChecked = true;
         MoveLadderPolicy.BandIntegrity bands = MoveLadderPolicy.bandIntegrity();
-        if (bands.inverted()) {
-            logger.error("LADDER BAND INVERSION: R2 floor {} <= R1 ceiling {} — rank bands no longer separate "
-                + "(RANK_R2={}, FINE_CLAMP={}, ATE_CROSS_NEG={}, R1_FINE_CEILING={}, ATE_CROSS_POS={}). "
-                + "Rebalance before trusting MOVE decisions.",
-                bands.r2Floor(), bands.r1Ceiling(), bands.rankR2Score(), bands.fineClamp(),
-                bands.actionTextCrossNegative(), bands.r1FineCeiling(), bands.actionTextCrossPositive());
-        } else {
-            logger.info("LADDER BANDS OK: R2 floor {} > R1 ceiling {} (margin {})",
-                bands.r2Floor(), bands.r1Ceiling(), bands.margin());
-        }
+        logger.info("LADDER R2 TACTICAL RANGE: base {}, floor {}, R1 ceiling {}. "
+                + "Negative and urgent ordinary logic may override R2 by design.",
+            bands.rankR2Score(), bands.r2Floor(), bands.r1Ceiling());
     }
 
     /**
@@ -221,7 +209,7 @@ public class MoveEvaluator extends ActionEvaluator {
      * the L1 negative-clamp demote R2→R1 / R3→R2) → rank base → R1 default -50.
      */
     private void ladderFinalize(EvaluatedAction action) {
-        ladderAssertBandsOnce();
+        ladderReportBandsOnce();
 
         MoveLadderPolicy.Finalization finalization = MoveLadderPolicy.finalizeAction(
             new MoveLadderPolicy.State(
@@ -231,7 +219,7 @@ public class MoveEvaluator extends ActionEvaluator {
                 ladderCanWinVeto,
                 ladderCanWinVetoReason,
                 ladderBattleSeekingClaim,
-                ladderMandatoryTransit,
+                false,
                 ladderWrongDirVeto,
                 ladderWrongDirVetoReason,
                 ladderRankMoveRan),
@@ -501,9 +489,21 @@ public class MoveEvaluator extends ActionEvaluator {
                                 route.admissible());
                         if (!routes.isEmpty()
                                 && !hasAdmissible) {
-                            ladderVetoHard = true;
-                            ladderVetoHardReason =
-                                "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_TRANSIT_HOLD: no safe docking-bay transit route";
+                            boolean hasFormationSafeRoute =
+                                routes.stream().anyMatch(
+                                    route -> route.safetyVeto() == null);
+                            if (hasFormationSafeRoute) {
+                                addObjectiveContribution(
+                                    action,
+                                    "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_TRANSIT_HOLD: legal transit relaxes the objective actor hold",
+                                    -300.0f,
+                                    "MOVE.OBJECTIVE.RUNTIME_ACTOR_TRANSIT_HOLD",
+                                    TraceOutputKind.BANDED);
+                            } else {
+                                ladderVetoHard = true;
+                                ladderVetoHardReason =
+                                    "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_TRANSIT_SAFETY: no formation-safe docking-bay transit route";
+                            }
                         } else {
                             boolean actorAdvance =
                                 routes.stream().anyMatch(
@@ -525,15 +525,14 @@ public class MoveEvaluator extends ActionEvaluator {
                                         .objectiveBlockerChaseStart(
                                             blockerChase, "Vader");
                             if (objectiveTransit.applies()) {
-                                action.addReasoning(
+                                addObjectiveContribution(
+                                    action,
                                     objectiveTransit.reason(),
-                                    objectiveTransit.delta());
-                                ladderClaimR2(
-                                    actorAdvance
-                                        ? "OBJECTIVE ACTOR TRANSIT"
-                                        : "OBJECTIVE BLOCKER TRANSIT",
                                     objectiveTransit.delta(),
-                                    0.0f, blockerChase);
+                                    actorAdvance
+                                        ? "MOVE.OBJECTIVE.ACTOR_TRANSIT"
+                                        : "MOVE.OBJECTIVE.BLOCKER_TRANSIT",
+                                    TraceOutputKind.BANDED);
                             }
                         }
                     }
@@ -549,10 +548,13 @@ public class MoveEvaluator extends ActionEvaluator {
                     && context.getObjectiveAnalyzer()
                         .shouldHoldSecondaryShieldMarkerWalker(
                             game, playerId, cardToMove)) {
-                ladderVetoHard = true;
-                ladderVetoHardReason =
-                    "HOTH WALKER MARKER HOLD: keep the spare piloted AT-AT on its controlled marker";
-                logger.warn("HOTH WALKER MARKER HOLD: {} stays spread while the cannon carrier advances",
+                addObjectiveContribution(
+                    action,
+                    "HOTH WALKER MARKER HOLD: prefer keeping the spare piloted AT-AT on its controlled marker",
+                    -300.0f,
+                    "MOVE.OBJECTIVE.HOTH.SPARE_MARKER_WALKER_HOLD",
+                    TraceOutputKind.BANDED);
+                logger.warn("HOTH WALKER MARKER HOLD: {} receives a bounded -300 preference to stay spread while the cannon carrier advances",
                         cardToMove.getTitle());
             }
 
@@ -626,20 +628,14 @@ public class MoveEvaluator extends ActionEvaluator {
                                 game, playerId,
                                 captureAnalyzer, cardToMove);
                     if (guaranteedCaptureRoute) {
-                        // The move ladder owns the +20k R4 band. Applying the
-                        // policy's scalar here as well would be clamped and
-                        // double-counted by the finalizer.
-                        action.addReasoning(
+                        addObjectiveContribution(
+                            action,
                             captureKind
                                 + " CAPTURE ROUTE: an exact legal destination"
                                 + " guarantees the source capture trigger",
-                            0.0f,
-                            TraceRuleId.of(
-                                "MOVE.OBJECTIVE.CAPTURE_ROUTE_PARENT"),
-                            TraceDomainId.MOVE,
+                            300.0f,
+                            "MOVE.OBJECTIVE.CAPTURE_ROUTE_PARENT",
                             TraceOutputKind.BANDED);
-                        ladderClaimR4Transit(
-                            "OBJECTIVE CAPTURE ROUTE");
                     } else if (captureAnalyzer.isFlipped()
                             && CaptureObjectiveFacts.stableBackState(
                                 game, playerId, captureAnalyzer)
@@ -654,11 +650,14 @@ public class MoveEvaluator extends ActionEvaluator {
                                 .hasLegalStableBackMoveDestination(
                                     game, playerId,
                                     captureAnalyzer, cardToMove)) {
-                        ladderVetoHard = true;
-                        ladderVetoHardReason =
+                        addObjectiveContribution(
+                            action,
                             "OBJECTIVE.CAPTURE_STATE.STABLE_BACK_HOLD:"
-                            + " every legal destination breaks the last"
-                            + " captive or present-with-Vader state";
+                                + " prefer not to break the last captive"
+                                + " or present-with-Vader state",
+                            -300.0f,
+                            "MOVE.OBJECTIVE.CAPTURE_STABLE_BACK_HOLD",
+                            TraceOutputKind.BANDED);
                     }
                 }
             }
@@ -916,7 +915,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                     objectiveRoute.delta(),
                                     TraceRuleId.of(
                                         "MOVE.OBJECTIVE.NABOO_DUEL_FRONT_ROUTE_START"),
-                                    TraceDomainId.MOVE,
+                                    TraceDomainId.OBJECTIVE_INTENT,
                                     TraceOutputKind.BANDED);
                         } else if (postFlipPayoffHop) {
                             action.addReasoning(
@@ -924,7 +923,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                     objectiveRoute.delta(),
                                     TraceRuleId.of(
                                         "MOVE.OBJECTIVE.POST_FLIP_PAYOFF_START"),
-                                    TraceDomainId.MOVE,
+                                    TraceDomainId.OBJECTIVE_INTENT,
                                     TraceOutputKind.BANDED);
                         } else if (requiredCardEnablerHop) {
                             action.addReasoning(
@@ -932,7 +931,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                     objectiveRoute.delta(),
                                     TraceRuleId.of(
                                         "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_START"),
-                                    TraceDomainId.MOVE,
+                                    TraceDomainId.OBJECTIVE_INTENT,
                                     TraceOutputKind.BANDED);
                         } else {
                             action.addReasoning(
@@ -944,22 +943,9 @@ public class MoveEvaluator extends ActionEvaluator {
                                             : runtimeBlockerChaseHop
                                             ? "MOVE.OBJECTIVE.BLOCKER_CHASE_START"
                                             : "MOVE.OBJECTIVE.ACTOR_ROUTE_START"),
-                                    TraceDomainId.MOVE,
+                                    TraceDomainId.OBJECTIVE_INTENT,
                                     TraceOutputKind.BANDED);
                         }
-                        ladderClaimR2(
-                                postFlipPayoffHop
-                                    ? "OBJECTIVE POST-FLIP PAYOFF"
-                                    : nabooDuelFrontRouteHop
-                                    ? "NABOO DUEL FRONT ROUTE"
-                                    : requiredCardEnablerHop
-                                    ? "OBJECTIVE REQUIRED-CARD ENABLER"
-                                    : runtimeLocationHop
-                                    ? "OBJECTIVE ACTOR LOCATION"
-                                    : runtimeBlockerChaseHop
-                                    ? "OBJECTIVE BLOCKER CHASE"
-                                    : "OBJECTIVE ACTOR ROUTE",
-                                objectiveRoute.delta(), 0.0f, false);
                         logger.warn(
                                 "OBJECTIVE ACTOR MOVE: {} has a safe objective {} hop",
                                 cardToMove.getTitle(),
@@ -985,7 +971,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                 payoffHold.delta(),
                                 TraceRuleId.of(
                                     "MOVE.OBJECTIVE.POST_FLIP_PAYOFF_HOLD"),
-                                TraceDomainId.MOVE,
+                                TraceDomainId.OBJECTIVE_INTENT,
                                     TraceOutputKind.ORDERING);
                     }
                     MoveDestinationPolicy.Contribution
@@ -1002,7 +988,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                 nabooDuelFrontRouteHold.delta(),
                                 TraceRuleId.of(
                                     "MOVE.OBJECTIVE.NABOO_DUEL_FRONT_ROUTE_HOLD"),
-                                TraceDomainId.MOVE,
+                                TraceDomainId.OBJECTIVE_INTENT,
                                 TraceOutputKind.ORDERING);
                     }
                     MoveDestinationPolicy.Contribution terminalEscape =
@@ -1016,7 +1002,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                 terminalEscape.delta(),
                                 TraceRuleId.of(
                                     "MOVE.OBJECTIVE.TERMINAL_ACTOR_ESCAPE_START"),
-                                TraceDomainId.MOVE,
+                                TraceDomainId.OBJECTIVE_INTENT,
                                 TraceOutputKind.BANDED);
                         ladderClaimR3(
                                 "OBJECTIVE TERMINAL ACTOR ESCAPE");
@@ -1032,12 +1018,8 @@ public class MoveEvaluator extends ActionEvaluator {
                                 drainPairStart.delta(),
                                 TraceRuleId.of(
                                     "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR_START"),
-                                TraceDomainId.MOVE,
+                                TraceDomainId.OBJECTIVE_INTENT,
                                 TraceOutputKind.BANDED);
-                        ladderClaimR2(
-                                "OBJECTIVE FIRST ORDER DRAIN PAIR",
-                                drainPairStart.delta(),
-                                1.0f, false);
                     }
                     MoveDestinationPolicy.Contribution drainPairHold =
                             MoveDestinationPolicy
@@ -1051,7 +1033,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                 drainPairHold.delta(),
                                 TraceRuleId.of(
                                     "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR_HOLD"),
-                                TraceDomainId.MOVE,
+                                TraceDomainId.OBJECTIVE_INTENT,
                                 TraceOutputKind.ORDERING);
                     }
                 } catch (Exception e) {
@@ -1079,20 +1061,14 @@ public class MoveEvaluator extends ActionEvaluator {
                                         game, playerId, cardToMove));
                 if (sycMove.applies()) {
                     if (sycMove.delta() != 0.0f) {
-                        action.addReasoning(
-                            sycMove.reason(), sycMove.delta(),
-                            TraceRuleId.of(
-                                "OBJECTIVE.SET_YOUR_COURSE.MOVE_TO_ALDERAAN"),
-                            TraceDomainId.MOVE,
+                        addObjectiveContribution(
+                            action, sycMove.reason(), sycMove.delta(),
+                            "OBJECTIVE.SET_YOUR_COURSE.MOVE_TO_ALDERAAN",
                             TraceOutputKind.BANDED);
                     }
                     if (sycMove.hardVeto()) {
                         ladderVetoHard = true;
                         ladderVetoHardReason = sycMove.reason();
-                    }
-                    if (sycMove.mandatory()) {
-                        ladderClaimR4Transit(
-                            "OBJECTIVE SET YOUR COURSE ALDERAAN ROUTE");
                     }
                 }
             }
@@ -1157,29 +1133,30 @@ public class MoveEvaluator extends ActionEvaluator {
                         MoveVergePolicy.evaluate(
                             v79Verge, v79AtScarif, v79Flipped, v79DisplayText);
                     if (v79Evaluation.contribution().applies()) {
-                        action.addReasoning(
+                        addObjectiveContribution(
+                            action,
                             v79Evaluation.contribution().reason(),
-                            v79Evaluation.contribution().delta());
+                            v79Evaluation.contribution().delta(),
+                            "MOVE.OBJECTIVE.ON_THE_VERGE.DEATH_STAR_ROUTE",
+                            TraceOutputKind.BANDED);
                     }
 
                     if (v79Evaluation.branch() == MoveVergePolicy.Branch.ORBIT_SCARIF) {
-                        logger.warn("V79 DEATH STAR ORBIT SCARIF: '{}' → +1500", v79Evaluation.actionLower());
+                        logger.warn("V79 DEATH STAR ORBIT SCARIF: '{}' matched bounded objective preference", v79Evaluation.actionLower());
                     } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.PARSEC_SEVEN) {
-                        logger.warn("V79 DEATH STAR → parsec 7 → +1200");
+                        logger.warn("V79 DEATH STAR to parsec 7 matched bounded objective preference");
                     } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.ONE_HOP_FROM_SCARIF) {
-                        logger.warn("V79 DEATH STAR → parsec {} → +1000", v79Evaluation.destinationParsec());
+                        logger.warn("V79 DEATH STAR to parsec {} matched bounded objective preference", v79Evaluation.destinationParsec());
                     } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.TOWARD_SCARIF) {
-                        logger.warn("V79 DEATH STAR → parsec {} → +700", v79Evaluation.destinationParsec());
+                        logger.warn("V79 DEATH STAR toward parsec {} matched bounded objective preference", v79Evaluation.destinationParsec());
                     } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.WRONG_DIRECTION) {
                         logger.warn("V79 DEATH STAR WRONG WAY: parsec {} → -300", v79Evaluation.destinationParsec());
                     } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.DEFAULT_MOVE) {
-                        logger.warn("V79 DEATH STAR MOVE (no parsec parsed): '{}' → +500", v79Evaluation.actionLower());
+                        logger.warn("V79 DEATH STAR MOVE (no parsec parsed): '{}' matched bounded objective preference", v79Evaluation.actionLower());
                     } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.POST_FLIP_RELEASE) {
                         logger.info("V79 DEATH STAR: objective back does not require Scarif orbit; normal movement may compete");
                     } else if (v79Evaluation.branch() == MoveVergePolicy.Branch.PRE_FLIP_HOLD) {
-                        ladderVetoHard = v79Evaluation.hardVeto();
-                        ladderVetoHardReason = v79Evaluation.hardVetoReason();
-                        logger.warn("V79 FRONT FLIP HOLD: Death Star orbiting Scarif pre-flip, hyperspeed move VETOED ('{}')", actionText);
+                        logger.warn("V79 FRONT FLIP HOLD: Death Star orbiting Scarif pre-flip, bounded movement penalty ('{}')", actionText);
                     }
                 } catch (Exception e) {
                     logger.debug("V79 Death Star move check error: {}", e.getMessage());
@@ -1200,16 +1177,9 @@ public class MoveEvaluator extends ActionEvaluator {
                     pilotLock.pilotName(), pilotLock.shipName());
             }
 
-            // === V47: LANDO AT CC — NEVER MOVE ===
-            // Lando at a Cloud City site should STAY PUT. He establishes occupation for
-            // the objective. V32 SOLO ESCAPE was moving him because ability < 4, but
-            // that's wrong — Lando's JOB is to sit at CC sites for drains/occupation.
-            // V47 UPDATED 2026-07-06 (audit move-8): the -9999 lock used to fire for ANY
-            // *lando* card at ANY site whose title contained 'platform' (real false positives:
-            // Endor: Landing Platform (Docking Bay), Coruscant: Private Platform, Kashyyyk:
-            // Skyhook Platform), on any deck, with no danger exit, burying every retreat rule
-            // (RETREAT +150, V22.5 +160, V53 +500). Now gated on (a) an active Cloud City
-            // occupation objective that still wants Lando at THIS site, and (b) survivability.
+            // === V47: LANDO AT CC STAY PREFERENCE ===
+            // Apply a bounded -300 preference to preserve survivable Cloud City occupation.
+            // Tactical movement and retreat logic may override it.
             if (cardToMove != null && cardToMove.getTitle() != null
                 && MoveLandoStayPolicy.titleMarksLando(cardToMove.getTitle())) {
                 PhysicalCard currentLoc = cardToMove.getAtLocation();
@@ -1220,12 +1190,8 @@ public class MoveEvaluator extends ActionEvaluator {
                     // 'platform' fragment matched non-CC sites and is commented out; the other
                     // CC-specific fragments are kept (redundant but harmless).
                     if (MoveLandoStayPolicy.isCloudCitySite(currentLoc.getTitle())) {
-                        // V47 UPDATED 2026-07-06 gate (a): objective. Only lock when OUR analyzed
-                        // objective is a Bespin/Cloud City occupation objective (V22.5 detector)
-                        // and this site still serves it: pre-flip = flip-condition site (the
-                        // occupation Lando is establishing), post-flip = flip-back protection
-                        // site (the occupation Lando is defending). No CC objective, or a CC
-                        // site the objective no longer cares about, = no lock.
+                        // Apply only when our analyzed Bespin/Cloud City objective still values
+                        // this site, either for the pre-flip condition or post-flip protection.
                         boolean v47ObjectiveWantsLandoHere = false;
                         try {
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v47Analyzer =
@@ -1269,13 +1235,13 @@ public class MoveEvaluator extends ActionEvaluator {
                                 currentLoc.getTitle(),
                                 v47ObjectiveWantsLandoHere,
                                 v47Survivable);
-                        if (v47Decision.hardVeto()) {
-                            // V47 UPDATED 2026-07-06 T4.1: -9999 addReasoning converted to the ladder
-                            // hard-veto class (-100000 at the finalizer). Today's gates (a)+(b) kept
-                            // unchanged — semantics identical, magnitude now band-proof.
-                            ladderVetoHard = true;
-                            ladderVetoHardReason = v47Decision.reason();
-                            logger.warn("V47 LANDO STAY: Lando at {} — LADDER VETO on move!", currentLoc.getTitle());
+                        if (v47Decision.applies()) {
+                            addObjectiveContribution(
+                                action, v47Decision.reason(),
+                                v47Decision.delta(),
+                                "MOVE.OBJECTIVE.TDIGWATT_LANDO_STAY",
+                                TraceOutputKind.BANDED);
+                            logger.info("V47 LANDO STAY: bounded objective preference at {}", currentLoc.getTitle());
                         } else {
                             logger.warn("V47 LANDO STAY skipped at {}: objectiveWantsHere={}, survivable={} (powerDiff={})",
                                 currentLoc.getTitle(), v47ObjectiveWantsLandoHere, v47Survivable, (int)v47PowerDiff);
@@ -1349,11 +1315,9 @@ public class MoveEvaluator extends ActionEvaluator {
                         .getLocationThatCardIsAt(gameState, cardToMove);
 
                 if (currentLocation != null) {
-                    // V297 addendum: the deploy planner built an actor-and-buddy formation at
-                    // the exact flip gate. MOVE must not dismantle that same formation with
-                    // generic drain-routing or per-card retreat scores. A defensible contested
-                    // gate holds as a group; an uncontested gate retains its last actor+buddy.
-                    // A power gap greater than six remains retreatable.
+                    // V297 addendum: apply a bounded -300 objective preference against
+                    // dismantling an ordinary actor-and-buddy gate formation. Retreat and
+                    // tactical movement scores may override it.
                     try {
                         var gateAnalyzer = context.getObjectiveAnalyzer();
                         boolean holdOldAlliesFalcon = gateAnalyzer != null
@@ -1380,9 +1344,12 @@ public class MoveEvaluator extends ActionEvaluator {
                                         + MoveObjectiveGateHoldPolicy
                                             .RETREATABLE_POWER_GAP;
                             if (!retreatable) {
-                                ladderVetoHard = true;
-                                ladderVetoHardReason =
-                                    "OLD ALLIES: keep the setup Falcon at Niima unless it is the selected route to empty Jakku space";
+                                addObjectiveContribution(
+                                    action,
+                                    "OLD ALLIES: prefer keeping the setup Falcon at Niima unless it is the selected route to empty Jakku space",
+                                    -300.0f,
+                                    "MOVE.OBJECTIVE.OLD_ALLIES_FALCON_HOLD",
+                                    TraceOutputKind.BANDED);
                             }
                         }
                         boolean activeRequiredControl =
@@ -1407,9 +1374,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                     controlsRequiredLocation,
                                     soleControlSource);
                         if (controlHold.hardVeto()) {
-                            ladderVetoHard = true;
-                            ladderVetoHardReason = controlHold.reason();
-                            logger.warn("OBJECTIVE REQUIRED CONTROL HOLD: {} at {} vetoed ({})",
+                            addObjectiveContribution(
+                                action, controlHold.reason(), -300.0f,
+                                "MOVE.OBJECTIVE.REQUIRED_CONTROL_HOLD",
+                                TraceOutputKind.BANDED);
+                            logger.warn("OBJECTIVE REQUIRED CONTROL HOLD: {} at {} bounded ({})",
                                 cardToMove.getTitle(), currentLocation.getTitle(),
                                 controlHold.branch());
                         }
@@ -1443,10 +1412,12 @@ public class MoveEvaluator extends ActionEvaluator {
                                         controlsRequiredCardEnabler,
                                         soleRequiredCardEnablerSource);
                         if (requiredCardEnablerHold.hardVeto()) {
-                            ladderVetoHard = true;
-                            ladderVetoHardReason =
-                                requiredCardEnablerHold.reason();
-                            logger.warn("OBJECTIVE REQUIRED CARD ENABLER HOLD: {} at {} vetoed ({})",
+                            addObjectiveContribution(
+                                action, requiredCardEnablerHold.reason(),
+                                -300.0f,
+                                "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_HOLD",
+                                TraceOutputKind.BANDED);
+                            logger.warn("OBJECTIVE REQUIRED CARD ENABLER HOLD: {} at {} bounded ({})",
                                 cardToMove.getTitle(),
                                 currentLocation.getTitle(),
                                 requiredCardEnablerHold.branch());
@@ -1502,9 +1473,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                         friendlyPowerAtGate,
                                         opponentPowerAtGate);
                         if (gateHold.hardVeto()) {
-                            ladderVetoHard = true;
-                            ladderVetoHardReason = gateHold.reason();
-                            logger.warn("V297 OBJECTIVE GATE HOLD: {} at {} vetoed ({}, actors={}, chars={}, power={}/{})",
+                            addObjectiveContribution(
+                                action, gateHold.reason(), -300.0f,
+                                "MOVE.OBJECTIVE.FLIP_GATE_HOLD",
+                                TraceOutputKind.BANDED);
+                            logger.warn("V297 OBJECTIVE GATE HOLD: {} at {} bounded ({}, actors={}, chars={}, power={}/{})",
                                     cardToMove.getTitle(), currentLocation.getTitle(),
                                     gateHold.branch(), actorsAtGate,
                                     friendlyCharactersAtGate,
@@ -1580,9 +1553,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                         countedOpponentPower,
                                         safeCountedRelocation);
                         if (countedHold.hardVeto()) {
-                            ladderVetoHard = true;
-                            ladderVetoHardReason = countedHold.reason();
-                            logger.warn("OBJECTIVE COUNTED FORMATION HOLD: {} at {} vetoed ({}, role={}, power={}/{})",
+                            addObjectiveContribution(
+                                action, countedHold.reason(), -300.0f,
+                                "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD",
+                                TraceOutputKind.BANDED);
+                            logger.warn("OBJECTIVE COUNTED FORMATION HOLD: {} at {} bounded ({}, role={}, power={}/{})",
                                 cardToMove.getTitle(),
                                 currentLocation.getTitle(),
                                 countedHold.branch(), countedRole,
@@ -1645,10 +1620,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                         runtimeOpponentPower,
                                         safeRuntimeActorRelocation);
                         if (runtimeHold.hardVeto()) {
-                            ladderVetoHard = true;
-                            ladderVetoHardReason =
-                                    runtimeHold.reason();
-                            logger.warn("OBJECTIVE RUNTIME ACTOR HOLD: {} at {} vetoed ({}, power={}/{})",
+                            addObjectiveContribution(
+                                action, runtimeHold.reason(), -300.0f,
+                                "MOVE.OBJECTIVE.RUNTIME_ACTOR_HOLD",
+                                TraceOutputKind.BANDED);
+                            logger.warn("OBJECTIVE RUNTIME ACTOR HOLD: {} at {} bounded ({}, power={}/{})",
                                 cardToMove.getTitle(),
                                 currentLocation.getTitle(),
                                 runtimeActorRole,
@@ -1742,15 +1718,31 @@ public class MoveEvaluator extends ActionEvaluator {
                                         postFlipFriendlyPower,
                                         postFlipOpponentPower);
                         if (postFlipBlockerHold.hardVeto()) {
-                            ladderVetoHard = true;
-                            ladderVetoHardReason =
+                            if (postFlipBlockerHold.branch()
+                                    == MoveObjectiveGateHoldPolicy.Branch
+                                        .HOLD_POST_FLIP_SURVIVAL_ACTOR) {
+                                ladderVetoHard = true;
+                                ladderVetoHardReason =
                                     postFlipBlockerHold.reason();
-                            logger.warn("OBJECTIVE POST-FLIP HOLD: {} at {} vetoed ({}, power={}/{})",
-                                cardToMove.getTitle(),
-                                currentLocation.getTitle(),
-                                postFlipBlockerHold.branch(),
-                                (int) postFlipFriendlyPower,
-                                (int) postFlipOpponentPower);
+                                logger.warn("OBJECTIVE POST-FLIP SURVIVAL HOLD: {} at {} vetoed ({}, power={}/{})",
+                                    cardToMove.getTitle(),
+                                    currentLocation.getTitle(),
+                                    postFlipBlockerHold.branch(),
+                                    (int) postFlipFriendlyPower,
+                                    (int) postFlipOpponentPower);
+                            } else {
+                                addObjectiveContribution(
+                                    action, postFlipBlockerHold.reason(),
+                                    -300.0f,
+                                    "MOVE.OBJECTIVE.POST_FLIP_HOLD",
+                                    TraceOutputKind.BANDED);
+                                logger.warn("OBJECTIVE POST-FLIP HOLD: {} at {} bounded ({}, power={}/{})",
+                                    cardToMove.getTitle(),
+                                    currentLocation.getTitle(),
+                                    postFlipBlockerHold.branch(),
+                                    (int) postFlipFriendlyPower,
+                                    (int) postFlipOpponentPower);
+                            }
                         }
                         boolean terminalActorMustEscape =
                                 gateAnalyzer != null
@@ -1912,10 +1904,11 @@ public class MoveEvaluator extends ActionEvaluator {
                                         retentionOpponentPower,
                                         safeRetentionRelocation);
                         if (retentionHold.hardVeto()) {
-                            ladderVetoHard = true;
-                            ladderVetoHardReason =
-                                    retentionHold.reason();
-                            logger.warn("OBJECTIVE REQUIRED-CARD RETENTION HOLD: {} at {} vetoed ({}, power={}/{})",
+                            addObjectiveContribution(
+                                action, retentionHold.reason(), -300.0f,
+                                "MOVE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD",
+                                TraceOutputKind.BANDED);
+                            logger.warn("OBJECTIVE REQUIRED-CARD RETENTION HOLD: {} at {} bounded ({}, power={}/{})",
                                 cardToMove.getTitle(),
                                 currentLocation.getTitle(),
                                 retentionHold.branch(),
@@ -2126,7 +2119,7 @@ public class MoveEvaluator extends ActionEvaluator {
                                 // V22.2 -120...) bury the move. Claim R2 DOCTRINE when the weak solo has
                                 // an adjacent friendly group to join: fine +250 passes the L2 gate,
                                 // NON-battle-seeking so the V137 canWinAt veto never applies (ruling L3),
-                                // and R2 base 6000 < R3 12000 / R4 20000 so survival/transit still outrank.
+                                // and the tactical R2 base is now +1000, so ordinary penalties can override it.
                                 // Exempt: undercover spies (V170's parked spies sit), opponent presence at
                                 // the site (that's a battle/retreat problem, not a join), and a solo doing
                                 // READY objective work at a flip-relevant site (same carve the deploy-side
@@ -2329,18 +2322,18 @@ public class MoveEvaluator extends ActionEvaluator {
                                         currentLocationMustBeHeld,
                                         objPowerMap);
                                 if (v31Decision.applies()) {
-                                    action.addReasoning(
+                                    addObjectiveContribution(
+                                        action,
                                         v31Decision.reason(),
-                                        v31Decision.delta());
+                                        v31Decision.delta(),
+                                        "MOVE.OBJECTIVE.POST_FLIP_CONSOLIDATE",
+                                        TraceOutputKind.BANDED);
                                     logger.warn("V31 POST-FLIP CONSOLIDATE: {} should leave {} (weakest, power={}) to reinforce",
                                         cardToMove.getTitle(),
                                         v31Decision.weakestLocationTitle(),
                                         (int)v31Decision.weakestPower());
                                     // V31 UPDATED 2026-07-06 T4.1: consolidation claims R2 DOCTRINE
                                     // (non-battle; fine +200 passes the L2 strength gate).
-                                    if (v31Decision.claimDoctrine()) {
-                                        ladderClaimR2("V31 POST-FLIP CONSOLIDATE", 200.0f, 0.0f, false);
-                                    }
                                 }
                             } catch (Exception e) {
                                 logger.debug("V31 MOVE CONSOLIDATE: Error: {}", e.getMessage());
@@ -2437,12 +2430,9 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // === V29.12: HUNT DOWN — VADER MUST LEAVE CASTLE AND HUNT ===
-                    // When playing Hunt Down V, armed Vader sitting at an uncontested location
-                    // (like Vader's Castle) is WASTING turns. The whole point of Hunt Down is
-                    // that Vader goes out to fight. If Vader is armed and there are no opponents
-                    // at his location, give a massive bonus to move him toward the action.
-                    // This overrides the natural tendency to "stay safe" at Castle.
+                    // === V29.12: HUNT DOWN VADER TARGET PREFERENCE ===
+                    // Give armed Vader a bounded +300 objective preference toward useful targets.
+                    // Ordinary tactical safety remains competitive.
                     {
                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer huntMoveAnalyzer =
                             context.getObjectiveAnalyzer();
@@ -2461,9 +2451,12 @@ public class MoveEvaluator extends ActionEvaluator {
                                             game, playerId, location),
                                 (float) RandoConfig.SCORE_VADER_SEEK_JEDI);
                         if (huntTarget.contribution().applies()) {
-                            action.addReasoning(
+                            addObjectiveContribution(
+                                action,
                                 huntTarget.contribution().reason(),
-                                huntTarget.contribution().delta());
+                                huntTarget.contribution().delta(),
+                                "MOVE.OBJECTIVE.HUNT_DOWN_TARGET",
+                                TraceOutputKind.BANDED);
                             String huntBranch = huntTarget.branch()
                                 == MoveHuntTargetPolicy.Branch.JEDI
                                 ? "JEDI" : "DOWN";
@@ -2472,10 +2465,6 @@ public class MoveEvaluator extends ActionEvaluator {
                                 huntTarget.targetLocation(),
                                 (int) huntTarget.targetPower(),
                                 (int) huntTarget.contribution().delta());
-                            // V35/V29.12: battle-seeking R2 doctrine claim.
-                            ladderClaimR2("V35 HUNT " + huntBranch,
-                                huntTarget.contribution().delta(),
-                                0.0f, true);
                         }
                     }
 
@@ -2679,9 +2668,12 @@ public class MoveEvaluator extends ActionEvaluator {
                                         candidate -> com.gempukku.swccgo.filters.Filters.Vader
                                             .accepts(gameState, game.getModifiersQuerying(), candidate));
                                 if (huntGroup.contribution().applies()) {
-                                    action.addReasoning(
+                                    addObjectiveContribution(
+                                        action,
                                         huntGroup.contribution().reason(),
-                                        huntGroup.contribution().delta());
+                                        huntGroup.contribution().delta(),
+                                        "MOVE.OBJECTIVE.HUNT_DOWN_GROUP",
+                                        TraceOutputKind.BANDED);
                                 }
                                 switch (huntGroup.branch()) {
                                     case HUNTER_TOWARD_ALLIES -> {
@@ -2690,8 +2682,6 @@ public class MoveEvaluator extends ActionEvaluator {
                                             (int)huntGroup.contribution().delta());
                                         // V29.13 UPDATED 2026-07-06 T4.1: toward-group claims R2 DOCTRINE
                                         // (non-battle; +200/+250 passes the L2 gate). Scatter arms stay R1 weights.
-                                        ladderClaimR2("V29.13 HUNT GROUP MOVE (Vader→allies)",
-                                            huntGroup.contribution().delta(), 0.0f, false);
                                     }
                                     case HUNTER_AWAY_FROM_ALLIES ->
                                         logger.warn("V29.13 HUNT SCATTER: Vader moving away from allies at {} (-200)",
@@ -2705,8 +2695,6 @@ public class MoveEvaluator extends ActionEvaluator {
                                             (int)huntGroup.contribution().delta());
                                         // V29.13 UPDATED 2026-07-06 T4.1: toward-group claims R2 DOCTRINE
                                         // (non-battle; +250 passes the L2 gate). Scatter arms stay R1 weights.
-                                        ladderClaimR2("V29.13 HUNT GROUP MOVE (→Vader)",
-                                            huntGroup.contribution().delta(), 0.0f, false);
                                     }
                                     case ALLY_ELSEWHERE ->
                                         logger.info("V29.13 HUNT SCATTER: {} not moving toward Vader at {} (-100)",
@@ -2768,13 +2756,16 @@ public class MoveEvaluator extends ActionEvaluator {
                                     "Could not analyze protection locations: {}",
                                     e.getMessage()));
                         if (postFlip.contribution().applies()) {
-                            action.addReasoning(
+                            addObjectiveContribution(
+                                action,
                                 postFlip.contribution().reason(),
-                                postFlip.contribution().delta());
+                                postFlip.contribution().delta(),
+                                "MOVE.OBJECTIVE.POST_FLIP_REINFORCE",
+                                TraceOutputKind.BANDED);
                         }
                         switch (postFlip.branch()) {
                             case POST_FLIP_STAY ->
-                                logger.warn("V22.2 PROTECT: {} must stay at {} (our power={}, opponent total={})",
+                                logger.warn("V22.2 PROTECT: {} prefers staying at {} (-300 objective preference; our power={}, opponent total={})",
                                     cardToMove.getTitle(),
                                     postFlip.currentLocationName(),
                                     (int) postFlip.ownPower(),
@@ -2792,12 +2783,6 @@ public class MoveEvaluator extends ActionEvaluator {
                                     postFlip.weakestProtectionLocation(),
                                     (int) postFlip.worstProtectionDeficit());
                             default -> { }
-                        }
-                        if (postFlip.contribution().claimDoctrineRank()) {
-                            ladderClaimR2(
-                                "V22.2 POST-FLIP REINFORCE",
-                                postFlip.contribution().delta(),
-                                0.0f, false);
                         }
                     }
                 } else {
@@ -2847,12 +2832,12 @@ public class MoveEvaluator extends ActionEvaluator {
                 switch (landing.route()) {
                     case HARD_VETO:
                         if (theyHaveNoIdeaRogueOneLanding) {
-                            action.addReasoning(
+                            addObjectiveContribution(
+                                action,
                                 "OBJECTIVE.THNI.ROGUE_ONE_LAND: land at Landing Pad Nine to establish the back-side exception",
-                                800.0f);
-                            ladderClaimR2(
-                                "OBJECTIVE.THNI.ROGUE_ONE_LAND",
-                                800.0f, 0.0f, false);
+                                300.0f,
+                                "MOVE.OBJECTIVE.THNI.ROGUE_ONE_LAND",
+                                TraceOutputKind.BANDED);
                         } else {
                             ladderVetoHard = true;
                             ladderVetoHardReason = landing.reason();
@@ -2862,12 +2847,12 @@ public class MoveEvaluator extends ActionEvaluator {
                         break;
                     case STARFIGHTER_PENALTY:
                         if (theyHaveNoIdeaRogueOneLanding) {
-                            action.addReasoning(
+                            addObjectiveContribution(
+                                action,
                                 "OBJECTIVE.THNI.ROGUE_ONE_LAND: land at Landing Pad Nine to establish the back-side exception",
-                                800.0f);
-                            ladderClaimR2(
-                                "OBJECTIVE.THNI.ROGUE_ONE_LAND",
-                                800.0f, 0.0f, false);
+                                300.0f,
+                                "MOVE.OBJECTIVE.THNI.ROGUE_ONE_LAND",
+                                TraceOutputKind.BANDED);
                         } else {
                             action.addReasoning(landing.reason(), landing.delta());
                             logger.info("[MoveEvaluator] BLOCKED: Landing starfighter {}", landing.cardName());
@@ -2963,13 +2948,9 @@ public class MoveEvaluator extends ActionEvaluator {
                 }
             }
 
-            // === V53b: HIDDEN PATH MANDATORY JEDI TRANSIT ===
-            // HARD RULE: If playing Hidden Path, characters at Safehouse MUST move to
-            // Underground Corridor. Characters at Corridor MUST move OFF Mapuzo.
-            // Jedi Survivors move FREE on Mapuzo — there is ZERO cost. No force reserve
-            // excuses. The objective REQUIRES Jedi outside Mapuzo to flip.
-            // T4.1 (2026-07-06): overrides via the R4 MANDATORY TRANSIT band (+20000 at the
-            // finalizer), no longer via setScore(±9999) ordering hacks.
+            // === V53b: HIDDEN PATH JEDI TRANSIT PREFERENCE ===
+            // Hidden Path transit uses bounded +/-300 objective preferences. Ordinary tactical
+            // logic may override the preferred Safehouse, Corridor, and Mapuzo routes.
             {
                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer hpMoveAnalyzer =
                     context.getObjectiveAnalyzer();
@@ -2981,30 +2962,30 @@ public class MoveEvaluator extends ActionEvaluator {
                     && cardToMove.getBlueprint().hasKeyword(
                         com.gempukku.swccgo.common.Keyword.JEDI_SURVIVOR);
                 if (exactFrontSurvivor) {
-                    // V60 FIX: Corridor landspeed stays vetoed; positive transit remains in ActionTextEvaluator.
+                    // V60: Corridor landspeed receives a bounded -300 objective preference.
                     MoveTransitPolicy.HiddenPathTransit hiddenPath =
                         MoveTransitPolicy.hiddenPathTransit(
                             hpMoveAnalyzer.getObjectiveTitle(),
                             cardToMove, actionLower);
                     if (hiddenPath.contribution().applies()) {
-                        action.addReasoning(
+                        addObjectiveContribution(
+                            action,
                             hiddenPath.contribution().reason(),
-                            hiddenPath.contribution().delta());
+                            hiddenPath.contribution().delta(),
+                            "MOVE.OBJECTIVE.HIDDEN_PATH.TRANSIT",
+                            TraceOutputKind.BANDED);
                     }
                     if (hiddenPath.hardVeto()) {
                         ladderVetoHard = true;
                         ladderVetoHardReason = hiddenPath.hardVetoReason();
                     }
-                    if (hiddenPath.claimMandatoryTransit()) {
-                        ladderClaimR4Transit(hiddenPath.claimIdentity());
-                    }
                     switch (hiddenPath.branch()) {
                         case SAFEHOUSE_TO_CORRIDOR ->
-                            logger.warn("V53b HIDDEN PATH: {} MUST landspeed Safehouse → Corridor (R4 transit +800 fine)!", hiddenPath.characterName());
+                            logger.warn("V53b HIDDEN PATH: {} Safehouse to Corridor objective preference +300", hiddenPath.characterName());
                         case CORRIDOR_LANDSPEED_BLOCK ->
-                            logger.warn("V60 HIDDEN PATH: {} BLOCKED landspeed from Corridor (LADDER VETO) — must use 'Move Jedi Survivor here to a site'!", hiddenPath.characterName());
+                            logger.warn("V60 HIDDEN PATH: {} receives a bounded -300 preference against landspeed from Corridor; prefer 'Move Jedi Survivor here to a site'", hiddenPath.characterName());
                         case MAPUZO_EXIT ->
-                            logger.warn("V53b HIDDEN PATH: {} leaving Mapuzo via landspeed — R4 transit +800!", hiddenPath.characterName());
+                            logger.warn("V53b HIDDEN PATH: {} leaving Mapuzo via landspeed, objective preference +300", hiddenPath.characterName());
                         default -> { }
                     }
                 }
@@ -3563,7 +3544,7 @@ public class MoveEvaluator extends ActionEvaluator {
                         location.getTitle(), shuttle.destination().getTitle());
                     // V73 UPDATED 2026-07-06 T4.1: the shuttle claims R2 DOCTRINE (non-battle;
                     // +400 passes L2). This is the move-1 boundary fix: V85's old -2000+return
-                    // buried the shuttle forever; now R2 base + fines = +5560 > Pass.
+                    // buried the shuttle forever; the tactical R2 claim now remains overridable.
                     ladderClaimR2("V73 SHUTTLE",
                         shuttle.contribution().delta(), 0.0f, false);
                 } else if (shuttle.pairMatched()) {

@@ -275,9 +275,13 @@ public final class DeployTacticalPolicy {
         List<PolicyOperation> operations = new ArrayList<>(1);
 
         if (facts.completesObjective()) {
-            add(operations, facts.actionId(), "V51", 900.0f, String.format(
-                    "V51 VADER FLIP: Deploy Vader to %s, all live flip conditions are met",
-                    facts.locationTitle()));
+            operations.add(PolicyOperation.add(
+                    facts.actionId(), TraceRuleId.of("V51"),
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.BANDED, 300.0f,
+                    String.format(
+                        "V51 VADER FLIP: Deploy Vader to %s, all live flip conditions are met",
+                        facts.locationTitle())));
         }
 
         return new PolicyResult("DEPLOY_V51_VADER_FLIP_POLICY", operations);
@@ -513,8 +517,8 @@ public final class DeployTacticalPolicy {
             if (facts.objectiveRelevant()) {
                 objectiveOverride = Math.min(200.0f,
                         Math.abs(contestPenalty) * 0.6f);
-                add(operations, facts.actionId(), "V22.7", objectiveOverride,
-                        "V22.7: Objective-critical location — must contest!");
+                addObjective(operations, facts.actionId(), "V22.7", objectiveOverride,
+                        "V22.7: Objective-critical location, prefer contesting");
             }
 
             if (facts.applyContestPenalty()) {
@@ -995,5 +999,13 @@ public final class DeployTacticalPolicy {
         operations.add(PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
                 TraceDomainId.DEPLOY_SITING, TraceOutputKind.BANDED,
                 delta, reason));
+    }
+
+    private static void addObjective(
+            List<PolicyOperation> operations, String actionId,
+            String ruleId, float delta, String reason) {
+        operations.add(PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, delta, reason));
     }
 }

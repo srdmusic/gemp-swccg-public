@@ -589,7 +589,7 @@ public class EndorOperationsRetentionBehaviorTest {
         assertEquals(
                 "BATTLE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD",
                 avoidable.operations().get(0).ruleArmId().id());
-        assertEquals(-9999.0f,
+        assertEquals(-300.0f,
                 avoidable.operations().get(0).delta(), 0.0f);
         assertTrue(BattleForfeitPolicy
                 .scoreFlipGateFormationProtection(

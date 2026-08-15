@@ -217,73 +217,7 @@ final class PullPolicyAdapter {
             public boolean objectiveRoutePullVetoBypass(
                     SwccgGame game, String playerId,
                     PhysicalCard source, String actionText) {
-                boolean firstOrderRoute = objective
-                        .isFirstOrderReignsDownloadAction(
-                                source, actionText)
-                        && objective
-                            .hasFirstOrderReignsRouteProgressCandidateInReserve(
-                                game, playerId);
-                boolean imperialEntanglementsBackSiteRoute = objective
-                        .isImperialEntanglementsBackSiteRouteAction(
-                                game, playerId, source, actionText);
-                boolean massassiFrontSiteRoute = objective
-                        .isMassassiFrontSiteRouteAction(
-                                game, playerId, source, actionText);
-                boolean oldAlliesFrontLocationRoute = objective
-                        .isOldAlliesFrontLocationRouteAction(
-                                game, playerId, source, actionText);
-                boolean countedOperativeSiteRoute = objective
-                        .isCountedOperativeSiteRouteAction(
-                                game, playerId, source, actionText);
-                boolean noMoneyWattoRoute = objective
-                        .isNoMoneyNoPartsWattoPullAction(
-                                game, playerId, source, actionText);
-                boolean twinSunsRoute = objective
-                        .isTwinSunsFrontSiteRouteAction(
-                                game, playerId, source, actionText)
-                        || objective.isTwinSunsOccupationPullAction(
-                                game, playerId, source, actionText);
-                boolean ralltiirRoute = objective
-                        .isRalltiirFrontRouteAction(
-                                game, playerId, source, actionText);
-                boolean onTheVergeRoute = objective
-                        .isOnTheVergeScarifBattlegroundRouteAction(
-                                game, playerId, source, actionText)
-                        || objective.isOnTheVergeKrennicDeployAction(
-                                game, playerId, source, actionText);
-                boolean iWantThatMapRoute = objective
-                        .isIWantThatMapBattlegroundRouteAction(
-                                game, playerId, source, actionText);
-                boolean shadowCollectiveRoute = objective
-                        .isShadowCollectiveRoutePullAction(
-                                playerId, source, actionText)
-                        && objective
-                            .hasShadowCollectiveNativePullCandidateInReserve(
-                                game, playerId, source);
-                boolean bringHimBeforeMeEmperorRoute =
-                        CaptureObjectiveFacts.objectiveKind(objective)
-                            == CaptureObjectivePolicy.ObjectiveKind.BHBM
-                        && CaptureObjectiveFacts.isOwnedExactSource(
-                            source, playerId, "9_151")
-                        && actionText != null
-                        && "deploy emperor from reserve deck".equals(
-                            actionText.trim().toLowerCase(Locale.ROOT))
-                        && CaptureObjectiveFacts
-                            .canAffordBhbmEmperorDownload(
-                                game, playerId,
-                                objective, source);
-                return firstOrderRoute
-                        || massassiFrontSiteRoute
-                        || oldAlliesFrontLocationRoute
-                        || imperialEntanglementsBackSiteRoute
-                        || countedOperativeSiteRoute
-                        || noMoneyWattoRoute
-                        || twinSunsRoute
-                        || ralltiirRoute
-                        || onTheVergeRoute
-                        || iWantThatMapRoute
-                        || shadowCollectiveRoute
-                        || bringHimBeforeMeEmperorRoute;
+                return false;
             }
 
             @Override
@@ -291,8 +225,6 @@ final class PullPolicyAdapter {
                     SwccgGame game, String playerId,
                     PhysicalCard source, String actionText) {
                 return objective.isCountedOperativeSiteRouteAction(
-                            game, playerId, source, actionText)
-                        || objective.isNoMoneyNoPartsWattoPullAction(
                             game, playerId, source, actionText)
                         || objective.isTwinSunsFrontSiteRouteAction(
                             game, playerId, source, actionText)
@@ -302,11 +234,6 @@ final class PullPolicyAdapter {
                             game, playerId, source, actionText)
                         || objective.isRalltiirBackAnyCardTutorAction(
                             game, playerId, source, actionText)
-                        || objective
-                            .isOnTheVergeScarifBattlegroundRouteAction(
-                                game, playerId, source, actionText)
-                        || objective.isOnTheVergeKrennicDeployAction(
-                                game, playerId, source, actionText)
                         || objective.isIWantThatMapBattlegroundRouteAction(
                                 game, playerId, source, actionText)
                         || objective.isShadowCollectiveRoutePullAction(
@@ -320,13 +247,7 @@ final class PullPolicyAdapter {
             public boolean objectivePullFormationExempt(
                     SwccgGame game, String playerId,
                     PhysicalCard source, String actionText) {
-                return objective.isNoMoneyNoPartsWattoPullAction(
-                            game, playerId, source, actionText)
-                        || objective
-                            .isOnTheVergeScarifBattlegroundRouteAction(
-                                game, playerId, source, actionText)
-                        || objective.isOnTheVergeKrennicDeployAction(
-                                game, playerId, source, actionText);
+                return false;
             }
         };
     }

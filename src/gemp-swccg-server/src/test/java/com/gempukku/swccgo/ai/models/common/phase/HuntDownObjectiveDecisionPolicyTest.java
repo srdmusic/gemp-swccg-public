@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
@@ -18,9 +19,9 @@ public class HuntDownObjectiveDecisionPolicyTest {
         PolicyResult qualifying =
                 DeployObjectiveSitingPolicy.scoreActorRuntimeLocation(
                         "deploy-vader", true);
-        assertOperation(qualifying, 0,
+        assertObjectiveOperation(qualifying, 0,
                 "DEPLOY.OBJECTIVE.ACTOR_RUNTIME_LOCATION",
-                1000.0f, TraceOutputKind.BANDED);
+                300.0f, TraceOutputKind.BANDED);
 
         assertEmpty(DeployObjectiveSitingPolicy
                 .scoreActorRuntimeLocation("deploy-vader", false));
@@ -32,7 +33,7 @@ public class HuntDownObjectiveDecisionPolicyTest {
                 MoveDestinationPolicy.objectiveActorLocationStart(
                         true, "Darth Vader");
         assertTrue(start.applies());
-        assertEquals(600.0f, start.delta(), 0.0f);
+        assertEquals(300.0f, start.delta(), 0.0f);
         assertEquals("MOVE.OBJECTIVE.ACTOR_LOCATION_START",
                 moveRuleId(start));
 
@@ -47,7 +48,7 @@ public class HuntDownObjectiveDecisionPolicyTest {
                 MoveDestinationPolicy.objectiveActorLocationDestination(
                         true, "Darth Vader", "Tatooine: Cantina");
         assertTrue(destination.applies());
-        assertEquals(1000.0f, destination.delta(), 0.0f);
+        assertEquals(300.0f, destination.delta(), 0.0f);
         assertEquals("MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION",
                 moveRuleId(destination));
 
@@ -64,9 +65,9 @@ public class HuntDownObjectiveDecisionPolicyTest {
         PolicyResult safe = blockerBattle(
                 true, false, true, -2.0f,
                 3, 6.0f, 6.0f);
-        assertOperation(safe, 0,
+        assertObjectiveOperation(safe, 0,
                 ObjectiveBattlePolicy.GLOBAL_BLOCKER_REMOVAL_RULE_ID,
-                250.0f, TraceOutputKind.BANDED);
+                300.0f, TraceOutputKind.BANDED);
 
         assertEmpty(blockerBattle(
                 false, false, true, -2.0f,
@@ -97,9 +98,9 @@ public class HuntDownObjectiveDecisionPolicyTest {
                         true, false, true,
                         0.0f, 3, 6.0f, 6.0f));
         assertEquals(1, control.operations().size());
-        assertOperation(control, 0,
+        assertObjectiveOperation(control, 0,
                 ObjectiveBattlePolicy.REQUIRED_LOCATION_CONTEST_RULE_ID,
-                80.0f, TraceOutputKind.BANDED);
+                300.0f, TraceOutputKind.BANDED);
 
         PolicyResult blocker = ObjectiveBattlePolicy.evaluate(
                 new ObjectiveBattlePolicy.Facts(
@@ -108,9 +109,9 @@ public class HuntDownObjectiveDecisionPolicyTest {
                         true, false, true,
                         0.0f, 3, 6.0f, 6.0f));
         assertEquals(1, blocker.operations().size());
-        assertOperation(blocker, 0,
+        assertObjectiveOperation(blocker, 0,
                 ObjectiveBattlePolicy.GLOBAL_BLOCKER_REMOVAL_RULE_ID,
-                250.0f, TraceOutputKind.BANDED);
+                300.0f, TraceOutputKind.BANDED);
 
         PolicyResult both = ObjectiveBattlePolicy.evaluate(
                 new ObjectiveBattlePolicy.Facts(
@@ -119,25 +120,26 @@ public class HuntDownObjectiveDecisionPolicyTest {
                         true, false, true,
                         0.0f, 3, 6.0f, 6.0f));
         assertEquals(2, both.operations().size());
-        assertOperation(both, 0,
+        assertObjectiveOperation(both, 0,
                 ObjectiveBattlePolicy.REQUIRED_LOCATION_CONTEST_RULE_ID,
-                80.0f, TraceOutputKind.BANDED);
-        assertOperation(both, 1,
+                300.0f, TraceOutputKind.BANDED);
+        assertObjectiveOperation(both, 1,
                 ObjectiveBattlePolicy.GLOBAL_BLOCKER_REMOVAL_RULE_ID,
-                250.0f, TraceOutputKind.BANDED);
+                0.0f, TraceOutputKind.BANDED);
+        assertEquals(300.0f, total(both), 0.0f);
     }
 
     @Test
-    public void lastOnTableActorForfeitProtectionNeedsAnotherLegalLoss() {
+    public void lastOnTableActorForfeitPreferenceNeedsAnotherLegalLoss() {
         PolicyResult protectedActor = BattleForfeitPolicy
                 .scoreFlipGateFormationProtection(
                         "forfeit-vader",
                         ObjectiveAnalyzer.FlipGateFormationRole
                                 .LAST_REQUIRED_ON_TABLE_ACTOR,
                         true);
-        assertOperation(protectedActor, 0,
+        assertObjectiveOperation(protectedActor, 0,
                 "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
-                -9999.0f, TraceOutputKind.VETO);
+                -300.0f, TraceOutputKind.BANDED);
         assertTrue(protectedActor.operations().get(0).reason()
                 .contains("last required actor on table"));
 
@@ -166,10 +168,10 @@ public class HuntDownObjectiveDecisionPolicyTest {
                         "castle-download", true, true,
                         false, true, true, 7));
         assertEquals(1, legal.operations().size());
-        assertOperation(legal, 0,
+        assertObjectiveOperation(legal, 0,
                 "V25-vader-castle-priority",
-                550.0f, TraceOutputKind.ORDERING);
-        assertEquals(550.0f, total(legal), 0.0f);
+                300.0f, TraceOutputKind.ORDERING);
+        assertEquals(300.0f, total(legal), 0.0f);
     }
 
     @Test
@@ -178,7 +180,7 @@ public class HuntDownObjectiveDecisionPolicyTest {
                 PullSpecificActionPolicy.scoreHuntDownLocationDownload(
                         new PullSpecificActionFacts.HuntDownLocationDownload(
                                 "download-site", true));
-        assertOperation(available, 0,
+        assertObjectiveOperation(available, 0,
                 "PULL.OBJECTIVE.HUNT_DOWN_LOCATION_DOWNLOAD",
                 300.0f, TraceOutputKind.ORDERING);
 
@@ -196,8 +198,8 @@ public class HuntDownObjectiveDecisionPolicyTest {
         PolicyResult complete = DeployTacticalPolicy.scoreV51VaderFlip(
                 new DeployTacticalPolicy.VaderFlipFacts(
                         "deploy-vader", "Tatooine: Cantina", true));
-        assertOperation(complete, 0,
-                "V51", 900.0f, TraceOutputKind.BANDED);
+        assertObjectiveOperation(complete, 0,
+                "V51", 300.0f, TraceOutputKind.BANDED);
     }
 
     private static PolicyResult blockerBattle(
@@ -227,6 +229,17 @@ public class HuntDownObjectiveDecisionPolicyTest {
         assertEquals(ruleId, operation.ruleArmId().id());
         assertEquals(delta, operation.delta(), 0.0f);
         assertEquals(outputKind, operation.outputKind());
+    }
+
+    private static void assertObjectiveOperation(
+            PolicyResult result,
+            int index,
+            String ruleId,
+            float delta,
+            TraceOutputKind outputKind) {
+        assertOperation(result, index, ruleId, delta, outputKind);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                result.operations().get(index).domainId());
     }
 
     private static void assertEmpty(PolicyResult result) {

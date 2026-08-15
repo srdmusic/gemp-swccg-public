@@ -83,11 +83,11 @@ public final class PullTakeCandidatePolicy {
         if (facts.objectiveNeedsBespinPresence()) {
             if (lower.contains("lando")) {
                 if (facts.friendlyAtCloudCity()) {
-                    operations.add(add(id, "V24.2-lando", 250.0f,
+                    operations.add(addObjective(id, "V24.2-lando", 250.0f,
                             "V24.2 TDIGWATT: Lando is KEY "
                                     + "\u2014 moves to 3rd CC site for extra drains + occupation!"));
                 } else if (facts.handBuddy() && facts.availableForce() >= 5) {
-                    operations.add(add(id, "V47-lando-buddy", 250.0f,
+                    operations.add(addObjective(id, "V47-lando-buddy", 250.0f,
                             "V47 LANDO PULL OK: No CC friendlies but have char in hand "
                                     + "+ force to deploy both!"));
                 } else {
@@ -96,7 +96,7 @@ public final class PullTakeCandidatePolicy {
                                     + "or not enough force \u2014 Lando would die alone!"));
                 }
             } else if (lower.contains("lobot")) {
-                operations.add(add(id, "V24.2-lobot", 200.0f,
+                operations.add(addObjective(id, "V24.2-lobot", 200.0f,
                         "V24.2 TDIGWATT: Lobot deploys cheap "
                                 + "\u2014 helps flip objective!"));
             }
@@ -138,5 +138,12 @@ public final class PullTakeCandidatePolicy {
                                        float delta, String reason) {
         return PolicyOperation.add(actionId, TraceRuleId.of(rule),
                 TraceDomainId.PULL_SEARCH, TraceOutputKind.ORDERING, delta, reason);
+    }
+
+    private static PolicyOperation addObjective(
+            String actionId, String rule, float delta, String reason) {
+        return PolicyOperation.add(actionId, TraceRuleId.of(rule),
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.ORDERING, delta, reason);
     }
 }

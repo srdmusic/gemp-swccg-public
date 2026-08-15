@@ -103,7 +103,7 @@ public class HuntDownObjectiveAdapterSourceParityTest {
     }
 
     @Test
-    public void moveParentAndChildKeepRuntimeProgressSafetyAndDirectionCarveout()
+    public void moveParentAndChildKeepRuntimeProgressAndFormationSafetyBoundaries()
             throws IOException {
         String parent = sourceSlice(
                 botSource("rando", "MoveEvaluator.java"),
@@ -124,10 +124,17 @@ public class HuntDownObjectiveAdapterSourceParityTest {
                 ".vetoMoveOrigin(",
                 ".advancesPreFlipActorAtRuntimeLocation(",
                 ".objectiveActorLocationDestination(");
-        assertTrue("Runtime actor progress must exempt the destination from V41",
-                child.contains("objectiveActorRouteDestination\n"
-                        + "                                                    "
-                        + "|| objectiveActorLocationDestination"));
+        assertTrue(child.contains(
+                "\"MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION\""));
+        String wrongDirection = sourceSlice(
+                child,
+                "MoveDestinationPolicy.wrongDirection(",
+                "if (v41Direction.disposition()");
+        assertTrue("Only terminal objective loss may bypass wrong-direction tactics",
+                wrongDirection.contains(
+                        "objectiveTerminalEscapeDestination"));
+        assertFalse("Ordinary objective progress must remain overridable",
+                wrongDirection.contains("objectiveActor"));
     }
 
     @Test

@@ -40,11 +40,11 @@ public class DeployObjectiveSequencingPolicyTest {
                 new String[] {"deploy-location-text-priority",
                         "V24.10-piett-location-priority",
                         "V24.15-bespin-priority"},
-                new float[] {200.0f, 150.0f, 800.0f});
+                new float[] {200.0f, 150.0f, 300.0f});
         assertEquals(DeployObjectiveSequencingPolicy.AdapterStep.CONTINUE_ACTION,
                 result.adapterStep());
         assertEquals(true, result.piettPriorityApplied());
-        assertRaw(800.0f, result.bespinBoost());
+        assertRaw(300.0f, result.bespinBoost());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class DeployObjectiveSequencingPolicyTest {
                 new float[] {200.0f});
         assertOperations(evaluate(early(true, false, false, 4,
                         true, true, 2, true, false)),
-                new float[] {200.0f, 150.0f, 400.0f});
+                new float[] {200.0f, 150.0f, 300.0f});
         assertOperations(evaluate(early(true, false, false, 4,
                         true, true, 3, true, true)),
                 new float[] {200.0f, 150.0f});
@@ -136,23 +136,23 @@ public class DeployObjectiveSequencingPolicyTest {
                 decision(false, false, false);
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstOutcome.PENALIZED,
                 unavailable.outcome());
-        assertEquals(DeployObjectiveSequencingPolicy.AdapterStep.CONTINUE_ACTION,
+        assertEquals(DeployObjectiveSequencingPolicy.AdapterStep.FALL_THROUGH,
                 unavailable.adapterStep());
         assertNull(unavailable.releaseReason());
         assertOperations(unavailable.result().operations(),
-                new float[] {-500.0f});
-        assertEquals("V29 BESPIN-FIRST: Executor MUST deploy before characters! "
-                        + "Get Bespin \u2192 Executor/AMSD \u2192 THEN characters.",
+                new float[] {-300.0f});
+        assertEquals("V29 BESPIN-FIRST: prefer the Bespin -> Executor/AMSD sequence before characters "
+                        + "(-300 objective preference).",
                 unavailable.result().operations().get(0).reason());
 
         DeployObjectiveSequencingPolicy.BespinFirstEvaluation capital =
                 decision(false, true, true);
         assertEquals(DeployObjectiveSequencingPolicy.BespinFirstOutcome.PENALIZED,
                 capital.outcome());
-        assertEquals(DeployObjectiveSequencingPolicy.AdapterStep.CONTINUE_ACTION,
+        assertEquals(DeployObjectiveSequencingPolicy.AdapterStep.FALL_THROUGH,
                 capital.adapterStep());
         assertOperations(capital.result().operations(),
-                new float[] {-500.0f});
+                new float[] {-300.0f});
     }
 
     private static DeployObjectiveSequencingFacts.EarlyLocation early(

@@ -135,9 +135,17 @@ public class ShieldPolicyTest {
         PolicyResult reserved = ShieldPolicy.stackedPileParent(
                 "A", 3, pick("Come Here You Big Coward"),
                 false, 0, false, 2, true);
-        assertOperations(reserved,
-                "SHIELDS-EOP-BATTLE-ORDER-RESERVE", -3000.0f,
-                "SHIELDS-stacked-pile-available", 50.0f);
+        assertEquals(2, reserved.operations().size());
+        assertEquals("SHIELDS-EOP-BATTLE-ORDER-RESERVE",
+                reserved.operations().get(0).ruleArmId().id());
+        assertBits(-300.0f, reserved.operations().get(0).delta());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                reserved.operations().get(0).domainId());
+        assertEquals("SHIELDS-stacked-pile-available",
+                reserved.operations().get(1).ruleArmId().id());
+        assertBits(50.0f, reserved.operations().get(1).delta());
+        assertEquals(TraceDomainId.SHIELDS,
+                reserved.operations().get(1).domainId());
 
         PolicyResult ordinary = ShieldPolicy.stackedPileParent(
                 "A", 2, closed(), false, 0, false, 2, false);

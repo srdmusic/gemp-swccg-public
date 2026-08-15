@@ -122,9 +122,8 @@ public final class DeployObjectiveSequencingPolicy {
                 && facts.objectiveTurnNumber() <= 3
                 && facts.bespinDeploy()
                 && !facts.bespinOnTable()) {
-            bespinBoost = facts.objectiveTurnNumber() <= 1
-                    ? 800.0f : 400.0f;
-            operations.add(add(facts.actionId(), "V24.15-bespin-priority",
+            bespinBoost = 300.0f;
+            operations.add(addObjective(facts.actionId(), "V24.15-bespin-priority",
                     TraceOutputKind.ORDERING, bespinBoost,
                     "V24.15 BESPIN PRIORITY: Deploy Bespin system FIRST \u2014 objective foundation!"));
         }
@@ -177,13 +176,13 @@ public final class DeployObjectiveSequencingPolicy {
                     BespinFirstOutcome.RELEASED,
                     "no capital starship in hand/reserve/force/used \u2014 no live path to occupy Bespin space");
         }
-        PolicyOperation penalty = add(facts.actionId(), "V29-bespin-first",
-                TraceOutputKind.VETO, -500.0f,
-                "V29 BESPIN-FIRST: Executor MUST deploy before characters! "
-                        + "Get Bespin \u2192 Executor/AMSD \u2192 THEN characters.");
+        PolicyOperation penalty = addObjective(facts.actionId(), "V29-bespin-first",
+                TraceOutputKind.BANDED, -300.0f,
+                "V29 BESPIN-FIRST: prefer the Bespin -> Executor/AMSD sequence before characters "
+                        + "(-300 objective preference).");
         return new BespinFirstEvaluation(
                 new PolicyResult(BESPIN_FIRST_PRODUCER, List.of(penalty)),
-                AdapterStep.CONTINUE_ACTION,
+                AdapterStep.FALL_THROUGH,
                 BespinFirstOutcome.PENALIZED, null);
     }
 
@@ -195,5 +194,15 @@ public final class DeployObjectiveSequencingPolicy {
             String reason) {
         return PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
                 TraceDomainId.DEPLOY_SEQUENCING, outputKind, delta, reason);
+    }
+
+    private static PolicyOperation addObjective(
+            String actionId,
+            String ruleId,
+            TraceOutputKind outputKind,
+            float delta,
+            String reason) {
+        return PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                TraceDomainId.OBJECTIVE_INTENT, outputKind, delta, reason);
     }
 }

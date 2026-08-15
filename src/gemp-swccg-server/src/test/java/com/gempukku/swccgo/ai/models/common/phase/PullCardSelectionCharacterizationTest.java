@@ -146,7 +146,7 @@ public class PullCardSelectionCharacterizationTest {
         assertEquals(List.of("temp0", "temp1"),
                 rando.stream().map(action -> action.getActionId()).toList());
         assertScores(rando.get(0).getScore(), rando.get(1).getScore(),
-                450.0f, 50.0f);
+                350.0f, 50.0f);
         assertMirrored(rando, chosen);
     }
 
@@ -279,7 +279,7 @@ public class PullCardSelectionCharacterizationTest {
         assertEquals(List.of("0", "1"),
                 rando.stream().map(action -> action.getActionId()).toList());
         assertScores(rando.get(0).getScore(), rando.get(1).getScore(),
-                450.0f, 350.0f);
+                350.0f, 350.0f);
         assertTrue(rando.get(0).getReasoning().stream().anyMatch(
                 reason -> reason.contains("typed actor required")));
         assertTrue(rando.get(1).getReasoning().stream().anyMatch(
@@ -319,7 +319,7 @@ public class PullCardSelectionCharacterizationTest {
     }
 
     @Test
-    public void iWantThatMapSelfLossVetoAppliesOnlyToDeployFromReserve() {
+    public void iWantThatMapSelfLossPreferenceAppliesOnlyToDeployFromReserve() {
         GameState gameState = gameState(2);
         SwccgGame game = mock(SwccgGame.class);
         PhysicalCard maul = card(
@@ -399,13 +399,16 @@ public class PullCardSelectionCharacterizationTest {
         var chosenDeployed = new com.gempukku.swccgo.ai.models.chosenone.evaluators
                 .CardSelectionEvaluator().evaluate(chosenDeploy);
         assertEquals(1, randoDeployed.size());
-        assertTrue("Expected deploy-only self-loss veto; score="
+        assertFalse("Expected bounded deploy-only self-loss preference; score="
                         + randoDeployed.getFirst().getScore()
                         + "; reasons="
                         + randoDeployed.getFirst().getReasoning(),
                 randoDeployed.getFirst().isHardVetoed());
+        assertScores(randoDeployed.getFirst().getScore(), -260.0f);
         assertTrue(randoDeployed.getFirst().getReasoning().stream().anyMatch(
-                reason -> reason.contains("I_WANT_THAT_MAP.SELF_LOSS")));
+                reason -> reason.contains(
+                        "prefer not to choose a Reserve Deck candidate")
+                        && reason.contains("(-300.0)")));
         assertMirrored(randoDeployed, chosenDeployed);
         assertEquals(randoDeployed.getFirst().isHardVetoed(),
                 chosenDeployed.getFirst().isHardVetoed());
@@ -443,7 +446,7 @@ public class PullCardSelectionCharacterizationTest {
         assertEquals(List.of("0", "1"),
                 rando.stream().map(action -> action.getActionId()).toList());
         assertScores(rando.get(0).getScore(), rando.get(1).getScore(),
-                550.0f, -350.0f);
+                350.0f, -250.0f);
         assertMirrored(rando, chosen);
     }
 

@@ -48,9 +48,9 @@ public class EndorOperationsDecisionPolicyTest {
         assertOperation(find(open,
                         "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD"),
                 "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
-                TraceDomainId.PULL_SEARCH,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
-                1000.0f);
+                300.0f);
 
         PolicyResult blocked = PullActionPolicy.evaluateParent(
                 parentPull(2, true)).result();
@@ -71,25 +71,25 @@ public class EndorOperationsDecisionPolicyTest {
                                 .scoreRequiredOnTableCard(
                                         ACTION_ID, true)),
                 "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
-                TraceDomainId.DECK_PLAYBOOK,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
-                500.0f);
+                300.0f);
         assertOperation(only(
                         PullSelectionCandidatePolicy
                                 .scoreRequiredCardDeployEnabler(
                                         ACTION_ID, true, false)),
                 "PULL.OBJECTIVE.REQUIRED_CARD_ENABLER_ACTOR",
-                TraceDomainId.DECK_PLAYBOOK,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
-                350.0f);
+                300.0f);
         assertOperation(only(
                         PullSelectionCandidatePolicy
                                 .scoreRequiredCardDeployEnabler(
                                         ACTION_ID, false, true)),
                 "PULL.OBJECTIVE.REQUIRED_CARD_ENABLER_LOCATION",
-                TraceDomainId.DECK_PLAYBOOK,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
-                250.0f);
+                300.0f);
 
         assertTrue(PullSelectionCandidatePolicy
                 .scoreRequiredOnTableCard(ACTION_ID, false)
@@ -110,7 +110,7 @@ public class EndorOperationsDecisionPolicyTest {
     }
 
     @Test
-    public void requiredCardDeployScoresAdvanceBelowCompletion() {
+    public void requiredCardDeploySignalsShareOneObjectivePreference() {
         PolicyOperation advances = only(
                 DeployObjectiveSitingPolicy.scoreRequiredOnTableCard(
                         ACTION_ID,
@@ -124,15 +124,15 @@ public class EndorOperationsDecisionPolicyTest {
 
         assertOperation(advances,
                 "DEPLOY.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
-                TraceDomainId.DEPLOY_SITING,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
-                800.0f);
+                300.0f);
         assertOperation(completes,
                 "DEPLOY.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
-                TraceDomainId.DEPLOY_SITING,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
-                1200.0f);
-        assertTrue(completes.delta() > advances.delta());
+                300.0f);
+        assertEquals(advances.delta(), completes.delta(), 0.0f);
         assertTrue(DeployObjectiveSitingPolicy
                 .scoreRequiredOnTableCard(
                         ACTION_ID,
@@ -146,9 +146,9 @@ public class EndorOperationsDecisionPolicyTest {
                 "breaking-distractor", 5, 3, 3);
         assertOperation(only(breakingDistractor),
                 "DEPLOY.BUDGET.OBJECTIVE_REQUIRED_CARD_RESERVE",
-                TraceDomainId.DEPLOY_SEQUENCING,
-                TraceOutputKind.VETO,
-                -500.0f);
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED,
+                -300.0f);
 
         PolicyResult equalityBoundary = requiredCardReserve(
                 "affordable-distractor", 5, 2, 3);
@@ -188,10 +188,9 @@ public class EndorOperationsDecisionPolicyTest {
         assertOperation(safeBoundary,
                 ObjectiveBattlePolicy
                         .REQUIRED_CARD_CONTROL_ENABLER_RULE_ID,
-                TraceDomainId.BATTLE_INITIATION,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
-                ObjectiveBattlePolicy
-                        .REQUIRED_CARD_CONTROL_ENABLER_BONUS);
+                300.0f);
 
         assertEmptyBattle(battle(
                 false, true, true, false, true,
@@ -231,9 +230,9 @@ public class EndorOperationsDecisionPolicyTest {
                 -2.0f, 3, 6.0f, 7.0f));
         assertOperation(safeBoundary,
                 ObjectiveBattlePolicy.HARD_LOSS_LOCATION_RULE_ID,
-                TraceDomainId.BATTLE_INITIATION,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
-                ObjectiveBattlePolicy.HARD_LOSS_LOCATION_BONUS);
+                300.0f);
 
         assertEmptyBattle(hardLossBattle(
                 true, false, false, true,
@@ -327,11 +326,11 @@ public class EndorOperationsDecisionPolicyTest {
         assertForceLossParity(rando, chosen);
         var protectedEffect = randoAction(rando, "41");
         var disposableEffect = randoAction(rando, "42");
-        assertFloatBits(-9349.0f, protectedEffect.getScore());
+        assertFloatBits(350.0f, protectedEffect.getScore());
         assertFloatBits(650.0f, disposableEffect.getScore());
         assertEquals(List.of(
                         "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+600.0)",
-                        "OBJECTIVE CRITICAL IN HAND - NEVER LOSE! (-9999.0)"),
+                        "OBJECTIVE CRITICAL IN HAND: prefer to retain (-300.0)"),
                 protectedEffect.getReasoning());
         assertEquals(List.of(
                         "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+600.0)"),

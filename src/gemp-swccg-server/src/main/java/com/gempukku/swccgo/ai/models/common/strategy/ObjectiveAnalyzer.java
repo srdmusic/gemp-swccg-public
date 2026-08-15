@@ -141,7 +141,7 @@ public class ObjectiveAnalyzer {
     // title but NOT the deploy gate: base 8_124 deploys on Endor SYSTEM gated on controlling
     // 3 Endor sites (NOT Bunker); V 207_25 deploys on Bunker gated on Bunker; Legacy V 601_260
     // deploys on Endor system but is ALSO gated on controlling Bunker. So the Bunker steer is
-    // correct ONLY for {207_25, 601_260}. Matching by the shared title would misfire the +400
+    // correct ONLY for {207_25, 601_260}. Matching by the shared title would misfire the +300
     // when a deck runs the base 8_124. When non-empty, DeployEvaluator detects by these ids
     // (blueprint-id exact match) instead of the title. Empty → fall back to the title name.
     private final Set<String> flipCriticalControlCardIds = new HashSet<>();
@@ -174,8 +174,8 @@ public class ObjectiveAnalyzer {
     // ObjectivePlaybook pilot (2026-07-07): the active objective's typed profile, or null. Selected
     // in analyze() when the objective matches a known playbook; consumed via getActivePlaybook().
     private ObjectivePlaybook activePlaybook = null;
-    // V186 CONSOLIDATED (2026-07-07): I Want That Map identity + TYPED steer data. The +400
-    // Starkiller-system pick and +1000 preferred-starting-effect pick in CardSelectionEvaluator
+    // V186 CONSOLIDATED (2026-07-07): I Want That Map identity + TYPED steer data. The +300
+    // Starkiller-system and +300 preferred-starting-effect objective preferences in CardSelectionEvaluator
     // used to hardcode these ids/titles inline; they now read these slots. Populated title-derived
     // in analyze() (NOT the flip block) so they're set whether or not the objective exposes a flip
     // pattern — matching the old evaluator's title-derived gate exactly (Codex review 2026-07-07).
@@ -14245,7 +14245,6 @@ public class ObjectiveAnalyzer {
                         game, playerId, mover, destination);
             if (assessment.legal()
                     && assessment.preservesHold()
-                    && assessment.battlegroundSitesBefore() < 2
                     && isHiddenPathRelocationFormationSafe(
                         game, playerId, mover, destination)) {
                 best = Math.max(
@@ -14253,6 +14252,47 @@ public class ObjectiveAnalyzer {
             }
         }
         return best;
+    }
+
+    /** True when at least one legal relocation is tactically formation-safe. */
+    public boolean hasFormationSafeHiddenPathRelocation(
+            SwccgGame game, String playerId, PhysicalCard mover) {
+        if (game == null || game.getGameState() == null) {
+            return false;
+        }
+        List<PhysicalCard> locations =
+                game.getGameState().getTopLocations();
+        if (locations == null) return false;
+        for (PhysicalCard destination : locations) {
+            HiddenPathRelocationAssessment assessment =
+                    assessHiddenPathRelocation(
+                        game, playerId, mover, destination);
+            if (assessment.legal()
+                    && isHiddenPathRelocationFormationSafe(
+                        game, playerId, mover, destination)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** True when any owned Jedi has a legal, formation-safe relocation. */
+    public boolean hasFormationSafeHiddenPathRelocation(
+            SwccgGame game, String playerId) {
+        if (!isHiddenPathObjectiveFamily() || !isFlipped
+                || game == null || game.getGameState() == null) {
+            return false;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (hasFormationSafeHiddenPathRelocation(
+                    game, playerId, card)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean hasUsefulHiddenPathRelocation(
@@ -22063,7 +22103,7 @@ public class ObjectiveAnalyzer {
         return analyzed && isTdigwatt && !isFlipped;
     }
     // V186 CONSOLIDATED accessors (2026-07-07): consumers = CardSelectionEvaluator V186
-    // (+400 Starkiller-SYSTEM starting-location pick, +1000 preferred starting-effect pick).
+    // (+300 Starkiller-SYSTEM starting-location pick, +300 preferred starting-effect pick).
     public boolean isWantThatMap() { return isWantThatMap; }
     public java.util.Set<String> getIwtmSystemBpIds() { return iwtmSystemBpIds; }
     public String getIwtmSystemTitleFragment() { return iwtmSystemTitleFragment; }
@@ -22079,7 +22119,7 @@ public class ObjectiveAnalyzer {
     // region has no outer control-flow escape between these rules; verified 2026-07-07).
     // NOTE: this evolves the reorg's original "SVC-INTEL owns no scores" contract — the
     // analyzer now owns objective DECISION scores, which is what the deploy evaluator reads.
-    // Scores/reasons/conditions are transcribed verbatim from the old inline blocks.
+    // Conditions retain their prior gates; objective scores and reasons use the shared bounded preference policy.
     // ═══════════════════════════════════════════════════════════════════════════
 
     /** A single objective-driven score adjustment: apply via action.addReasoning(reason, score). */
@@ -22108,7 +22148,7 @@ public class ObjectiveAnalyzer {
     // Steve: ObjectiveAnalyzer owns objective identity, typed facts, and objective SCORING WEIGHTS;
     // evaluators consume via getActivePlaybook() at existing call sites (ordering unchanged). Facts
     // sourced from Codex batch resources/Objective_Playbook_Facts_2026-07-07.json, independently
-    // source-verified 2026-07-07 (My Lord = GO). Weights REUSE existing V-tag magnitudes — no new balance.
+    // source-verified 2026-07-07 (My Lord = GO). Weights use the shared signed +/-300 objective ceiling.
 
     /** A card/objective reference matched by blueprint id OR title fragment (virtual-reprint proof). */
     public static final class NamedCardRef {
@@ -22131,13 +22171,13 @@ public class ObjectiveAnalyzer {
         }
     }
 
-    /** Per-objective DEPLOY score magnitudes. Values REUSE existing V-tag numbers; no new balance. */
+    /** Per-objective deploy preferences, bounded to the shared signed objective ceiling. */
     public static final class ObjectiveWeights {
-        public final float rewardKeyCharAtKeySite;    // My Lord V88: senator → Galactic Senate  +1500
-        public final float penalizeKeyCharOffKeySite; // My Lord V83: senator → non-Senate        -2000
-        public final float prioritizeKeyCharDeploy;   // My Lord V108: deploy a senator            +500
-        public final float holdNonKeyCharNoSite;      // My Lord V110: hold non-senator, no site   -2000
-        public final float deployFlipGateSite;        // Endor V193: steer one body to flip-gate site +400
+        public final float rewardKeyCharAtKeySite;
+        public final float penalizeKeyCharOffKeySite;
+        public final float prioritizeKeyCharDeploy;
+        public final float holdNonKeyCharNoSite;
+        public final float deployFlipGateSite;
         /** My Lord family (senator rules only; no flip-gate steer). */
         public ObjectiveWeights(float rewardKeyCharAtKeySite, float penalizeKeyCharOffKeySite,
                                 float prioritizeKeyCharDeploy, float holdNonKeyCharNoSite) {
@@ -22171,23 +22211,22 @@ public class ObjectiveAnalyzer {
         }
     }
 
-    /** MY LORD, IS THAT LEGAL? / I WILL MAKE IT LEGAL (12_179, DARK; no virtual reprint). Senators belong
-     *  at Galactic Senate. Weights = the exact existing V-tag magnitudes (V88 +1500, V83 -2000, V108 +500,
-     *  V110 -2000). Source-verified vs Card12_179.java 2026-07-07 (Codex batch, GO). */
+    /** MY LORD, IS THAT LEGAL? / I WILL MAKE IT LEGAL (12_179, DARK; no virtual reprint).
+     *  Senators belong at Galactic Senate. Ordinary preferences use the shared signed ceiling. */
     public static final ObjectivePlaybook MY_LORD_PLAYBOOK = new ObjectivePlaybook(
         "My Lord",
         new NamedCardRef(new String[]{"12_179", "12_179_BACK"},
                          new String[]{"my lord", "make it legal"}),
         com.gempukku.swccgo.filters.Filters.senator,
         com.gempukku.swccgo.filters.Filters.Galactic_Senate,
-        new ObjectiveWeights(1500.0f, -2000.0f, 500.0f, -2000.0f));
+        new ObjectiveWeights(300.0f, -300.0f, 300.0f, -300.0f));
 
     /** ENDOR OPERATIONS / IMPERIAL OUTPOST (8_167 / _BACK, DARK; virtual/Legacy reprints share the title).
      *  Flips once Ominous Rumors + Establish Secret Base are both on table. Establish Secret Base (V)
      *  (207_25) "Deploy on Bunker if you control that site", so the flip-gate is CONTROLLING Endor: Bunker.
      *  keyCharacter = biker scout (back-side Imperial Outpost drain-protect / draw-phase retrieve target,
-     *  not yet scored); keySite = Bunker (the flip-gate control site). Weight = the exact existing V193
-     *  magnitude (+400 one-shot Bunker steer); senator categories unused (0). Source-verified vs
+     *  not yet scored); keySite = Bunker (the flip-gate control site). Weight = the bounded V193
+     *  magnitude (+300 Bunker steer); senator categories unused (0). Source-verified vs
      *  Card8_167.java / Card207_025.java / Card8_124.java 2026-07-07 (Codex facts batch, GO_WITH_FIXES). */
     public static final ObjectivePlaybook ENDOR_PLAYBOOK = new ObjectivePlaybook(
         "Endor Operations",
@@ -22195,7 +22234,7 @@ public class ObjectiveAnalyzer {
                          new String[]{"endor operations", "imperial outpost"}),
         com.gempukku.swccgo.filters.Filters.biker_scout,
         com.gempukku.swccgo.filters.Filters.Bunker,
-        new ObjectiveWeights(0.0f, 0.0f, 0.0f, 0.0f, 400.0f));
+        new ObjectiveWeights(0.0f, 0.0f, 0.0f, 0.0f, 300.0f));
 
     /** The active objective's playbook, or null. Analyzer-owned API for evaluators/planners to consult. */
     public ObjectivePlaybook getActivePlaybook() { return activePlaybook; }
@@ -23407,7 +23446,7 @@ public class ObjectiveAnalyzer {
         if (hasLegalRalltiirSoleSystemBlockerDeployRoute(
                 game, playerId, card)) {
             notes.add(new ScoreNote(
-                    2000.0f,
+                    300.0f,
                     "OBJECTIVE RALLTIIR SOLE SYSTEM BLOCKER: deploy '"
                             + card.getTitle()
                             + "' to contest the last opponent-controlled Ralltiir location"));
@@ -23419,7 +23458,7 @@ public class ObjectiveAnalyzer {
                     == ObjectiveProgressCandidateRole
                         .REQUIRED_ACTOR) {
             notes.add(new ScoreNote(
-                    1200.0f,
+                    300.0f,
                     "OBJECTIVE FIRST ORDER CHASE SHIP: deploy '"
                             + card.getTitle()
                             + "' before ground forces so it can pursue Tracked Fleet"));
@@ -23439,7 +23478,7 @@ public class ObjectiveAnalyzer {
                 if (canFirstOrderReignsCrewBoard(
                         game, card, chaseShip)) {
                     notes.add(new ScoreNote(
-                            1000.0f,
+                            300.0f,
                             "OBJECTIVE FIRST ORDER ROUTE CREW: deploy '"
                                     + card.getTitle()
                                     + "' aboard the Tracked Fleet chase ship before committing ground forces"));
@@ -23452,7 +23491,7 @@ public class ObjectiveAnalyzer {
                 || isMassassiAttackRunCarrierDeployCandidate(
                     game, playerId, card)) {
             notes.add(new ScoreNote(
-                    800.0f,
+                    300.0f,
                     "OBJECTIVE MASSASSI ATTACK RUN PACKAGE: deploy '"
                             + card.getTitle()
                             + "' before unrelated cards"));
@@ -23460,7 +23499,7 @@ public class ObjectiveAnalyzer {
         if (isAgentsOfBlackSunPayoffDeployCandidate(
                 game, playerId, card)) {
             notes.add(new ScoreNote(
-                    800.0f,
+                    300.0f,
                     "OBJECTIVE AGENTS OF BLACK SUN PAYOFF: deploy '"
                             + card.getTitle()
                             + "' where it adds a distinct battleground Force-loss location"));
@@ -23468,7 +23507,7 @@ public class ObjectiveAnalyzer {
         if (isOldAlliesRouteDeployCandidate(
                 game, playerId, card)) {
             notes.add(new ScoreNote(
-                    1000.0f,
+                    300.0f,
                     "OBJECTIVE OLD ALLIES ROUTE: deploy '"
                             + card.getTitle()
                             + "' as part of the funded Jakku flip route"));
@@ -23477,8 +23516,7 @@ public class ObjectiveAnalyzer {
                 getAgentsOfBlackSunGateLocationDeployPriority(
                         game, playerId, card);
         if (agentsOfBlackSunLocationPriority > 0) {
-            float score = agentsOfBlackSunLocationPriority >= 2
-                    ? 1200.0f : 800.0f;
+            float score = 300.0f;
             notes.add(new ScoreNote(
                     score,
                     "OBJECTIVE AGENTS OF BLACK SUN GATE: deploy '"
@@ -23492,7 +23530,7 @@ public class ObjectiveAnalyzer {
                 && isPreferredCountedObjectivePresenceForceLossCandidate(
                     game, playerId, card)) {
             notes.add(new ScoreNote(
-                    1600.0f,
+                    300.0f,
                     "OBJECTIVE NO MONEY MOS ESPA ROUTE: deploy '"
                             + card.getTitle()
                             + "' as the cheapest legal Mos Espa occupier"));
@@ -23503,7 +23541,7 @@ public class ObjectiveAnalyzer {
                     game, playerId, card);
             if (stagingRoute) {
                 notes.add(new ScoreNote(
-                        600.0f,
+                        300.0f,
                         "OBJECTIVE ACTOR STAGING: deploy '"
                                 + card.getTitle()
                                 + "' to stage its route to the flip gate"));
@@ -23513,7 +23551,7 @@ public class ObjectiveAnalyzer {
                 && hasLegalPreFlipActorLocationDestination(
                         game, playerId, card)) {
             notes.add(new ScoreNote(
-                    600.0f,
+                    300.0f,
                     "OBJECTIVE ACTOR LOCATION: deploy '"
                             + card.getTitle()
                             + "' where it advances the live objective route"));
@@ -23526,7 +23564,7 @@ public class ObjectiveAnalyzer {
                 && !isRequiredCardActiveOnTable(
                         game, card.getTitle())) {
             notes.add(new ScoreNote(
-                    1000.0f,
+                    300.0f,
                     "DEPLOY.OBJECTIVE.REQUIRED_ON_TABLE_CARD: deploy '"
                             + card.getTitle()
                             + "' to satisfy a missing active-table flip requirement"));
@@ -23537,7 +23575,7 @@ public class ObjectiveAnalyzer {
                     == ObjectiveProgressCandidateRole
                         .REQUIRED_CARD_DEPLOY_ENABLER_ACTOR) {
             notes.add(new ScoreNote(
-                    600.0f,
+                    300.0f,
                     "DEPLOY.OBJECTIVE.REQUIRED_CARD_ENABLER: deploy '"
                             + card.getTitle()
                             + "' to unlock a missing required objective card"));
@@ -23546,7 +23584,7 @@ public class ObjectiveAnalyzer {
                 && isPreferredShieldRoutePackageCandidate(
                         game, playerId, card)) {
             notes.add(new ScoreNote(
-                    600.0f,
+                    300.0f,
                     "DEPLOY.OBJECTIVE.SHIELD_ROUTE_PACKAGE: deploy '"
                             + card.getTitle()
                             + "' to build the piloted AT-AT and cannon route"));
@@ -23555,7 +23593,7 @@ public class ObjectiveAnalyzer {
                 && isPreferredShieldRouteStageLocation(
                         game, playerId, card)) {
             notes.add(new ScoreNote(
-                    600.0f,
+                    300.0f,
                     "DEPLOY.OBJECTIVE.SHIELD_ROUTE_LOCATION: deploy '"
                             + card.getTitle()
                             + "' as the next adjacent marker in the firing route"));
@@ -23564,7 +23602,7 @@ public class ObjectiveAnalyzer {
         // My Lord DEPLOY magnitudes now read from the ACTIVE playbook (JSON-built when loaderEnabled, else the
         // compiled MY_LORD_PLAYBOOK fallback). Inside the isMyLord arms activePlaybook is non-null (the ternary
         // in analyze() always yields MY_LORD_PLAYBOOK or the JSON build for My Lord); the ?: is defensive only.
-        // Boundary-neutral: the JSON My Lord weights == the compiled statics (1500/-2000/500/-2000).
+        // Active and compiled My Lord weights use the bounded tuple (300/-300/300/-300).
         ObjectivePlaybook mlPb = (activePlaybook != null) ? activePlaybook : MY_LORD_PLAYBOOK;
 
         // === V83: MY LORD — senators only at Galactic Senate (penalize senator → non-Senate) ===
@@ -23581,8 +23619,8 @@ public class ObjectiveAnalyzer {
                 if (!atSenate) {
                     notes.add(new ScoreNote(mlPb.weights.penalizeKeyCharOffKeySite,
                         "V83 MY LORD: senator '" + card.getTitle() + "' → '" + mlTargetLoc.getTitle()
-                            + "' — must deploy to Galactic Senate (dies elsewhere)"));
-                    LOG.warn("V83 MY LORD: blocking senator {} → {} (only Galactic Senate is safe)",
+                            + "': prefer Galactic Senate because the senator is lost elsewhere (-300 objective preference)"));
+                    LOG.warn("V83 MY LORD: bounded senator destination preference {} → {} (-300)",
                         card.getTitle(), mlTargetLoc.getTitle());
                 }
             }
@@ -23603,9 +23641,9 @@ public class ObjectiveAnalyzer {
             } catch (Exception ignore) { /* */ }
             if (!hasNonSenateSite) {
                 notes.add(new ScoreNote(mlPb.weights.holdNonKeyCharNoSite,
-                    "V110 MY LORD: HOLD non-senator '" + card.getTitle()
-                        + "' — no non-Senate site on table yet, would land at Senate"));
-                LOG.warn("V110 MY LORD: HOLD deploy non-senator {} → -2000 (no non-Senate site)",
+                    "V110 MY LORD: prefer delaying non-senator '" + card.getTitle()
+                        + "'; no non-Senate site on table yet, would land at Senate (-300 objective preference)"));
+                LOG.warn("V110 MY LORD: non-senator {} receives -300 bounded objective preference (no non-Senate site)",
                     card.getTitle());
             }
         }
@@ -23614,7 +23652,7 @@ public class ObjectiveAnalyzer {
         if (analyzed && isMyLord && isCharacter && isSenatorCard(blueprint)) {
             notes.add(new ScoreNote(mlPb.weights.prioritizeKeyCharDeploy,
                 "V108 MY LORD: senator '" + card.getTitle() + "' in hand — prioritize deploy (flip target)"));
-            LOG.warn("V108 MY LORD: BOOST deploy senator {} → +500", card.getTitle());
+            LOG.warn("V108 MY LORD: senator {} matched bounded objective preference", card.getTitle());
         }
 
         // === V86: INVASION — Neimoidian pilots aboard capital ship ===
@@ -23639,11 +23677,11 @@ public class ObjectiveAnalyzer {
                     boolean aboardCapital = !capitalTitleLower.isEmpty()
                         && actionLower.contains(capitalTitleLower);
                     if (!aboardCapital) {
-                        notes.add(new ScoreNote(-1500.0f,
+                        notes.add(new ScoreNote(-300.0f,
                             "V86 INVASION: Neimoidian pilot '" + card.getTitle()
                                 + "' must deploy aboard friendly capital ship '"
                                 + friendlyCapital.getTitle() + "' (vulnerable on ground sites)"));
-                        LOG.warn("V86 INVASION: blocking Neimoidian pilot {} (target not aboard {}) → -1500",
+                        LOG.warn("V86 INVASION: discouraging Neimoidian pilot {} away from {} by -300",
                             card.getTitle(), friendlyCapital.getTitle());
                     } else {
                         notes.add(new ScoreNote(300.0f,
@@ -23663,10 +23701,10 @@ public class ObjectiveAnalyzer {
             notes.add(new ScoreNote(mlPb.weights.rewardKeyCharAtKeySite,
                 "V88 MY LORD: senator '" + card.getTitle()
                     + "' → Galactic Senate (flip condition + weapon destiny -6 protection)"));
-            LOG.warn("V88 MY LORD: BOOST senator {} → Galactic Senate → +1500", card.getTitle());
+            LOG.warn("V88 MY LORD: senator {} to Galactic Senate matched bounded objective preference", card.getTitle());
         }
 
-        // === V99: NON-SENATOR AT GALACTIC SENATE BLOCK (DELIBERATELY ungated — keys on Senate on table) ===
+        // === V99: NON-SENATOR AT GALACTIC SENATE PREFERENCE (DELIBERATELY ungated; keys on Senate on table) ===
         if (isCharacter && !isSenatorCard(blueprint)) {
             PhysicalCard v99Senate = null;
             for (PhysicalCard loc : gameState.getTopLocations()) {
@@ -23696,12 +23734,12 @@ public class ObjectiveAnalyzer {
                         gameState, v99Senate, v99Opp, false, false)
                     : 0f;
                 if (v99OpponentPower <= friendlySenatorPower) {
-                    notes.add(new ScoreNote(-1500.0f, String.format(
+                    notes.add(new ScoreNote(-300.0f, String.format(
                         "V99 SENATE GUARD: non-senator '%s' → Galactic Senate"
                             + " (opp %.0f <= my senator %.0f) — wasted, deploy elsewhere",
                         card.getTitle(), v99OpponentPower, friendlySenatorPower)));
-                    LOG.warn("V99 SENATE GUARD: BLOCK non-senator {} → Galactic Senate"
-                            + " (opp={} my-senators={}) -1500",
+                    LOG.warn("V99 SENATE GUARD: discourage non-senator {} at Galactic Senate"
+                            + " (opp={} my-senators={}) by -300",
                         card.getTitle(), (int) v99OpponentPower, (int) friendlySenatorPower);
                 } else {
                     LOG.info("V99 SENATE GUARD: ALLOW non-senator {} → Galactic Senate"

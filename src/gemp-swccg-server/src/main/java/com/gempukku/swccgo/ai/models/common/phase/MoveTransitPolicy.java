@@ -140,8 +140,8 @@ public final class MoveTransitPolicy {
         if (hiddenPathObjective) {
             return new Contribution(
                     true,
-                    "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)",
-                    20000.0f);
+                    "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor to advance the objective",
+                    300.0f);
         }
         return new Contribution(
                 true,
@@ -391,18 +391,20 @@ public final class MoveTransitPolicy {
                     HiddenPathBranch.SAFEHOUSE_TO_CORRIDOR,
                     new Contribution(
                             true,
-                            "V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!",
-                            800.0f),
-                    true, "V53b SAFEHOUSE→CORRIDOR",
+                            "V53b HIDDEN PATH: prefer the free Safehouse to Corridor objective-progress move (+300)",
+                            300.0f),
+                    false, "V53b SAFEHOUSE→CORRIDOR",
                     false, null, characterName);
         } else if (sourceName.contains("underground corridor")
                 || sourceName.contains("underground")) {
             if (landspeed) {
                 return new HiddenPathTransit(
                         HiddenPathBranch.CORRIDOR_LANDSPEED_BLOCK,
-                        Contribution.none(),
-                        false, null, true,
-                        "V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!",
+                        new Contribution(
+                                true,
+                                "V60 HIDDEN PATH LANDSPEED PREFERENCE: prefer the Corridor transit text instead of moving back to Mapuzo",
+                                -300.0f),
+                        false, null, false, null,
                         characterName);
             }
         } else if (sourceName.contains("mapuzo") && landspeed) {
@@ -411,8 +413,8 @@ public final class MoveTransitPolicy {
                     new Contribution(
                             true,
                             "V53b HIDDEN PATH: Leaving Mapuzo via landspeed — objective progress!",
-                            800.0f),
-                    true, "V53b MAPUZO EXIT",
+                            300.0f),
+                    false, "V53b MAPUZO EXIT",
                     false, null, characterName);
         }
 

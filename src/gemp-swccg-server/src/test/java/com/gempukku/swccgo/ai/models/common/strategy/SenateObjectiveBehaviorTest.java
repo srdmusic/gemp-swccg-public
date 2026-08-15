@@ -201,7 +201,7 @@ public class SenateObjectiveBehaviorTest {
                                 facts.hasUnprotectedLegalAlternative());
                 assertEquals(label(bot, family), 1,
                         battle.operations().size());
-                assertEquals(label(bot, family), -9999.0f,
+                assertEquals(label(bot, family), -300.0f,
                         battle.operations().get(0).delta(), 0.0f);
             }
         }

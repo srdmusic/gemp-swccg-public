@@ -154,6 +154,7 @@ public final class BattleInitiationPolicy {
         if (jediPresent) {
             bonus += 100.0f;
         }
+        bonus = Math.min(300.0f, bonus);
         return new Contribution(
                 true,
                 String.format(

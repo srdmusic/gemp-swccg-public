@@ -25,8 +25,8 @@ public class CaptureObjectivePolicyTest {
 
         assertOperation(preferred, PolicyOperationKind.ADD,
                 "SETUP.TIGIH.PREFER_VIRTUAL_HUT",
-                TraceDomainId.SETUP_STARTING,
-                TraceOutputKind.ORDERING, 100.0f);
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.ORDERING, 300.0f);
         assertEmpty(CaptureObjectivePolicy.scoreSetupHut(
                 new CaptureObjectivePolicy.SetupHutFacts(
                         "base", CaptureObjectivePolicy.ObjectiveKind.TIGIH,
@@ -44,7 +44,7 @@ public class CaptureObjectivePolicyTest {
     }
 
     @Test
-    public void guaranteedCaptureParentAndDestinationUseR4Band() {
+    public void guaranteedCaptureParentAndDestinationUseBoundedPreference() {
         for (CaptureObjectivePolicy.ObjectiveKind objective
                 : CaptureObjectivePolicy.ObjectiveKind.values()) {
             PolicyOperation parent = only(
@@ -62,12 +62,12 @@ public class CaptureObjectivePolicyTest {
 
             assertOperation(parent, PolicyOperationKind.ADD,
                     "MOVE.OBJECTIVE.CAPTURE_ROUTE_PARENT",
-                    TraceDomainId.MOVE, TraceOutputKind.BANDED,
-                    20000.0f);
+                    TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED,
+                    300.0f);
             assertOperation(destination, PolicyOperationKind.ADD,
                     "MOVE.OBJECTIVE.CAPTURE_ROUTE_DESTINATION",
-                    TraceDomainId.MOVE, TraceOutputKind.BANDED,
-                    20000.0f);
+                    TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED,
+                    300.0f);
         }
         assertEmpty(CaptureObjectivePolicy.scoreCaptureRoute(
                 new CaptureObjectivePolicy.CaptureRouteFacts(
@@ -78,7 +78,7 @@ public class CaptureObjectivePolicyTest {
     }
 
     @Test
-    public void guaranteedCaptureDeployUsesDeployDomains() {
+    public void guaranteedCaptureDeployUsesBoundedObjectiveDomain() {
         PolicyOperation parent = only(
                 CaptureObjectivePolicy.scoreDeployCaptureRoute(
                         new CaptureObjectivePolicy.DeployCaptureFacts(
@@ -96,12 +96,12 @@ public class CaptureObjectivePolicyTest {
 
         assertOperation(parent, PolicyOperationKind.ADD,
                 "DEPLOY.OBJECTIVE.CAPTURE_ROUTE_PARENT",
-                TraceDomainId.DEPLOY_SEQUENCING,
-                TraceOutputKind.BANDED, 20000.0f);
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, 300.0f);
         assertOperation(destination, PolicyOperationKind.ADD,
                 "DEPLOY.OBJECTIVE.CAPTURE_ROUTE_DESTINATION",
-                TraceDomainId.DEPLOY_SITING,
-                TraceOutputKind.BANDED, 20000.0f);
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, 300.0f);
         assertEmpty(CaptureObjectivePolicy.scoreDeployCaptureRoute(
                 new CaptureObjectivePolicy.DeployCaptureFacts(
                         "no-capture",
@@ -121,8 +121,8 @@ public class CaptureObjectivePolicyTest {
                                 true)));
         assertOperation(payoff, PolicyOperationKind.ADD,
                 "PULL.OBJECTIVE.BHBM.EMPEROR",
-                TraceDomainId.PULL_SEARCH,
-                TraceOutputKind.BANDED, 20000.0f);
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, 300.0f);
         PolicyOperation setup = only(
                 CaptureObjectivePolicy.scoreEmperorDownload(
                         new CaptureObjectivePolicy.EmperorDownloadFacts(
@@ -132,8 +132,8 @@ public class CaptureObjectivePolicyTest {
                                 true)));
         assertOperation(setup, PolicyOperationKind.ADD,
                 "PULL.OBJECTIVE.BHBM.EMPEROR_SETUP",
-                TraceDomainId.PULL_SEARCH,
-                TraceOutputKind.BANDED, 20000.0f);
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, 300.0f);
         assertEmpty(CaptureObjectivePolicy.scoreEmperorDownload(
                 new CaptureObjectivePolicy.EmperorDownloadFacts(
                         "wrong-objective",
@@ -148,23 +148,23 @@ public class CaptureObjectivePolicyTest {
                                 true,
                                 false)));
         assertOperation(unaffordable,
-                PolicyOperationKind.HARD_VETO,
-                "PULL.OBJECTIVE.BHBM.EMPEROR_UNAFFORDABLE",
-                TraceDomainId.PULL_SEARCH,
-                TraceOutputKind.VETO, 0.0f);
+                PolicyOperationKind.ADD,
+                "PULL.OBJECTIVE.BHBM.EMPEROR_RESERVE",
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, -300.0f);
     }
 
     @Test
-    public void tigihCrossoverDefersUntilSafeTimingAtStrictFourteen() {
+    public void tigihCrossoverPrefersToWaitAtStrictFourteen() {
         PolicyOperation deferAtFourteen = only(
                 CaptureObjectivePolicy.scorePayoff(
                         new CaptureObjectivePolicy.PayoffFacts(
                                 "defer", CaptureObjectivePolicy.ObjectiveKind.TIGIH,
                                 true, false, 14.0f)));
-        assertOperation(deferAtFourteen, PolicyOperationKind.DEFER,
+        assertOperation(deferAtFourteen, PolicyOperationKind.ADD,
                 "OBJECTIVE.TIGIH.CROSSOVER_TIMING_DEFER",
                 TraceDomainId.OBJECTIVE_INTENT,
-                TraceOutputKind.VETO, -800.0f);
+                TraceOutputKind.BANDED, -300.0f);
 
         PolicyOperation safeTiming = only(
                 CaptureObjectivePolicy.scorePayoff(
@@ -174,7 +174,7 @@ public class CaptureObjectivePolicyTest {
         assertOperation(safeTiming, PolicyOperationKind.ADD,
                 "OBJECTIVE.TIGIH.CROSSOVER_ATTEMPT",
                 TraceDomainId.OBJECTIVE_INTENT,
-                TraceOutputKind.BANDED, 20000.0f);
+                TraceOutputKind.BANDED, 300.0f);
     }
 
     @Test
@@ -189,11 +189,11 @@ public class CaptureObjectivePolicyTest {
         assertOperation(guaranteed, PolicyOperationKind.ADD,
                 "OBJECTIVE.TIGIH.CROSSOVER_ATTEMPT",
                 TraceDomainId.OBJECTIVE_INTENT,
-                TraceOutputKind.BANDED, 20000.0f);
+                TraceOutputKind.BANDED, 300.0f);
     }
 
     @Test
-    public void bhbmDuelIsMandatoryWheneverExactActionIsReady() {
+    public void bhbmDuelReceivesBoundedPreferenceWhenExactActionIsReady() {
         PolicyOperation duel = only(
                 CaptureObjectivePolicy.scorePayoff(
                         new CaptureObjectivePolicy.PayoffFacts(
@@ -203,7 +203,7 @@ public class CaptureObjectivePolicyTest {
         assertOperation(duel, PolicyOperationKind.ADD,
                 "OBJECTIVE.BHBM.DUEL_ATTEMPT",
                 TraceDomainId.OBJECTIVE_INTENT,
-                TraceOutputKind.BANDED, 20000.0f);
+                TraceOutputKind.BANDED, 300.0f);
         assertEmpty(CaptureObjectivePolicy.scorePayoff(
                 new CaptureObjectivePolicy.PayoffFacts(
                         "not-ready",
@@ -212,7 +212,7 @@ public class CaptureObjectivePolicyTest {
     }
 
     @Test
-    public void bhbmForceDripUrgencyIsMonotonicAndCappedBelowDuel() {
+    public void bhbmForceDripUrgencyUsesOneBoundedPositiveSignal() {
         assertEmpty(CaptureObjectivePolicy.scoreBhbmForceDripUrgency(
                 bhbmUrgencyFacts("age-zero", 0)));
 
@@ -241,19 +241,12 @@ public class CaptureObjectivePolicyTest {
         assertOperation(ageOne, PolicyOperationKind.ADD,
                 "OBJECTIVE.BHBM.FORCE_DRIP_TRIO_URGENCY",
                 TraceDomainId.OBJECTIVE_INTENT,
-                TraceOutputKind.BANDED, 100.0f);
-        assertRawFloat(200.0f, ageTwo.delta());
-        assertRawFloat(700.0f, ageSeven.delta());
-        assertRawFloat(800.0f, capped.delta());
-        assertRawFloat(capped.delta(), pastCap.delta());
-        assertTrue(ageOne.delta() < ageTwo.delta());
-        assertTrue(ageTwo.delta() < ageSeven.delta());
-        assertTrue(ageSeven.delta() < capped.delta());
-        assertTrue(capped.delta() < duel.delta());
-        assertTrue(capped.delta() + 1200.0f + 600.0f
-                < duel.delta());
-        assertTrue(capped.delta() + 1200.0f
-                <= 2000.0f);
+                TraceOutputKind.BANDED, 300.0f);
+        assertRawFloat(300.0f, ageTwo.delta());
+        assertRawFloat(300.0f, ageSeven.delta());
+        assertRawFloat(300.0f, capped.delta());
+        assertRawFloat(300.0f, pastCap.delta());
+        assertRawFloat(300.0f, duel.delta());
     }
 
     @Test
@@ -382,8 +375,8 @@ public class CaptureObjectivePolicyTest {
                                 true, true)));
         assertOperation(safe, PolicyOperationKind.ADD,
                 "BATTLE.OBJECTIVE.TIGIH.CONFLICT_BUILDUP",
-                TraceDomainId.BATTLE_INITIATION,
-                TraceOutputKind.BANDED, 80.0f);
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, 300.0f);
 
         assertEmpty(CaptureObjectivePolicy.scoreConflictBattle(
                 new CaptureObjectivePolicy.ConflictBattleFacts(
@@ -400,7 +393,7 @@ public class CaptureObjectivePolicyTest {
     }
 
     @Test
-    public void soleVirtualHutCaptureEnablerIsNeverABattleTarget() {
+    public void soleVirtualHutCaptureEnablerGetsBoundedBattleHold() {
         PolicyOperation hold = only(
                 CaptureObjectivePolicy
                     .holdSoleVirtualCaptureEnablerBattle(
@@ -410,10 +403,10 @@ public class CaptureObjectivePolicyTest {
                                 CaptureObjectivePolicy
                                     .ObjectiveKind.TIGIH,
                                 true)));
-        assertOperation(hold, PolicyOperationKind.HARD_VETO,
+        assertOperation(hold, PolicyOperationKind.ADD,
                 "BATTLE.OBJECTIVE.TIGIH.VIRTUAL_HUT_ENABLER_HOLD",
-                TraceDomainId.BATTLE_INITIATION,
-                TraceOutputKind.VETO, 0.0f);
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, -300.0f);
         assertEmpty(CaptureObjectivePolicy
                 .holdSoleVirtualCaptureEnablerBattle(
                     new CaptureObjectivePolicy
@@ -433,7 +426,7 @@ public class CaptureObjectivePolicyTest {
     }
 
     @Test
-    public void breakingLastStableBackStateIsAHardHold() {
+    public void breakingLastStableBackStateGetsBoundedHold() {
         for (CaptureObjectivePolicy.ObjectiveKind objective
                 : CaptureObjectivePolicy.ObjectiveKind.values()) {
             PolicyOperation hold = only(
@@ -441,10 +434,10 @@ public class CaptureObjectivePolicyTest {
                             new CaptureObjectivePolicy.StableBackFacts(
                                     "hold", objective, true, true, true)));
 
-            assertOperation(hold, PolicyOperationKind.HARD_VETO,
+            assertOperation(hold, PolicyOperationKind.ADD,
                     "OBJECTIVE.CAPTURE_STATE.STABLE_BACK_HOLD",
                     TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO, 0.0f);
+                    TraceOutputKind.BANDED, -300.0f);
         }
         assertEmpty(CaptureObjectivePolicy.scoreStableBackHold(
                 new CaptureObjectivePolicy.StableBackFacts(
@@ -457,7 +450,7 @@ public class CaptureObjectivePolicyTest {
     }
 
     @Test
-    public void criticalTargetAndPayoffRetentionCannotBeOutscored() {
+    public void criticalTargetAndPayoffRetentionUseBoundedPreference() {
         for (CaptureObjectivePolicy.ObjectiveKind objective
                 : CaptureObjectivePolicy.ObjectiveKind.values()) {
             for (CaptureObjectivePolicy.CriticalRole role
@@ -467,10 +460,10 @@ public class CaptureObjectivePolicyTest {
                                 new CaptureObjectivePolicy.RetentionFacts(
                                         "retain", objective, role, true)));
 
-                assertOperation(retain, PolicyOperationKind.HARD_VETO,
+                assertOperation(retain, PolicyOperationKind.ADD,
                         "FORCE_LOSS.OBJECTIVE.CAPTURE_CRITICAL",
-                        TraceDomainId.FORCE_LOSS_PAYMENT,
-                        TraceOutputKind.VETO, 0.0f);
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.BANDED, -300.0f);
             }
         }
         assertEmpty(CaptureObjectivePolicy.scoreCriticalRetention(

@@ -40,7 +40,7 @@ public class BattleInitiationPolicyTest {
         assertContribution(BattleInitiationPolicy.inquisitorDestiny(
                 true, true, false, false), 120.0f, "+1 total battle destiny");
         assertContribution(BattleInitiationPolicy.inquisitorDestiny(
-                true, true, true, true), 350.0f, "+2 total battle destiny");
+                true, true, true, true), 300.0f, "+2 total battle destiny");
     }
 
     @Test

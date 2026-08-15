@@ -25,8 +25,7 @@ public final class PullActionFacts {
         NONE,
         HARD_BLOCK,
         DEFER,
-        UNKNOWN,
-        FLIP_EXEMPT
+        UNKNOWN
     }
 
     public record EarlySearch(

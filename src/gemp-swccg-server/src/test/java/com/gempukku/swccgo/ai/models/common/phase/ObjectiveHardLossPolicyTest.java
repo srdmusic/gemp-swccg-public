@@ -39,18 +39,16 @@ public class ObjectiveHardLossPolicyTest {
     }
 
     @Test
-    public void unsafeClassicAndVirtualRecallAreTerminal() {
-        assertRecallHardLoss(
+    public void unsafeClassicAndVirtualRecallAreBoundedPreferences() {
+        assertRecallPreference(
                 ObjectiveHardLossPolicy.RecallKind.CLASSIC,
                 "V35-vader-recall-objective-actor",
-                TraceDomainId.BATTLE_WEAPONS,
-                "V35 VADER RECALL BLOCKED: recalling the sole required"
+                "V35 VADER RECALL DISFAVORED: recalling the sole required"
                         + " battleground Vader would dismantle Hunt Down");
-        assertRecallHardLoss(
+        assertRecallPreference(
                 ObjectiveHardLossPolicy.RecallKind.VIRTUAL,
                 "OBJECTIVE.FLIP_BACK.VIRTUAL_HUNT_VADER_RECALL",
-                TraceDomainId.OBJECTIVE_INTENT,
-                "VIRTUAL HUNT DOWN RECALL BLOCKED: taking the last Vader"
+                "VIRTUAL HUNT DOWN RECALL DISFAVORED: taking the last Vader"
                         + " into hand would immediately satisfy the"
                         + " flip-back law");
     }
@@ -98,10 +96,9 @@ public class ObjectiveHardLossPolicyTest {
                         result.operations().get(0).delta()));
     }
 
-    private static void assertRecallHardLoss(
+    private static void assertRecallPreference(
             ObjectiveHardLossPolicy.RecallKind kind,
             String ruleId,
-            TraceDomainId domainId,
             String reason) {
         PolicyResult result = ObjectiveHardLossPolicy.scoreRecall(
                 new ObjectiveHardLossPolicy.RecallFacts(
@@ -109,11 +106,11 @@ public class ObjectiveHardLossPolicyTest {
         assertEquals(1, result.operations().size());
         assertEquals(ruleId,
                 result.operations().get(0).ruleArmId().id());
-        assertEquals(domainId,
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
                 result.operations().get(0).domainId());
-        assertEquals(PolicyOperationKind.HARD_VETO,
+        assertEquals(PolicyOperationKind.ADD,
                 result.operations().get(0).kind());
-        assertEquals(Float.floatToRawIntBits(0.0f),
+        assertEquals(Float.floatToRawIntBits(-300.0f),
                 Float.floatToRawIntBits(
                         result.operations().get(0).delta()));
         assertEquals(reason, result.operations().get(0).reason());

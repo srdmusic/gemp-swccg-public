@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import org.junit.Test;
 
 import java.util.List;
@@ -39,7 +40,7 @@ public class DeployBudgetPolicyTest {
     }
 
     @Test
-    public void futureObligationsStackInLegacyOrder() {
+    public void objectiveFutureObligationsShareOneBoundedPenalty() {
         DeployBudgetPolicy.FutureObligationFacts facts =
                 new DeployBudgetPolicy.FutureObligationFacts(
                         "a", 3, 3, 1, 3, 1,
@@ -47,9 +48,15 @@ public class DeployBudgetPolicyTest {
         List<PolicyOperation> operations =
                 DeployBudgetPolicy.futureObligations(facts).result().operations();
         assertEquals(5, operations.size());
-        assertOperation(operations.get(0), "V48", -500.0f);
-        assertOperation(operations.get(1), "V67z", -1500.0f);
-        assertOperation(operations.get(2), "V79", -500.0f);
+        assertOperation(operations.get(0), "V48", -300.0f);
+        assertOperation(operations.get(1), "V67z", 0.0f);
+        assertOperation(operations.get(2), "V79", 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                operations.get(0).domainId());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                operations.get(1).domainId());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                operations.get(2).domainId());
         assertOperation(operations.get(3), "V29.13-maintenance", -500.0f);
         assertOperation(operations.get(4), "V29.13-interrupt", -30.0f);
     }
@@ -74,7 +81,9 @@ public class DeployBudgetPolicyTest {
         assertEquals(DeployBudgetPolicy.AdapterStep.FALL_THROUGH,
                 breaking.adapterStep());
         assertSingle(breaking.result().operations(),
-                "DEPLOY.BUDGET.OBJECTIVE_FORMATION_RESERVE", -500.0f);
+                "DEPLOY.BUDGET.OBJECTIVE_FORMATION_RESERVE", -300.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                breaking.result().operations().get(0).domainId());
 
         DeployBudgetPolicy.Evaluation affordable =
                 DeployBudgetPolicy.futureObligations(
@@ -87,7 +96,7 @@ public class DeployBudgetPolicyTest {
     }
 
     @Test
-    public void captureMoveReserveIsStrongButNonterminal() {
+    public void captureMoveReserveIsBoundedAndNonterminal() {
         List<PolicyOperation> operations =
                 DeployBudgetPolicy.futureObligations(
                     new DeployBudgetPolicy.FutureObligationFacts(
@@ -99,9 +108,11 @@ public class DeployBudgetPolicyTest {
 
         assertSingle(operations,
                 "DEPLOY.BUDGET.CAPTURE_MOVE_RESERVE",
-                -2000.0f);
+                -300.0f);
         assertEquals(PolicyOperationKind.ADD,
                 operations.get(0).kind());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                operations.get(0).domainId());
     }
 
     @Test
@@ -117,7 +128,7 @@ public class DeployBudgetPolicyTest {
 
         assertSingle(operations,
                 "DEPLOY.BUDGET.OBJECTIVE_REQUIRED_CARD_RESERVE",
-                -500.0f);
+                -300.0f);
     }
 
     @Test

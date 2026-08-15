@@ -1,5 +1,8 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
+import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
@@ -18,17 +21,16 @@ import java.util.Map;
 import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
 import static com.gempukku.swccgo.framework.TestBase.DS;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 /**
  * Persistent-board behavior proof for Bring Him Before Me.
  *
- * Both public bot adapters evaluate each real engine decision. The shared
- * winner is then submitted to that same game. The resulting Vader deploy must
- * capture Luke and fire the native flip before the next-turn Emperor download
- * and exact duel payoff are evaluated.
+ * Both public bot adapters evaluate each real engine decision. Objective
+ * candidates carry one bounded preference, then this fixture submits the
+ * exact legal actions needed to exercise native capture, flip, and duel state.
  */
 public class CaptureObjectivePersistentBoardChainTest {
     private static VirtualTableScenario scenario() {
@@ -52,7 +54,7 @@ public class CaptureObjectivePersistentBoardChainTest {
     }
 
     @Test
-    public void realAiWinnersCaptureFlipThenPursueEmperorAndDuel()
+    public void boundedAiSignalsFeedTheNativeCaptureFlipAndDuelChain()
             throws Exception {
         VirtualTableScenario scn = scenario();
         PhysicalCardImpl objective = scn.GetDSCard("bhbm");
@@ -85,15 +87,16 @@ public class CaptureObjectivePersistentBoardChainTest {
         assertEquals(6, scn.GetDSForcePileCount());
         scn.SkipToPhase(Phase.DEPLOY);
 
-        Choice vaderParent = evaluateBoth(
+        Evidence vaderParent = evaluateBoth(
                 scn, randoAnalyzer, chosenAnalyzer, null);
-        assertTrue(vaderParent.text().contains("Deploy")
-                && vaderParent.cardId().equals(
-                    Integer.toString(vader.getCardId())));
-        assertTrue(vaderParent.allText().contains("CAPTURE DEPLOY"));
-        assertEquals(vaderParent.actionId(),
-                publicBots.decideBoth(scn));
-        scn.DSDecided(vaderParent.actionId());
+        String vaderParentAction = scn.GetCardActionId(
+                DS, vader, "Deploy");
+        assertNotNull(vaderParentAction);
+        assertBoundedObjectiveCandidate(vaderParent,
+                vaderParentAction,
+                "DEPLOY.OBJECTIVE.CAPTURE_ROUTE_PARENT", 300.0f);
+        publicBots.decideBoth(scn);
+        scn.DSDecided(vaderParentAction);
 
         AwaitingDecision vaderDeployDecision =
                 scn.GetAwaitingDecision(DS);
@@ -102,16 +105,16 @@ public class CaptureObjectivePersistentBoardChainTest {
                 scn.DSDecisionAvailable("Choose where to deploy")
                 || scn.DSDecisionAvailable(
                     "Choose location where to deploy"));
-        Choice vaderDestination = evaluateBoth(
+        Evidence vaderDestination = evaluateBoth(
                 scn, randoAnalyzer, chosenAnalyzer,
                 vader.getPermanentCardId());
-        assertEquals(Integer.toString(throne.getCardId()),
-                vaderDestination.actionId());
-        assertTrue(vaderDestination.allText()
-                .contains("CAPTURE DEPLOY"));
-        assertEquals(vaderDestination.actionId(),
-                publicBots.decideBoth(scn));
-        scn.DSDecided(vaderDestination.actionId());
+        String throneAction = Integer.toString(throne.getCardId());
+        assertOffered(vaderDeployDecision, throneAction);
+        assertBoundedObjectiveCandidate(vaderDestination,
+                throneAction,
+                "DEPLOY.OBJECTIVE.CAPTURE_ROUTE_DESTINATION", 300.0f);
+        publicBots.decideBoth(scn);
+        scn.DSDecided(throneAction);
         scn.PassAllResponses();
 
         assertEquals(0, scn.GetDSForcePileCount());
@@ -140,25 +143,32 @@ public class CaptureObjectivePersistentBoardChainTest {
                 scn.gameState(), DS);
         chosenAnalyzer.refreshFlipStatus(
                 scn.gameState(), DS);
-        Choice emperorParent = evaluateBoth(
+        AwaitingDecision emperorParentDecision =
+                scn.GetAwaitingDecision(DS);
+        String emperorParentAction = actionIdForText(
+                emperorParentDecision,
+                "Deploy Emperor from Reserve Deck");
+        Evidence emperorParent = evaluateBoth(
                 scn, randoAnalyzer, chosenAnalyzer, null);
-        assertEquals("Deploy Emperor from Reserve Deck",
-                emperorParent.text());
-        assertTrue(emperorParent.allText().contains("BHBM PAYOFF"));
-        assertEquals(emperorParent.actionId(),
-                publicBots.decideBoth(scn));
-        scn.DSDecided(emperorParent.actionId());
+        assertBoundedObjectiveCandidate(emperorParent,
+                emperorParentAction,
+                "PULL.OBJECTIVE.BHBM.EMPEROR", 300.0f);
+        publicBots.decideBoth(scn);
+        scn.DSDecided(emperorParentAction);
 
         if (scn.DSDecisionAvailable("Choose Emperor")
                 || scn.DSDecisionAvailable(
                     "Choose card to deploy from Reserve Deck")) {
-            Choice emperorCard = evaluateBoth(
+            AwaitingDecision emperorCardDecision =
+                    scn.GetAwaitingDecision(DS);
+            String emperorCardAction = actionIdForCard(
+                    emperorCardDecision, emperor);
+            Evidence emperorCard = evaluateBoth(
                     scn, randoAnalyzer, chosenAnalyzer, null);
-            assertEquals("9_109",
-                    normalizeBlueprint(emperorCard.blueprintId()));
-            assertEquals(emperorCard.actionId(),
-                    publicBots.decideBoth(scn));
-            scn.DSDecided(emperorCard.actionId());
+            assertCandidateNotVetoed(emperorCard,
+                    emperorCardAction);
+            publicBots.decideBoth(scn);
+            scn.DSDecided(emperorCardAction);
         }
         if (!scn.DSAnyDecisionsAvailable()) {
             scn.PassResponses(
@@ -177,18 +187,15 @@ public class CaptureObjectivePersistentBoardChainTest {
                 scn.DSDecisionAvailable("Choose where to deploy")
                 || scn.DSDecisionAvailable(
                     "Choose location where to deploy"));
-        Choice emperorDestination = evaluateBoth(
+        Evidence emperorDestination = evaluateBoth(
                 scn, randoAnalyzer, chosenAnalyzer,
                 emperor.getPermanentCardId());
-        assertEquals(Integer.toString(throne.getCardId()),
-                emperorDestination.actionId());
-        assertTrue("Expected BHBM Emperor staging reason, got "
-                    + emperorDestination.allText(),
-                emperorDestination.allText()
-                    .contains("secondary back-side payoff"));
-        assertEquals(emperorDestination.actionId(),
-                publicBots.decideBoth(scn));
-        scn.DSDecided(emperorDestination.actionId());
+        assertOffered(emperorDeployDecision, throneAction);
+        assertBoundedObjectiveCandidate(emperorDestination,
+                throneAction,
+                "DEPLOY.OBJECTIVE.POST_FLIP_SECONDARY_PAYOFF", 300.0f);
+        publicBots.decideBoth(scn);
+        scn.DSDecided(throneAction);
         scn.PassAllResponses();
 
         assertEquals("9_109's source deploy -2 must cost exactly three",
@@ -206,14 +213,15 @@ public class CaptureObjectivePersistentBoardChainTest {
         assertTrue(scn.DSCardActionAvailable(
                 objective, "Initiate a Luke/Vader duel"));
 
-        Choice duel = evaluateBoth(
+        AwaitingDecision duelDecision =
+                scn.GetAwaitingDecision(DS);
+        String duelAction = actionIdForText(
+                duelDecision, "Initiate a Luke/Vader duel");
+        Evidence duel = evaluateBoth(
                 scn, randoAnalyzer, chosenAnalyzer, null);
-        assertEquals("Initiate a Luke/Vader duel", duel.text());
-        assertTrue(duel.allText()
-                .contains("initiate the legal Vader duel"));
-        assertFalse(duel.hardVeto());
-        assertEquals(duel.actionId(),
-                publicBots.decideBoth(scn));
+        assertBoundedObjectiveCandidate(duel, duelAction,
+                "OBJECTIVE.BHBM.DUEL_ATTEMPT", 300.0f);
+        publicBots.decideBoth(scn);
     }
 
     private static void moveOtherDarkHandCardsToReserve(
@@ -243,7 +251,7 @@ public class CaptureObjectivePersistentBoardChainTest {
         }
     }
 
-    private static Choice evaluateBoth(
+    private static Evidence evaluateBoth(
             VirtualTableScenario scn,
             com.gempukku.swccgo.ai.models.rando.strategy
                     .ObjectiveAnalyzer randoAnalyzer,
@@ -301,33 +309,74 @@ public class CaptureObjectivePersistentBoardChainTest {
                     deployingPermanentId);
         }
 
-        var rando =
-                new com.gempukku.swccgo.ai.models.rando.evaluators
-                    .CombinedEvaluator()
-                    .evaluateDecision(randoContext);
-        var chosen =
-                new com.gempukku.swccgo.ai.models.chosenone.evaluators
-                    .CombinedEvaluator()
-                    .evaluateDecision(chosenContext);
+        TracedChoice rando = tracedRando(decision, randoContext);
+        TracedChoice chosen = tracedChosen(decision, chosenContext);
         assertTrue(rando != null);
         assertTrue(chosen != null);
         Choice randoChoice = choice(
-                decision, rando.getActionId(),
-                rando.getActionType().name(),
-                rando.getScore(),
-                rando.isHardVetoed(),
-                rando.getReasoning(),
-                rando.getVetoReason());
+                decision, rando.actionId(),
+                rando.actionType(), rando.score(),
+                rando.hardVeto(), rando.reasoning(),
+                rando.vetoReason());
         Choice chosenChoice = choice(
-                decision, chosen.getActionId(),
-                chosen.getActionType().name(),
-                chosen.getScore(),
-                chosen.isHardVetoed(),
-                chosen.getReasoning(),
-                chosen.getVetoReason());
+                decision, chosen.actionId(),
+                chosen.actionType(), chosen.score(),
+                chosen.hardVeto(), chosen.reasoning(),
+                chosen.vetoReason());
         assertEquals("Rando and Chosen One must select the same response",
                 randoChoice, chosenChoice);
-        return randoChoice;
+        return new Evidence(randoChoice,
+                rando.trace(), chosen.trace());
+    }
+
+    private static TracedChoice tracedRando(
+            AwaitingDecision decision,
+            com.gempukku.swccgo.ai.models.rando.evaluators
+                    .DecisionContext context) {
+        assertTrue(TraceSession.open(
+                "RANDO", "capture-objective-persistent-board",
+                decision.getDecisionType().name(), decision.getText(),
+                traceCandidates(decision), null,
+                List.of("real engine decision fixture"), false));
+        com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction action;
+        DecisionTrace trace;
+        try {
+            action = new com.gempukku.swccgo.ai.models.rando.evaluators
+                    .CombinedEvaluator().evaluateDecision(context);
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(action);
+        assertNotNull(trace);
+        return new TracedChoice(action.getActionId(),
+                action.getActionType().name(), action.getScore(),
+                action.isHardVetoed(), List.copyOf(action.getReasoning()),
+                action.getVetoReason(), trace);
+    }
+
+    private static TracedChoice tracedChosen(
+            AwaitingDecision decision,
+            com.gempukku.swccgo.ai.models.chosenone.evaluators
+                    .DecisionContext context) {
+        assertTrue(TraceSession.open(
+                "CHOSEN_ONE", "capture-objective-persistent-board",
+                decision.getDecisionType().name(), decision.getText(),
+                traceCandidates(decision), null,
+                List.of("real engine decision fixture"), false));
+        com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction action;
+        DecisionTrace trace;
+        try {
+            action = new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                    .CombinedEvaluator().evaluateDecision(context);
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(action);
+        assertNotNull(trace);
+        return new TracedChoice(action.getActionId(),
+                action.getActionType().name(), action.getScore(),
+                action.isHardVetoed(), List.copyOf(action.getReasoning()),
+                action.getVetoReason(), trace);
     }
 
     private static void populate(
@@ -375,6 +424,110 @@ public class CaptureObjectivePersistentBoardChainTest {
                 bool(params, "noPass", true),
                 integer(params, "min", 0),
                 integer(params, "max", 1));
+    }
+
+    private static List<String> traceCandidates(
+            AwaitingDecision decision) {
+        Raw raw = raw(decision);
+        return raw.actionIds().isEmpty()
+                ? raw.cardIds() : raw.actionIds();
+    }
+
+    private static void assertOffered(
+            AwaitingDecision decision, String actionId) {
+        Raw raw = raw(decision);
+        assertTrue("Expected legal action " + actionId
+                        + " in " + raw.actionIds()
+                        + " or " + raw.cardIds(),
+                raw.actionIds().contains(actionId)
+                        || raw.cardIds().contains(actionId));
+    }
+
+    private static String actionIdForText(
+            AwaitingDecision decision, String text) {
+        Raw raw = raw(decision);
+        int index = raw.actionTexts().indexOf(text);
+        assertTrue("Expected action text '" + text
+                        + "' in " + raw.actionTexts(),
+                index >= 0);
+        return actionIdAt(raw, index);
+    }
+
+    private static String actionIdForCard(
+            AwaitingDecision decision, PhysicalCardImpl card) {
+        Raw raw = raw(decision);
+        String cardId = Integer.toString(card.getCardId());
+        String blueprintId = normalizeBlueprint(
+                card.getBlueprintId(true));
+        for (int index = 0; index < Math.max(
+                raw.cardIds().size(), raw.blueprints().size()); index++) {
+            boolean sameCard = index < raw.cardIds().size()
+                    && cardId.equals(raw.cardIds().get(index));
+            boolean sameBlueprint = index < raw.blueprints().size()
+                    && blueprintId.equals(normalizeBlueprint(
+                        raw.blueprints().get(index)));
+            if (sameCard || sameBlueprint) {
+                return actionIdAt(raw, index);
+            }
+        }
+        throw new AssertionError("Expected card " + card.getTitle()
+                + " in cardIds=" + raw.cardIds()
+                + ", blueprints=" + raw.blueprints());
+    }
+
+    private static String actionIdAt(Raw raw, int index) {
+        if (index < raw.actionIds().size()
+                && raw.actionIds().get(index) != null
+                && !raw.actionIds().get(index).isBlank()) {
+            return raw.actionIds().get(index);
+        }
+        assertTrue("Missing action and card id at index " + index,
+                index < raw.cardIds().size());
+        return raw.cardIds().get(index);
+    }
+
+    private static void assertBoundedObjectiveCandidate(
+            Evidence evidence, String actionId,
+            String ruleId, float delta) {
+        assertCandidateNotVetoed(evidence, actionId);
+        assertBoundedObjectiveTrace(
+                evidence.randoTrace(), actionId, ruleId, delta);
+        assertBoundedObjectiveTrace(
+                evidence.chosenTrace(), actionId, ruleId, delta);
+    }
+
+    private static void assertCandidateNotVetoed(
+            Evidence evidence, String actionId) {
+        for (DecisionTrace trace : List.of(
+                evidence.randoTrace(), evidence.chosenTrace())) {
+            assertTrue("Legal action " + actionId
+                            + " was hard-vetoed in "
+                            + trace.getOperations(),
+                    trace.getOperations().stream()
+                            .noneMatch(operation ->
+                                    actionId.equals(
+                                            operation.getActionId())
+                                    && operation.isVetoed()));
+        }
+    }
+
+    private static void assertBoundedObjectiveTrace(
+            DecisionTrace trace, String actionId,
+            String ruleId, float delta) {
+        int expectedDeltaBits = Float.floatToRawIntBits(delta);
+        assertTrue("Expected bounded objective rule " + ruleId
+                        + " for " + actionId + " in "
+                        + trace.getOperations(),
+                trace.getOperations().stream()
+                        .anyMatch(operation ->
+                                actionId.equals(
+                                        operation.getActionId())
+                                && ruleId.equals(
+                                        operation.getRuleId().id())
+                                && operation.getDomainId()
+                                        == TraceDomainId.OBJECTIVE_INTENT
+                                && Integer.valueOf(expectedDeltaBits)
+                                        .equals(operation.getDeltaBits())));
     }
 
     private static Choice choice(
@@ -511,6 +664,22 @@ public class CaptureObjectivePersistentBoardChainTest {
             int max) {
     }
 
+    private record TracedChoice(
+            String actionId,
+            String actionType,
+            float score,
+            boolean hardVeto,
+            List<String> reasoning,
+            String vetoReason,
+            DecisionTrace trace) {
+    }
+
+    private record Evidence(
+            Choice winner,
+            DecisionTrace randoTrace,
+            DecisionTrace chosenTrace) {
+    }
+
     private record Choice(
             String actionId,
             String actionType,
@@ -521,11 +690,5 @@ public class CaptureObjectivePersistentBoardChainTest {
             String blueprintId,
             List<String> reasoning,
             String vetoReason) {
-        private String allText() {
-            return String.join(" | ", reasoning)
-                    + " | "
-                    + (vetoReason != null
-                        ? vetoReason : "");
-        }
     }
 }

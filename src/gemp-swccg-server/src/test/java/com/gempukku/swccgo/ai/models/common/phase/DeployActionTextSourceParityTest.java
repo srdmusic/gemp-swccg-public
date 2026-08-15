@@ -134,16 +134,29 @@ public class DeployActionTextSourceParityTest {
                     "private List<EvaluatedAction> evaluateDeployLocation(",
                     "// ═══ SECTION: FORCE-LOSS");
             for (String mutation : new String[] {
-                    "action.addReasoning(", "action.setScore(",
+                    "action.setScore(",
                     "action.hardVeto(", "action.defer("}) {
                 assertFalse(bot + ": " + mutation,
                         destination.contains(mutation));
             }
+            assertTrue(bot, destination.contains(
+                    "V136 objective-relevant deploy site"));
+            assertTrue(bot, destination.contains(
+                    "EOP Bunker garrison deploy preference"));
+            assertTrue(bot, destination.contains(
+                    "TraceDomainId.OBJECTIVE_INTENT"));
 
             String parent = evaluatorSource(bot, "DeployEvaluator.java");
             assertFalse(bot, parent.contains("action.addReasoning(\""));
             assertEquals(bot, 1, count(parent,
-                    "action.addReasoning(note.reason, note.score);"));
+                    "note.reason, note.score,"));
+            assertEquals(bot, 1, count(parent,
+                    "TraceRuleId.of(\"OBJECTIVE.ANALYZER.DEPLOY_NOTE\")"));
+            int objectiveNote = parent.indexOf(
+                    "note.reason, note.score,");
+            int objectiveDomain = parent.indexOf(
+                    "TraceDomainId.OBJECTIVE_INTENT,", objectiveNote);
+            assertTrue(bot, objectiveDomain > objectiveNote);
         }
     }
 

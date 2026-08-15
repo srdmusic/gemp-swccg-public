@@ -81,8 +81,8 @@ public final class DeployWeaponPolicy {
                     TraceOutputKind.VETO, -9999.0f,
                     "V25 HUNT DOWN: Target ALREADY HAS lightsaber — NEVER deploy second!");
         } else if (facts.huntDownV()) {
-            add(operations, facts.actionId(), "V25-hunt-down-lightsaber",
-                    TraceOutputKind.BANDED, 150.0f,
+            addObjective(operations, facts.actionId(), "V25-hunt-down-lightsaber",
+                    TraceOutputKind.BANDED, 300.0f,
                     "V25 HUNT DOWN: DEPLOYING LIGHTSABER — deck engine critical!");
         }
         return new PolicyResult("DEPLOY_LIGHTSABER_DESTINATION_POLICY", operations);
@@ -95,7 +95,7 @@ public final class DeployWeaponPolicy {
         if (facts.activePreFlipActorGate()
                 && facts.targetAtExactGate()
                 && facts.requiredActorAtGate()) {
-            add(operations, facts.actionId(), "V297-objective-gate-weapon",
+            addObjective(operations, facts.actionId(), "V297-objective-gate-weapon",
                     TraceOutputKind.BANDED, 250.0f,
                     "V297 OBJECTIVE GATE ARMAMENT: equip the actor formation");
         }
@@ -241,5 +241,14 @@ public final class DeployWeaponPolicy {
                             float delta, String reason) {
         operations.add(PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
                 TraceDomainId.DEPLOY_ATTACH, outputKind, delta, reason));
+    }
+
+    private static void addObjective(
+            List<PolicyOperation> operations, String actionId,
+            String ruleId, TraceOutputKind outputKind,
+            float delta, String reason) {
+        operations.add(PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                TraceDomainId.OBJECTIVE_INTENT,
+                outputKind, delta, reason));
     }
 }

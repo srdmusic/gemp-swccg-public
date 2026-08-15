@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
+import com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
@@ -20,6 +21,7 @@ public class EvaluatedAction {
     private String actionId;
     private ActionType actionType;
     private float score;
+    private float objectivePreferenceScore;
     private List<String> reasoning;
 
     // Optional metadata
@@ -30,8 +32,8 @@ public class EvaluatedAction {
     private float expectedValue = 0.0f;
     // FORMATION SAFETY (2026-07-11c, Codex root-cause audit + Steve's four laws): a TRUE veto that
     // survives additive merging. ~20 prior fixes coded the basics (no solos, no destiny-less battles,
-    // no buddy-less deploys, no solo charges) as -150..-500 penalties, which the R2 +6000 move band
-    // and +600/+700 bonus stacks routinely outvoted. hardVeto is OR-merged and CombinedEvaluator
+    // no buddy-less deploys, no solo charges) as -150..-500 penalties, which the old R2 +6000 move
+    // band and objective bonus stacks routinely outvoted. hardVeto is OR-merged and CombinedEvaluator
     // never selects a vetoed action regardless of score.
     private boolean hardVeto = false;
     private String vetoReason = null;
@@ -53,7 +55,9 @@ public class EvaluatedAction {
                            String initialReason) {
         this.actionId = actionId;
         this.actionType = actionType;
-        this.score = score;
+        this.score = ObjectivePreferencePolicy.normalize(initialDomainId, score);
+        this.objectivePreferenceScore = ObjectivePreferencePolicy.isObjective(
+                initialDomainId) ? this.score : 0.0f;
         this.displayText = displayText;
         this.reasoning = new ArrayList<>();
         if (initialReason != null && !initialReason.isBlank()) {
@@ -62,7 +66,7 @@ public class EvaluatedAction {
         // TRACE HOOK (2026-07-13, CODEX_MINIMAL_DECISION_TRACE_HOOK): INITIAL score op,
         // LEGACY_UNTAGGED until arms migrate to the tagged overloads. No-op (cheap
         // thread-local guard) unless a trace session is open.
-        TraceSession.recordInitial(this, actionId, score, initialRuleId,
+        TraceSession.recordInitial(this, actionId, this.score, initialRuleId,
             initialDomainId, initialOutputKind,
             initialReason != null ? initialReason : displayText);
     }
@@ -88,13 +92,20 @@ public class EvaluatedAction {
     public void addReasoning(String reason, float scoreDelta, TraceRuleId ruleId,
                              TraceDomainId domainId, TraceOutputKind outputKind) {
         float traceBefore = score;
-        if (scoreDelta != 0) {
-            reasoning.add(String.format("%s (%+.1f)", reason, scoreDelta));
-            score += scoreDelta;
+        float appliedDelta = scoreDelta;
+        if (ObjectivePreferencePolicy.isObjective(domainId)) {
+            appliedDelta = ObjectivePreferencePolicy.applyWithinCeiling(
+                    objectivePreferenceScore,
+                    ObjectivePreferencePolicy.normalize(domainId, scoreDelta));
+            objectivePreferenceScore += appliedDelta;
+        }
+        if (appliedDelta != 0) {
+            reasoning.add(String.format("%s (%+.1f)", reason, appliedDelta));
+            score += appliedDelta;
         } else {
             reasoning.add(reason);
         }
-        TraceSession.recordAdd(this, actionId, traceBefore, scoreDelta, score,
+        TraceSession.recordAdd(this, actionId, traceBefore, appliedDelta, score,
             ruleId, domainId, outputKind, reason);
     }
 
@@ -127,10 +138,26 @@ public class EvaluatedAction {
             if (this.deferReason == null) this.deferReason = other.deferReason;
         }
 
-        // Add the other action's score to this one
-        this.score += other.score;
+        // Objective preference saturates across evaluator objects as well as within one.
+        float scoreToMerge = other.score;
+        float requestedObjective = other.objectivePreferenceScore;
+        float acceptedObjective = 0.0f;
+        if (other.objectivePreferenceScore != 0.0f) {
+            acceptedObjective = ObjectivePreferencePolicy.applyWithinCeiling(
+                    this.objectivePreferenceScore,
+                    other.objectivePreferenceScore);
+            scoreToMerge += acceptedObjective - other.objectivePreferenceScore;
+            this.objectivePreferenceScore += acceptedObjective;
+        }
+        this.score += scoreToMerge;
 
         // Merge reasoning lists
+        if (requestedObjective != 0.0f) {
+            this.reasoning.add(String.format(
+                    "OBJECTIVE MERGE CAP: requested %+.1f, applied %+.1f, suppressed %+.1f",
+                    requestedObjective, acceptedObjective,
+                    requestedObjective - acceptedObjective));
+        }
         this.reasoning.addAll(other.reasoning);
 
         // Keep the more specific action type if this one is UNKNOWN
@@ -149,7 +176,10 @@ public class EvaluatedAction {
         // isActive() guard keeps the detail string from being built in production.
         if (TraceSession.isActive()) {
             TraceSession.recordMerge(this, actionId, traceBefore, this.score, this.hardVeto,
-                this.vetoReason, "mergeFrom actionId=" + other.actionId + " score=" + other.score);
+                this.vetoReason, "mergeFrom actionId=" + other.actionId
+                    + " score=" + other.score
+                    + " objectiveRequested=" + requestedObjective
+                    + " objectiveApplied=" + acceptedObjective);
         }
     }
 
@@ -233,7 +263,9 @@ public class EvaluatedAction {
     public void setScore(float score, TraceRuleId ruleId, TraceDomainId domainId,
                          TraceOutputKind outputKind) {
         float traceBefore = this.score;
-        this.score = score;
+        this.score = ObjectivePreferencePolicy.normalize(domainId, score);
+        this.objectivePreferenceScore = ObjectivePreferencePolicy.isObjective(
+                domainId) ? this.score : 0.0f;
         TraceSession.recordSet(this, actionId, traceBefore, this.score,
             ruleId, domainId, outputKind, null);
     }

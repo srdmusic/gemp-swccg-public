@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Persona;
@@ -53,6 +54,8 @@ public class WeHaveAPlanCombinedEvaluatorDecisionTest {
             "MOVE.OBJECTIVE.ACTOR_ROUTE_START";
     private static final String FLIP_BACK_HOLD_RULE =
             "MOVE.OBJECTIVE.FLIP_BACK_BLOCKER_HOLD";
+    private static final String POST_FLIP_HOLD_RULE =
+            "MOVE.OBJECTIVE.POST_FLIP_HOLD";
 
     private static final SwccgCardBlueprintLibrary CARDS =
             new SwccgCardBlueprintLibrary();
@@ -214,7 +217,7 @@ public class WeHaveAPlanCombinedEvaluatorDecisionTest {
     }
 
     @Test
-    public void postFlipContestedSoleBlockerHoldsAtGapSixButMayRetreatAtSeven() {
+    public void postFlipContestedSoleBlockerGetsBoundedHoldAtGapSixButMayRetreatAtSeven() {
         List<Outcome> holdResults = new ArrayList<>();
         List<Outcome> holdMoves = new ArrayList<>();
         List<Outcome> retreatResults = new ArrayList<>();
@@ -226,11 +229,16 @@ public class WeHaveAPlanCombinedEvaluatorDecisionTest {
             Outcome holdMove = only(
                     moveAdapter(bot, hold, move), "move-padme");
             assertContains(holdMove, FLIP_BACK_HOLD_RULE);
-            assertTrue(holdMove.score() <= -90000.0f);
+            assertFalse(holdMove.hardVeto());
             holdMoves.add(holdMove);
 
-            Outcome holdWinner = combined(bot, hold, move);
+            TracedOutcome holdDecision = tracedCombined(
+                    bot, hold, move);
+            Outcome holdWinner = holdDecision.outcome();
             assertEquals("pass", holdWinner.actionId());
+            assertBoundedObjectiveRule(
+                    holdDecision.trace(), "move-padme",
+                    POST_FLIP_HOLD_RULE, -300.0f);
             holdResults.add(holdWinner);
 
             Fixture retreat = fixture(bot, true, fixtureSite(THRONE_ID),
@@ -467,6 +475,24 @@ public class WeHaveAPlanCombinedEvaluatorDecisionTest {
                         operation -> actionId.equals(operation.getActionId())
                                 && ruleId.equals(
                                         operation.getRuleId().id())));
+    }
+
+    private static void assertBoundedObjectiveRule(
+            DecisionTrace trace, String actionId,
+            String ruleId, float delta) {
+        assertTrue(
+                "Expected bounded objective rule '" + ruleId
+                        + "' for " + actionId + " in "
+                        + trace.getOperations(),
+                trace.getOperations().stream().anyMatch(
+                        operation -> actionId.equals(operation.getActionId())
+                                && ruleId.equals(
+                                        operation.getRuleId().id())
+                                && operation.getDomainId()
+                                        == TraceDomainId.OBJECTIVE_INTENT
+                                && operation.getDeltaBits() != null
+                                && operation.getDeltaBits()
+                                        == Float.floatToRawIntBits(delta)));
     }
 
     private static void assertParity(List<Outcome> outcomes) {

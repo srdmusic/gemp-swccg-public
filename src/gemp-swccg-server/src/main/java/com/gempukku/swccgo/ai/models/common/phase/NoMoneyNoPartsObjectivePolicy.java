@@ -19,18 +19,18 @@ public final class NoMoneyNoPartsObjectivePolicy {
             boolean safeCandidateAvailable) {
         if (!exactAction) return empty();
         if (!safeCandidateAvailable) {
-            return result(PolicyOperation.hardVeto(
+            return result(add(
                     actionId,
-                    TraceRuleId.of("OBJECTIVE.NO_MONEY.GAMBIT_NO_SAFE_CARD"),
-                    TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO,
+                    "OBJECTIVE.NO_MONEY.GAMBIT_NO_SAFE_CARD",
+                    TraceOutputKind.BANDED,
+                    -300.0f,
                     "NO MONEY: do not start the back-side gambit without a safe hand card"));
         }
         return result(add(
                 actionId,
                 "OBJECTIVE.NO_MONEY.GAMBIT_PARENT",
                 TraceOutputKind.BANDED,
-                3000.0f,
+                300.0f,
                 "NO MONEY: use the back-side two-Force gambit with a safe hand card"));
     }
 
@@ -39,11 +39,11 @@ public final class NoMoneyNoPartsObjectivePolicy {
             boolean safeCandidate, boolean safeAlternativeAvailable) {
         if (!exactSelection) return empty();
         if (!safeCandidate && safeAlternativeAvailable) {
-            return result(PolicyOperation.hardVeto(
+            return result(add(
                     actionId,
-                    TraceRuleId.of("OBJECTIVE.NO_MONEY.GAMBIT_CARD_UNSAFE"),
-                    TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO,
+                    "OBJECTIVE.NO_MONEY.GAMBIT_CARD_UNSAFE",
+                    TraceOutputKind.BANDED,
+                    -300.0f,
                     "NO MONEY: keep this undeployable bluff card while a safe gambit card is available"));
         }
         return safeCandidate
@@ -51,7 +51,7 @@ public final class NoMoneyNoPartsObjectivePolicy {
                     actionId,
                     "OBJECTIVE.NO_MONEY.GAMBIT_CARD_SAFE",
                     TraceOutputKind.BANDED,
-                    2000.0f,
+                    300.0f,
                     "NO MONEY: this card can survive either opponent response"))
                 : empty();
     }
@@ -63,7 +63,7 @@ public final class NoMoneyNoPartsObjectivePolicy {
                     actionId,
                     "OBJECTIVE.NO_MONEY.OPPONENT_REMOVE_WATTO",
                     TraceOutputKind.BANDED,
-                    900.0f,
+                    300.0f,
                     "NO MONEY counterplay: remove Watto to break the opponent's flip formation"))
                 : empty();
     }
@@ -79,12 +79,11 @@ public final class NoMoneyNoPartsObjectivePolicy {
         if (exactPayment == null) {
             return fallback > 0
                     && forceAvailable - fallback < moveForceReserve
-                    ? result(PolicyOperation.hardVeto(
+                    ? result(add(
                         actionId,
-                        TraceRuleId.of(
-                            "OBJECTIVE.NO_MONEY.MOVE_PAYMENT_UNKNOWN"),
-                        TraceDomainId.OBJECTIVE_INTENT,
-                        TraceOutputKind.VETO,
+                        "OBJECTIVE.NO_MONEY.MOVE_PAYMENT_UNKNOWN",
+                        TraceOutputKind.BANDED,
+                        -300.0f,
                         "NO MONEY: cannot prove this deploy preserves the exact Mos Espa move payment"))
                     : empty();
         }
@@ -93,12 +92,11 @@ public final class NoMoneyNoPartsObjectivePolicy {
                 || forceAvailable - payment >= moveForceReserve) {
             return empty();
         }
-        return result(PolicyOperation.hardVeto(
+        return result(add(
                 actionId,
-                TraceRuleId.of(
-                    "OBJECTIVE.NO_MONEY.MOVE_FORCE_RESERVE"),
-                TraceDomainId.OBJECTIVE_INTENT,
-                TraceOutputKind.VETO,
+                "OBJECTIVE.NO_MONEY.MOVE_FORCE_RESERVE",
+                TraceOutputKind.BANDED,
+                -300.0f,
                 "NO MONEY: preserve the exact landspeed payment that occupies Mos Espa"));
     }
 

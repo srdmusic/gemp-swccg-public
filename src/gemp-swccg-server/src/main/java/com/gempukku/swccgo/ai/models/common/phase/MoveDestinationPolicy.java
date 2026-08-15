@@ -60,10 +60,9 @@ public final class MoveDestinationPolicy {
 
     public enum WrongDirectionDisposition {
         NONE,
-        HIDDEN_PATH_EXEMPT,
         RETREAT_EXEMPT,
         JOIN_GROUP_EXEMPT,
-        OBJECTIVE_ROUTE_EXEMPT,
+        TERMINAL_ESCAPE_EXEMPT,
         VETO
     }
 
@@ -131,7 +130,7 @@ public final class MoveDestinationPolicy {
                         + (actorTitle != null
                             ? actorTitle : "named actor")
                         + " has a safe move to activate a back-side objective payoff",
-                600.0f);
+                300.0f);
     }
 
     public static Contribution objectiveNabooDuelFrontRouteStart(
@@ -144,7 +143,7 @@ public final class MoveDestinationPolicy {
                         + (actorTitle != null
                             ? actorTitle : "typed duelist")
                         + " has a safe move to the legal interior Theed Palace target",
-                600.0f);
+                300.0f);
     }
 
     public static Contribution objectiveNabooDuelFrontRouteDestination(
@@ -160,7 +159,7 @@ public final class MoveDestinationPolicy {
                         + " reaches the legal target-loss pairing at "
                         + (destinationTitle != null
                             ? destinationTitle : "this location"),
-                1200.0f);
+                300.0f);
     }
 
     public static Contribution objectiveNabooDuelFrontRouteRetention(
@@ -203,7 +202,7 @@ public final class MoveDestinationPolicy {
                         + " activates a back-side objective payoff at "
                         + (destinationTitle != null
                             ? destinationTitle : "this location"),
-                primary ? 1200.0f : 700.0f);
+                300.0f);
     }
 
     public static Contribution objectivePostFlipPayoffRetention(
@@ -241,7 +240,7 @@ public final class MoveDestinationPolicy {
                         + (actorTitle != null
                             ? actorTitle : "terminal actor")
                         + " has a safe move out of the exact objective-loss conjunction",
-                1800.0f);
+                300.0f);
     }
 
     public static Contribution objectiveTerminalActorEscapeDestination(
@@ -259,7 +258,7 @@ public final class MoveDestinationPolicy {
                         + " escapes the objective-loss conjunction via "
                         + (destinationTitle != null
                             ? destinationTitle : "this destination"),
-                1800.0f);
+                300.0f);
     }
 
     public static Contribution objectiveFirstOrderDrainPairStart(
@@ -272,7 +271,7 @@ public final class MoveDestinationPolicy {
                         + (actorTitle != null
                             ? actorTitle : "First Order character")
                         + " has a safe move that completes the objective's +1 drain pair",
-                600.0f);
+                300.0f);
     }
 
     public static Contribution objectiveFirstOrderDrainPairDestination(
@@ -288,7 +287,7 @@ public final class MoveDestinationPolicy {
                         + " completes the objective's +1 drain pair at "
                         + (destinationTitle != null
                             ? destinationTitle : "this battleground"),
-                800.0f);
+                300.0f);
     }
 
     public static Contribution objectiveFirstOrderDrainPairHold(
@@ -327,7 +326,7 @@ public final class MoveDestinationPolicy {
                 "MOVE.OBJECTIVE.ACTOR_ROUTE_START: "
                         + (actorTitle != null ? actorTitle : "typed actor")
                         + " has a safe move toward the flip gate",
-                600.0f);
+                300.0f);
     }
 
     public static Contribution objectiveActorRouteDestination(
@@ -342,7 +341,7 @@ public final class MoveDestinationPolicy {
                         + " advances toward the flip gate via "
                         + (destinationTitle != null
                                 ? destinationTitle : "this site"),
-                1000.0f);
+                300.0f);
     }
 
     public static Contribution objectiveRequiredCardEnablerStart(
@@ -355,7 +354,7 @@ public final class MoveDestinationPolicy {
                         + (actorTitle != null
                             ? actorTitle : "required actor")
                         + " has a safe move toward a required-card deploy condition",
-                600.0f);
+                300.0f);
     }
 
     public static Contribution objectiveRequiredCardEnablerDestination(
@@ -371,7 +370,7 @@ public final class MoveDestinationPolicy {
                         + " advances a required-card deploy condition at "
                         + (destinationTitle != null
                             ? destinationTitle : "this site"),
-                1000.0f);
+                300.0f);
     }
 
     public static Contribution objectiveActorLocationStart(
@@ -384,7 +383,7 @@ public final class MoveDestinationPolicy {
                         + (actorTitle != null
                                 ? actorTitle : "typed actor")
                         + " has a safe legal move to a live qualifying location",
-                600.0f);
+                300.0f);
     }
 
     public static Contribution objectiveActorLocationDestination(
@@ -400,7 +399,7 @@ public final class MoveDestinationPolicy {
                         + " advances the objective at "
                         + (destinationTitle != null
                                 ? destinationTitle : "this location"),
-                1000.0f);
+                300.0f);
     }
 
     public static Contribution objectiveBlockerChaseStart(
@@ -413,7 +412,7 @@ public final class MoveDestinationPolicy {
                         + (actorTitle != null
                                 ? actorTitle : "typed actor")
                         + " has a safe legal move toward a flip blocker",
-                600.0f);
+                300.0f);
     }
 
     public static Contribution objectiveBlockerChaseDestination(
@@ -429,7 +428,7 @@ public final class MoveDestinationPolicy {
                         + " chases the blocker at "
                         + (destinationTitle != null
                                 ? destinationTitle : "this location"),
-                1000.0f);
+                300.0f);
     }
 
     public static IconScoring icons(int ownIcons, int opponentIcons) {
@@ -758,30 +757,12 @@ public final class MoveDestinationPolicy {
             boolean opponentsElsewhere,
             String destinationTitle,
             String opponentLocation,
-            boolean hiddenPathExempt,
-            boolean retreatExempt,
-            boolean joinGroupExempt) {
-        return wrongDirection(
-                opponentsElsewhere, destinationTitle, opponentLocation,
-                hiddenPathExempt, retreatExempt, joinGroupExempt, false);
-    }
-
-    public static WrongDirectionEvaluation wrongDirection(
-            boolean opponentsElsewhere,
-            String destinationTitle,
-            String opponentLocation,
-            boolean hiddenPathExempt,
             boolean retreatExempt,
             boolean joinGroupExempt,
-            boolean objectiveRouteExempt) {
+            boolean terminalEscapeExempt) {
         if (!opponentsElsewhere) {
             return new WrongDirectionEvaluation(
                     WrongDirectionDisposition.NONE,
-                    Contribution.none());
-        }
-        if (hiddenPathExempt) {
-            return new WrongDirectionEvaluation(
-                    WrongDirectionDisposition.HIDDEN_PATH_EXEMPT,
                     Contribution.none());
         }
         if (retreatExempt) {
@@ -794,9 +775,9 @@ public final class MoveDestinationPolicy {
                     WrongDirectionDisposition.JOIN_GROUP_EXEMPT,
                     Contribution.none());
         }
-        if (objectiveRouteExempt) {
+        if (terminalEscapeExempt) {
             return new WrongDirectionEvaluation(
-                    WrongDirectionDisposition.OBJECTIVE_ROUTE_EXEMPT,
+                    WrongDirectionDisposition.TERMINAL_ESCAPE_EXEMPT,
                     Contribution.none());
         }
         return new WrongDirectionEvaluation(

@@ -299,3 +299,17 @@ Runtime: final checks show matching host/container bytes, HTTP `200`, zero table
 Boundary: four natural games prove the controlled lifecycle and the named selected branches. They do not establish a new win rate or behaviorally seal unexercised branches. No deck-library change, push, or pull request occurred.
 
 Needed: none for this campaign. Future work begins only from a new exact fixture that can prove one of the remaining opportunity gates.
+
+## 2026-08-15 12:28 PT - Codex objective score-cap lane -> Alfred - OPEN
+
+Topic: Global objective score ceiling and R2 score-cannon retirement are ready for final verification.
+
+Request: Review the uncommitted source boundary after the final test ring. Check that ordinary objective influence cannot exceed `+300` or fall below `-300` per action and decision, and that only true categorical safety or terminal cases retain hard control flow.
+
+Evidence: branch `codex/objective-score-cap-2026-08-15`, exact base and current uncommitted HEAD `efbb36723cd0ce9e33efb42764c2217126f6ea26`. The sole executable positive AI `+6000` literal, shared MoveLadder R2, is now `+1000`. Its modeled floor changes from `2650`, above R1 ceiling `1920`, to `-2350`. Shared `ObjectivePreferencePolicy` normalizes positive `OBJECTIVE_INTENT` to exactly `+300` and the accumulation paths cap signed net objective influence at `[-300,+300]`. Audited ordinary objective veto, defer, early-return, and bucket-preemption paths are demoted to bounded preferences. Legality, no-candidate, actual terminal objective loss, and FormationSafety remain categorical. Focused tests: `PENDING`. Changed-test ring: `PENDING`. Full reactor comparison: `PENDING`. Compile: `PENDING`.
+
+Files: shared AI policy and phase owners, mirrored Rando and Chosen One adapters, `objective_playbooks.json`, AI tests, both required history files, this append-only mailbox, and `outputs/rando-objective-score-cap-2026-08-15/implementation_report.md`.
+
+Risks: this changes a broad additive scoring surface. It removes dominance but does not add Emperor-on-shuttle pairing, repair a specific unsafe AT-AT destination, or correct battle prediction. No clean build, package, candidate jar, deployment, restart, loaded-JVM proof, semantic-tag firing, live replay proof, push, or pull request exists.
+
+Needed: final bounded test evidence, normalized bot parity, static score-leak review, and one coherent local commit. Do not deploy this uncommitted source.

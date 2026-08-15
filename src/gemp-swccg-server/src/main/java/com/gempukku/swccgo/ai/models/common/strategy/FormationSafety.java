@@ -16,7 +16,7 @@ import java.util.Locale;
 // Steve's FOUR LAWS as non-additive constraints, enforced identically on every scoring route.
 // Born from the Codex root-cause audit (Handoffs/CODEX_SOLO_ABILITY_ROOT_CAUSE_AUDIT_2026-07-11.md)
 // + council review: ~20 prior fixes coded these basics as -150..-500 additive penalties that the
-// R2 +6000 move band and +600 bonus stacks outvoted (H2), or that lived on only one of the five
+// old R2 +6000 move band and objective bonus stacks outvoted (H2), or that lived on only one of the five
 // scoring routes (H1). This class is SHARED by both bots (like CharacterDeploySiteEvaluator), so
 // it cannot mirror-drift. Callers map the closed deploy verdict to hardVeto or defer;
 // CombinedEvaluator applies constraint order before additive score.
@@ -250,8 +250,8 @@ public final class FormationSafety {
      * when the AI deployment plan contains another exact physical character at
      * this same destination. Movement is deliberately not an exemption because
      * the current AI has no exact move-mode, cost, and Force-reservation proof.
-     * For actor-gated objectives, callers may pass flipGateSiteTitle only when
-     * this exact support proof already exists; Endor's one-body gate is unchanged.
+     * Objective identity never bypasses the same formation checks. The retained
+     * flipGateSiteTitle parameter preserves the mirrored adapter contract only.
      */
     public static DeployVerdict assessCharacterDeploy(SwccgGame game, GameState gs, String playerId,
                                                        PhysicalCard cardBeingDeployed,
@@ -268,11 +268,6 @@ public final class FormationSafety {
             if (deployIsUndercover) {
                 return new DeployVerdict(DeployConstraint.ALLOW, "undercover deployment is solo by design");
             }
-            if (flipGateSiteTitle != null && destination.getTitle() != null
-                    && flipGateSiteTitle.equalsIgnoreCase(destination.getTitle())) {
-                return new DeployVerdict(DeployConstraint.ALLOW, "objective flip-gate deployment");
-            }
-
             float power = deployPower != null ? deployPower : 0f;
             float ability = deployAbility != null ? deployAbility : 0f;
             String opp = gs.getOpponent(playerId);

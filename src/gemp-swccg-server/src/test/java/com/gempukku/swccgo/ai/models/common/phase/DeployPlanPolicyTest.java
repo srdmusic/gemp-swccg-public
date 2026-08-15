@@ -22,14 +22,17 @@ public class DeployPlanPolicyTest {
     }
 
     @Test
-    public void turnOneTdigwattOffPlanCandidateStops() {
+    public void turnOneTdigwattOffPlanCandidateGetsBoundedObjectivePenalty() {
         DeployPlanPolicy.Evaluation evaluation = DeployPlanPolicy.evaluate(
                 facts(true, true, false, 99, false, false,
                         true, false, 1, 6, false, 0, true));
-        assertEquals(DeployPlanPolicy.AdapterStep.CONTINUE_ACTION,
+        assertEquals(DeployPlanPolicy.AdapterStep.FALL_THROUGH,
                 evaluation.adapterStep());
         assertOperations(evaluation.result().operations(),
-                new String[]{"V40-plan-location-first"}, new float[]{-1000.0f});
+                new String[]{"V40-plan-location-first", "V40-plan-hold-back"},
+                new float[]{-300.0f, 0.0f});
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                evaluation.result().operations().get(0).domainId());
     }
 
     @Test
@@ -47,11 +50,11 @@ public class DeployPlanPolicyTest {
     }
 
     @Test
-    public void lowForceWaitStopsButSurplusFallsThrough() {
+    public void lowForceWaitAndSurplusBothRemainScored() {
         DeployPlanPolicy.Evaluation low = DeployPlanPolicy.evaluate(
                 facts(true, true, false, 99, false, true,
                         false, false, 3, 7, false, 0, false));
-        assertEquals(DeployPlanPolicy.AdapterStep.CONTINUE_ACTION, low.adapterStep());
+        assertEquals(DeployPlanPolicy.AdapterStep.FALL_THROUGH, low.adapterStep());
         assertOperations(low.result().operations(),
                 new String[]{"V40-plan-save-force"}, new float[]{0.0f});
 
@@ -93,9 +96,7 @@ public class DeployPlanPolicyTest {
         assertEquals("deploy-plan-target-other", other.ruleArmId().id());
         assertEquals(-100.0f, other.delta(), 0.0f);
         assertEquals("Not planned target (want null)", other.reason());
-        assertEquals(2, offeredOther.size());
-        assertEquals("deploy-plan-target-defer", offeredOther.get(1).ruleArmId().id());
-        assertEquals(PolicyOperationKind.DEFER, offeredOther.get(1).kind());
+        assertEquals(1, offeredOther.size());
 
         List<PolicyOperation> unavailableOther = DeployPlanPolicy.evaluateDestinationTarget(
                 new DeployPlanPolicy.DestinationTargetFacts(
@@ -118,19 +119,17 @@ public class DeployPlanPolicyTest {
     }
 
     @Test
-    public void nonDominantAlternativeStillDefersWhenPlannedTargetOffered() {
-        // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): explicit false keeps the
-        // legacy defer (same as the four-arg constructor).
+    public void nonDominantAlternativeRemainsAComparableScore() {
         List<PolicyOperation> operations = DeployPlanPolicy.evaluateDestinationTarget(
                 new DeployPlanPolicy.DestinationTargetFacts(
                         "a", false, true, "Bespin", false)).operations();
-        assertEquals(2, operations.size());
-        assertEquals("deploy-plan-target-defer", operations.get(1).ruleArmId().id());
-        assertEquals(PolicyOperationKind.DEFER, operations.get(1).kind());
+        assertEquals(1, operations.size());
+        assertEquals("deploy-plan-target-other", operations.get(0).ruleArmId().id());
+        assertEquals(PolicyOperationKind.ADD, operations.get(0).kind());
     }
 
     @Test
-    public void objectiveFormationTieBreakAddsOnlyTwentyFiveToPlannedCard() {
+    public void objectiveFormationTieBreakUsesExactBoundedPreference() {
         DeployPlanPolicy.Evaluation offPlan = DeployPlanPolicy.evaluate(
                 new DeployPlanPolicy.Facts(
                         "maul", true, true, false, true,
@@ -154,11 +153,13 @@ public class DeployPlanPolicyTest {
         assertOperations(buddy.result().operations(),
                 new String[]{"deploy-plan-membership", "deploy-plan-priority",
                         "DEPLOY.FORMATION.OBJECTIVE_TIE_BREAK"},
-                new float[]{100.0f, 25.0f, 25.0f});
+                new float[]{100.0f, 25.0f, 300.0f});
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                buddy.result().operations().get(2).domainId());
     }
 
     @Test
-    public void eopBunkerGarrisonDominatesObservedShipComboGap() {
+    public void eopBunkerGarrisonUsesBoundedObjectivePreference() {
         DeployPlanPolicy.Evaluation evaluation =
                 DeployPlanPolicy.evaluate(
                         new DeployPlanPolicy.Facts(
@@ -172,7 +173,7 @@ public class DeployPlanPolicyTest {
                         "deploy-plan-membership",
                         "deploy-plan-priority",
                         "DEPLOY.EOP.BUNKER_GARRISON"},
-                new float[]{100.0f, 50.0f, 2500.0f});
+                new float[]{100.0f, 50.0f, 300.0f});
     }
 
     private static DeployPlanPolicy.Facts facts(

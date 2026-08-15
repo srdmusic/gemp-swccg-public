@@ -59,9 +59,9 @@ public class DeployPlanRankingPolicyTest {
                         "deploy-plan-ranking-establish",
                         "V22-plan-ranking-objective-capital-bespin"},
                 new float[]{
-                        4.0f, 6.0f, 150.0f, 175.0f, 25.0f,
+                        4.0f, 6.0f, 300.0f, 175.0f, 25.0f,
                         30.0f, -30.0f, 45.0f, 25.0f, -460.0f,
-                        200.0f},
+                        300.0f},
                 new String[]{
                         "Base power value",
                         "Base power value",
@@ -76,8 +76,8 @@ public class DeployPlanRankingPolicyTest {
                         "V22 objective capital ship priority for Bespin"});
 
         float coreScore = DeployPlanRankingPolicy.apply(0.0f, core);
-        assertBits(-30.0f, coreScore);
-        assertBits(170.0f, DeployPlanRankingPolicy.apply(coreScore, adjunct));
+        assertBits(120.0f, coreScore);
+        assertBits(120.0f, DeployPlanRankingPolicy.apply(0.0f, core, adjunct));
     }
 
     @Test
@@ -101,16 +101,23 @@ public class DeployPlanRankingPolicyTest {
         assertBits(216.0f, score(8, 4, 4.0f, 2, 3, false, 0.0f));
         assertBits(78.0f, score(4, 4, 4.0f, 2, 3, false, 0.0f));
 
-        float objective = score(8, 4, 4.0f, 0, 0, true, 150.0f);
-        assertBits(281.0f, objective);
+        PolicyResult objectivePlan = DeployPlanRankingPolicy.evaluate(
+                List.of(instruction("objective-instruction", 8)),
+                List.of(location("objective-location", 8, 4, 4.0f,
+                        0, 0, true, 150.0f)));
+        float objective = DeployPlanRankingPolicy.apply(
+                0.0f, objectivePlan);
+        assertBits(431.0f, objective);
         PolicyResult capital = DeployPlanRankingPolicy.evaluateAdjunct(
                 new DeployPlanRankingPolicy.AdjunctFacts("capital", true));
-        assertBits(481.0f, DeployPlanRankingPolicy.apply(objective, capital));
+        assertBits(431.0f, DeployPlanRankingPolicy.apply(
+                0.0f, objectivePlan, capital));
 
         PolicyResult earlyRescore = DeployPlanRankingPolicy.evaluateAdjunct(
                 new DeployPlanRankingPolicy.AdjunctFacts("early", false));
         assertEquals(0, earlyRescore.operations().size());
-        assertBits(281.0f, DeployPlanRankingPolicy.apply(objective, earlyRescore));
+        assertBits(431.0f, DeployPlanRankingPolicy.apply(
+                0.0f, objectivePlan, earlyRescore));
     }
 
     @Test
@@ -126,9 +133,9 @@ public class DeployPlanRankingPolicyTest {
         assertOperations(complete.operations(),
                 new String[]{"flip-gate"},
                 new String[]{"V297-plan-ranking-flip-gate-formation"},
-                new float[]{1600.0f},
+                new float[]{300.0f},
                 new String[]{"V297 objective flip-gate actor and buddy formation"});
-        assertBits(1700.0f, DeployPlanRankingPolicy.apply(100.0f, complete));
+        assertBits(400.0f, DeployPlanRankingPolicy.apply(100.0f, complete));
     }
 
     @Test
@@ -283,7 +290,10 @@ public class DeployPlanRankingPolicyTest {
             assertEquals(ruleIds[i], operation.ruleArmId().id());
             assertBits(deltas[i], operation.delta());
             assertEquals(reasons[i], operation.reason());
-            assertEquals(TraceDomainId.DEPLOY_SEQUENCING,
+            boolean objective = ruleIds[i].contains("objective")
+                    || ruleIds[i].contains("flip-gate");
+            assertEquals(objective ? TraceDomainId.OBJECTIVE_INTENT
+                            : TraceDomainId.DEPLOY_SEQUENCING,
                     operation.domainId());
             assertEquals(TraceOutputKind.ORDERING, operation.outputKind());
             assertEquals(PolicyOperationKind.ADD, operation.kind());

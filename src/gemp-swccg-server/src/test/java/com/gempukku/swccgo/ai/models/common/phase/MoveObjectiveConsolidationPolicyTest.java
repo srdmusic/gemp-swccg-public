@@ -40,7 +40,7 @@ public class MoveObjectiveConsolidationPolicyTest {
                         true, true, false, 0,
                         "Another non-Mapuzo site");
 
-        assertEquals(-500.0f, occupied.delta(), 0.0f);
+        assertEquals(-300.0f, occupied.delta(), 0.0f);
         assertEquals(200.0f, empty.delta(), 0.0f);
         assertEquals("The source flip law accepts a non-battleground site",
                 200.0f, plainSite.delta(), 0.0f);

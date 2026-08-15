@@ -19,7 +19,7 @@ public class DeployPilotShipPolicyTest {
                                 "a", "Piett", "Executor", true, true,
                                 true, true, "Bespin")).operations(),
                 new String[]{"V30-pilot-combo", "V30-pilot-objective"},
-                new float[]{1000.0f, 1000.0f});
+                new float[]{1000.0f, 300.0f});
         assertRules(DeployPilotShipPolicy.evaluateMatchingPilot(
                         new DeployPilotShipPolicy.MatchingPilotFacts(
                                 "a", "Piett", "Executor", false, true,
@@ -38,7 +38,7 @@ public class DeployPilotShipPolicyTest {
                         new DeployPilotShipPolicy.MatchingShipFacts(
                                 "a", "Executor", "Piett", true, "Bespin")).operations(),
                 new String[]{"V30-ship-combo", "V30-ship-objective"},
-                new float[]{1000.0f, 1000.0f});
+                new float[]{1000.0f, 300.0f});
         assertTrue(DeployPilotShipPolicy.evaluateMatchingShip(
                 new DeployPilotShipPolicy.MatchingShipFacts(
                         "a", "Executor", "Piett", false, "Bespin"))
@@ -116,10 +116,10 @@ public class DeployPilotShipPolicyTest {
     @Test
     public void v121PreservesCorrectAndWrongDestinationScores() {
         assertRules(DeployPilotShipPolicy.evaluateObjectivePilotDestination(
-                        new DeployPilotShipPolicy.ObjectivePilotDestinationFacts(
+                new DeployPilotShipPolicy.ObjectivePilotDestinationFacts(
                                 "a", true, "Trade Federation Droid Control Ship",
                                 "Bridge", false)).operations(),
-                new String[]{"V121"}, new float[]{-1500.0f});
+                new String[]{"V121"}, new float[]{-300.0f});
         assertRules(DeployPilotShipPolicy.evaluateObjectivePilotDestination(
                         new DeployPilotShipPolicy.ObjectivePilotDestinationFacts(
                                 "a", true, "Trade Federation Droid Control Ship",
@@ -135,14 +135,14 @@ public class DeployPilotShipPolicyTest {
                                 false, 1, false, true,
                                 false, false, false, false)).operations(),
                 new String[]{"asset-base", "V24.10", "V23"},
-                new float[]{15.0f, -9999.0f, 300.0f});
+                new float[]{15.0f, -300.0f, 300.0f});
         assertRules(DeployPilotShipPolicy.evaluateAssetTail(
                         new DeployPilotShipPolicy.AssetTailFacts(
                                 "a", "Executor", true, true, true,
                                 true, 2, false, false,
                                 false, false, false, false)).operations(),
                 new String[]{"asset-base", "V24.9", "V23"},
-                new float[]{15.0f, 800.0f, 250.0f});
+                new float[]{15.0f, 300.0f, 0.0f});
     }
 
     @Test
@@ -191,9 +191,9 @@ public class DeployPilotShipPolicyTest {
                         "a", true, "Bespin"))
                 .operations().get(0);
         assertEquals("V24.10-executor-bespin", bespin.ruleArmId().id());
-        assertEquals(500.0f, bespin.delta(), 0.0f);
+        assertEquals(300.0f, bespin.delta(), 0.0f);
         assertEquals(PolicyOperationKind.ADD, bespin.kind());
-        assertEquals(TraceDomainId.DEPLOY_SITING, bespin.domainId());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT, bespin.domainId());
         assertEquals(TraceOutputKind.BANDED, bespin.outputKind());
         assertEquals("V24.10 EXECUTOR TO BESPIN: This is THE correct system — entire TDIGWATT engine depends on it!",
                 bespin.reason());
@@ -203,11 +203,11 @@ public class DeployPilotShipPolicyTest {
                         "a", false, "Kashyyyk"))
                 .operations().get(0);
         assertEquals("V24.10-executor-wrong-system", wrong.ruleArmId().id());
-        assertEquals(-9999.0f, wrong.delta(), 0.0f);
+        assertEquals(-300.0f, wrong.delta(), 0.0f);
         assertEquals(PolicyOperationKind.ADD, wrong.kind());
-        assertEquals(TraceDomainId.DEPLOY_SITING, wrong.domainId());
-        assertEquals(TraceOutputKind.VETO, wrong.outputKind());
-        assertEquals("V24.10 EXECUTOR WRONG SYSTEM: Executor MUST go to Bespin, not Kashyyyk!",
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT, wrong.domainId());
+        assertEquals(TraceOutputKind.BANDED, wrong.outputKind());
+        assertEquals("V24.10 EXECUTOR WRONG SYSTEM: prefer Bespin over Kashyyyk (-300 objective preference)",
                 wrong.reason());
     }
 
@@ -442,9 +442,11 @@ public class DeployPilotShipPolicyTest {
 
         assertRules(operations,
                 new String[]{"DEPLOY.EOP.BUNKER_GARRISON_RESERVE"},
-                new float[]{-9999.0f});
-        assertEquals(TraceOutputKind.VETO,
+                new float[]{-300.0f});
+        assertEquals(TraceOutputKind.BANDED,
                 operations.get(0).outputKind());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                operations.get(0).domainId());
     }
 
     private static void assertRules(List<PolicyOperation> operations,
@@ -454,7 +456,8 @@ public class DeployPilotShipPolicyTest {
             assertEquals(rules[i], operations.get(i).ruleArmId().id());
             assertEquals(deltas[i], operations.get(i).delta(), 0.0f);
             assertTrue(operations.get(i).domainId() == TraceDomainId.DEPLOY_ATTACH
-                    || operations.get(i).domainId() == TraceDomainId.DEPLOY_SITING);
+                    || operations.get(i).domainId() == TraceDomainId.DEPLOY_SITING
+                    || operations.get(i).domainId() == TraceDomainId.OBJECTIVE_INTENT);
         }
     }
 }

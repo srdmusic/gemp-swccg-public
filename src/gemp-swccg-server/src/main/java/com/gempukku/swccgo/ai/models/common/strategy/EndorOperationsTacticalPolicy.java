@@ -10,10 +10,10 @@ import java.util.Locale;
  * attack plans must outrank establishing another unsupported Endor site.</p>
  */
 public final class EndorOperationsTacticalPolicy {
-    public static final float ENDOR_SHIELD_BOOTSTRAP_BONUS = 1500.0f;
-    public static final float BUNKER_GARRISON_PLAN_BONUS = 3000.0f;
-    public static final float BUNKER_GARRISON_DEPLOY_BONUS = 2500.0f;
-    public static final float POST_FLIP_REINFORCE_BONUS = 500.0f;
+    public static final float ENDOR_SHIELD_BOOTSTRAP_BONUS = 300.0f;
+    public static final float BUNKER_GARRISON_PLAN_BONUS = 300.0f;
+    public static final float BUNKER_GARRISON_DEPLOY_BONUS = 300.0f;
+    public static final float POST_FLIP_REINFORCE_BONUS = 300.0f;
     public static final float POST_FLIP_SPREAD_PENALTY = -250.0f;
     private static final String BUNKER_GARRISON_PLAN_PREFIX =
             "EOP: garrison Endor Bunker";
@@ -86,12 +86,6 @@ public final class EndorOperationsTacticalPolicy {
                 && opponentPowerAtEndor <= 0.0f;
     }
 
-    public static boolean shouldSuppressEmptyEndorGroundEstablish(
-            boolean endorSystemOccupationPending,
-            boolean targetsEmptyEndorSite) {
-        return endorSystemOccupationPending && targetsEmptyEndorSite;
-    }
-
     public static float bunkerGarrisonAdjustment(
             boolean endorOperations,
             boolean flipped,
@@ -103,10 +97,10 @@ public final class EndorOperationsTacticalPolicy {
             return 0.0f;
         }
         if (imperialAdmiral && deployCost <= 2) {
-            return 1200.0f;
+            return 300.0f;
         }
         if (highValueMobileCharacter) {
-            return -1200.0f;
+            return -300.0f;
         }
         return 0.0f;
     }

@@ -106,7 +106,7 @@ public final class MoveObjectiveConsolidationPolicy {
                     "V62 SPLIT SITE: Already have " + friendlyJediAtDestination
                             + " Jedi at " + destinationTitle
                             + ": move 2nd Jedi to a DIFFERENT non-Mapuzo site to flip Hidden Path!",
-                    -500.0f,
+                    -300.0f,
                     false);
         }
         if (!advancesDistinctHoldSite) {

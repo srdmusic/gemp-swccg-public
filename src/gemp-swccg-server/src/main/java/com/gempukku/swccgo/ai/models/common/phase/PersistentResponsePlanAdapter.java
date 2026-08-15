@@ -407,7 +407,8 @@ public final class PersistentResponsePlanAdapter {
             PersistentResponsePolicy.TargetRole role = targetRole(
                     input.game(), input.playerId(),
                     input.objectiveAnalyzer(), target.location);
-            boolean mandatory = completesMandatoryNeed(
+            boolean mandatory = isTerminalHardLoss(role)
+                    && completesMandatoryNeed(
                     input, role, target.location, targetCards);
             PersistentResponsePolicy.ExecutionProof execution =
                     proveExecution(input, entry.getValue(),
@@ -436,7 +437,7 @@ public final class PersistentResponsePlanAdapter {
             boolean responseFact = actionKey != null
                     && actionKeys.size() == entry.getValue().size()
                     && opponentPresent
-                    && (threat != null || isCritical(role));
+                    && (threat != null || isTerminalHardLoss(role));
             boolean responseEligible = responseFact
                     && formation.responseViable()
                     && (formation.route()
@@ -445,7 +446,7 @@ public final class PersistentResponsePlanAdapter {
 
             if (responseEligible) {
                 PersistentResponsePolicy.TargetRole effectiveRole = role;
-                if (!isCritical(effectiveRole)) {
+                if (!isObjectivePreferenceRole(effectiveRole)) {
                     effectiveRole = PersistentResponsePolicy.TargetRole
                             .PERSISTENT_DAMAGE;
                 }
@@ -822,7 +823,7 @@ public final class PersistentResponsePlanAdapter {
             Input<P> input, PersistentResponsePolicy.TargetRole role,
             PhysicalCard location, List<PhysicalCard> plannedCards) {
         ObjectiveAnalyzer objective = input.objectiveAnalyzer();
-        if (!isCritical(role) || objective == null
+        if (!isTerminalHardLoss(role) || objective == null
                 || !objective.isAnalyzed() || objective.isFlipped()) {
             return false;
         }
@@ -858,10 +859,15 @@ public final class PersistentResponsePlanAdapter {
         return false;
     }
 
-    private static boolean isCritical(
+    private static boolean isTerminalHardLoss(
             PersistentResponsePolicy.TargetRole role) {
         return role == PersistentResponsePolicy.TargetRole
-                .OBJECTIVE_HARD_LOSS_DEFENSE
+                .OBJECTIVE_HARD_LOSS_DEFENSE;
+    }
+
+    private static boolean isObjectivePreferenceRole(
+            PersistentResponsePolicy.TargetRole role) {
+        return isTerminalHardLoss(role)
                 || role == PersistentResponsePolicy.TargetRole.ACTIVE_FLIP_GATE
                 || role == PersistentResponsePolicy.TargetRole
                 .POST_FLIP_PROTECTION

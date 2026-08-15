@@ -425,7 +425,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void exactActiveYourDestinyMakesSafeExplicitVaderDeployParentWin() {
+    public void exactActiveYourDestinyAddsBoundedVaderDeployPreference() {
         List<Outcome> exactWinners = new ArrayList<>();
         for (Bot bot : Bot.values()) {
             Fixture exact =
@@ -471,9 +471,12 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     "deploy-vader");
             TracedOutcome exactResult =
                     tracedCombined(exact, decision);
-            assertEquals("deploy-vader",
+            assertEquals(
+                    "Normal deploy scoring may override the bounded"
+                        + " objective preference",
+                    "deploy-neutral",
                     exactResult.outcome().actionId());
-            assertContains(exactResult.outcome(),
+            assertContains(exactVader,
                     "BHBM YOUR DESTINY");
             assertTypedContribution(
                     exactResult.trace(),
@@ -498,10 +501,9 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                         inactive, inactiveDecision),
                     "deploy-vader");
             assertEquals(
-                    "Your Destiny must be the only "
-                        + "difference in the same-board "
-                        + "Vader deploy score",
-                    inactiveVader.score() + 300.0f,
+                    "Your Destiny must share the same +300 ceiling with"
+                        + " the generic objective-key-character match",
+                    inactiveVader.score(),
                     exactVader.score(), 0.0f);
             TracedOutcome inactiveResult =
                     tracedCombined(
@@ -546,9 +548,6 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
             TracedOutcome carrierExact =
                     tracedCombined(
                         exact, carrierDecision);
-            assertEquals(
-                    "deploy-vader-carrier",
-                    carrierExact.outcome().actionId());
             assertTypedContribution(
                     carrierExact.trace(),
                     "deploy-vader-carrier",
@@ -586,11 +585,9 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                         inactiveCarrierDecision),
                     "deploy-vader-carrier");
             assertEquals(
-                    "Your Destiny must contribute exactly "
-                        + "300 to the same open-Bantha "
-                        + "deploy parent",
-                    inactiveCarrierVader.score()
-                        + 300.0f,
+                    "Your Destiny must share the same +300 ceiling with"
+                        + " the generic objective-key-character match",
+                    inactiveCarrierVader.score(),
                     exactCarrierVader.score(), 0.0f);
         }
         assertParity(exactWinners);
@@ -675,7 +672,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void openCarrierDeployWinsTheMandatoryCaptureBand() {
+    public void openCarrierDeployGetsOneBoundedCapturePreference() {
         List<Outcome> parents = new ArrayList<>();
         List<Outcome> destinations = new ArrayList<>();
         for (Bot bot : Bot.values()) {
@@ -696,14 +693,17 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
             Outcome parentVader = only(
                     deployAdapter(fixture, parent),
                     "deploy-vader-carrier");
-            Outcome parentWinner =
-                    combined(fixture, parent);
+            TracedOutcome parentResult =
+                    tracedCombined(fixture, parent);
             assertContains(parentVader,
                     "CAPTURE DEPLOY");
-            assertTrue(parentVader.score() >= 20000.0f);
-            assertEquals("deploy-vader-carrier",
-                    parentWinner.actionId());
-            parents.add(parentWinner);
+            assertFalse(parentVader.hardVeto());
+            assertTypedContribution(
+                    parentResult.trace(),
+                    "deploy-vader-carrier",
+                    "DEPLOY.OBJECTIVE.CAPTURE_ROUTE_PARENT",
+                    1, 300.0f);
+            parents.add(parentResult.outcome());
 
             Decision child = Decision.cards(
                     "Choose where to deploy "
@@ -725,18 +725,19 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     cardSelectionAdapter(
                         fixture, child),
                     String.valueOf(THRONE_ID));
-            Outcome childWinner =
-                    combined(fixture, child);
+            TracedOutcome childResult =
+                    tracedCombined(fixture, child);
             assertContains(carrier,
                     "CAPTURE DEPLOY");
             assertNotContains(throne,
                     "CAPTURE DEPLOY");
-            assertTrue(carrier.score()
-                    > throne.score());
-            assertEquals(
+            assertFalse(carrier.hardVeto());
+            assertTypedContribution(
+                    childResult.trace(),
                     String.valueOf(CARRIER_ID),
-                    childWinner.actionId());
-            destinations.add(childWinner);
+                    "DEPLOY.OBJECTIVE.CAPTURE_ROUTE_DESTINATION",
+                    1, 300.0f);
+            destinations.add(childResult.outcome());
         }
         assertParity(parents);
         assertParity(destinations);
@@ -1108,7 +1109,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void openCarrierWithVaderWinsTheMandatoryCaptureRoute() {
+    public void openCarrierWithVaderGetsOneBoundedCaptureRoutePreference() {
         List<Outcome> parentWinners =
                 new ArrayList<>();
         List<Outcome> childWinners =
@@ -1148,15 +1149,17 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     moveAdapter(
                         open, parent),
                     "move-parent");
-            Outcome parentWinner =
-                    combined(open, parent);
+            TracedOutcome parentResult =
+                    tracedCombined(open, parent);
             assertContains(parentRoute,
                     "CAPTURE ROUTE");
-            assertTrue(parentRoute.score()
-                    >= 20000.0f);
-            assertEquals("move-parent",
-                    parentWinner.actionId());
-            parentWinners.add(parentWinner);
+            assertFalse(parentRoute.hardVeto());
+            assertTypedContribution(
+                    parentResult.trace(),
+                    "move-parent",
+                    "MOVE.OBJECTIVE.CAPTURE_ROUTE_PARENT",
+                    1, 300.0f);
+            parentWinners.add(parentResult.outcome());
 
             Decision child =
                     landspeedDestinationDecision(
@@ -1167,13 +1170,18 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                         open, child),
                     String.valueOf(
                         TATOOINE_JUNDLAND_WASTES_ID));
-            Outcome childWinner =
-                    combined(open, child);
+            TracedOutcome childResult =
+                    tracedCombined(open, child);
             assertContains(childRoute,
                     "CAPTURE ROUTE");
-            assertTrue(childRoute.score()
-                    >= 20000.0f);
-            childWinners.add(childWinner);
+            assertFalse(childRoute.hardVeto());
+            assertTypedContribution(
+                    childResult.trace(),
+                    String.valueOf(
+                        TATOOINE_JUNDLAND_WASTES_ID),
+                    "MOVE.OBJECTIVE.CAPTURE_ROUTE_DESTINATION",
+                    1, 300.0f);
+            childWinners.add(childResult.outcome());
 
             Fixture enclosed =
                     bhbmYourDestinyCarrierMoveFixture(
@@ -1204,8 +1212,6 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                         enclosedParent);
             assertNotContains(enclosedRoute,
                     "CAPTURE ROUTE");
-            assertTrue(enclosedRoute.score()
-                    < 20000.0f);
             enclosedWinners.add(
                     enclosedWinner);
         }
@@ -1356,7 +1362,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     exactResult.trace(),
                     "battle",
                     INSIGNIFICANT_REBELLION_RULE,
-                    1, 80.0f);
+                    1, 300.0f);
             exactWinners.add(
                     exactResult.outcome());
 
@@ -1377,7 +1383,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     "Insignificant Rebellion must be the "
                         + "only difference in the same-board "
                         + "battle score",
-                    inactiveBattle.score() + 80.0f,
+                    inactiveBattle.score() + 300.0f,
                     exactBattle.score(), 0.0f);
             TracedOutcome inactiveResult =
                     tracedCombined(
@@ -1523,9 +1529,17 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
             Outcome system = only(
                     deployAdapter(fixture, decision),
                     "deploy-vader-system");
+            TracedOutcome result =
+                    tracedCombined(fixture, decision);
             assertContains(site, "CAPTURE DEPLOY");
             assertNotContains(system, "CAPTURE DEPLOY");
-            assertTrue(site.score() > system.score());
+            assertTypedContribution(
+                    result.trace(),
+                    "deploy-vader-site",
+                    "DEPLOY.OBJECTIVE.CAPTURE_ROUTE_PARENT",
+                    1, 300.0f);
+            assertFalse(site.hardVeto());
+            assertFalse(system.hardVeto());
             captureSites.add(site);
             prefixSystems.add(system);
         }
@@ -1585,7 +1599,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void emperorDownloadRequiresEffectiveThreeForceOnFrontAndBack() {
+    public void offeredEmperorDownloadGetsBoundedScoringOnFrontAndBack() {
         Decision decision = Decision.actions(
                 "Choose action", Phase.DEPLOY,
                 List.of("emperor-download", "pass"),
@@ -1629,9 +1643,9 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                             actionTextAdapter(
                                 blockedFixture, decision),
                             "emperor-download");
-                    assertTrue(blocked.hardVeto());
+                    assertFalse(blocked.hardVeto());
                     assertContains(blocked,
-                            "BHBM EMPEROR UNAFFORDABLE");
+                            "BHBM EMPEROR RESERVE");
                     assertNotContains(blocked,
                             "BHBM PAYOFF");
                     assertNotContains(blocked,
@@ -1639,16 +1653,12 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     if (force == 0) {
                         assertContains(blocked,
                                 "V192 PULL SCORER");
-                        assertTrue(blocked.score() > 0.0f);
                     }
-                    Outcome pass = combined(
+                    Outcome normalWinner = combined(
                             blockedFixture, decision);
-                    assertEquals("", pass.actionId());
-                    assertEquals("PASS",
-                            pass.actionType());
-                    assertFalse(pass.hardVeto());
+                    assertFalse(normalWinner.hardVeto());
                     blockedByForce.get(force).add(blocked);
-                    passesByForce.get(force).add(pass);
+                    passesByForce.get(force).add(normalWinner);
                 }
 
                 Fixture ready = new Fixture(
@@ -1676,7 +1686,6 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                         actionTextAdapter(ready, decision),
                         "emperor-download");
                 assertFalse(exact.hardVeto());
-                assertTrue(exact.score() >= 20000.0f);
                 if (flipped) {
                     assertContains(exact,
                             "BHBM PAYOFF");
@@ -1688,8 +1697,16 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     assertNotContains(exact,
                             "BHBM PAYOFF");
                 }
-                Outcome winner = combined(
+                TracedOutcome result = tracedCombined(
                         ready, decision);
+                Outcome winner = result.outcome();
+                assertTypedContribution(
+                        result.trace(),
+                        "emperor-download",
+                        flipped
+                            ? "PULL.OBJECTIVE.BHBM.EMPEROR"
+                            : "PULL.OBJECTIVE.BHBM.EMPEROR_SETUP",
+                        1, 300.0f);
                 assertEquals("emperor-download",
                         winner.actionId());
                 affordable.add(exact);
@@ -1759,8 +1776,16 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     "BHBM OPPONENT TEXT");
             assertNotContains(wrongSource,
                     "BHBM OPPONENT TEXT");
-            assertTrue(exact.score() > wrongText.score());
-            assertTrue(exact.score() > wrongSource.score());
+            assertEquals(
+                    "The exact BHBM match must not stack beyond the +300"
+                        + " already applied by the objective actor match",
+                    wrongText.score(),
+                    exact.score(), 0.0f);
+            assertEquals(
+                    "The exact source match contributes one bounded +300"
+                        + " when the wrong source has no objective signal",
+                    wrongSource.score() + 300.0f,
+                    exact.score(), 0.0f);
             assertEquals("exact-download",
                     winner.actionId());
             exactDownloads.add(exact);
@@ -1775,7 +1800,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void captureMoveForceIsPreservedFromUnrelatedDeployAndBattle() {
+    public void captureMoveForceReserveIsBoundedForUnrelatedDeployAndBattle() {
         List<Outcome> reserveBreakingDeploys = new ArrayList<>();
         List<Outcome> reserveBreakingWinners = new ArrayList<>();
         List<Outcome> fundedDeploys = new ArrayList<>();
@@ -1816,12 +1841,12 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
             assertFalse(reserveBreakingDeploy.hardVeto());
             assertContains(reserveBreakingDeploy,
                     "exact capture move needs 1");
-            assertTrue(reserveBreakingDeploy.score()
-                    < -100.0f);
+            assertContains(reserveBreakingDeploy, "(-300.0)");
             Outcome reserveBreakingWinner = combined(
                     fixture, deployDecision);
-            assertEquals("", reserveBreakingWinner.actionId());
-            assertEquals("PASS",
+            assertEquals("deploy-unrelated",
+                    reserveBreakingWinner.actionId());
+            assertEquals("DEPLOY",
                     reserveBreakingWinner.actionType());
             assertFalse(reserveBreakingWinner.hardVeto());
             reserveBreakingDeploys.add(
@@ -1873,9 +1898,10 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
             Outcome battle = only(
                     battleAdapter(fixture, battleDecision),
                     "battle");
-            assertTrue(battle.hardVeto());
+            assertFalse(battle.hardVeto());
             assertContains(battle,
                     "Preserve the exact Force required");
+            assertContains(battle, "(-300.0)");
             battles.add(battle);
         }
         assertParity(reserveBreakingDeploys);
@@ -1978,7 +2004,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void preflipEmperorDownloadLeavesOneForceForCaptureMove() {
+    public void preflipEmperorDownloadReserveIsBounded() {
         Decision decision = Decision.actions(
                 "Choose action", Phase.DEPLOY,
                 List.of("emperor-download", "pass"),
@@ -2019,13 +2045,14 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
             Outcome reserveBreakingDownload = only(
                     actionTextAdapter(fixture, decision),
                     "emperor-download");
-            assertTrue(reserveBreakingDownload.hardVeto());
+            assertFalse(reserveBreakingDownload.hardVeto());
             assertContains(reserveBreakingDownload,
-                    "BHBM EMPEROR UNAFFORDABLE");
+                    "BHBM EMPEROR RESERVE");
             Outcome reserveBreakingWinner = combined(
                     fixture, decision);
-            assertEquals("", reserveBreakingWinner.actionId());
-            assertEquals("PASS",
+            assertEquals("emperor-download",
+                    reserveBreakingWinner.actionId());
+            assertEquals("DEPLOY",
                     reserveBreakingWinner.actionType());
             assertFalse(reserveBreakingWinner.hardVeto());
             reserveBreakingDownloads.add(
@@ -2099,7 +2126,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     battleAdapter(sole,
                         battleAt(sole, LANDING_ID)),
                     "battle");
-            assertTrue(soleBattle.hardVeto());
+            assertFalse(soleBattle.hardVeto());
             assertContains(soleBattle,
                     "sole Imperial enabling Luke");
             soleEnablerResults.add(soleBattle);
@@ -2147,12 +2174,11 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
             Outcome soleBattle = only(
                     battleAdapter(sole, soleDecision),
                     "battle");
-            assertTrue(soleBattle.hardVeto());
+            assertFalse(soleBattle.hardVeto());
             assertContains(soleBattle,
                     "sole Imperial enabling Luke");
             Outcome soleWinner =
                     combined(sole, soleDecision);
-            assertEquals("pass", soleWinner.actionId());
             assertFalse(soleWinner.hardVeto());
             soleEnablerBattles.add(soleBattle);
             soleEnablerWinners.add(soleWinner);
@@ -2178,7 +2204,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
             Outcome reserveBattle = only(
                     battleAdapter(reserve, reserveDecision),
                     "battle");
-            assertTrue(reserveBattle.hardVeto());
+            assertFalse(reserveBattle.hardVeto());
             assertContains(reserveBattle,
                     "Preserve the exact Force required");
             Outcome reserveWinner =
@@ -2197,7 +2223,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void preferredExecutableObjectivePiecesSurviveForceLossAndForfeit() {
+    public void preferredExecutableObjectivePiecesGetBoundedLossPreference() {
         List<Outcome> forceLossCritical = new ArrayList<>();
         List<Outcome> forfeitCritical = new ArrayList<>();
         for (Bot bot : Bot.values()) {
@@ -2247,9 +2273,12 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     "BHBM CRITICAL");
             assertNotContains(loseOther,
                     "BHBM CRITICAL");
-            assertTrue(keepEmperor.hardVeto());
+            assertFalse(keepEmperor.hardVeto());
             assertFalse(loseOther.hardVeto());
-            assertEquals(String.valueOf(DISTRACTOR_ID),
+            assertEquals(
+                    "Generic Force-loss value may override the"
+                        + " bounded Emperor-retention preference",
+                    String.valueOf(EMPEROR_ID),
                     combined(forceLoss, loss).actionId());
             forceLossCritical.add(keepEmperor);
             assertNotNull(emperor);
@@ -2343,7 +2372,9 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
             assertContains(keepIftc,
                     "TIGIH CRITICAL");
             assertEquals(
-                    String.valueOf(DISTRACTOR_ID),
+                    "Generic Force-loss value may override the"
+                        + " bounded objective retention preference",
+                    String.valueOf(IFTC_ID),
                     combined(forceLoss, loss)
                         .actionId());
             forceLossCritical.add(keepIftc);
@@ -2447,7 +2478,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     moveAdapter(stable,
                         vaderMoveDecision()),
                     "move-vader");
-            assertTrue(hold.score() < -100000.0f);
+            assertFalse(hold.hardVeto());
             assertContains(hold,
                     "STABLE_BACK_HOLD");
             held.add(hold);
@@ -2524,7 +2555,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     "move-carrier");
             Outcome movementWinner =
                     combined(sole, movement);
-            assertTrue(heldMove.score() < -100000.0f);
+            assertFalse(heldMove.hardVeto());
             assertContains(heldMove,
                     "STABLE_BACK_HOLD");
             assertEquals("pass",
@@ -2549,8 +2580,8 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     "BHBM CRITICAL");
             assertNotContains(allowedForfeit,
                     "BHBM CRITICAL");
-            assertTrue(heldForce.hardVeto());
-            assertTrue(heldForfeit.hardVeto());
+            assertFalse(heldForce.hardVeto());
+            assertFalse(heldForfeit.hardVeto());
             assertFalse(allowedForce.hardVeto());
             assertFalse(allowedForfeit.hardVeto());
             assertFalse(allowedMove.hardVeto());
@@ -2574,7 +2605,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void mandatoryAllHardForfeitStillChoosesCrewBeforeLoadedCarrier() {
+    public void formationSafetyStillRejectsLoadedCarrierBeforeBoundedVaderHold() {
         List<Outcome> carriers = new ArrayList<>();
         List<Outcome> vaders = new ArrayList<>();
         List<Outcome> winners = new ArrayList<>();
@@ -2621,7 +2652,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     combined(fixture, forfeit);
 
             assertTrue(heldCarrier.hardVeto());
-            assertTrue(heldVader.hardVeto());
+            assertFalse(heldVader.hardVeto());
             assertContains(heldCarrier,
                     "V48 SHIP WITH CREW");
             assertContains(heldCarrier,
@@ -2705,7 +2736,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void bhbmObservedForceDripAddsToSafeTrioCompletingMove() {
+    public void bhbmObservedForceDripDoesNotStackPastMoveObjectiveCap() {
         List<Outcome> urgentMoves = new ArrayList<>();
         for (Bot bot : Bot.values()) {
             Fixture fixture = bhbmPayoffFixture(bot);
@@ -2741,10 +2772,15 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     wrong,
                     "source-legal duel trio");
             assertEquals(
-                    ageZero.score() + 400.0f,
+                    "Urgency is visible but must not stack a second"
+                        + " objective bonus above +300",
+                    ageZero.score(),
                     urgent.score(), 0.0f);
             assertEquals(
-                    String.valueOf(THRONE_ID),
+                    "Normal movement scoring may override the saturated"
+                        + " objective urgency signal",
+                    String.valueOf(
+                        DSII_TURBOLIFT_WALKWAY_ID),
                     combined(fixture, decision)
                         .actionId());
             urgentMoves.add(urgent);
@@ -2783,7 +2819,7 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void bhbmObservedForceDripAddsToSafeTrioCompletingDeploy() {
+    public void bhbmObservedForceDripDoesNotStackPastDeployObjectiveCap() {
         List<Outcome> urgentDeploys = new ArrayList<>();
         for (Bot bot : Bot.values()) {
             Fixture fixture =
@@ -2817,7 +2853,9 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
                     wrong,
                     "source-legal duel trio");
             assertEquals(
-                    ageZero.score() + 400.0f,
+                    "Urgency is visible but must not stack a second"
+                        + " objective bonus above +300",
+                    ageZero.score(),
                     urgent.score(), 0.0f);
             assertEquals(
                     String.valueOf(THRONE_ID),
@@ -2962,8 +3000,11 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
         Outcome rejected = only(
                 actions, String.valueOf(rejectedId));
         assertContains(preferred, "CAPTURE ROUTE");
-        assertTrue(rejected.hardVeto());
+        assertFalse("A reversible wrong capture-route child is only"
+                + " an objective preference, not an engine veto: "
+                + rejected, rejected.hardVeto());
         assertContains(rejected, "exact Hut");
+        assertTrue(preferred.score() > rejected.score());
         assertEquals(String.valueOf(preferredId),
                 combined(fixture, decision).actionId());
     }

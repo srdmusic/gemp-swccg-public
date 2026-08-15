@@ -3,7 +3,6 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
-import com.gempukku.swccgo.ai.models.common.phase.DeployPlanPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossFacts;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
@@ -14,6 +13,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
@@ -118,6 +118,8 @@ public class InvasionObjectiveFullChainBehaviorTest {
                 operation(throne, "PULL.OBJECTIVE.FLIP_GATE_SITE");
         assertEquals(300.0f, objectivePull.delta(), 0.0f);
         assertEquals(PolicyOperationKind.ADD, objectivePull.kind());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                objectivePull.domainId());
     }
 
     @Test
@@ -175,6 +177,11 @@ public class InvasionObjectiveFullChainBehaviorTest {
         assertTrue(randoAnalyzer.isFlipGateActorUploadIntoHandAction(
                 scn.game(), DS, sidious,
                 "Take card into hand from Reserve Deck"));
+        assertTrue("The enabler is not itself the required objective actor",
+                randoAnalyzer.getDeployObjectiveAdjustments(
+                        scn.game(), scn.gameState(), DS, sidious,
+                        sidious.getBlueprint(), "Deploy Lord Sidious")
+                    .isEmpty());
 
         var randoPlanner =
                 new com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner();
@@ -187,18 +194,10 @@ public class InvasionObjectiveFullChainBehaviorTest {
         var chosenInitial =
                 chosenPlanner.createPlan(scn.game(), DS, Side.DARK);
 
-        assertEquals(1, randoInitial.getInstructions().size());
-        assertEquals(1, chosenInitial.getInstructions().size());
-        assertEquals("Lord Sidious",
-                randoInitial.getInstructions().get(0).getCardName());
-        assertEquals("Lord Sidious",
-                chosenInitial.getInstructions().get(0).getCardName());
-        assertEquals(THRONE_ROOM,
-                randoInitial.getInstructions().get(0).getTargetLocationName());
-        assertEquals(THRONE_ROOM,
-                chosenInitial.getInstructions().get(0).getTargetLocationName());
-        assertEquals(6,
-                randoInitial.getInstructions().get(0).getDeployCost());
+        assertTrue("The objective preference does not force an unsupported structural plan",
+                randoInitial.getInstructions().isEmpty());
+        assertTrue("Chosen One matches the non-forced initial plan",
+                chosenInitial.getInstructions().isEmpty());
 
         scn.PassControlActions();
         scn.DSDeployCardAndPassResponses(sidious, throne);
@@ -217,45 +216,10 @@ public class InvasionObjectiveFullChainBehaviorTest {
                 randoPlanner.createPlan(scn.game(), DS, Side.DARK);
         var chosenRefreshed =
                 chosenPlanner.createPlan(scn.game(), DS, Side.DARK);
-        assertEquals(1, randoRefreshed.getInstructions().size());
-        assertEquals(1, chosenRefreshed.getInstructions().size());
-        assertEquals("Nute Gunray",
-                randoRefreshed.getInstructions().get(0).getCardName());
-        assertEquals("Nute Gunray",
-                chosenRefreshed.getInstructions().get(0).getCardName());
-        assertEquals(THRONE_ROOM,
-                randoRefreshed.getInstructions().get(0)
-                        .getTargetLocationName());
-        assertEquals(THRONE_ROOM,
-                chosenRefreshed.getInstructions().get(0)
-                        .getTargetLocationName());
-        assertEquals(3,
-                randoRefreshed.getInstructions().get(0).getDeployCost());
-
-        PolicyResult plannedThrone =
-                DeployPlanPolicy.evaluateDestinationTarget(
-                        new DeployPlanPolicy.DestinationTargetFacts(
-                                "throne-destination", true, true,
-                                randoRefreshed.getInstructions().get(0)
-                                        .getTargetLocationName()));
-        PolicyOperation throneMatch =
-                operation(plannedThrone, "deploy-plan-target-match");
-        assertEquals(PolicyOperationKind.ADD, throneMatch.kind());
-        assertEquals(200.0f, throneMatch.delta(), 0.0f);
-
-        PolicyResult offeredFlagship =
-                DeployPlanPolicy.evaluateDestinationTarget(
-                        new DeployPlanPolicy.DestinationTargetFacts(
-                                "blockade-flagship-destination",
-                                false, true,
-                                randoRefreshed.getInstructions().get(0)
-                                        .getTargetLocationName()));
-        assertEquals(-100.0f,
-                operation(offeredFlagship,
-                        "deploy-plan-target-other").delta(), 0.0f);
-        assertEquals(PolicyOperationKind.DEFER,
-                operation(offeredFlagship,
-                        "deploy-plan-target-defer").kind());
+        assertTrue("The required actor remains an ordinary deploy choice",
+                randoRefreshed.getInstructions().isEmpty());
+        assertTrue("Chosen One matches the non-forced refreshed plan",
+                chosenRefreshed.getInstructions().isEmpty());
 
         PolicyOperation v193 = operation(
                 DeploySitingPolicy.evaluateDirect(
@@ -278,10 +242,14 @@ public class InvasionObjectiveFullChainBehaviorTest {
                                 true, BLOCKADE_FLAGSHIP,
                                 THRONE_ROOM, false)),
                 "V121");
-        assertEquals(1600.0f, v193.delta(), 0.0f);
-        assertEquals(-1500.0f, v121.delta(), 0.0f);
-        assertEquals(300.0f,
-                throneMatch.delta() + v193.delta() + v121.delta(),
+        assertEquals(300.0f, v193.delta(), 0.0f);
+        assertEquals(-300.0f, v121.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                v193.domainId());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                v121.domainId());
+        assertEquals(0.0f,
+                v193.delta() + v121.delta(),
                 0.0f);
 
         scn.LSPass();
@@ -420,7 +388,9 @@ public class InvasionObjectiveFullChainBehaviorTest {
 
         PolicyOperation objectiveHold =
                 operation(nuteLoss, "V21-objective");
-        assertEquals(-9999.0f, objectiveHold.delta(), 0.0f);
+        assertEquals(-300.0f, objectiveHold.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                objectiveHold.domainId());
         assertFalse(hasOperation(blasterLoss, "V21-objective"));
         assertTrue(totalDelta(blasterLoss) > totalDelta(nuteLoss));
     }
@@ -481,8 +451,8 @@ public class InvasionObjectiveFullChainBehaviorTest {
                 actorHold.ruleArmId().id());
         assertEquals("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
                 buddyHold.ruleArmId().id());
-        assertEquals(-9999.0f, actorHold.delta(), 0.0f);
-        assertEquals(-9999.0f, buddyHold.delta(), 0.0f);
+        assertEquals(-300.0f, actorHold.delta(), 0.0f);
+        assertEquals(-300.0f, buddyHold.delta(), 0.0f);
 
         BattleForfeitFacts.FlipGateFormationSelectionFacts unavoidable =
                 BattleForfeitFacts.readFlipGateFormationSelection(

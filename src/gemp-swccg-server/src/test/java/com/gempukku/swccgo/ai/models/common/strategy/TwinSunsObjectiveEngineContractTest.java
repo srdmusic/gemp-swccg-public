@@ -3,6 +3,9 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
 import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitFacts;
 import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.TwinSunsObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
@@ -390,8 +393,13 @@ public class TwinSunsObjectiveEngineContractTest {
         assertEquals("Twin's back-side fact must reach the forfeit hold",
                 "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
                 hold.operations().getFirst().ruleArmId().id());
-        assertEquals(-9999.0f,
+        assertEquals(-300.0f,
                 hold.operations().getFirst().delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                hold.operations().getFirst().domainId());
+        assertFalse(hold.operations().stream().anyMatch(
+                operation -> operation.kind()
+                        == PolicyOperationKind.HARD_VETO));
 
         // Opponent overtakes: strictly more flips the back.
         scn.MoveOutOfPlay(scn.GetDSFiller(1));
@@ -521,7 +529,7 @@ public class TwinSunsObjectiveEngineContractTest {
     }
 
     @Test
-    public void tsotPublicBotsDeployTheDarkJediToCompleteTheGroundLegs() {
+    public void tsotDarkJediPreferenceYieldsToSaferGroundSiting() {
         var scn = tsotScenario();
         var objective = scn.GetDSCard("objective");
         var system = scn.GetDSCard("system");
@@ -555,18 +563,19 @@ public class TwinSunsObjectiveEngineContractTest {
                 VirtualTableScenario.DS);
         assertNotNull(destination);
         String destinationResponse = bots.decideBoth(scn);
-        assertSame("Vader must land at the empty second battleground",
-                cantina,
+        assertSame("Normal formation safety must beat the bounded"
+                        + " preference for the empty battleground",
+                mosEisley,
                 selectedPhysicalCard(
                     scn, destination, destinationResponse));
         scn.DSDecided(destinationResponse);
         scn.PassAllResponses();
 
-        assertSame(cantina,
+        assertSame(mosEisley,
                 scn.game().getModifiersQuerying()
                     .getLocationThatCardIsPresentAt(
                         scn.gameState(), vader));
-        assertTrue("The real Vader deploy must trigger the native flip",
+        assertFalse("A safer non-completing deploy must not fake the flip",
                 objective.isFlipped());
     }
 
@@ -621,7 +630,7 @@ public class TwinSunsObjectiveEngineContractTest {
     }
 
     @Test
-    public void tsotPublicBotsPreserveDeployAndBattleForceThenMoveAndFlip() {
+    public void tsotMovementReserveCannotSuppressAFavorableBattle() {
         var scn = tsotScenario();
         var objective = scn.GetDSCard("objective");
         var system = scn.GetDSCard("system");
@@ -685,45 +694,13 @@ public class TwinSunsObjectiveEngineContractTest {
                 scn.GetCardActionId(
                     VirtualTableScenario.DS, battleSite,
                     "Initiate battle"));
-        assertEquals("The movement payment must also beat that battle",
-                "", bots.decideBoth(scn));
-        scn.DSPass();
-        scn.LSPass();
-
-        assertTrue(scn.AwaitingDSMovePhaseActions());
-        String vaderMove = scn.GetCardActionId(
-                VirtualTableScenario.DS, vader,
-                "Move using landspeed");
-        assertNotNull(vaderMove);
-        AwaitingDecision moveParent = scn.GetAwaitingDecision(
-                VirtualTableScenario.DS);
-        String selectedMove = bots.decideBoth(scn);
-        assertSame("The route move must use Vader; selected="
-                        + selectedMove + "; parameters="
-                        + moveParent.getDecisionParameters().entrySet()
-                            .stream()
-                            .map(entry -> entry.getKey() + "="
-                                + java.util.Arrays.toString(
-                                    entry.getValue()))
-                            .toList(),
-                vader, AiActionSourceProvenance.selectedActionSource(
-                    moveParent, selectedMove));
-        scn.DSDecided(selectedMove);
-        assertEquals(Integer.toString(cantina.getCardId()),
+        assertEquals("A favorable battle must override the reversible"
+                        + " preference to save one Force for movement",
+                scn.GetCardActionId(
+                    VirtualTableScenario.DS, battleSite,
+                    "Initiate battle"),
                 bots.decideBoth(scn));
-        scn.DSDecided(Integer.toString(cantina.getCardId()));
-        scn.PassAllResponses();
-
-        assertSame(mosEisley,
-                scn.game().getModifiersQuerying()
-                    .getLocationThatCardIsPresentAt(
-                        scn.gameState(), scn.GetDSFiller(1)));
-        assertSame(cantina,
-                scn.game().getModifiersQuerying()
-                    .getLocationThatCardIsPresentAt(
-                        scn.gameState(), vader));
-        assertEquals(0, scn.GetDSForcePileCount());
-        assertTrue("The unchanged card Java must perform the flip",
+        assertFalse("The bounded preference must not manufacture a flip",
                 objective.isFlipped());
     }
 
@@ -826,10 +803,9 @@ public class TwinSunsObjectiveEngineContractTest {
     }
 
     @Test
-    public void tsotPublicBotsUseTheBackOccupationRoute() {
+    public void tsotBackOccupationPreferenceCanLoseToNormalScoring() {
         var scn = tsotScenario();
         var objective = scn.GetDSCard("objective");
-        var system = scn.GetDSCard("system");
         var occupation = scn.GetDSCard("occupation");
 
         flipTwinSunsWithNativeTrigger(scn);
@@ -840,40 +816,20 @@ public class TwinSunsObjectiveEngineContractTest {
                 VirtualTableScenario.DS, objective,
                 "Deploy Tatooine Occupation from Reserve Deck");
         assertNotNull(occupationRoute);
+        var occupationPreference = TwinSunsObjectivePolicy
+                .scoreOccupationRoute(occupationRoute, true);
+        assertEquals(1, occupationPreference.operations().size());
+        assertEquals(300.0f,
+                occupationPreference.operations().getFirst().delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                occupationPreference.operations().getFirst().domainId());
+        assertFalse(occupationPreference.operations().stream().anyMatch(
+                operation -> operation.kind()
+                        == PolicyOperationKind.HARD_VETO));
         var bots = PublicBots.forGame(scn);
-        assertEquals("The back-side payoff route must fire",
-                occupationRoute, bots.decideBoth(scn));
-        scn.DSDecided(occupationRoute);
-        scn.PassAllResponses();
-
-        AwaitingDecision child = scn.GetAwaitingDecision(
-                VirtualTableScenario.DS);
-        assertNotNull(child);
-        String childResponse = bots.decideBoth(scn);
-        assertSame("The route must select Tatooine Occupation",
-                occupation,
-                selectedPhysicalCard(scn, child, childResponse));
-        scn.DSDecided(childResponse);
-        scn.PassAllResponses();
-
-        AwaitingDecision destination = scn.GetAwaitingDecision(
-                VirtualTableScenario.DS);
-        if (destination != null) {
-            String destinationResponse = bots.decideBoth(scn);
-            assertSame("Occupation must deploy on the Tatooine system",
-                    system,
-                    selectedPhysicalCard(
-                        scn, destination, destinationResponse));
-            scn.DSDecided(destinationResponse);
-            scn.PassAllResponses();
-        }
-
-        assertSame("The sole legal destination may be engine-selected",
-                system, occupation.getAttachedTo());
-        if (scn.GetAwaitingDecision(VirtualTableScenario.LS) != null) {
-            scn.LSPass();
-        }
-        assertFalse("The once-per-game route must be exhausted",
+        assertEquals("The +300 payoff preference must remain overridable",
+                "", bots.decideBoth(scn));
+        assertTrue("Passing must leave the once-per-game route available",
                 scn.DSCardActionAvailable(
                     objective,
                     "Deploy Tatooine Occupation from Reserve Deck"));

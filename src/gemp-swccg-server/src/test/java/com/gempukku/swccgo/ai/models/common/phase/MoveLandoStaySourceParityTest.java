@@ -38,7 +38,7 @@ public class MoveLandoStaySourceParityTest {
         assertTrue(policy.contains("contains(\"lando\")"));
         assertTrue(policy.contains("contains(\"cloud city\")"));
         assertTrue(policy.contains(
-                "stay for occupation! Don't move!"));
+                "prefer staying for occupation"));
     }
 
     @Test
@@ -87,13 +87,12 @@ public class MoveLandoStaySourceParityTest {
                 "oppWeaponBonusAt(", power);
         int decision = move.indexOf(
                 "MoveLandoStayPolicy.evaluate(", weapons);
-        int vetoGate = move.indexOf(
-                "if (v47Decision.hardVeto())", decision);
-        int veto = move.indexOf("ladderVetoHard = true", vetoGate);
+        int preferenceGate = move.indexOf(
+                "if (v47Decision.applies())", decision);
         int reason = move.indexOf(
-                "ladderVetoHardReason = v47Decision.reason()", veto);
+                "addObjectiveContribution(", preferenceGate);
         int appliedLog = move.indexOf(
-                "V47 LANDO STAY: Lando at {}", reason);
+                "V47 LANDO STAY: bounded objective preference", reason);
         int skippedLog = move.indexOf(
                 "V47 LANDO STAY skipped at {}", appliedLog);
         int nextRule = move.indexOf(
@@ -107,16 +106,15 @@ public class MoveLandoStaySourceParityTest {
         assertTrue(power > objective);
         assertTrue(weapons > power);
         assertTrue(decision > weapons);
-        assertTrue(vetoGate > decision);
-        assertTrue(veto > vetoGate);
-        assertTrue(reason > veto);
+        assertTrue(preferenceGate > decision);
+        assertTrue(reason > preferenceGate);
         assertTrue(appliedLog > reason);
         assertTrue(skippedLog > appliedLog);
         assertTrue(nextRule > skippedLog);
     }
 
     @Test
-    public void v47RemainsADeferredHardVetoWithoutEarlyExit()
+    public void v47IsABoundedObjectivePreferenceWithoutEarlyExit()
             throws IOException {
         String move = evaluatorSource("rando");
         int start = move.indexOf("// === V47: LANDO");
@@ -124,12 +122,12 @@ public class MoveLandoStaySourceParityTest {
                 "// === V29: FORCE RESERVE CHECK", start);
         String block = move.substring(start, end);
 
-        assertTrue(block.contains("ladderVetoHard = true"));
+        assertTrue(block.contains("addObjectiveContribution("));
         assertTrue(block.contains(
-                "ladderVetoHardReason = v47Decision.reason()"));
+                "MOVE.OBJECTIVE.TDIGWATT_LANDO_STAY"));
         assertFalse(block.contains("return;"));
         assertFalse(block.contains("continue;"));
-        assertFalse(block.contains("action.addReasoning("));
+        assertFalse(block.contains("ladderVetoHard = true"));
     }
 
     @Test

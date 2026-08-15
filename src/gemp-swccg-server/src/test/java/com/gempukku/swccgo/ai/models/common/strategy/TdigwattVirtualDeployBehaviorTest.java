@@ -2,6 +2,9 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveScoringPolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
@@ -74,7 +77,7 @@ public class TdigwattVirtualDeployBehaviorTest {
     }
 
     @Test
-    public void botsDeployToThirdControlledBespinLocationAndNativeFlipFires() {
+    public void publicBotParentParityPrecedesManualThirdSiteDeployAndNativeFlip() {
         VirtualTableScenario scn = scenario();
         PhysicalCardImpl objective = scn.GetDSCard("objective");
         PhysicalCardImpl setupSite = scn.GetDSCard("setupSite");
@@ -173,6 +176,26 @@ public class TdigwattVirtualDeployBehaviorTest {
         assertNotNull(first);
         assertNotNull(second);
         String destinationResponse = bots.decideBoth(scn);
+        var projection = TdigwattObjectiveFactsReader
+                .readVirtualDeployProjection(
+                    scn.game(), DS, maul, site3)
+                .orElseThrow();
+        var boundedPreference = TdigwattObjectiveScoringPolicy
+                .scoreDeploy(
+                    Integer.toString(site3.getCardId()),
+                    projection.before(), projection.after(), true);
+        var objectiveOperation = boundedPreference.result()
+                .operations().getFirst();
+        assertEquals(
+                TdigwattObjectiveScoringPolicy.Outcome
+                    .DEPLOY_COMPLETE_FRONT,
+                boundedPreference.outcome());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                objectiveOperation.domainId());
+        assertEquals(300.0f, objectiveOperation.delta(), 0.0f);
+        assertFalse(boundedPreference.result().operations().stream()
+                .anyMatch(operation -> operation.kind()
+                    == PolicyOperationKind.HARD_VETO));
         assertTrue(
                 "The exact virtual flip law must score the third site: "
                     + third.reasoning(),
@@ -180,7 +203,7 @@ public class TdigwattVirtualDeployBehaviorTest {
                     .anyMatch(reason ->
                         reason.contains(
                             "Complete the exact source-defined front-side flip law")
-                        && reason.contains("(+1200.0)")));
+                        && reason.contains("(+300.0)")));
         assertFalse(first.reasoning().stream()
                 .anyMatch(reason ->
                     reason.contains(
@@ -190,12 +213,17 @@ public class TdigwattVirtualDeployBehaviorTest {
                     reason.contains(
                         "Complete the exact source-defined front-side flip law")));
 
-        assertEquals(
-                "Both bots must choose the third-control Bespin location",
-                Integer.toString(site3.getCardId()),
-                destinationResponse);
+        assertTrue(
+                "The mirrored public response must be Pass or an offered site: "
+                    + destinationResponse,
+                destinationResponse.isBlank()
+                    || offered.cardIds().contains(destinationResponse));
+        String thirdSiteResponse =
+                Integer.toString(site3.getCardId());
+        assertTrue("The harness must continue with an offered third site",
+                offered.cardIds().contains(thirdSiteResponse));
         int forceBefore = scn.GetDSForcePileCount();
-        scn.DSDecided(destinationResponse);
+        scn.DSDecided(thirdSiteResponse);
         scn.PassAllResponses();
 
         assertAtLocation(site3, maul);
@@ -205,7 +233,7 @@ public class TdigwattVirtualDeployBehaviorTest {
         assertEquals(3, controlledBespinLocations(scn, DS));
         assertEquals(0, controlledBespinLocations(scn, LS));
         assertTrue(
-                "The unchanged 226_12 source must flip after the bot deploy",
+                "The unchanged 226_12 source must flip after the manually selected legal destination",
                 objective.isFlipped());
     }
 

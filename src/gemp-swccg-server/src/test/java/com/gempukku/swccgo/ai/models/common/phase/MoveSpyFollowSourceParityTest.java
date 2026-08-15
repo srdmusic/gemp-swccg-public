@@ -119,7 +119,8 @@ public class MoveSpyFollowSourceParityTest {
             throws IOException {
         String move = evaluatorSource("rando");
 
-        assertTrue(move.contains("// V60 FIX:"));
+        assertTrue(move.contains(
+                "// V60: Corridor landspeed receives a bounded -300 objective preference."));
         assertTrue(move.contains("MovePredicates.canWinAt("));
         assertTrue(move.contains("ladderFinalize(action)"));
         assertFalse(move.contains("MovePhysicalCardResolver"));

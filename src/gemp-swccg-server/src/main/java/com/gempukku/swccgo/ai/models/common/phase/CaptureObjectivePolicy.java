@@ -17,15 +17,15 @@ public final class CaptureObjectivePolicy {
     private static final String PRODUCER = "CAPTURE_OBJECTIVE_POLICY";
     private static final String VIRTUAL_HUT_BLUEPRINT = "214_19";
     private static final float SETUP_TIE_BREAK = 100.0f;
-    private static final float MANDATORY_SCORE = 20000.0f;
-    private static final float TIMING_DEFER_SCORE = -800.0f;
+    private static final float MANDATORY_SCORE = 300.0f;
+    private static final float TIMING_PREFERENCE_SCORE = -300.0f;
     private static final float SAFE_CONFLICT_BONUS = 80.0f;
     private static final float BHBM_YOUR_DESTINY_BONUS = 300.0f;
     private static final float BHBM_BATTLE_WIN_BONUS = 80.0f;
     private static final float BHBM_FORCE_DRIP_URGENCY_PER_TURN =
             100.0f;
     private static final float BHBM_FORCE_DRIP_URGENCY_CAP =
-            800.0f;
+            300.0f;
 
     public enum ObjectiveKind {
         TIGIH,
@@ -235,7 +235,7 @@ public final class CaptureObjectivePolicy {
         return one(PolicyOperation.add(
                 facts.actionId(),
                 TraceRuleId.of("SETUP.TIGIH.PREFER_VIRTUAL_HUT"),
-                TraceDomainId.SETUP_STARTING,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.ORDERING,
                 SETUP_TIE_BREAK,
                 "TIGIH SETUP: prefer virtual Chief Chirpa's Hut"
@@ -257,7 +257,7 @@ public final class CaptureObjectivePolicy {
         return one(PolicyOperation.add(
                 facts.actionId(),
                 TraceRuleId.of(ruleId),
-                TraceDomainId.MOVE,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 MANDATORY_SCORE,
                 facts.objective() + " CAPTURE ROUTE: " + step
@@ -278,9 +278,7 @@ public final class CaptureObjectivePolicy {
                 TraceRuleId.of(parent
                         ? "DEPLOY.OBJECTIVE.CAPTURE_ROUTE_PARENT"
                         : "DEPLOY.OBJECTIVE.CAPTURE_ROUTE_DESTINATION"),
-                parent
-                        ? TraceDomainId.DEPLOY_SEQUENCING
-                        : TraceDomainId.DEPLOY_SITING,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 MANDATORY_SCORE,
                 facts.objective() + " CAPTURE DEPLOY: "
@@ -295,21 +293,22 @@ public final class CaptureObjectivePolicy {
             return none();
         }
         if (!facts.affordable()) {
-            return one(PolicyOperation.hardVeto(
+            return one(PolicyOperation.add(
                     facts.actionId(),
                     TraceRuleId.of(
-                        "PULL.OBJECTIVE.BHBM.EMPEROR_UNAFFORDABLE"),
-                    TraceDomainId.PULL_SEARCH,
-                    TraceOutputKind.VETO,
-                    "BHBM EMPEROR UNAFFORDABLE: the exact download"
-                        + " is not currently affordable"));
+                        "PULL.OBJECTIVE.BHBM.EMPEROR_RESERVE"),
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.BANDED,
+                    -300.0f,
+                    "BHBM EMPEROR RESERVE: prefer to leave Force"
+                        + " for the next exact capture move"));
         }
         if (!facts.backSideUp()) {
             return one(PolicyOperation.add(
                     facts.actionId(),
                     TraceRuleId.of(
                         "PULL.OBJECTIVE.BHBM.EMPEROR_SETUP"),
-                    TraceDomainId.PULL_SEARCH,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
                     MANDATORY_SCORE,
                     "BHBM SETUP: deploy Emperor from Reserve Deck"
@@ -319,7 +318,7 @@ public final class CaptureObjectivePolicy {
                 facts.actionId(),
                 TraceRuleId.of(
                         "PULL.OBJECTIVE.BHBM.EMPEROR"),
-                TraceDomainId.PULL_SEARCH,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 MANDATORY_SCORE,
                 "BHBM PAYOFF: deploy Emperor from Reserve Deck"
@@ -335,14 +334,14 @@ public final class CaptureObjectivePolicy {
         if (facts.objective() == ObjectiveKind.TIGIH
                 && !facts.safeTimingReached()
                 && !(facts.guaranteedCrossoverTotal() > 14.0f)) {
-            return one(PolicyOperation.defer(
+            return one(PolicyOperation.add(
                     facts.actionId(),
                     TraceRuleId.of(
                             "OBJECTIVE.TIGIH.CROSSOVER_TIMING_DEFER"),
                     TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO,
-                    TIMING_DEFER_SCORE,
-                    "TIGIH CROSSOVER: wait for remaining safe"
+                    TraceOutputKind.BANDED,
+                    TIMING_PREFERENCE_SCORE,
+                    "TIGIH CROSSOVER: prefer to wait for remaining safe"
                             + " I Feel The Conflict buildup"));
         }
 
@@ -414,7 +413,7 @@ public final class CaptureObjectivePolicy {
                 facts.actionId(),
                 TraceRuleId.of(
                         "BATTLE.OBJECTIVE.TIGIH.CONFLICT_BUILDUP"),
-                TraceDomainId.BATTLE_INITIATION,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 SAFE_CONFLICT_BONUS,
                 "TIGIH I FEEL THE CONFLICT: projected-safe battle"
@@ -449,7 +448,7 @@ public final class CaptureObjectivePolicy {
                 facts.actionId(),
                 TraceRuleId.of(
                         "BATTLE.OBJECTIVE.BHBM.INSIGNIFICANT_REBELLION"),
-                TraceDomainId.BATTLE_INITIATION,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 BHBM_BATTLE_WIN_BONUS,
                 "BHBM INSIGNIFICANT REBELLION: projected-safe battle"
@@ -463,13 +462,14 @@ public final class CaptureObjectivePolicy {
                 || !facts.soleVirtualCaptureEnablerAtBattleLocation()) {
             return none();
         }
-        return one(PolicyOperation.hardVeto(
+        return one(PolicyOperation.add(
                 facts.actionId(),
                 TraceRuleId.of(
                         "BATTLE.OBJECTIVE.TIGIH.VIRTUAL_HUT_ENABLER_HOLD"),
-                TraceDomainId.BATTLE_INITIATION,
-                TraceOutputKind.VETO,
-                "TIGIH VIRTUAL HUT: do not battle away the sole"
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED,
+                -300.0f,
+                "TIGIH VIRTUAL HUT: prefer not to battle away the sole"
                         + " Imperial enabling Luke's free capture move"));
     }
 
@@ -481,13 +481,14 @@ public final class CaptureObjectivePolicy {
                 || !facts.wouldBreakLastStableState()) {
             return none();
         }
-        return one(PolicyOperation.hardVeto(
+        return one(PolicyOperation.add(
                 facts.actionId(),
                 TraceRuleId.of(
                         "OBJECTIVE.CAPTURE_STATE.STABLE_BACK_HOLD"),
                 TraceDomainId.OBJECTIVE_INTENT,
-                TraceOutputKind.VETO,
-                facts.objective() + " HOLD: preserve the last captive"
+                TraceOutputKind.BANDED,
+                -300.0f,
+                facts.objective() + " HOLD: prefer to preserve the last captive"
                         + " or present-with-Vader state"));
     }
 
@@ -499,12 +500,13 @@ public final class CaptureObjectivePolicy {
             return none();
         }
         if (facts.crossoverModifierPressure() >= 8.0f) {
-            return one(PolicyOperation.hardVeto(
+            return one(PolicyOperation.add(
                     facts.actionId(),
                     TraceRuleId.of(
                         "OBJECTIVE.TIGIH.OPPONENT_TRANSFER_HOLD"),
                     TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO,
+                    TraceOutputKind.BANDED,
+                    -300.0f,
                     "TIGIH BACK: keep Luke with the non-Vader escort"
                         + " because modifier pressure 8 or more plus"
                         + " maximum destiny 7 can exceed 14"));
@@ -547,13 +549,14 @@ public final class CaptureObjectivePolicy {
         }
         String role = facts.role() == CriticalRole.CAPTURE_PIECE
                 ? "capture piece" : "payoff card";
-        return one(PolicyOperation.hardVeto(
+        return one(PolicyOperation.add(
                 facts.actionId(),
                 TraceRuleId.of(
                         "FORCE_LOSS.OBJECTIVE.CAPTURE_CRITICAL"),
-                TraceDomainId.FORCE_LOSS_PAYMENT,
-                TraceOutputKind.VETO,
-                facts.objective() + " CRITICAL: preserve the " + role));
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED,
+                -300.0f,
+                facts.objective() + " CRITICAL: prefer to preserve the " + role));
     }
 
     private static PolicyResult one(PolicyOperation operation) {

@@ -104,13 +104,13 @@ public final class DeployFormationSitingPolicy {
             if (facts.objectiveFlipDeploy()) {
                 if (facts.escapeRoute()) {
                     outcome = LegacySoloOutcome.OBJECTIVE_WITH_ESCAPE;
-                    addSoloFormation(operations, facts.actionId(), "V29-obj-flip", 50.0f,
+                    addObjective(operations, facts.actionId(), "V29-obj-flip", 50.0f,
                             String.format(
                                     "V29 OBJ-FLIP: %s solo at '%s' to help flip objective — escape route exists!",
                                     facts.cardName(), facts.destinationTitle()));
                 } else {
                     outcome = LegacySoloOutcome.OBJECTIVE_NO_ESCAPE;
-                    addSoloFormation(operations, facts.actionId(), "V29-obj-flip", -150.0f,
+                    addObjective(operations, facts.actionId(), "V29-obj-flip", -150.0f,
                             String.format(
                                     "V29 OBJ-FLIP: %s solo at '%s' for flip but NO escape route — risky!",
                                     facts.cardName(), facts.destinationTitle()));
@@ -193,8 +193,7 @@ public final class DeployFormationSitingPolicy {
             if (facts.deploysToVaderLocation()) {
                 if (facts.opponentPowerAtVaderLocation() > 0.0f) {
                     outcome = HuntGroupingOutcome.GROUP_AND_ENGAGE;
-                    float score = 350.0f + (facts.cardPower() >= 5 ? 50.0f : 0.0f);
-                    addDeploySiting(operations, facts.actionId(), "V35.1-hunt-group", score,
+                    addObjective(operations, facts.actionId(), "V35.1-hunt-group", 300.0f,
                             String.format(
                                     "V35.1 HUNT GROUP+ENGAGE: Deploy %s WITH Vader at %s — opponents here (power %.0f)!",
                                     facts.cardName(), facts.vaderLocationTitle(),
@@ -770,6 +769,13 @@ public final class DeployFormationSitingPolicy {
                                          String actionId, String ruleId,
                                          float delta, String reason) {
         add(operations, actionId, ruleId, TraceDomainId.SOLO_FORMATION,
+                delta, reason);
+    }
+
+    private static void addObjective(
+            List<PolicyOperation> operations, String actionId,
+            String ruleId, float delta, String reason) {
+        add(operations, actionId, ruleId, TraceDomainId.OBJECTIVE_INTENT,
                 delta, reason);
     }
 

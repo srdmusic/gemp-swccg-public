@@ -334,8 +334,8 @@ public class AgentsOfBlackSunObjectiveEngineContractTest {
         assertEquals(1, hunterCandidates.size());
         assertFalse(hunterCandidates.getFirst().getReasoningString(),
                 hunterCandidates.getFirst().isHardVetoed());
-        assertTrue(hunterCandidates.getFirst().getReasoningString(),
-                hunterCandidates.getFirst().getScore() >= 600.0f);
+        assertEquals(hunterCandidates.getFirst().getReasoningString(),
+                300.0f, hunterCandidates.getFirst().getScore(), 0.0f);
         assertEquals("The safe physical hunter must be retained",
                 Integer.toString(snoova.getCardId()),
                 bots.decideBoth(scn));

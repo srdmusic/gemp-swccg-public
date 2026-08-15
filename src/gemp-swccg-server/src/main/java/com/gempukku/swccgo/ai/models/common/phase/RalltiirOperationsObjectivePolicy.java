@@ -31,7 +31,7 @@ public final class RalltiirOperationsObjectivePolicy {
                     actionId,
                     "OBJECTIVE.RALLTIIR.FRONT_ROUTE",
                     TraceOutputKind.BANDED,
-                    2000.0f,
+                    300.0f,
                     "RALLTIIR OPERATIONS: use the exact site-or-Imperial route before unrelated deploys"))
                 : empty();
     }
@@ -46,7 +46,7 @@ public final class RalltiirOperationsObjectivePolicy {
                     ? "OBJECTIVE.RALLTIIR.PULL_SITE_STAGE"
                     : "OBJECTIVE.RALLTIIR.PULL_IMPERIAL_STAGE",
                 TraceOutputKind.BANDED,
-                siteStage ? 1200.0f : 1000.0f,
+                300.0f,
                 siteStage
                     ? "RALLTIIR OPERATIONS: build enough usable geography before pulling another Imperial"
                     : "RALLTIIR OPERATIONS: pull a non-unique Imperial that can qualify an open Ralltiir site"));
@@ -59,7 +59,7 @@ public final class RalltiirOperationsObjectivePolicy {
                     actionId,
                     "OBJECTIVE.RALLTIIR.BACK_ANY_CARD_TUTOR",
                     TraceOutputKind.BANDED,
-                    2000.0f,
+                    300.0f,
                     "IN THE HANDS OF THE EMPIRE: spend 2 Force for the source-verified any-card tutor"))
                 : empty();
     }
@@ -71,7 +71,7 @@ public final class RalltiirOperationsObjectivePolicy {
                     actionId,
                     "OBJECTIVE.RALLTIIR.BACK_HOLD_REINFORCEMENT",
                     TraceOutputKind.BANDED,
-                    1200.0f,
+                    300.0f,
                     "IN THE HANDS OF THE EMPIRE: tutor legal presence for the one opponent-controlled Ralltiir location before the objective flips back"))
                 : empty();
     }
@@ -82,12 +82,11 @@ public final class RalltiirOperationsObjectivePolicy {
         if (!progressDestinationOffered || thisDestinationAdvances) {
             return empty();
         }
-        return result(PolicyOperation.hardVeto(
+        return result(add(
                 actionId,
-                TraceRuleId.of(
-                        "OBJECTIVE.RALLTIIR.WRONG_DEPLOY_DESTINATION"),
-                TraceDomainId.OBJECTIVE_INTENT,
-                TraceOutputKind.VETO,
+                "OBJECTIVE.RALLTIIR.WRONG_DEPLOY_DESTINATION",
+                TraceOutputKind.BANDED,
+                -300.0f,
                 "RALLTIIR OPERATIONS: deploy the selected Imperial to an open objective site instead of reinforcing an already-qualified site"));
     }
 
@@ -102,12 +101,11 @@ public final class RalltiirOperationsObjectivePolicy {
         if (exactPayment == null) {
             return fallback > 0
                     && forceAvailable - fallback < routeForceReserve
-                    ? result(PolicyOperation.hardVeto(
+                    ? result(add(
                         actionId,
-                        TraceRuleId.of(
-                            "OBJECTIVE.RALLTIIR.ROUTE_PAYMENT_UNKNOWN"),
-                        TraceDomainId.OBJECTIVE_INTENT,
-                        TraceOutputKind.VETO,
+                        "OBJECTIVE.RALLTIIR.ROUTE_PAYMENT_UNKNOWN",
+                        TraceOutputKind.BANDED,
+                        -300.0f,
                         "RALLTIIR OPERATIONS: cannot prove this deploy preserves the exact route payments"))
                     : empty();
         }
@@ -116,12 +114,11 @@ public final class RalltiirOperationsObjectivePolicy {
                 || forceAvailable - payment >= routeForceReserve) {
             return empty();
         }
-        return result(PolicyOperation.hardVeto(
+        return result(add(
                 actionId,
-                TraceRuleId.of(
-                        "OBJECTIVE.RALLTIIR.ROUTE_FORCE_RESERVE"),
-                TraceDomainId.OBJECTIVE_INTENT,
-                TraceOutputKind.VETO,
+                "OBJECTIVE.RALLTIIR.ROUTE_FORCE_RESERVE",
+                TraceOutputKind.BANDED,
+                -300.0f,
                 "RALLTIIR OPERATIONS: preserve Force for the current pull, battle, and movement chain"));
     }
 

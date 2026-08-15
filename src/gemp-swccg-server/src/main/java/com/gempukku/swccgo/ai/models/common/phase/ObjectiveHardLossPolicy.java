@@ -90,26 +90,28 @@ public final class ObjectiveHardLossPolicy {
         if (facts.kind() == RecallKind.CLASSIC) {
             return new PolicyResult(
                     "OBJECTIVE_HARD_LOSS_POLICY",
-                    List.of(PolicyOperation.hardVeto(
+                    List.of(PolicyOperation.add(
                             facts.actionId(),
                             TraceRuleId.of(
                                     "V35-vader-recall-objective-actor"),
-                            TraceDomainId.BATTLE_WEAPONS,
-                            TraceOutputKind.VETO,
-                            "V35 VADER RECALL BLOCKED: recalling the sole"
+                            TraceDomainId.OBJECTIVE_INTENT,
+                            TraceOutputKind.BANDED,
+                            -300.0f,
+                            "V35 VADER RECALL DISFAVORED: recalling the sole"
                                     + " required battleground Vader would"
                                     + " dismantle Hunt Down")));
         }
 
         return new PolicyResult(
                 "OBJECTIVE_HARD_LOSS_POLICY",
-                List.of(PolicyOperation.hardVeto(
+                List.of(PolicyOperation.add(
                         facts.actionId(),
                         TraceRuleId.of(
                                 "OBJECTIVE.FLIP_BACK.VIRTUAL_HUNT_VADER_RECALL"),
                         TraceDomainId.OBJECTIVE_INTENT,
-                        TraceOutputKind.VETO,
-                        "VIRTUAL HUNT DOWN RECALL BLOCKED: taking the"
+                        TraceOutputKind.BANDED,
+                        -300.0f,
+                        "VIRTUAL HUNT DOWN RECALL DISFAVORED: taking the"
                                 + " last Vader into hand would immediately"
                                 + " satisfy the flip-back law")));
     }

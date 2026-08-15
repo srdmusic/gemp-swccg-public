@@ -49,7 +49,7 @@ public abstract class AbstractShieldTwinActionTextDecisionTest {
                     .orElseThrow();
 
             assertEquals(objectiveBlueprintId, "fire", winner.actionId());
-            assertEquals(objectiveBlueprintId, 800.0f,
+            assertEquals(objectiveBlueprintId, 300.0f,
                     fire.score() - wait.score(), 0.0f);
             assertTrue(objectiveBlueprintId,
                     fire.reasoning().contains(
@@ -71,7 +71,7 @@ public abstract class AbstractShieldTwinActionTextDecisionTest {
 
             Candidate real = candidate(candidates, "real");
             Candidate fake = candidate(candidates, "fake");
-            assertEquals(objectiveBlueprintId, 800.0f,
+            assertEquals(objectiveBlueprintId, 300.0f,
                     real.score() - fake.score(), 0.0f);
             assertFalse(objectiveBlueprintId,
                     fake.reasoning().contains(
@@ -90,7 +90,7 @@ public abstract class AbstractShieldTwinActionTextDecisionTest {
 
             Candidate virtual = candidate(candidates, "virtual");
             Candidate classic = candidate(candidates, "classic");
-            assertEquals(objectiveBlueprintId, 800.0f,
+            assertEquals(objectiveBlueprintId, 300.0f,
                     virtual.score() - classic.score(), 0.0f);
             assertFalse(objectiveBlueprintId,
                     classic.reasoning().contains(

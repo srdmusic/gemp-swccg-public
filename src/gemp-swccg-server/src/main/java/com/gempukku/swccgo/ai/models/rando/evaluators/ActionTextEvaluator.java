@@ -530,26 +530,20 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 objectiveFlipLedger.register(objectiveFlip);
                 PolicyOperationAdapter.apply(
                         action, objectiveFlipLedger);
-                actions.add(action);
-                continue;
             }
 
             if (exactAgentsOfBlackSunBountyMove) {
                 action.setActionType(ActionType.MOVE);
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.AOBS.BOUNTY_MOVE.PARENT: move a bounty hunter toward the objective's bounty site after ordinary drains",
-                    40.0f);
-                actions.add(action);
-                continue;
+                    40.0f, "ACTION.OBJECTIVE.AOBS.BOUNTY_MOVE_PARENT");
             }
 
             if (exactAgentsOfBlackSunLandspeedChoice) {
                 action.setActionType(ActionType.MOVE);
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.AOBS.BOUNTY_MOVE.MECHANISM: complete the proven objective move using landspeed",
-                    600.0f);
-                actions.add(action);
-                continue;
+                    300.0f, "ACTION.OBJECTIVE.AOBS.BOUNTY_MOVE_MECHANISM");
             }
 
             NabooDuelObjectivePolicy.ActionKind nabooDuelAction = null;
@@ -577,8 +571,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             actionId, nabooDuelAction));
                 PolicyOperationAdapter.apply(
                         action, nabooDuelLedger);
-                actions.add(action);
-                continue;
             }
 
             if (exactOnTheVergeBackRetrieval) {
@@ -591,8 +583,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             onTheVergeBackRetrievalTarget));
                 PolicyOperationAdapter.apply(
                         action, onTheVergeLedger);
-                actions.add(action);
-                continue;
             }
 
             if (exactOnTheVergeVaderReaction) {
@@ -606,8 +596,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 safeOnTheVergeVaderCandidate));
                 PolicyOperationAdapter.apply(
                         action, onTheVergeLedger);
-                actions.add(action);
-                continue;
             }
 
             if (exactDeployAnalyzer != null
@@ -622,8 +610,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             actionId));
                 PolicyOperationAdapter.apply(
                         action, massassiLedger);
-                actions.add(action);
-                continue;
             }
 
             if (exactDeployAnalyzer != null
@@ -633,13 +619,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             actionSource, actionText)) {
                 boolean playStacked =
                         "Play stacked Interrupt".equals(actionText);
-                action.addReasoning(
+                addObjectiveContribution(action,
                     playStacked
                         ? "OBJECTIVE.I_WANT_THAT_MAP.PLAY_STACKED_INTERRUPT: use an engine-confirmed playable stacked Interrupt before ending the turn"
                         : "OBJECTIVE.I_WANT_THAT_MAP.STACK_INTERRUPT: bank an Interrupt from Lost Pile for Kylo's back-side route",
-                    playStacked ? 500.0f : 250.0f);
-                actions.add(action);
-                continue;
+                    playStacked ? 300.0f : 250.0f,
+                    "ACTION.OBJECTIVE.I_WANT_THAT_MAP.INTERRUPT");
             }
 
             if (exactDeployAnalyzer != null
@@ -647,11 +632,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .isIWantThatMapBattlegroundRouteAction(
                             game, context.getPlayerId(),
                             actionSource, actionText)) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.I_WANT_THAT_MAP.BATTLEGROUND_PULL: use the exact free battleground route before unrelated deploys",
-                    12000.0f);
-                actions.add(action);
-                continue;
+                    300.0f, "ACTION.OBJECTIVE.I_WANT_THAT_MAP.BATTLEGROUND_PULL");
             }
 
             if (exactDeployAnalyzer != null
@@ -659,11 +642,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .isSetYourCourseDeathStarSitePullAction(
                             game, context.getPlayerId(),
                             actionSource, actionText)) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.SET_YOUR_COURSE.PACKAGE_PULL: use the objective's Death Star site upload before unrelated deploys",
-                    12000.0f);
-                actions.add(action);
-                continue;
+                    300.0f, "ACTION.OBJECTIVE.SET_YOUR_COURSE.PACKAGE_PULL");
             }
 
             if (exactDeployAnalyzer != null
@@ -676,9 +657,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             .getSetYourCourseRouteStage(
                                 game, context.getPlayerId()),
                         true, actionText);
-                action.addReasoning(cpi.reason(), cpi.delta());
-                actions.add(action);
-                continue;
+                addObjectiveContribution(action, cpi.reason(), cpi.delta(),
+                    "ACTION.OBJECTIVE.SET_YOUR_COURSE.CPI");
             }
 
             if (exactDeployAnalyzer != null
@@ -696,8 +676,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 actionId, true));
                 PolicyOperationAdapter.apply(
                         action, entanglementsLedger);
-                actions.add(action);
-                continue;
             }
 
             boolean exactShieldFreeWarriorSource =
@@ -1055,14 +1033,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     opponentPower);
                     if (hold.hardVeto()) {
                         action.setActionType(ActionType.MOVE);
-                        action.hardVeto(
-                            hold.reason(),
-                            TraceRuleId.of(
-                                "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_FORMATION_HOLD"),
-                            TraceDomainId.MOVE,
-                            TraceOutputKind.VETO);
-                        actions.add(action);
-                        continue;
+                        addObjectiveContribution(action, hold.reason(), -300.0f,
+                            "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_FORMATION_HOLD");
                     }
                 } catch (Exception e) {
                     logger.debug(
@@ -1098,14 +1070,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 holdAll);
                     if (hold.hardVeto()) {
                         action.setActionType(ActionType.MOVE);
-                        action.hardVeto(
-                            hold.reason(),
-                            TraceRuleId.of(
-                                "MOVE.OBJECTIVE.VADERS_CASTLE_RETURN_HOLD"),
-                            TraceDomainId.MOVE,
-                            TraceOutputKind.VETO);
-                        actions.add(action);
-                        continue;
+                        addObjectiveContribution(action, hold.reason(), -300.0f,
+                            "MOVE.OBJECTIVE.VADERS_CASTLE_RETURN_HOLD");
                     }
                 } catch (Exception e) {
                     logger.debug(
@@ -1152,11 +1118,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                     safeRoute, "Vader");
                         if (contribution.applies()) {
                             action.setActionType(ActionType.MOVE);
-                            action.addReasoning(
+                            addObjectiveContribution(action,
                                 contribution.reason(),
-                                contribution.delta());
+                                contribution.delta(),
+                                "MOVE.OBJECTIVE.VADERS_CASTLE_START");
                             logger.warn(
-                                "HUNT DOWN CASTLE MOVE: safe Vader route from Castle +600");
+                                "HUNT DOWN CASTLE MOVE: safe Vader route from Castle +{}",
+                                (int) contribution.delta());
                         }
                     }
                 } catch (Exception e) {
@@ -1852,7 +1820,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     applyDeployActionTextPolicy(action,
                         DeployActionTextPolicy.scoreMainGenerator(
                             new DeployActionTextFacts.MainGeneratorFacts(actionId)));
-                    logger.warn("V160 SHIELD WILL BE DOWN: pushing exact virtual main-generator route action '{}' (+800)", actionText);
+                    logger.warn("V160 SHIELD WILL BE DOWN: pushing exact virtual main-generator route action '{}' (+300 objective preference)", actionText);
                 }
             }
 
@@ -2054,15 +2022,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 actionText);
                     }
                     if (sycChoice.applies()) {
-                        if (sycChoice.hardVeto()) {
-                            action.hardVeto(sycChoice.reason());
-                        } else {
-                            action.addReasoning(
-                                sycChoice.reason(),
-                                sycChoice.delta());
-                        }
-                        actions.add(action);
-                        continue;
+                        addObjectiveContribution(action,
+                            sycChoice.reason(),
+                            sycChoice.delta(),
+                            "OBJECTIVE.SET_YOUR_COURSE.CHOICE");
                     }
                 }
             }
@@ -2190,20 +2153,22 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             if (parsec != null) {
                                 MoveVergePolicy.ParsecChoiceEvaluation v79ParsecChoice =
                                     MoveVergePolicy.evaluateParsecChoice(parsec);
-                                action.addReasoning(
+                                addObjectiveContribution(
+                                    action,
                                     v79ParsecChoice.contribution().reason(),
-                                    v79ParsecChoice.contribution().delta());
+                                    v79ParsecChoice.contribution().delta(),
+                                    "MOVE.OBJECTIVE.ON_THE_VERGE.PARSEC_CHOICE");
                                 if (v79ParsecChoice.branch()
                                         == MoveVergePolicy.ParsecChoiceBranch.PARSEC_SEVEN) {
-                                    logger.warn("V79 PARSEC CHOICE: parsec 7 (Scarif) → +1500");
+                                    logger.warn("V79 PARSEC CHOICE: parsec 7 (Scarif) -> +300");
                                 } else if (v79ParsecChoice.branch()
                                         == MoveVergePolicy.ParsecChoiceBranch.ONE_HOP_FROM_SCARIF) {
-                                    logger.warn("V79 PARSEC CHOICE: parsec {} → +1200", parsec);
+                                    logger.warn("V79 PARSEC CHOICE: parsec {} -> +300", parsec);
                                 } else if (v79ParsecChoice.branch()
                                         == MoveVergePolicy.ParsecChoiceBranch.TOWARD_SCARIF) {
-                                    logger.warn("V79 PARSEC CHOICE: parsec {} → +800", parsec);
+                                    logger.warn("V79 PARSEC CHOICE: parsec {} -> +300", parsec);
                                 } else {
-                                    logger.warn("V79 PARSEC CHOICE WRONG WAY: parsec {} → -800", parsec);
+                                    logger.warn("V79 PARSEC CHOICE WRONG WAY: parsec {} → -300", parsec);
                                 }
                             }
                         } else if (v79IsDestChoice) {
@@ -2223,12 +2188,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 MoveVergePolicy.ParsecChoiceEvaluation v79DestinationChoice =
                                     MoveVergePolicy.evaluateDestinationChoice(
                                         textLower.contains("orbit"));
-                                action.addReasoning(
+                                addObjectiveContribution(
+                                    action,
                                     v79DestinationChoice.contribution().reason(),
-                                    v79DestinationChoice.contribution().delta());
+                                    v79DestinationChoice.contribution().delta(),
+                                    "MOVE.OBJECTIVE.ON_THE_VERGE.DESTINATION_CHOICE");
                                 if (v79DestinationChoice.branch()
                                         == MoveVergePolicy.ParsecChoiceBranch.ORBIT_SCARIF) {
-                                    logger.warn("V79 DESTINATION: orbit the exact parsec-7 system → +1500");
+                                    logger.warn("V79 DESTINATION: orbit the exact parsec-7 system -> +300");
                                 } else {
                                     logger.warn("V79 DESTINATION: '{}' leaves the Death Star in deep space at Scarif's parsec → -200", actionText);
                                 }
@@ -2262,9 +2229,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         if (fparsec != null) {
                             MoveVergePolicy.ParsecChoiceEvaluation v103ParsecFallback =
                                 MoveVergePolicy.evaluateParsecFallback(fparsec);
-                            action.addReasoning(
+                            addObjectiveContribution(
+                                action,
                                 v103ParsecFallback.contribution().reason(),
-                                v103ParsecFallback.contribution().delta());
+                                v103ParsecFallback.contribution().delta(),
+                                "MOVE.OBJECTIVE.ON_THE_VERGE.PARSEC_FALLBACK");
                             logger.warn("V103 PARSEC FALLBACK: parsec {} dist {} → +{}",
                                 fparsec, v103ParsecFallback.distanceFromScarif(),
                                 (int)v103ParsecFallback.contribution().delta());
@@ -2530,8 +2499,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     DeployObjectiveSitingPolicy
                         .scoreFirstOrderReignsNavyRouteAction(
                             actionId, true));
-                actions.add(action);
-                continue;
             }
 
             // ========== V23: EMPTY PILE GUARD ==========
@@ -5090,7 +5057,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Deploy From Reserve (Risky) ==========
             // V114 (Steve, 2026-05-21): DELETED the generic "Deploy ... from ..." catch-all.
             // It assigned -10 to ALL "Deploy X from Y" action texts before the V60/V67ai
-            // block (line 3120) could award the +2000 OBJECTIVE-tier location-pull bonus.
+            // block (line 3120) could award the bounded objective location-pull preference.
             // This caused Rando to IGNORE Hunt Down V's once-per-turn "Deploy a [Cloud City]
             // or Malachor battleground site from Reserve Deck" every single turn in
             // replay dc8n6dl9s88rqycz (2026-05-12). Same bug affected EVERY non-specific
@@ -5101,7 +5068,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // No "Deploy X from Y" action deserves an unconditional -10. Specific bad
             // cases are already handled upstream (V67u Force Push exchange, V35.2 weapon
             // rack outside battle, etc.). Letting these actions fall through to V60/V67ai
-            // gives the correct +150 baseline plus +2000 objective bonus for Hunt Down V
+            // gives the correct +150 baseline plus bounded objective preference for Hunt Down V
             // and similar location/site/character pulls.
             // (Mirrored in chosenone ActionTextEvaluator.java)
 
@@ -5126,12 +5093,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .hasUsefulHiddenPathRelocation(
                             game, context.getPlayerId());
                     if (useful) {
-                        action.addReasoning(
+                        addObjectiveContribution(action,
                             "HIDDEN PATH RELOCATE: advance the two-battleground payoff without breaking the two-site hold",
-                            5000.0f);
+                            300.0f, "ACTION.OBJECTIVE.HIDDEN_PATH.RELOCATE");
+                    } else if (exactDeployAnalyzer
+                            .hasFormationSafeHiddenPathRelocation(
+                                game, context.getPlayerId())) {
+                        addObjectiveContribution(action,
+                            "HIDDEN PATH RELOCATE: no new battleground progress, preserve the 2 Force unless tactics justify moving",
+                            -300.0f,
+                            "ACTION.OBJECTIVE.HIDDEN_PATH.RELOCATE_HOLD");
                     } else {
                         action.hardVeto(
-                            "HIDDEN PATH RELOCATE: no hold-safe battleground progress, preserve 2 Force");
+                            "HIDDEN PATH RELOCATE: no formation-safe relocation is available");
                     }
                 } else {
                     MoveTransitPolicy.Contribution residualTransfer =
@@ -5558,12 +5532,17 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         game, context.getPlayerId());
                 MoveTransitPolicy.Contribution v60Transit =
                     MoveTransitPolicy.positiveHiddenPathTransit(productive);
-                action.addReasoning(v60Transit.reason(), v60Transit.delta());
+                addObjectiveContribution(
+                    action, v60Transit.reason(), v60Transit.delta(),
+                    "MOVE.OBJECTIVE.HIDDEN_PATH.TRANSIT_ACTION");
                 if (productive) {
-                    logger.warn("V60 HIDDEN PATH TRANSIT: '{}' — +20000 (R4 band; CORRECT outward move, unlike landspeed)", actionText);
+                    logger.warn("V60 HIDDEN PATH TRANSIT: '{}' -> +300 objective preference", actionText);
                 } else if (exactFrontRoute) {
-                    action.hardVeto(
-                        "HIDDEN PATH TRANSIT: no formation-safe distinct-site advance is available");
+                    addObjectiveContribution(
+                        action,
+                        "HIDDEN PATH TRANSIT: no distinct-site objective advance is available",
+                        -300.0f,
+                        "MOVE.OBJECTIVE.HIDDEN_PATH.TRANSIT_HOLD");
                 }
             }
 
@@ -5868,8 +5847,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                         context.getGame(),
                                         context.getPlayerId()),
                                 context.getForcePileSize(), spend);
-                    if (sycReserve.hardVeto()) {
-                        action.hardVeto(sycReserve.reason());
+                    if (sycReserve.applies()) {
+                        addObjectiveContribution(action,
+                            sycReserve.reason(), sycReserve.delta(),
+                            "OBJECTIVE.SET_YOUR_COURSE.CONTROL_FORCE_RESERVE");
                     }
                     int bountyMoveReserve = context
                         .getObjectiveAnalyzer()
@@ -5888,8 +5869,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             && availableForce
                                 - Math.ceil(spend)
                                 < bountyMoveReserve) {
-                        action.hardVeto(
-                            "OBJECTIVE.AOBS.BOUNTY_MOVE.FORCE_RESERVE: preserve the exact paid move to a bounty");
+                        addObjectiveContribution(action,
+                            "OBJECTIVE.AOBS.BOUNTY_MOVE.FORCE_RESERVE: preserve the exact paid move to a bounty",
+                            -300.0f,
+                            "OBJECTIVE.AOBS.BOUNTY_MOVE.FORCE_RESERVE");
                     }
                 }
             } catch (Exception e) {
@@ -6564,22 +6547,25 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     true, false, false, embarker.getTitle(), null);
             }
             if (objectiveEnablerTitle != null) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_START: "
                         + embarker.getTitle()
                         + " can pilot " + objectiveEnablerTitle
                         + " for the required-card deploy route",
-                    600.0f,
-                    TraceRuleId.of(
-                        "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_START"),
-                    TraceDomainId.MOVE,
-                    TraceOutputKind.BANDED);
+                    300.0f,
+                    "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_START");
             }
         } catch (Exception e) {
             logger.debug("evaluateEmbark error: {}", e.getMessage());
             applyEmbarkPolicy(action, true, true, true, null,
                 true, false, true, null, null);
         }
+    }
+
+    private void addObjectiveContribution(
+            EvaluatedAction action, String reason, float delta, String ruleId) {
+        action.addReasoning(reason, delta, TraceRuleId.of(ruleId),
+            TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED);
     }
 
     private void applyEmbarkPolicy(

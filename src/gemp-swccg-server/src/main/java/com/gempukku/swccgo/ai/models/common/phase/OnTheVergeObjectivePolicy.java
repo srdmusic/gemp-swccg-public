@@ -30,7 +30,7 @@ public final class OnTheVergeObjectivePolicy {
         return result(add(
                 actionId,
                 "OBJECTIVE.OTVOG.SCARIF_ROUTE",
-                2000.0f,
+                300.0f,
                 "ON THE VERGE: use the native Scarif battleground route before unrelated deploys"));
     }
 
@@ -41,7 +41,7 @@ public final class OnTheVergeObjectivePolicy {
                 ? result(add(
                     actionId,
                     "OBJECTIVE.OTVOG.COMMAND_CENTER",
-                    1200.0f,
+                    300.0f,
                     "ON THE VERGE: deploy Command Center to unlock the source-verified Krennic route"))
                 : empty();
     }
@@ -62,31 +62,13 @@ public final class OnTheVergeObjectivePolicy {
                     "ON THE VERGE: no legal Krennic remains in Reserve Deck"));
         }
         if (deployCost == null) {
-            return result(PolicyOperation.hardVeto(
-                    actionId,
-                    TraceRuleId.of(
-                            "OBJECTIVE.OTVOG.KRENNIC_COST_UNKNOWN"),
-                    TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO,
-                    "ON THE VERGE: Krennic payment is not proven"));
+            return empty();
         }
         if (forceAvailable == null) {
-            return result(PolicyOperation.hardVeto(
-                    actionId,
-                    TraceRuleId.of(
-                            "OBJECTIVE.OTVOG.FORCE_UNKNOWN"),
-                    TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO,
-                    "ON THE VERGE: available Force is not proven"));
+            return empty();
         }
         if (moveReserve == null) {
-            return result(PolicyOperation.hardVeto(
-                    actionId,
-                    TraceRuleId.of(
-                            "OBJECTIVE.OTVOG.MOVE_COST_UNKNOWN"),
-                    TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO,
-                    "ON THE VERGE: Death Star movement payment is not proven"));
+            return empty();
         }
         int payment = Math.max(0, deployCost);
         if (forceAvailable < payment) {
@@ -99,18 +81,16 @@ public final class OnTheVergeObjectivePolicy {
                     "ON THE VERGE: Krennic is not currently affordable"));
         }
         if (forceAvailable - payment < Math.max(0, moveReserve)) {
-            return result(PolicyOperation.hardVeto(
+            return result(add(
                     actionId,
-                    TraceRuleId.of(
-                            "OBJECTIVE.OTVOG.KRENNIC_MOVE_RESERVE"),
-                    TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO,
+                    "OBJECTIVE.OTVOG.KRENNIC_MOVE_RESERVE",
+                    -300.0f,
                     "ON THE VERGE: preserve the exact Death Star movement payment before deploying Krennic"));
         }
         return result(add(
                 actionId,
                 "OBJECTIVE.OTVOG.KRENNIC_ROUTE",
-                2000.0f,
+                300.0f,
                 "ON THE VERGE: deploy Krennic while preserving the exact Death Star movement payment"));
     }
 
@@ -121,7 +101,7 @@ public final class OnTheVergeObjectivePolicy {
                 ? result(add(
                     actionId,
                     "OBJECTIVE.OTVOG.KRENNIC_CANDIDATE",
-                    1200.0f,
+                    300.0f,
                     "ON THE VERGE: select the source-legal Krennic printing"))
                 : empty();
     }
@@ -142,7 +122,7 @@ public final class OnTheVergeObjectivePolicy {
         return result(add(
                 actionId,
                 "OBJECTIVE.OTVOG.BACK_RETRIEVAL",
-                2000.0f,
+                300.0f,
                 "TAKING CONTROL: use the free once-per-draw retrieval"));
     }
 
@@ -151,18 +131,19 @@ public final class OnTheVergeObjectivePolicy {
             boolean safeCandidateAvailable) {
         if (!exactAction) return empty();
         if (!safeCandidateAvailable) {
-            return result(PolicyOperation.hardVeto(
+            return result(PolicyOperation.add(
                     actionId,
                     TraceRuleId.of(
                             "OBJECTIVE.OTVOG.VADER_REACTION_BREAKS_HOLD"),
                     TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO,
-                    "TAKING CONTROL: do not move the only Scarif leader away and flip the objective"));
+                    TraceOutputKind.BANDED,
+                    -300.0f,
+                    "TAKING CONTROL: prefer not to move the only Scarif leader away and flip the objective"));
         }
         return result(add(
                 actionId,
                 "OBJECTIVE.OTVOG.VADER_BATTLE_REACTION",
-                2000.0f,
+                300.0f,
                 "TAKING CONTROL: move Vader to the battle offered by the objective"));
     }
 
@@ -171,18 +152,19 @@ public final class OnTheVergeObjectivePolicy {
             boolean safeVaderCandidate) {
         if (!exactDecision) return empty();
         if (!safeVaderCandidate) {
-            return result(PolicyOperation.hardVeto(
+            return result(PolicyOperation.add(
                     actionId,
                     TraceRuleId.of(
                             "OBJECTIVE.OTVOG.VADER_CANDIDATE_BREAKS_HOLD"),
                     TraceDomainId.OBJECTIVE_INTENT,
-                    TraceOutputKind.VETO,
-                    "TAKING CONTROL: this Vader move would break the Scarif leader hold"));
+                    TraceOutputKind.BANDED,
+                    -300.0f,
+                    "TAKING CONTROL: prefer a Vader move that preserves the Scarif leader hold"));
         }
         return result(add(
                 actionId,
                 "OBJECTIVE.OTVOG.VADER_BATTLE_REACTION_CANDIDATE",
-                1200.0f,
+                300.0f,
                 "TAKING CONTROL: select Vader for the objective's battle reaction"));
     }
 

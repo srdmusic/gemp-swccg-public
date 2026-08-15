@@ -12,8 +12,10 @@ import com.gempukku.swccgo.ai.models.common.phase.PullActionFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullOracleView;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
+import com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.set3.dark.Card3_158;
 import com.gempukku.swccgo.cards.set222.dark.Card222_003;
@@ -212,7 +214,7 @@ public class ShieldTwinObjectiveEngineContractTest {
                 EvaluatedCandidate warrior =
                         evaluatedCandidate(
                             candidates, "warrior");
-                assertEquals(800.0f,
+                assertEquals(ObjectivePreferencePolicy.SCORE,
                         warrior.score() - wait.score(),
                         0.0f);
                 assertTrue(warrior.reasoning().contains(
@@ -498,7 +500,7 @@ public class ShieldTwinObjectiveEngineContractTest {
     }
 
     @Test
-    public void exactVirtualPreparePullSurvivesAllParentVetoBoundaries() {
+    public void exactVirtualPreparePullStillRespectsGenericReserveSafety() {
         for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
             VirtualTableScenario scn = scenario(objectiveBlueprintId);
             var prepare = scn.GetDSCard("prepare");
@@ -580,11 +582,10 @@ public class ShieldTwinObjectiveEngineContractTest {
                 PolicyResult classicPolicy =
                         PullActionPolicy.evaluateParent(
                                 classicFacts).result();
-                PolicyOperation requiredPull = operation(
-                        virtualPolicy,
-                        "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD");
-                assertEquals(1000.0f, requiredPull.delta(), 0.0f);
                 assertFalse(hasOperation(
+                        virtualPolicy,
+                        "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD"));
+                assertTrue(hasOperation(
                         virtualPolicy, "V60-reserve-risk"));
                 assertFalse(hasOperation(
                         virtualPolicy, "V185-ate"));
@@ -674,8 +675,8 @@ public class ShieldTwinObjectiveEngineContractTest {
                 assertFalse(decoy.reasoning(),
                         decoy.reasoning().contains(
                                 "missing location required by the counted objective"));
-                assertTrue(routeStage.score()
-                        > decoy.score() + 250.0f);
+                assertEquals(ObjectivePreferencePolicy.SCORE,
+                        routeStage.score() - decoy.score(), 0.0f);
             }
         }
     }
@@ -700,8 +701,8 @@ public class ShieldTwinObjectiveEngineContractTest {
                 PolicyResult classicLoss = forceLossPolicy(
                         scn, classicPrepare, false,
                         analyzer.isPullableCard(classicPrepare));
-                assertEquals(-9999.0f,
-                        operation(
+                assertEquals(-ObjectivePreferencePolicy.SCORE,
+                        objectiveOperation(
                                 virtualLoss,
                                 "V21-objective").delta(),
                         0.0f);
@@ -712,7 +713,7 @@ public class ShieldTwinObjectiveEngineContractTest {
     }
 
     @Test
-    public void noWalkerOpeningSelectsAndBudgetsTheActionableHandPackage() {
+    public void noWalkerOpeningIdentifiesAndBudgetsTheActionableHandPackage() {
         for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
             VirtualTableScenario scn = scenario(objectiveBlueprintId);
             var icePlains = scn.GetDSCard("icePlains");
@@ -766,12 +767,13 @@ public class ShieldTwinObjectiveEngineContractTest {
                                 destinations, northRidge);
                 assertTrue(iceDeploy.reasoning(),
                         iceDeploy.reasoning().contains(
-                                "advance a missing counted-objective location"));
+                                "advance a missing counted-objective location (+300.0)"));
                 assertFalse(ridgeDeploy.reasoning(),
                         ridgeDeploy.reasoning().contains(
                                 "advance a missing counted-objective location"));
-                assertTrue(iceDeploy.score()
-                        > ridgeDeploy.score() + 500.0f);
+                assertTrue("Ordinary tactical siting may override the bounded objective preference: "
+                                + destinations,
+                        ridgeDeploy.score() > iceDeploy.score());
 
                 assertEquals(hostCost + cannonCost,
                         analyzer
@@ -988,7 +990,7 @@ public class ShieldTwinObjectiveEngineContractTest {
     }
 
     @Test
-    public void selectedPilotWaitsForDeployButIsProtectedFromForceLoss() {
+    public void selectedPilotGetsBoundedForceLossRetentionPreference() {
         for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
             VirtualTableScenario scn = scenario(objectiveBlueprintId);
             var target = scn.GetDSCard("target");
@@ -1027,15 +1029,16 @@ public class ShieldTwinObjectiveEngineContractTest {
                 EvaluatedCandidate ordinaryLoss =
                         evaluatedCandidate(
                             lossCandidates, disposable);
+                assertFalse(protectedPilot.hardVeto());
                 assertTrue(protectedPilot.reasoning(),
                         protectedPilot.reasoning().contains(
-                            "OBJECTIVE CRITICAL IN HAND - NEVER LOSE"));
+                            "OBJECTIVE CRITICAL IN HAND: prefer to retain (-300.0)"));
                 assertFalse(ordinaryLoss.reasoning(),
                         ordinaryLoss.reasoning().contains(
-                            "OBJECTIVE CRITICAL IN HAND - NEVER LOSE"));
+                            "OBJECTIVE CRITICAL IN HAND: prefer to retain"));
                 assertTrue(protectedPilot.reasoning(),
                         protectedPilot.score()
-                            < ordinaryLoss.score() - 9000.0f);
+                            < ordinaryLoss.score());
             }
         }
     }
@@ -1073,7 +1076,7 @@ public class ShieldTwinObjectiveEngineContractTest {
                             "HOTH SHIELD PACKAGE: retain the selected host, pilot, and Cannon"));
                 assertFalse(ordinaryLoss.hardVeto());
                 assertTrue(protectedPilot.score()
-                        < ordinaryLoss.score() - 9000.0f);
+                        < ordinaryLoss.score());
             }
         }
     }
@@ -1180,7 +1183,8 @@ public class ShieldTwinObjectiveEngineContractTest {
                                                         scn.game(),
                                                         VirtualTableScenario.DS,
                                                         classicTarget));
-                assertEquals(500.0f, operation(
+                assertEquals(ObjectivePreferencePolicy.SCORE,
+                        objectiveOperation(
                         virtualChild,
                         "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD")
                         .delta(), 0.0f);
@@ -1216,13 +1220,13 @@ public class ShieldTwinObjectiveEngineContractTest {
                                 VirtualTableScenario.DS,
                                 classicCannon));
 
-                assertEquals(-9999.0f,
-                        operation(forceLossPolicy(
+                assertEquals(-ObjectivePreferencePolicy.SCORE,
+                        objectiveOperation(forceLossPolicy(
                                         scn, target, true),
                                 "V21-objective").delta(),
                         0.0f);
-                assertEquals(-9999.0f,
-                        operation(forceLossPolicy(
+                assertEquals(-ObjectivePreferencePolicy.SCORE,
+                        objectiveOperation(forceLossPolicy(
                                         scn, cannon, true),
                                 "V21-objective").delta(),
                         0.0f);
@@ -1248,8 +1252,8 @@ public class ShieldTwinObjectiveEngineContractTest {
                                 scn.game(),
                                 VirtualTableScenario.DS,
                                 classicCannon));
-                assertEquals(-9999.0f,
-                        operation(forceLossPolicy(
+                assertEquals(-ObjectivePreferencePolicy.SCORE,
+                        objectiveOperation(forceLossPolicy(
                                         scn, classicCannon, true),
                                 "V21-objective").delta(),
                         0.0f);
@@ -1327,7 +1331,7 @@ public class ShieldTwinObjectiveEngineContractTest {
                 assertFalse(otherCandidate.reasoning(),
                         otherCandidate.reasoning().contains(
                                 "active table presence is required to flip"));
-                assertEquals(500.0f,
+                assertEquals(ObjectivePreferencePolicy.SCORE,
                         preferredCandidate.score()
                                 - otherCandidate.score(),
                         0.0f);
@@ -1353,7 +1357,7 @@ public class ShieldTwinObjectiveEngineContractTest {
                 assertFalse(temporaryOther.reasoning(),
                         temporaryOther.reasoning().contains(
                                 "active table presence is required to flip"));
-                assertEquals(500.0f,
+                assertEquals(ObjectivePreferencePolicy.SCORE,
                         temporaryPreferred.score()
                                 - temporaryOther.score(),
                         0.0f);
@@ -1395,7 +1399,7 @@ public class ShieldTwinObjectiveEngineContractTest {
                                             String.valueOf(
                                                     packageCard.getCardId()),
                                             role, true);
-                    assertEquals(-9999.0f,
+                    assertEquals(-300.0f,
                             operation(
                                     avoidable,
                                     "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD")
@@ -1474,7 +1478,7 @@ public class ShieldTwinObjectiveEngineContractTest {
                                 .FlipGateFormationRole
                                 .LAST_REQUIRED_ACTOR,
                             role);
-                    assertEquals(-9999.0f,
+                    assertEquals(-300.0f,
                             operation(BattleForfeitPolicy
                                     .scoreFlipGateFormationProtection(
                                             String.valueOf(
@@ -1507,11 +1511,12 @@ public class ShieldTwinObjectiveEngineContractTest {
                                 analyzer, scn,
                                 blizzard2, northRidge),
                             northRidge);
-                assertTrue(prematureMove.reasoning(),
+                assertFalse(prematureMove.reasoning(),
                         prematureMove.hardVeto());
+                assertNull(prematureMove.vetoReason());
                 assertTrue(prematureMove.reasoning(),
                         prematureMove.reasoning().contains(
-                            "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD"));
+                            "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: prefer retaining the last required actor at the gate"));
             }
         }
     }
@@ -1629,8 +1634,11 @@ public class ShieldTwinObjectiveEngineContractTest {
                 assertTrue(reunion.reasoning(),
                         reunion.reasoning().contains(
                             "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"));
-                assertTrue(reverse.reasoning(),
+                assertFalse(reverse.reasoning(),
                         reverse.hardVeto());
+                assertTrue(reverse.reasoning(),
+                        reverse.reasoning().contains(
+                            "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: prefer retaining the last required actor at the gate"));
             }
         }
     }
@@ -1821,9 +1829,9 @@ public class ShieldTwinObjectiveEngineContractTest {
                 assertFalse(forward.hardVeto());
                 assertTrue(forward.reasoning().contains(
                         "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"));
-                assertTrue(reverse.hardVeto());
+                assertFalse(reverse.hardVeto());
                 assertTrue(reverse.reasoning().contains(
-                        "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD"));
+                        "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: prefer retaining the last required actor at the gate"));
             }
         }
     }
@@ -1972,7 +1980,7 @@ public class ShieldTwinObjectiveEngineContractTest {
     }
 
     @Test
-    public void selectedWalkerMoveForceDominatesAnAffordableDistractorDeploy() {
+    public void selectedWalkerMoveForceReserveIsBoundedAndPassMayWin() {
         for (String objectiveBlueprintId : List.of("222_14", "222_30")) {
             VirtualTableScenario scn =
                     scenario(objectiveBlueprintId);
@@ -2021,10 +2029,11 @@ public class ShieldTwinObjectiveEngineContractTest {
                                 List.of("distractor"),
                                 List.of("Deploy")),
                             "distractor");
-                assertTrue(deploy.hardVeto());
-                assertTrue(deploy.vetoReason(),
-                        deploy.vetoReason().contains(
-                            "HOTH.SHIELD.MOVE_FORCE_RESERVE"));
+                assertFalse(deploy.reasoning(), deploy.hardVeto());
+                assertNull(deploy.vetoReason());
+                assertTrue(deploy.reasoning(),
+                        deploy.reasoning().contains(
+                            "Preserve the selected walker's exact next forward landspeed payment (-300.0)"));
 
                 EvaluatedCandidate winner =
                         combinedActionAdapter(
@@ -2245,9 +2254,9 @@ public class ShieldTwinObjectiveEngineContractTest {
                             "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"));
                     assertFalse(rejectedHop.reasoning().contains(
                             "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"));
-                    assertTrue(rejectedHop.hardVeto());
+                    assertFalse(rejectedHop.hardVeto());
                     assertTrue(rejectedHop.reasoning().contains(
-                            "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD"));
+                            "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: prefer retaining the last required actor at the gate"));
                 }
 
                 scn.MoveCardsToLocation(secondMarker, blizzard2);
@@ -2313,9 +2322,11 @@ public class ShieldTwinObjectiveEngineContractTest {
                 assertFalse(forward.hardVeto());
                 assertTrue(forward.reasoning().contains(
                         "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"));
-                assertTrue(reverse.hardVeto());
+                assertFalse(reverse.hardVeto());
                 assertFalse(reverse.reasoning().contains(
                         "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"));
+                assertTrue(reverse.reasoning().contains(
+                        "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: prefer retaining the last required actor at the gate"));
 
                 assertForwardFollow(
                         analyzer, scn, target, blizzard2,
@@ -2410,9 +2421,10 @@ public class ShieldTwinObjectiveEngineContractTest {
                                     .equals(
                                         contribution
                                             .ruleArmId().id())
+                                && contribution.domainId()
+                                    == TraceDomainId.OBJECTIVE_INTENT
                                 && contribution.delta()
-                                    == ObjectiveBattlePolicy
-                                        .REQUIRED_LOCATION_CONTEST_BONUS));
+                                    == ObjectivePreferencePolicy.SCORE));
         verify(modifiers).controlsLocation(
                 gameState, location, playerId);
         verify(modifiers, never()).controlsLocation(
@@ -2480,7 +2492,7 @@ public class ShieldTwinObjectiveEngineContractTest {
                         evaluatedCandidate(
                                 fireCandidates,
                                 "second-marker-fire");
-                assertEquals(800.0f,
+                assertEquals(ObjectivePreferencePolicy.SCORE,
                         fire.score() - wait.score(), 0.0f);
                 assertTrue(fire.reasoning().contains(
                         "V160 PUSH TARGET THE MAIN GENERATOR"));
@@ -2662,10 +2674,10 @@ public class ShieldTwinObjectiveEngineContractTest {
                             disposable)) {
                     assertFalse(candidate.reasoning(),
                             candidate.reasoning().contains(
-                                "OBJECTIVE CRITICAL IN HAND - NEVER LOSE"));
+                                "OBJECTIVE CRITICAL IN HAND: prefer to retain"));
                     assertFalse(candidate.reasoning(),
                             candidate.reasoning().contains(
-                                "OBJECTIVE PULLABLE IN HAND - NEVER LOSE"));
+                                "OBJECTIVE PULLABLE IN HAND: prefer to retain"));
                 }
             }
         }
@@ -2738,7 +2750,9 @@ public class ShieldTwinObjectiveEngineContractTest {
                 assertFalse(safeMove.reasoning().contains(
                         "MOVE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD"));
                 assertTrue(unsafeMove.reasoning().contains(
-                        "MOVE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD"));
+                        "LADDER VETO: MOVE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD"));
+                assertFalse(unsafeMove.hardVeto());
+                assertNull(unsafeMove.vetoReason());
                 assertTrue(unsafeMove.score()
                         < safeMove.score() - 50000.0f);
 
@@ -2978,6 +2992,16 @@ public class ShieldTwinObjectiveEngineContractTest {
                 .orElseThrow();
     }
 
+    private static PolicyOperation objectiveOperation(
+            PolicyResult result, String ruleId) {
+        PolicyOperation operation = operation(result, ruleId);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                operation.domainId());
+        assertTrue(Math.abs(operation.delta())
+                <= ObjectivePreferencePolicy.SCORE);
+        return operation;
+    }
+
     private static BattleDecisionPolicy.Context battleContext(
             GameState gameState,
             SwccgGame game,
@@ -3167,7 +3191,7 @@ public class ShieldTwinObjectiveEngineContractTest {
         EvaluatedCandidate follow =
                 evaluatedCandidate(
                         candidates, "forward-follow");
-        assertEquals(800.0f,
+        assertEquals(ObjectivePreferencePolicy.SCORE,
                 follow.score() - wait.score(), 0.0f);
         assertTrue(follow.reasoning().contains(
                 "V160 PUSH TARGET THE MAIN GENERATOR"));

@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
@@ -14,7 +15,6 @@ import java.util.Objects;
 public final class DeploySitingPolicy {
     private static final float V89_BAD_SITE_SCORE = -1500.0f;
     private static final float FORMATION_DEFER_SCORE = -800.0f;
-    private static final float V193_DESTINATION_OFFSET = 1600.0f;
 
     public enum FormationState {
         ALLOW,
@@ -112,8 +112,7 @@ public final class DeploySitingPolicy {
                 facts.v136Score(), false);
 
         if (facts.v193Eligible() && facts.v193FormationSupported()) {
-            operations.add(addSiting(facts.actionId(), "V193", TraceOutputKind.BANDED,
-                    facts.v193PlaybookWeight(),
+            operations.add(addObjectiveSiting(facts.actionId(), "V193", TraceOutputKind.BANDED,
                     "V193 FLIP-GATE CONTROL: steer one body to '" + facts.siteTitle()
                             + "' to enable '" + facts.v193GateCardTitle()
                             + "' (objective flip gate)"));
@@ -141,8 +140,7 @@ public final class DeploySitingPolicy {
                 facts.v136Score(), true);
 
         if (facts.v193Eligible() && facts.v193FormationSupported()) {
-            operations.add(addSiting(facts.actionId(), "V193-CS", TraceOutputKind.BANDED,
-                    facts.v193PlaybookWeight() + V193_DESTINATION_OFFSET,
+            operations.add(addObjectiveSiting(facts.actionId(), "V193-CS", TraceOutputKind.BANDED,
                     "V193 (CS) FLIP-GATE CONTROL: steer one ability body to '"
                             + facts.siteTitle() + "' to enable '"
                             + facts.v193GateCardTitle() + "' (objective flip gate)"));
@@ -433,5 +431,13 @@ public final class DeploySitingPolicy {
                                              float delta, String reason) {
         return PolicyOperation.add(actionId, TraceRuleId.of(rule),
                 TraceDomainId.DEPLOY_SITING, outputKind, delta, reason);
+    }
+
+    private static PolicyOperation addObjectiveSiting(
+            String actionId, String rule, TraceOutputKind outputKind,
+            String reason) {
+        return PolicyOperation.add(actionId, TraceRuleId.of(rule),
+                TraceDomainId.OBJECTIVE_INTENT, outputKind,
+                ObjectivePreferencePolicy.SCORE, reason);
     }
 }

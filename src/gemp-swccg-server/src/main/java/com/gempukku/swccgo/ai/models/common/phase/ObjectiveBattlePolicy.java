@@ -14,19 +14,19 @@ import java.util.Objects;
 public final class ObjectiveBattlePolicy {
     public static final String REQUIRED_LOCATION_CONTEST_RULE_ID =
             "BATTLE.OBJECTIVE.REQUIRED_LOCATION_CONTEST";
-    public static final float REQUIRED_LOCATION_CONTEST_BONUS = 80.0f;
+    public static final float REQUIRED_LOCATION_CONTEST_BONUS = 300.0f;
     public static final String GLOBAL_BLOCKER_REMOVAL_RULE_ID =
             "BATTLE.OBJECTIVE.GLOBAL_BLOCKER_REMOVAL";
-    public static final float GLOBAL_BLOCKER_REMOVAL_BONUS = 250.0f;
+    public static final float GLOBAL_BLOCKER_REMOVAL_BONUS = 300.0f;
     public static final String REQUIRED_CARD_CONTROL_ENABLER_RULE_ID =
             "BATTLE.OBJECTIVE.REQUIRED_CARD_CONTROL_ENABLER";
-    public static final float REQUIRED_CARD_CONTROL_ENABLER_BONUS = 80.0f;
+    public static final float REQUIRED_CARD_CONTROL_ENABLER_BONUS = 300.0f;
     public static final String REQUIRED_CARD_RETENTION_RULE_ID =
             "BATTLE.OBJECTIVE.REQUIRED_CARD_RETENTION";
-    public static final float REQUIRED_CARD_RETENTION_BONUS = 80.0f;
+    public static final float REQUIRED_CARD_RETENTION_BONUS = 300.0f;
     public static final String HARD_LOSS_LOCATION_RULE_ID =
             "BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_DEFENSE";
-    public static final float HARD_LOSS_LOCATION_BONUS = 250.0f;
+    public static final float HARD_LOSS_LOCATION_BONUS = 300.0f;
     public static final String TERMINAL_OBJECTIVE_BATTLE_RULE_ID =
             "BATTLE.OBJECTIVE.TERMINAL_ACTOR_LOSS_VETO";
     public static final String OBJECTIVE_MOVE_FORCE_RESERVE_RULE_ID =
@@ -163,7 +163,7 @@ public final class ObjectiveBattlePolicy {
                     actionId,
                     TraceRuleId.of(
                         TERMINAL_OBJECTIVE_BATTLE_RULE_ID),
-                    TraceDomainId.BATTLE_INITIATION,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.VETO,
                     "Do not initiate a risky battle that can place the objective out of play by forfeiting its terminal actor")));
     }
@@ -183,12 +183,13 @@ public final class ObjectiveBattlePolicy {
         }
         return new PolicyResult(
                 PRODUCER,
-                List.of(PolicyOperation.hardVeto(
+                List.of(PolicyOperation.add(
                     actionId,
                     TraceRuleId.of(
                         OBJECTIVE_MOVE_FORCE_RESERVE_RULE_ID),
-                    TraceDomainId.BATTLE_INITIATION,
-                    TraceOutputKind.VETO,
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.BANDED,
+                    -300.0f,
                     "Preserve the exact Force required for the next objective movement leg")));
     }
 
@@ -216,7 +217,7 @@ public final class ObjectiveBattlePolicy {
             operations.add(PolicyOperation.add(
                     facts.actionId(),
                     TraceRuleId.of(REQUIRED_LOCATION_CONTEST_RULE_ID),
-                    TraceDomainId.BATTLE_INITIATION,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
                     REQUIRED_LOCATION_CONTEST_BONUS,
                     "Contest the exact unmet pre-flip objective control location"));
@@ -227,7 +228,7 @@ public final class ObjectiveBattlePolicy {
                     facts.actionId(),
                     TraceRuleId.of(
                             REQUIRED_CARD_CONTROL_ENABLER_RULE_ID),
-                    TraceDomainId.BATTLE_INITIATION,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
                     REQUIRED_CARD_CONTROL_ENABLER_BONUS,
                     "Contest the exact location that enables deployment of a missing required objective card"));
@@ -238,7 +239,7 @@ public final class ObjectiveBattlePolicy {
                     facts.actionId(),
                     TraceRuleId.of(
                             REQUIRED_CARD_RETENTION_RULE_ID),
-                    TraceDomainId.BATTLE_INITIATION,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
                     REQUIRED_CARD_RETENTION_BONUS,
                     "Contest the exact location that keeps an active required objective card on table"));
@@ -248,7 +249,7 @@ public final class ObjectiveBattlePolicy {
             operations.add(PolicyOperation.add(
                     facts.actionId(),
                     TraceRuleId.of(HARD_LOSS_LOCATION_RULE_ID),
-                    TraceDomainId.BATTLE_INITIATION,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
                     HARD_LOSS_LOCATION_BONUS,
                     "Contest an objective location whose destruction would place the objective out of play"));
@@ -257,7 +258,7 @@ public final class ObjectiveBattlePolicy {
             operations.add(PolicyOperation.add(
                     facts.actionId(),
                     TraceRuleId.of(GLOBAL_BLOCKER_REMOVAL_RULE_ID),
-                    TraceDomainId.BATTLE_INITIATION,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
                     GLOBAL_BLOCKER_REMOVAL_BONUS,
                     "Remove an opponent actor blocking the objective at this battleground"));

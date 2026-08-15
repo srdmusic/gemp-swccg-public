@@ -43,6 +43,17 @@ public class MoveObjectiveGateHoldSourceParityTest {
                 "isSolePresenceSourceAtRequiredLocation("));
         assertTrue(rando.contains("wouldDepartureTriggerFlipBack("));
         assertTrue(chosen.contains("wouldDepartureTriggerFlipBack("));
+        for (String rule : new String[] {
+                "MOVE.OBJECTIVE.FLIP_GATE_HOLD",
+                "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD",
+                "MOVE.OBJECTIVE.RUNTIME_ACTOR_HOLD",
+                "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_HOLD",
+                "MOVE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD",
+                "MOVE.OBJECTIVE.HOTH.SPARE_MARKER_WALKER_HOLD",
+                "MOVE.OBJECTIVE.CAPTURE_STABLE_BACK_HOLD"}) {
+            assertBoundedObjectiveRule(rando, rule);
+            assertBoundedObjectiveRule(chosen, rule);
+        }
         assertTrue(rando.contains("ladderVetoHard = true;"));
         assertTrue(chosen.contains("ladderVetoHard = true;"));
         assertTrue(rando.contains("+ oppWeaponBonusAt("));
@@ -98,5 +109,17 @@ public class MoveObjectiveGateHoldSourceParityTest {
             from += needle.length();
         }
         return count;
+    }
+
+    private static void assertBoundedObjectiveRule(
+            String source, String rule) {
+        int ruleIndex = source.indexOf('"' + rule + '"');
+        assertTrue(rule, ruleIndex >= 0);
+        int from = Math.max(0, ruleIndex - 500);
+        String window = source.substring(from,
+                Math.min(source.length(), ruleIndex + 100));
+        assertTrue(rule, window.contains("addObjectiveContribution("));
+        assertTrue(rule, window.contains("-300.0f"));
+        assertTrue(rule, !window.contains("ladderVetoHard = true;"));
     }
 }

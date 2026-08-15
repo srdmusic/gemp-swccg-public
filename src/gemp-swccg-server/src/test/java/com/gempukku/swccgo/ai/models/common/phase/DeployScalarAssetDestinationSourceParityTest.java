@@ -105,7 +105,7 @@ public class DeployScalarAssetDestinationSourceParityTest {
 
     private static String executorSlice(String source) {
         return slice(source,
-                "// === V24.10: EXECUTOR MUST DEPLOY TO BESPIN ===",
+                "// === V24.10: PREFER EXECUTOR DEPLOY TO BESPIN ===",
                 "// === V22.7: OBJECTIVE-CRITICAL LOCATION CONTESTATION ===");
     }
 

@@ -45,7 +45,7 @@ public class MoveTransitPolicyTest {
     }
 
     @Test
-    public void positiveHiddenPathTransitPreservesR4AndFallbackScores() {
+    public void positiveHiddenPathTransitUsesBoundedObjectivePreference() {
         MoveTransitPolicy.Contribution hiddenPath =
                 MoveTransitPolicy.positiveHiddenPathTransit(true);
         MoveTransitPolicy.Contribution fallback =
@@ -53,14 +53,14 @@ public class MoveTransitPolicyTest {
 
         assertTrue(hiddenPath.applies());
         assertEquals(
-                "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)",
+                "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor to advance the objective",
                 hiddenPath.reason());
-        assertRawFloat(20000.0f, hiddenPath.delta());
+        assertRawFloat(300.0f, hiddenPath.delta());
         assertTrue(fallback.applies());
         assertEquals("Move Jedi transit action — tactical mobility",
                 fallback.reason());
         assertRawFloat(200.0f, fallback.delta());
-        assertTrue(hiddenPath.delta() > 12000.0f + 2800.0f + 550.0f);
+        assertTrue(hiddenPath.delta() > fallback.delta());
     }
 
     @Test
@@ -452,7 +452,7 @@ public class MoveTransitPolicyTest {
     }
 
     @Test
-    public void hiddenPathSafehousePreservesMandatoryTransit() {
+    public void hiddenPathSafehousePreservesBoundedTransitPreference() {
         PhysicalCard card = mover("Cal Kestis", "Mapuzo: Safehouse");
 
         MoveTransitPolicy.HiddenPathTransit result =
@@ -463,18 +463,18 @@ public class MoveTransitPolicyTest {
         assertEquals(MoveTransitPolicy.HiddenPathBranch.SAFEHOUSE_TO_CORRIDOR,
                 result.branch());
         assertTrue(result.contribution().applies());
-        assertRawFloat(800.0f, result.contribution().delta());
+        assertRawFloat(300.0f, result.contribution().delta());
         assertEquals(
-                "V53b HIDDEN PATH MANDATORY: Landspeed Safehouse → Corridor — FREE move, MUST flip objective!",
+                "V53b HIDDEN PATH: prefer the free Safehouse to Corridor objective-progress move (+300)",
                 result.contribution().reason());
-        assertTrue(result.claimMandatoryTransit());
+        assertFalse(result.claimMandatoryTransit());
         assertEquals("V53b SAFEHOUSE→CORRIDOR", result.claimIdentity());
         assertFalse(result.hardVeto());
         assertEquals("Cal Kestis", result.characterName());
     }
 
     @Test
-    public void hiddenPathCorridorPreservesHardVeto() {
+    public void hiddenPathCorridorUsesBoundedObjectivePreference() {
         PhysicalCard card = mover(
                 "Kanan Jarrus", "Mapuzo: Underground Corridor");
 
@@ -485,17 +485,19 @@ public class MoveTransitPolicyTest {
         assertEquals(
                 MoveTransitPolicy.HiddenPathBranch.CORRIDOR_LANDSPEED_BLOCK,
                 result.branch());
-        assertFalse(result.contribution().applies());
-        assertFalse(result.claimMandatoryTransit());
-        assertTrue(result.hardVeto());
+        assertTrue(result.contribution().applies());
+        assertRawFloat(-300.0f, result.contribution().delta());
         assertEquals(
-                "V60 HIDDEN PATH LANDSPEED BLOCK: Landspeed from Corridor only goes back to Mapuzo — use the transit game text instead!",
-                result.hardVetoReason());
+                "V60 HIDDEN PATH LANDSPEED PREFERENCE: prefer the Corridor transit text instead of moving back to Mapuzo",
+                result.contribution().reason());
+        assertFalse(result.claimMandatoryTransit());
+        assertFalse(result.hardVeto());
+        assertNull(result.hardVetoReason());
         assertEquals("Kanan Jarrus", result.characterName());
     }
 
     @Test
-    public void hiddenPathBroadUndergroundNameStillBlocks() {
+    public void hiddenPathBroadUndergroundNameStillUsesBoundedPreference() {
         PhysicalCard card = mover("Jedi Survivor", "Underground Hideout");
 
         MoveTransitPolicy.HiddenPathTransit result =
@@ -506,7 +508,9 @@ public class MoveTransitPolicyTest {
         assertEquals(
                 MoveTransitPolicy.HiddenPathBranch.CORRIDOR_LANDSPEED_BLOCK,
                 result.branch());
-        assertTrue(result.hardVeto());
+        assertTrue(result.contribution().applies());
+        assertRawFloat(-300.0f, result.contribution().delta());
+        assertFalse(result.hardVeto());
     }
 
     @Test
@@ -521,11 +525,11 @@ public class MoveTransitPolicyTest {
         assertEquals(MoveTransitPolicy.HiddenPathBranch.MAPUZO_EXIT,
                 result.branch());
         assertTrue(result.contribution().applies());
-        assertRawFloat(800.0f, result.contribution().delta());
+        assertRawFloat(300.0f, result.contribution().delta());
         assertEquals(
                 "V53b HIDDEN PATH: Leaving Mapuzo via landspeed — objective progress!",
                 result.contribution().reason());
-        assertTrue(result.claimMandatoryTransit());
+        assertFalse(result.claimMandatoryTransit());
         assertEquals("V53b MAPUZO EXIT", result.claimIdentity());
         assertFalse(result.hardVeto());
     }

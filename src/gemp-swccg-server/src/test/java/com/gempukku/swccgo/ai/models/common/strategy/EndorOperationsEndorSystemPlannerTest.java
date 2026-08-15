@@ -84,12 +84,8 @@ public class EndorOperationsEndorSystemPlannerTest {
             assertEquals(bot.name(), 2,
                     invokeInt(instructions.get(0), "getDeployCost"));
 
-            Object noSpacePackage = invokeEopPlan(
-                    harness, Collections.emptyList(),
-                    Collections.emptyList(), 2);
             List<?> groundPlans = invokeGroundPlans(
-                    harness, List.of(ozzelInfo), noSpacePackage,
-                    harness.platform, 2);
+                    harness, List.of(ozzelInfo), harness.platform, 2);
             Object scored = groundPlans.stream()
                     .filter(candidate -> {
                         try {
@@ -233,15 +229,9 @@ public class EndorOperationsEndorSystemPlannerTest {
             assertEquals(bot.name(), 2.0f,
                     shipAbility + pilotAbility, 0.0f);
 
-            Object noPackage = invokeEopPlan(
-                    harness,
-                    Collections.emptyList(),
-                    List.of(ozzelInfo, alternateInfo),
-                    5);
             List<?> groundPlans = invokeGroundPlans(
                     harness,
                     List.of(ozzelInfo, alternateInfo),
-                    noPackage,
                     harness.platform,
                     5);
             assertTrue(bot.name(), hasGroundEstablishPlan(groundPlans));
@@ -285,32 +275,16 @@ public class EndorOperationsEndorSystemPlannerTest {
     }
 
     @Test
-    public void viableEndorPackageSuppressesOnlyOptionalEndorSpread()
+    public void groundEstablishRemainsAvailableWithoutStructuralEndorSuppression()
             throws Exception {
         for (Bot bot : Bot.values()) {
             Harness harness = harness(bot);
-            Object shipInfo = harness.cardInfo(
-                    SELF_PILOTED_SHIP_BP, SELF_PILOTED_SHIP_ID);
             Object ozzelInfo = harness.cardInfo(
                     ADMIRAL_OZZEL_BP, ADMIRAL_OZZEL_ID);
             Object alternateInfo = harness.cardInfo(
                     ALTERNATE_PILOT_BP, ALTERNATE_PILOT_ID);
-            PhysicalCard ship = physicalCard(shipInfo);
-            harness.setAbility(ship, true, 1.0f);
-            harness.setDeployCost(ship, harness.endor.location, 3.0f);
-            Object funded = invokeEopPlan(
-                    harness, List.of(shipInfo), Collections.emptyList(), 3);
-
-            List<?> suppressed = invokeGroundPlans(
-                    harness, List.of(ozzelInfo, alternateInfo), funded,
-                    harness.platform, 5);
-            assertFalse(bot.name(), hasGroundEstablishPlan(suppressed));
-
-            Object noPackage = invokeEopPlan(
-                    harness, Collections.emptyList(),
-                    Collections.emptyList(), 3);
             List<?> available = invokeGroundPlans(
-                    harness, List.of(ozzelInfo, alternateInfo), noPackage,
+                    harness, List.of(ozzelInfo, alternateInfo),
                     harness.platform, 5);
             assertTrue(bot.name(), hasGroundEstablishPlan(available));
         }
@@ -413,7 +387,6 @@ public class EndorOperationsEndorSystemPlannerTest {
     private static List<?> invokeGroundPlans(
             Harness harness,
             List<?> characters,
-            Object fundedEndorPackage,
             AiBoardAnalyzer.LocationAnalysis target,
             int forceAvailable) throws Exception {
         Class<?> categoriesClass = Class.forName(
@@ -433,13 +406,10 @@ public class EndorOperationsEndorSystemPlannerTest {
         Object drainGap = drainGapClass
                 .getConstructor(int.class, int.class, int.class, List.class)
                 .newInstance(0, 0, 0, Collections.emptyList());
-        Class<?> planClass = Class.forName(
-                harness.bot.strategyPackage + ".DeploymentPlan");
         Method method = harness.planner.getClass().getDeclaredMethod(
                 "generateGroundPlans",
                 List.class,
                 List.class,
-                planClass,
                 categoriesClass,
                 int.class,
                 int.class,
@@ -452,7 +422,6 @@ public class EndorOperationsEndorSystemPlannerTest {
                 harness.planner,
                 characters,
                 Collections.emptyList(),
-                fundedEndorPackage,
                 categories,
                 forceAvailable,
                 forceAvailable,

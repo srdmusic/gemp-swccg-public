@@ -98,14 +98,14 @@ public class ForceLossPolicyTest {
 
         assertOperations(score(ForceLossPolicy.Route.STANDALONE,
                         decision(5, 20, 8, 0, 3, false), senatorInterrupt, myLord),
-                op("V109", -300.0f,
-                        "V109 MY LORD: PROTECT senator 'Senator's Battle Trick' — never discard/lose senators in this deck -300"),
+                objectiveOp("V109", -300.0f,
+                        "V109 MY LORD: PROTECT senator 'Senator's Battle Trick': prefer retaining this senator (-300 objective preference)"),
                 op("V153-zone", 600.0f,
                         "V153 ZONE (HAND, lifeForce=8, protectChars=true)"));
         assertOperations(score(ForceLossPolicy.Route.STANDALONE,
                         decision(5, 20, 8, 0, 4, false), senatorInterrupt, myLord),
-                op("V109", -300.0f,
-                        "V109 MY LORD: PROTECT senator 'Senator's Battle Trick' — never discard/lose senators in this deck -300"),
+                objectiveOp("V109", -300.0f,
+                        "V109 MY LORD: PROTECT senator 'Senator's Battle Trick': prefer retaining this senator (-300 objective preference)"),
                 op("V153-zone", 600.0f,
                         "V153 ZONE (HAND, lifeForce=8, protectChars=true)"),
                 op("V175", -450.0f,
@@ -176,10 +176,11 @@ public class ForceLossPolicyTest {
         assertOperations(duplicateResult,
                 op("V153-zone", 1000.0f,
                         "V153 ZONE (HAND, lifeForce=8, protectChars=true)"),
-                op("V21-objective", -9999.0f,
-                        "OBJECTIVE CRITICAL IN HAND - NEVER LOSE!", TraceOutputKind.VETO),
-                op("V25", -500.0f,
-                        "V25 HUNT DOWN: PROTECT LIGHTSABER IN HAND!"));
+                objectiveOp("V21-objective", -300.0f,
+                        "OBJECTIVE CRITICAL IN HAND: prefer to retain",
+                        TraceOutputKind.BANDED),
+                objectiveOp("V25", 0.0f,
+                        "V25 HUNT DOWN: prefer to retain lightsaber in hand"));
         assertFalse(duplicateResult.operations().stream()
                 .anyMatch(operation -> operation.ruleArmId().id().equals("V153-priority")));
     }
@@ -198,17 +199,19 @@ public class ForceLossPolicyTest {
                         "V153 ZONE (USED_PILE, lifeForce=8, protectChars=true)"),
                 op("V153-priority", -100.0f,
                         "V153 PRIORITY CARD: protect 'Vader's Lightsaber' (hand/used) -100"),
-                op("V21-objective", -9999.0f,
-                        "OBJECTIVE CRITICAL - NEVER LOSE!", TraceOutputKind.VETO));
+                objectiveOp("V21-objective", -300.0f,
+                        "OBJECTIVE CRITICAL: prefer to retain",
+                        TraceOutputKind.BANDED));
 
         assertOperations(score(ForceLossPolicy.Route.COMBINED_BATTLE,
                         decision(5, 20, 8, 0, 2, false), usedLightsaber, huntRequired),
-                op("V25", -400.0f,
-                        "V25 HUNT DOWN: PROTECT LIGHTSABER from loss!"),
+                objectiveOp("V25", -300.0f,
+                        "V25 HUNT DOWN: prefer to retain lightsaber"),
                 op("V153-zone", 800.0f,
                         "V153 ZONE (USED_PILE, lifeForce=8, protectChars=true)"),
-                op("V21-objective", -9999.0f,
-                        "OBJECTIVE CRITICAL - NEVER LOSE!", TraceOutputKind.VETO),
+                objectiveOp("V21-objective", 0.0f,
+                        "OBJECTIVE CRITICAL: prefer to retain",
+                        TraceOutputKind.BANDED),
                 op("V153-priority", -100.0f,
                         "V153 PRIORITY CARD: protect 'Vader's Lightsaber' -100"));
 
@@ -225,8 +228,9 @@ public class ForceLossPolicyTest {
                         decision(5, 20, 8, 0, 2, false), reserve, pullable),
                 op("V153-zone", 400.0f,
                         "V153 ZONE (RESERVE_DECK, lifeForce=8, protectChars=true)"),
-                op("V21-objective", -9999.0f,
-                        "OBJECTIVE PULLABLE - NEVER LOSE!", TraceOutputKind.VETO));
+                objectiveOp("V21-objective", -300.0f,
+                        "OBJECTIVE PULLABLE: prefer to retain",
+                        TraceOutputKind.BANDED));
     }
 
     @Test
@@ -409,7 +413,7 @@ public class ForceLossPolicyTest {
 
         assertOperations(ForceLossPolicy.scoreUnknownLoss(
                         ACTION_ID, CardCategory.WEAPON, true),
-                op("V25-unknown-loss", -300.0f,
+                objectiveOp("V25-unknown-loss", -300.0f,
                         "V25 HUNT DOWN: PROTECT LIGHTSABER from loss!"));
     }
 
@@ -418,9 +422,9 @@ public class ForceLossPolicyTest {
         assertOperations(
                 ForceLossPolicy.scoreUnknownObjectiveRetention(
                     ACTION_ID, true),
-                op("HOTH.SHIELD.PACKAGE_RETAIN", -9999.0f,
+                objectiveOp("HOTH.SHIELD.PACKAGE_RETAIN", -300.0f,
                     "HOTH SHIELD PACKAGE: retain the selected host, pilot, and Cannon",
-                    TraceOutputKind.VETO));
+                    TraceOutputKind.BANDED));
         assertTrue(ForceLossPolicy
                 .scoreUnknownObjectiveRetention(
                     ACTION_ID, false)
@@ -497,7 +501,21 @@ public class ForceLossPolicyTest {
 
     private static Expected op(String ruleId, float delta, String reason,
                                TraceOutputKind outputKind) {
-        return new Expected(ruleId, delta, reason, outputKind);
+        return new Expected(ruleId, delta, reason, outputKind,
+                TraceDomainId.FORCE_LOSS_PAYMENT);
+    }
+
+    private static Expected objectiveOp(
+            String ruleId, float delta, String reason) {
+        return objectiveOp(ruleId, delta, reason,
+                TraceOutputKind.ORDERING);
+    }
+
+    private static Expected objectiveOp(
+            String ruleId, float delta, String reason,
+            TraceOutputKind outputKind) {
+        return new Expected(ruleId, delta, reason, outputKind,
+                TraceDomainId.OBJECTIVE_INTENT);
     }
 
     private static void assertOperations(PolicyResult result, Expected... expected) {
@@ -510,7 +528,7 @@ public class ForceLossPolicyTest {
             assertBits(expectedOperation.delta(), operation.delta());
             assertEquals(expectedOperation.reason(), operation.reason());
             assertEquals(expectedOperation.outputKind(), operation.outputKind());
-            assertEquals(TraceDomainId.FORCE_LOSS_PAYMENT, operation.domainId());
+            assertEquals(expectedOperation.domainId(), operation.domainId());
             assertEquals(PolicyOperationKind.ADD, operation.kind());
             assertEquals(ACTION_ID, operation.actionId());
         }
@@ -526,6 +544,7 @@ public class ForceLossPolicyTest {
     }
 
     private record Expected(String ruleId, float delta, String reason,
-                            TraceOutputKind outputKind) {
+                            TraceOutputKind outputKind,
+                            TraceDomainId domainId) {
     }
 }

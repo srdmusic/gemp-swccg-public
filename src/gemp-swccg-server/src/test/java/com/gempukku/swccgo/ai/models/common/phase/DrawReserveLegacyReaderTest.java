@@ -36,9 +36,13 @@ public class DrawReserveLegacyReaderTest {
         RecordingGameState state = state(List.of(contested))
                 .cardsAt(contested, card(PLAYER, null), card(OPPONENT, null));
 
-        int reserve = calculate(state, 4, facts(true, true, true, 2, true), 0);
+        DrawReserveAssessment assessment = assess(
+                state, 4, facts(true, true, true, 2, true), 0);
 
-        assertEquals(9, reserve);
+        assertEquals(8, assessment.generalForceToReserve());
+        assertEquals(1, assessment.vergeForceToReserve());
+        assertEquals(0, assessment.hiddenPathForceToReserve());
+        assertEquals(9, assessment.forceToReserve());
     }
 
     @Test
@@ -59,11 +63,14 @@ public class DrawReserveLegacyReaderTest {
         PhysicalCard site = location("Ordinary Site");
         RecordingGameState state = state(List.of(site));
 
-        int reserve = calculate(
+        DrawReserveAssessment assessment = assess(
                 state, 1,
                 facts(false, false, false, 20, false), 4);
 
-        assertEquals(14, reserve);
+        assertEquals(10, assessment.generalForceToReserve());
+        assertEquals(0, assessment.vergeForceToReserve());
+        assertEquals(4, assessment.hiddenPathForceToReserve());
+        assertEquals(14, assessment.forceToReserve());
         assertEquals(1, state.locationReadCount);
     }
 
@@ -89,13 +96,16 @@ public class DrawReserveLegacyReaderTest {
         PhysicalCard site = location("Ordinary Site");
         RecordingGameState state = state(List.of(site));
 
-        int reserve = DrawReserveLegacyReader.calculate(
+        DrawReserveAssessment assessment = DrawReserveLegacyReader.assess(
                 state, PLAYER, 1,
                 () -> facts(false, false, false, 20, false),
                 () -> { throw new IllegalStateException("transit read failed"); },
                 LOGGER);
 
-        assertEquals(10, reserve);
+        assertEquals(10, assessment.generalForceToReserve());
+        assertEquals(0, assessment.vergeForceToReserve());
+        assertEquals(0, assessment.hiddenPathForceToReserve());
+        assertEquals(10, assessment.forceToReserve());
         assertEquals(1, state.locationReadCount);
     }
 
@@ -113,10 +123,13 @@ public class DrawReserveLegacyReaderTest {
             return 2;
         };
 
-        int reserve = DrawReserveLegacyReader.calculate(
+        DrawReserveAssessment assessment = DrawReserveLegacyReader.assess(
                 state, PLAYER, 1, reserveFacts, transit, LOGGER);
 
-        assertEquals(1, reserve);
+        assertEquals(1, assessment.generalForceToReserve());
+        assertEquals(0, assessment.vergeForceToReserve());
+        assertEquals(0, assessment.hiddenPathForceToReserve());
+        assertEquals(1, assessment.forceToReserve());
         assertFalse(factsRead.get());
         assertFalse(transitRead.get());
     }
@@ -126,6 +139,20 @@ public class DrawReserveLegacyReaderTest {
                                  ForceReserveService.Facts reserveFacts,
                                  int hiddenPathTransitReserve) {
         return DrawReserveLegacyReader.calculate(
+                state,
+                PLAYER,
+                turnNumber,
+                () -> reserveFacts,
+                () -> hiddenPathTransitReserve,
+                LOGGER);
+    }
+
+    private static DrawReserveAssessment assess(
+            RecordingGameState state,
+            int turnNumber,
+            ForceReserveService.Facts reserveFacts,
+            int hiddenPathTransitReserve) {
+        return DrawReserveLegacyReader.assess(
                 state,
                 PLAYER,
                 turnNumber,

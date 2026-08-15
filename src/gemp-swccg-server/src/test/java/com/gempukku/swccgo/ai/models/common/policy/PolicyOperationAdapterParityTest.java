@@ -63,4 +63,64 @@ public class PolicyOperationAdapterParityTest {
         assertTrue(rando.isDeferred());
         assertTrue(chosenOne.isDeferred());
     }
+
+    @Test
+    public void objectivePreferenceNormalizesAndSaturatesAcrossMerges() {
+        TraceRuleId objectiveOne = TraceRuleId.of("OBJECTIVE.TEST.ONE");
+        TraceRuleId objectiveTwo = TraceRuleId.of("OBJECTIVE.TEST.TWO");
+        TraceRuleId tactical = TraceRuleId.of("TACTICAL.TEST.NEGATIVE");
+
+        PolicyOperation normalized = PolicyOperation.add(
+                "A", objectiveOne, TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, 20000.0f, "first objective match");
+        assertEquals(300.0f, normalized.delta(), 0.0f);
+
+        PolicyContributionLedger firstLedger = new PolicyContributionLedger("objective-first");
+        firstLedger.register(new PolicyResult("objective-first", List.of(
+                normalized,
+                PolicyOperation.add(
+                        "A", objectiveTwo, TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.BANDED, 800.0f, "second objective match"),
+                PolicyOperation.add(
+                        "A", tactical, TraceDomainId.DEPLOY_SITING,
+                        TraceOutputKind.BANDED, -350.0f, "unsafe tactical state"))));
+
+        PolicyContributionLedger secondLedger = new PolicyContributionLedger("objective-merge");
+        secondLedger.register(new PolicyResult(
+                "objective-merge", List.of(PolicyOperation.add(
+                        "A", objectiveTwo, TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.BANDED, 1200.0f, "third objective match"))));
+
+        com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction rando =
+                new com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction(
+                        "A", com.gempukku.swccgo.ai.models.rando.evaluators.ActionType.UNKNOWN,
+                        0.0f, "A");
+        com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction randoMerge =
+                new com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction(
+                        "A", com.gempukku.swccgo.ai.models.rando.evaluators.ActionType.UNKNOWN,
+                        0.0f, "A");
+        com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction chosen =
+                new com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction(
+                        "A", com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionType.UNKNOWN,
+                        0.0f, "A");
+        com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction chosenMerge =
+                new com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction(
+                        "A", com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionType.UNKNOWN,
+                        0.0f, "A");
+
+        com.gempukku.swccgo.ai.models.rando.evaluators.PolicyOperationAdapter.apply(rando, firstLedger);
+        com.gempukku.swccgo.ai.models.rando.evaluators.PolicyOperationAdapter.apply(randoMerge, secondLedger);
+        rando.mergeFrom(randoMerge);
+        com.gempukku.swccgo.ai.models.chosenone.evaluators.PolicyOperationAdapter.apply(chosen, firstLedger);
+        com.gempukku.swccgo.ai.models.chosenone.evaluators.PolicyOperationAdapter.apply(chosenMerge, secondLedger);
+        chosen.mergeFrom(chosenMerge);
+
+        assertEquals(-50.0f, rando.getScore(), 0.0f);
+        assertEquals(rando.getScore(), chosen.getScore(), 0.0f);
+        assertEquals(5, rando.getReasoning().size());
+        assertEquals(
+                "OBJECTIVE MERGE CAP: requested +300.0, applied +0.0, suppressed +300.0",
+                rando.getReasoning().get(3));
+        assertEquals(rando.getReasoning(), chosen.getReasoning());
+    }
 }

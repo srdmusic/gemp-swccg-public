@@ -36,11 +36,11 @@ public final class DeployObjectiveSitingPolicy {
         if (facts.objectiveAnalyzed() && facts.myLord() && facts.senator()) {
             if (facts.galacticSenateDestination()) {
                 operations.add(add(facts.actionId(), "V88-CS",
-                        TraceOutputKind.BANDED, 1500.0f,
+                        TraceOutputKind.BANDED, 300.0f,
                         "V88 MY LORD: senator → Galactic Senate (flip target + weapon destiny -6 protection)"));
             } else {
                 operations.add(add(facts.actionId(), "V88-CS",
-                        TraceOutputKind.VETO, -2000.0f,
+                        TraceOutputKind.BANDED, -300.0f,
                         "V88 MY LORD: senator not at Galactic Senate — wrong site!"));
             }
         }
@@ -53,7 +53,7 @@ public final class DeployObjectiveSitingPolicy {
                                 + facts.bareSiteTitle() + "' — wrong site"));
             } else if (!facts.textNamedDestinationDoomed()) {
                 operations.add(add(facts.actionId(), "V88-text-named",
-                        TraceOutputKind.BANDED, 500.0f,
+                        TraceOutputKind.BANDED, 300.0f,
                         "V88 TEXT-NAMED SITE: character text mentions '"
                                 + facts.bareSiteTitle() + "' — home-site bonus"));
             }
@@ -63,7 +63,7 @@ public final class DeployObjectiveSitingPolicy {
                 && !facts.senator()
                 && facts.opponentPower() <= facts.friendlySenatorPower()) {
             operations.add(add(facts.actionId(), "V99-CS",
-                    TraceOutputKind.VETO, -1500.0f,
+                    TraceOutputKind.BANDED, -300.0f,
                     String.format("V99 SENATE GUARD: non-senator → Galactic Senate (opp %.0f <= my senator %.0f) — wasted, deploy elsewhere",
                             facts.opponentPower(), facts.friendlySenatorPower())));
         }
@@ -75,7 +75,7 @@ public final class DeployObjectiveSitingPolicy {
         Objects.requireNonNull(facts, "facts");
         return single("DEPLOY_CLOUD_CITY_ARMY_POLICY",
                 add(facts.actionId(), "V51-CC-ARMY", TraceOutputKind.BANDED,
-                        500.0f, String.format(
+                        300.0f, String.format(
                                 "V51 CC ARMY: Deploy to %s pre-flip — build Cloud City army!",
                                 facts.locationTitle())));
     }
@@ -98,7 +98,7 @@ public final class DeployObjectiveSitingPolicy {
         }
         return single("DEPLOY_COUNTED_OBJECTIVE_PROGRESS_POLICY",
                 add(actionId, "DEPLOY.OBJECTIVE.COUNTED_REQUIRED_LOCATION",
-                        TraceOutputKind.BANDED, 600.0f,
+                        TraceOutputKind.BANDED, 300.0f,
                         "Deploy here to advance a missing counted-objective location"));
     }
 
@@ -111,7 +111,7 @@ public final class DeployObjectiveSitingPolicy {
         }
         return single("DEPLOY_THNI_DATA_VAULT_ROUTE_POLICY",
                 add(actionId, "OBJECTIVE.THNI.DATA_VAULT_CONTROLLER",
-                        TraceOutputKind.BANDED, 1600.0f,
+                        TraceOutputKind.BANDED, 300.0f,
                         "Keep the Rebel trooper at Data Vault to complete the two-location flip route"));
     }
 
@@ -124,7 +124,7 @@ public final class DeployObjectiveSitingPolicy {
         }
         return single("DEPLOY_THNI_ROGUE_ONE_SCARIF_ROUTE_POLICY",
                 add(actionId, "OBJECTIVE.THNI.ROGUE_ONE_SCARIF",
-                        TraceOutputKind.BANDED, 1600.0f,
+                        TraceOutputKind.BANDED, 300.0f,
                         "Deploy Rogue One to Scarif so it supplies the system-control leg of the flip route"));
     }
 
@@ -140,7 +140,7 @@ public final class DeployObjectiveSitingPolicy {
                 "DEPLOY_THREE_SITE_OBJECTIVE_COMPLETION_POLICY",
                 add(actionId,
                         "DEPLOY.OBJECTIVE.THREE_SITE_COMPLETION",
-                        TraceOutputKind.BANDED, 8000.0f,
+                        TraceOutputKind.BANDED, 300.0f,
                         "Complete the final controlled site for the three-site objective before reinforcing elsewhere"));
     }
 
@@ -156,7 +156,7 @@ public final class DeployObjectiveSitingPolicy {
                 "DEPLOY_SHADOW_COLLECTIVE_ROUTE_COMPLETION_POLICY",
                 add(actionId,
                         "DEPLOY.OBJECTIVE.SHADOW_COLLECTIVE.ROUTE_COMPLETION",
-                        TraceOutputKind.BANDED, 8000.0f,
+                        TraceOutputKind.BANDED, 300.0f,
                         "Deploy the final gangster to complete Shadow Collective's two-battleground route"));
     }
 
@@ -169,7 +169,7 @@ public final class DeployObjectiveSitingPolicy {
         }
         return single("DEPLOY_ACTOR_RUNTIME_LOCATION_POLICY",
                 add(actionId, "DEPLOY.OBJECTIVE.ACTOR_RUNTIME_LOCATION",
-                        TraceOutputKind.BANDED, 1000.0f,
+                        TraceOutputKind.BANDED, 300.0f,
                         "Deploy the required actor to a live qualifying objective location"));
     }
 
@@ -182,7 +182,7 @@ public final class DeployObjectiveSitingPolicy {
         }
         return single("DEPLOY_ISB_ROUTE_COMPLETION_POLICY",
                 add(actionId, "OBJECTIVE.ISB.ROUTE_COMPLETION",
-                        TraceOutputKind.BANDED, 8000.0f,
+                        TraceOutputKind.BANDED, 300.0f,
                         "Deploy the ISB agent here to complete the current flip route now"));
     }
 
@@ -207,7 +207,7 @@ public final class DeployObjectiveSitingPolicy {
                 add(actionId,
                         "DEPLOY.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
                         TraceOutputKind.BANDED,
-                        completes ? 1200.0f : 800.0f,
+                        300.0f,
                         completes
                             ? "Deploy the final active-table card and complete the modeled flip condition"
                             : "Deploy a missing active-table card required by the objective"));
@@ -225,7 +225,7 @@ public final class DeployObjectiveSitingPolicy {
                 add(actionId,
                         "DEPLOY.OBJECTIVE.REQUIRED_CARD_ENABLER",
                         TraceOutputKind.BANDED,
-                        900.0f,
+                        300.0f,
                         "Deploy here to satisfy a source-verified prerequisite for a missing objective card"));
     }
 
@@ -241,7 +241,7 @@ public final class DeployObjectiveSitingPolicy {
                 add(actionId,
                         "DEPLOY.OBJECTIVE.REQUIRED_CARD_RETENTION",
                         TraceOutputKind.BANDED,
-                        900.0f,
+                        300.0f,
                             "Deploy here to keep an active required objective card from removing itself"));
     }
 
@@ -257,7 +257,7 @@ public final class DeployObjectiveSitingPolicy {
                 add(actionId,
                         "DEPLOY.OBJECTIVE.HARD_LOSS_DEFENSE",
                         TraceOutputKind.BANDED,
-                        1200.0f,
+                        300.0f,
                         "Deploy here to defend a live threat to the objective's terminal-loss location"));
     }
 
@@ -310,7 +310,7 @@ public final class DeployObjectiveSitingPolicy {
                             ? "DEPLOY.OBJECTIVE.POST_FLIP_PRIMARY_PAYOFF"
                             : "DEPLOY.OBJECTIVE.POST_FLIP_SECONDARY_PAYOFF",
                         TraceOutputKind.BANDED,
-                        primary ? 1200.0f : 700.0f,
+                        300.0f,
                         primary
                             ? "Deploy the named actor to activate the objective's primary back-side payoff"
                             : "Deploy the named actor to activate the objective's secondary back-side payoff"));
@@ -329,7 +329,7 @@ public final class DeployObjectiveSitingPolicy {
                 add(actionId,
                         "DEPLOY.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR",
                         TraceOutputKind.BANDED,
-                        800.0f,
+                        300.0f,
                         "Deploy the second First Order character to activate the objective's +1 battleground drain"));
     }
 
@@ -346,7 +346,7 @@ public final class DeployObjectiveSitingPolicy {
                 add(actionId,
                     "DEPLOY.OBJECTIVE.FIRST_ORDER_ROUTE_CREW",
                     TraceOutputKind.BANDED,
-                    1200.0f,
+                    300.0f,
                     "Board a cheap First Order character on the Tracked Fleet chase ship before committing ground forces"));
     }
 
@@ -362,7 +362,7 @@ public final class DeployObjectiveSitingPolicy {
                 "DEPLOY_MASSASSI_ATTACK_RUN_PACKAGE_POLICY",
                 add(actionId,
                     "DEPLOY.OBJECTIVE.MASSASSI_REBEL_TECH",
-                    TraceOutputKind.BANDED, 1200.0f,
+                    TraceOutputKind.BANDED, 300.0f,
                     "Deploy Rebel Tech where its Trench tutor is executable, preferring Massassi War Room for the Attack Run bonus"));
     }
 
@@ -378,7 +378,7 @@ public final class DeployObjectiveSitingPolicy {
                 "DEPLOY_MASSASSI_ATTACK_RUN_CARRIER_POLICY",
                 add(actionId,
                     "DEPLOY.OBJECTIVE.MASSASSI_ATTACK_RUN_CARRIER",
-                    TraceOutputKind.BANDED, 1200.0f,
+                    TraceOutputKind.BANDED, 300.0f,
                     "Deploy the compatible Attack Run starfighter within one move of Death Star"));
     }
 
@@ -394,7 +394,7 @@ public final class DeployObjectiveSitingPolicy {
                 "DEPLOY_MASSASSI_ATTACK_RUN_TORPEDOES_POLICY",
                 add(actionId,
                     "DEPLOY.OBJECTIVE.MASSASSI_ATTACK_RUN_TORPEDOES",
-                    TraceOutputKind.BANDED, 1200.0f,
+                    TraceOutputKind.BANDED, 300.0f,
                     "Attach Proton Torpedoes to the piloted Attack Run starfighter on the Death Star route"));
     }
 
@@ -411,7 +411,7 @@ public final class DeployObjectiveSitingPolicy {
                 add(actionId,
                         "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE",
                         TraceOutputKind.BANDED,
-                        1500.0f,
+                        300.0f,
                         "Use Navy Of The First Order to deploy the affordable ship-and-pilot chase package"));
     }
 
@@ -428,7 +428,7 @@ public final class DeployObjectiveSitingPolicy {
                 add(actionId,
                         "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_CANDIDATE",
                         TraceOutputKind.BANDED,
-                        1500.0f,
+                        300.0f,
                         "Choose the affordable Navy ship-and-pilot package that can reach Tracked Fleet"));
     }
 
@@ -445,7 +445,7 @@ public final class DeployObjectiveSitingPolicy {
                 add(actionId,
                         "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_DESTINATION",
                         TraceOutputKind.BANDED,
-                        1500.0f,
+                        300.0f,
                         "Deploy the Navy ship-and-pilot package to the system that reaches Tracked Fleet"));
     }
 
@@ -459,12 +459,13 @@ public final class DeployObjectiveSitingPolicy {
         }
         return single(
                 "DEPLOY_FIRST_ORDER_PRE_FLIP_GROUND_POLICY",
-                PolicyOperation.hardVeto(
+                PolicyOperation.add(
                         actionId,
                         TraceRuleId.of(
                                 "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_GROUND_HOLD"),
-                        TraceDomainId.DEPLOY_SITING,
-                        TraceOutputKind.VETO,
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.BANDED,
+                        -300.0f,
                         "Do not spend the Tracked Fleet chase budget on ground forces before the objective flips"));
     }
 
@@ -516,13 +517,14 @@ public final class DeployObjectiveSitingPolicy {
         }
         return single(
                 "DEPLOY_IWTM_SELF_BLOCKER_POLICY",
-                PolicyOperation.hardVeto(
+                PolicyOperation.add(
                         actionId,
                         TraceRuleId.of(
                                 "OBJECTIVE.I_WANT_THAT_MAP.SELF_BLOCKER"),
-                        TraceDomainId.DEPLOY_SITING,
-                        TraceOutputKind.VETO,
-                        "Do not deploy our declared Resistance Agent to a battleground site"));
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.BANDED,
+                        -300.0f,
+                        "Avoid deploying our declared Resistance Agent to a battleground site"));
     }
 
     public static PolicyResult blockRequiredCardInactivation(
@@ -535,13 +537,14 @@ public final class DeployObjectiveSitingPolicy {
         }
         return single(
                 "DEPLOY_REQUIRED_CARD_INACTIVATION_POLICY",
-                PolicyOperation.hardVeto(
+                PolicyOperation.add(
                         actionId,
                         TraceRuleId.of(
                                 "DEPLOY.OBJECTIVE.REQUIRED_CARD_INACTIVATION"),
-                        TraceDomainId.DEPLOY_SITING,
-                        TraceOutputKind.VETO,
-                        "Do not deploy a card that suspends an active card required by the objective"));
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.BANDED,
+                        -300.0f,
+                        "Prefer not to deploy a card that suspends an active card required by the objective"));
     }
 
     public static PolicyResult scoreActorRouteStaging(
@@ -557,7 +560,7 @@ public final class DeployObjectiveSitingPolicy {
         return single("DEPLOY_ACTOR_ROUTE_STAGING_POLICY",
                 add(actionId,
                         "DEPLOY.OBJECTIVE.ACTOR_ROUTE_STAGING",
-                        TraceOutputKind.BANDED, 1000.0f,
+                        TraceOutputKind.BANDED, 300.0f,
                         "Deploy "
                                 + (actorTitle != null
                                     ? actorTitle : "typed actor")
@@ -571,7 +574,7 @@ public final class DeployObjectiveSitingPolicy {
         Objects.requireNonNull(facts, "facts");
         return single("DEPLOY_KEY_CHARACTER_POLICY",
                 add(facts.actionId(), "V67ak", TraceOutputKind.BANDED,
-                        800.0f, String.format(
+                        300.0f, String.format(
                                 "V67ak KEY CHARACTER: %s is named in objective/epic-event text — deploy first to enable flip!",
                                 facts.cardTitle())));
     }
@@ -582,14 +585,14 @@ public final class DeployObjectiveSitingPolicy {
         PolicyOperation operation;
         CloudCityEngineOutcome outcome;
         if (!facts.occupyBespin()) {
-            operation = add(facts.actionId(), "V22.7", TraceOutputKind.VETO,
-                    -800.0f, "V22.7 BLOCKED: " + facts.cardTitle()
-                            + " will SELF-CANCEL — we don't occupy Bespin system!");
+            operation = hardVeto(facts.actionId(), "V22.7",
+                    "V22.7 BLOCKED: " + facts.cardTitle()
+                            + " will self-cancel because we do not occupy Bespin system");
             outcome = CloudCityEngineOutcome.BLOCKED;
         } else if (!facts.effectAlreadyOnTable()) {
             operation = add(facts.actionId(), "V24", TraceOutputKind.BANDED,
-                    300.0f, "V24 TDIGWATT ENGINE: Deploy " + facts.cardTitle()
-                            + " NOW — enables objective damage engine!");
+                    300.0f, "V24 TDIGWATT ENGINE: prefer deploying " + facts.cardTitle()
+                            + " for the objective damage engine (+300)");
             outcome = CloudCityEngineOutcome.ENGINE_PRIORITY;
         } else {
             operation = add(facts.actionId(), "V22.7", TraceOutputKind.BANDED,
@@ -616,9 +619,9 @@ public final class DeployObjectiveSitingPolicy {
                 && facts.ourPower() < facts.opponentPower()) {
             PolicyOperation operation = add(facts.actionId(),
                     "V22.7-MUST-CONTEST", TraceOutputKind.BANDED, 300.0f,
-                    "V22.7 MUST CONTEST: Opponent controls objective-critical "
+                    "V22.7 CONTEST PREFERENCE: Opponent controls objective-critical "
                             + facts.locationTitle()
-                            + "! Deploy ship to contest!");
+                            + "; prefer deploying a ship to contest (+300)");
             return new MustContestEvaluation(
                     single("DEPLOY_MUST_CONTEST_POLICY", operation),
                     MustContestOutcome.MUST_CONTEST);
@@ -678,7 +681,7 @@ public final class DeployObjectiveSitingPolicy {
         HuntDownOutcome outcome = HuntDownOutcome.NONE;
 
         if (facts.vader()) {
-            float score = facts.battleground() ? 400.0f : 300.0f;
+            float score = 300.0f;
             operation = add(facts.actionId(), "V25-HUNT-DOWN-VADER",
                     TraceOutputKind.BANDED, score,
                     "V25 HUNT DOWN: DEPLOY VADER! Critical for flip!"
@@ -695,7 +698,7 @@ public final class DeployObjectiveSitingPolicy {
             } else {
                 operation = add(facts.actionId(), "V25-HUNT-DOWN-SAVE",
                         TraceOutputKind.BANDED, -200.0f,
-                        "V25 HUNT DOWN: SAVE FORCE FOR VADER! He must be deployed first!");
+                        "V25 HUNT DOWN: prefer saving Force for Vader before unrelated characters (-200 objective preference)");
                 outcome = HuntDownOutcome.SAVE_FOR_VADER;
             }
         }
@@ -715,7 +718,7 @@ public final class DeployObjectiveSitingPolicy {
         if (facts.landoAlone()) {
             operation = add(facts.actionId(), "V24.13-LANDO-SUPPORT",
                     TraceOutputKind.BANDED, 250.0f,
-                    "V24.13 LANDO SUPPORT: Lando is ALONE here — MUST reinforce!");
+                    "V24.13 LANDO SUPPORT: prefer reinforcing Lando (+300 objective preference)");
             outcome = CloudCitySpreadOutcome.LANDO_SUPPORT;
         } else if (facts.abilityHere() > 0.0f
                 && facts.abilityHere() < 6.0f) {
@@ -767,20 +770,20 @@ public final class DeployObjectiveSitingPolicy {
         if (facts.lando()) {
             if (facts.opponentCharactersHere() > 0
                     && facts.friendlyCharactersHere() == 0) {
-                operation = add(facts.actionId(), "V41-LANDO-INTO-ENEMY",
-                        TraceOutputKind.VETO, -9999.0f,
+                operation = hardVeto(facts.actionId(),
+                        "V41-LANDO-INTO-ENEMY",
                         "V41 LANDO INTO ENEMY: " + facts.opponentCharactersHere()
                                 + " opponents at " + facts.locationTitle()
-                                + " — Lando dies instantly! BLOCKED!");
+                                + ", with no friendly support");
                 outcome = LandoSafetyOutcome.BLOCKED_ENEMY;
             } else if (facts.friendlyCharactersHere() > 0) {
                 outcome = LandoSafetyOutcome.SAFE_FRIENDLY;
             } else if (facts.charactersInHand() < 1) {
-                operation = add(facts.actionId(), "V47-LANDO-ALONE",
-                        TraceOutputKind.VETO, -9999.0f,
+                operation = hardVeto(facts.actionId(),
+                        "V47-LANDO-ALONE",
                         "V47 LANDO ALONE BLOCK: No protection at "
                                 + facts.locationTitle()
-                                + " and no characters in hand — Lando dies alone!");
+                                + " and no characters in hand");
                 outcome = LandoSafetyOutcome.BLOCKED_ALONE;
             } else if (facts.opponentThreatensCloudCity()) {
                 operation = add(facts.actionId(), "V41-LANDO-CAUTION",
@@ -809,7 +812,7 @@ public final class DeployObjectiveSitingPolicy {
         if (facts.character() && facts.needsBespinPresence()) {
             operations.add(add(facts.actionId(), "V29-TDIGWATT-OFF-OBJECTIVE",
                     TraceOutputKind.BANDED, -500.0f,
-                    "V29 TDIGWATT: Do NOT deploy characters to non-Cloud City locations!"));
+                    "V29 TDIGWATT: prefer Cloud City over non-objective locations (-300 objective preference)"));
             tdgwattBlocked = true;
             if (facts.opponentPlanet()) {
                 operations.add(add(facts.actionId(), "V29-OPPONENT-PLANET",
@@ -906,9 +909,8 @@ public final class DeployObjectiveSitingPolicy {
                         "V29.2 LANDO: Key piece + backup present — safe to deploy!");
                 outcome = LandoLobotOutcome.LANDO_SAFE;
             } else {
-                operation = add(facts.actionId(), "V47-LANDO",
-                        TraceOutputKind.VETO, -9999.0f,
-                        "V47 LANDO SOLO BLOCK: No friendlies at CC — Lando dies alone!");
+                operation = hardVeto(facts.actionId(), "V47-LANDO",
+                        "V47 LANDO SOLO BLOCK: No friendlies at Cloud City");
                 outcome = LandoLobotOutcome.LANDO_BLOCKED;
             }
         } else if (facts.lobotDeploy()) {
@@ -918,9 +920,8 @@ public final class DeployObjectiveSitingPolicy {
                         "V29.2 LOBOT: Helps flip TDIGWATT + backup present!");
                 outcome = LandoLobotOutcome.LOBOT_SAFE;
             } else {
-                operation = add(facts.actionId(), "V47-LOBOT",
-                        TraceOutputKind.VETO, -9999.0f,
-                        "V47 LOBOT SOLO BLOCK: No friendlies at CC — Lobot dies alone!");
+                operation = hardVeto(facts.actionId(), "V47-LOBOT",
+                        "V47 LOBOT SOLO BLOCK: No friendlies at Cloud City");
                 outcome = LandoLobotOutcome.LOBOT_BLOCKED;
             }
         }
@@ -990,9 +991,9 @@ public final class DeployObjectiveSitingPolicy {
                     && facts.deploysToUnoccupiedObjectiveLocation()) {
                 float score = 250.0f;
                 if (facts.huntDown() && facts.turnNumber() <= 3) {
-                    score = facts.inquisitor() ? 1000.0f : 800.0f;
+                    score = 300.0f;
                 } else if (facts.huntDown()) {
-                    score = 500.0f;
+                    score = 300.0f;
                 }
                 String earlySuffix = facts.huntDown() && facts.turnNumber() <= 3
                         ? " — EARLY DEFENSE CRITICAL" : "";
@@ -1339,6 +1340,12 @@ public final class DeployObjectiveSitingPolicy {
                                        TraceOutputKind outputKind,
                                        float delta, String reason) {
         return PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
-                TraceDomainId.DEPLOY_SITING, outputKind, delta, reason);
+                TraceDomainId.OBJECTIVE_INTENT, outputKind, delta, reason);
+    }
+
+    private static PolicyOperation hardVeto(
+            String actionId, String ruleId, String reason) {
+        return PolicyOperation.hardVeto(actionId, TraceRuleId.of(ruleId),
+                TraceDomainId.DEPLOY_SITING, TraceOutputKind.VETO, reason);
     }
 }

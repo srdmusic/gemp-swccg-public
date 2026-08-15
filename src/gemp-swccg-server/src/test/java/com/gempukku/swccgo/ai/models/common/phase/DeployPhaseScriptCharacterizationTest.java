@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,14 +25,14 @@ import static org.mockito.Mockito.when;
 public class DeployPhaseScriptCharacterizationTest {
     @Test
     public void randoBucketOrderIsFrozen() {
-        assertEquals("[LOCATIONS, OBJECTIVE_ROUTE_ASSETS, KEY_CHARACTERS, OTHER_CHARACTERS, WEAPONS, DEVICES]",
+        assertEquals("[LOCATIONS, OTHER_CHARACTERS, WEAPONS, DEVICES]",
                 java.util.Arrays.toString(
                         com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript.Step.values()));
     }
 
     @Test
     public void chosenBucketOrderIsFrozen() {
-        assertEquals("[LOCATIONS, OBJECTIVE_ROUTE_ASSETS, KEY_CHARACTERS, OTHER_CHARACTERS, WEAPONS, DEVICES]",
+        assertEquals("[LOCATIONS, OTHER_CHARACTERS, WEAPONS, DEVICES]",
                 java.util.Arrays.toString(
                         com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript.Step.values()));
     }
@@ -70,7 +72,7 @@ public class DeployPhaseScriptCharacterizationTest {
     }
 
     @Test
-    public void bothBotsPutMissingFlipGateActorUploadBeforeOtherCharacters() throws Exception {
+    public void bothBotsKeepFlipGateActorUploadOutOfDeployBuckets() throws Exception {
         AwaitingDecision decision = mock(AwaitingDecision.class);
         GameState gameState = mock(GameState.class);
         SwccgGame game = mock(SwccgGame.class);
@@ -103,12 +105,14 @@ public class DeployPhaseScriptCharacterizationTest {
                                 decision, gameState, game, "p", objectiveAnalyzer);
 
         assertEquals(
-                "[KEY_CHARACTERS:[[upload], [security]], "
-                        + "KEY_CHARACTERS:[[upload], [security]]]",
+                "[OTHER_CHARACTERS:[[security]], "
+                        + "OTHER_CHARACTERS:[[security]]]",
                 java.util.Arrays.toString(new Object[] {
                         rando.step + ":" + rando.stepBuckets,
                         chosen.step + ":" + chosen.stepBuckets
                 }));
+        assertFalse(rando.allowedActionIds.contains("upload"));
+        assertFalse(chosen.allowedActionIds.contains("upload"));
     }
 
     @Test
@@ -144,7 +148,7 @@ public class DeployPhaseScriptCharacterizationTest {
                     decision, gameState, game, "p", objectiveAnalyzer);
             assertEquals("[LOCATIONS, OTHER_CHARACTERS]",
                     result.stepBucketLabels.toString());
-            assertEquals("[[navy, throne], [ground]]",
+            assertEquals("[[throne], [navy, ground]]",
                     result.stepBuckets.toString());
         }
 
@@ -160,7 +164,7 @@ public class DeployPhaseScriptCharacterizationTest {
     }
 
     @Test
-    public void exactMassassiUploadPrecedesBodiesForBothBots() {
+    public void exactMassassiUploadStaysOutOfDeployBucketsForBothBots() {
         AwaitingDecision decision = mock(AwaitingDecision.class);
         GameState gameState = mock(GameState.class);
         SwccgGame game = mock(SwccgGame.class);
@@ -194,15 +198,17 @@ public class DeployPhaseScriptCharacterizationTest {
         }) {
             DeployPhaseScript.Result result = script.selectAllowedActions(
                     decision, gameState, game, "p", analyzer);
-            assertEquals("[OBJECTIVE_ROUTE_ASSETS, OTHER_CHARACTERS]",
+            assertEquals("[OTHER_CHARACTERS]",
                     result.stepBucketLabels.toString());
-            assertEquals("[[mbo-upload], [body]]",
+            assertEquals("[[body]]",
                     result.stepBuckets.toString());
+            assertFalse(result.allowedActionIds.contains("mbo-upload"));
+            assertFalse(result.allowedActionIds.contains("impostor"));
         }
     }
 
     @Test
-    public void exactMassassiPackageDeploysShareTheRouteAssetBucketForBothBots() {
+    public void massassiEpicEventStaysOutWhileDeployableCardsUseNaturalBuckets() {
         AwaitingDecision decision = mock(AwaitingDecision.class);
         GameState gameState = mock(GameState.class);
         SwccgGame game = mock(SwccgGame.class);
@@ -257,15 +263,154 @@ public class DeployPhaseScriptCharacterizationTest {
         }) {
             DeployPhaseScript.Result result = script.selectAllowedActions(
                     decision, gameState, game, "p", analyzer);
-            assertEquals("[OBJECTIVE_ROUTE_ASSETS, OTHER_CHARACTERS]",
+            assertEquals("[OTHER_CHARACTERS, WEAPONS]",
                     result.stepBucketLabels.toString());
-            assertEquals("[[attack-run, carrier, torpedoes], [body]]",
+            assertEquals("[[carrier, body], [torpedoes]]",
+                    result.stepBuckets.toString());
+            assertFalse(result.allowedActionIds.contains("attack-run"));
+        }
+    }
+
+    @Test
+    public void twinSunsOccupationEffectCannotPreemptACharacterDeploy() {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard objective = mock(PhysicalCard.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId", new String[] {"occupation", "body"});
+        parameters.put("actionText", new String[] {
+                "Deploy Tatooine Occupation from Reserve Deck",
+                "Deploy a character"
+        });
+        parameters.put("cardId", new String[] {"301", null});
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(gameState.findCardById(301)).thenReturn(objective);
+        when(analyzer.isTwinSunsOccupationPullAction(
+                game, "p", objective,
+                "Deploy Tatooine Occupation from Reserve Deck"))
+                .thenReturn(true);
+
+        for (DeployPhaseScript script : bothBotScripts()) {
+            DeployPhaseScript.Result result = script.selectAllowedActions(
+                    decision, gameState, game, "p", analyzer);
+            assertEquals("[OTHER_CHARACTERS]",
+                    result.stepBucketLabels.toString());
+            assertEquals("[[body]]", result.stepBuckets.toString());
+            assertFalse(result.allowedActionIds.contains("occupation"));
+        }
+    }
+
+    @Test
+    public void noMoneyTableActionsCannotPreemptACharacterDeploy() {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard objective = mock(PhysicalCard.class);
+        PhysicalCard opponentObjective = mock(PhysicalCard.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId", new String[] {
+                "back-gambit", "watto-removal", "body"
+        });
+        parameters.put("actionText", new String[] {
+                "Place card face down on side of table",
+                "Place Watto in Used Pile",
+                "Deploy a character"
+        });
+        parameters.put("cardId", new String[] {"120", "121", null});
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(game.getGameState()).thenReturn(gameState);
+        when(gameState.findCardById(120)).thenReturn(objective);
+        when(gameState.findCardById(121)).thenReturn(opponentObjective);
+        when(opponentObjective.getZone()).thenReturn(Zone.SIDE_OF_TABLE);
+        when(opponentObjective.getOwner()).thenReturn("opponent");
+        when(opponentObjective.getBlueprintId(gameState, false))
+                .thenReturn("12_180_BACK");
+        when(analyzer.isNoMoneyNoPartsBackGambitAction(
+                game, "p", objective,
+                "Place card face down on side of table"))
+                .thenReturn(true);
+        assertTrue(NoMoneyNoPartsObjectivePolicy
+                .isExactOpponentWattoRemovalAction(
+                        game, "p", opponentObjective,
+                        "Place Watto in Used Pile"));
+
+        for (DeployPhaseScript script : bothBotScripts()) {
+            DeployPhaseScript.Result result = script.selectAllowedActions(
+                    decision, gameState, game, "p", analyzer);
+            assertEquals("[OTHER_CHARACTERS]",
+                    result.stepBucketLabels.toString());
+            assertEquals("[[body]]", result.stepBuckets.toString());
+            assertFalse(result.allowedActionIds.contains("back-gambit"));
+            assertFalse(result.allowedActionIds.contains("watto-removal"));
+        }
+    }
+
+    @Test
+    public void naturalObjectiveDeployActionsRemainCharacterActions() {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard survivorSource = mock(PhysicalCard.class);
+        PhysicalCard ralltiir = mock(PhysicalCard.class);
+        PhysicalCard junkyard = mock(PhysicalCard.class);
+        PhysicalCard commandCenter = mock(PhysicalCard.class);
+        ObjectiveAnalyzer analyzer = mock(ObjectiveAnalyzer.class);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId", new String[] {
+                "survivor", "ralltiir-actor", "watto", "krennic"
+        });
+        parameters.put("actionText", new String[] {
+                "Deploy a Jedi Survivor stacked here",
+                "Deploy card from Reserve Deck",
+                "Deploy Watto from Reserve Deck",
+                "Deploy Krennic from Reserve Deck"
+        });
+        parameters.put("cardId", new String[] {"226", "7300", "12178", "21616"});
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(gameState.findCardById(226)).thenReturn(survivorSource);
+        when(gameState.findCardById(7300)).thenReturn(ralltiir);
+        when(gameState.findCardById(12178)).thenReturn(junkyard);
+        when(gameState.findCardById(21616)).thenReturn(commandCenter);
+        when(analyzer.isHiddenPathSurvivorRouteAction(
+                game, "p", survivorSource,
+                "Deploy a Jedi Survivor stacked here"))
+                .thenReturn(true);
+        when(analyzer.isRalltiirFrontRouteAction(
+                game, "p", ralltiir,
+                "Deploy card from Reserve Deck"))
+                .thenReturn(true);
+        when(analyzer.hasRalltiirFrontSiteRouteCandidateInReserve(
+                game, "p", ralltiir)).thenReturn(false);
+        when(analyzer.isNoMoneyNoPartsWattoPullAction(
+                game, "p", junkyard,
+                "Deploy Watto from Reserve Deck"))
+                .thenReturn(true);
+        when(analyzer.isOnTheVergeKrennicDeployAction(
+                game, "p", commandCenter,
+                "Deploy Krennic from Reserve Deck"))
+                .thenReturn(true);
+
+        for (DeployPhaseScript script : bothBotScripts()) {
+            DeployPhaseScript.Result result = script.selectAllowedActions(
+                    decision, gameState, game, "p", analyzer);
+            assertEquals("[OTHER_CHARACTERS]",
+                    result.stepBucketLabels.toString());
+            assertEquals("[[survivor, ralltiir-actor, watto, krennic]]",
                     result.stepBuckets.toString());
         }
     }
 
     @Test
-    public void exactShieldRouteCannonPrecedesUnrelatedCharactersForBothBots() {
+    public void exactShieldRouteCannonUsesTheWeaponBucketForBothBots() {
         AwaitingDecision decision = mock(AwaitingDecision.class);
         GameState gameState = mock(GameState.class);
         SwccgGame game = mock(SwccgGame.class);
@@ -312,9 +457,9 @@ public class DeployPhaseScriptCharacterizationTest {
                         decision, gameState, game, "p",
                         objectiveAnalyzer);
             assertEquals(
-                    "[OBJECTIVE_ROUTE_ASSETS, OTHER_CHARACTERS]",
+                    "[OTHER_CHARACTERS, WEAPONS]",
                     result.stepBucketLabels.toString());
-            assertEquals("[[cannon], [character]]",
+            assertEquals("[[character], [cannon]]",
                     result.stepBuckets.toString());
         }
 
@@ -438,6 +583,13 @@ public class DeployPhaseScriptCharacterizationTest {
         method.setAccessible(true);
         Object step = method.invoke(script, text);
         return step == null ? null : step.toString();
+    }
+
+    private static DeployPhaseScript[] bothBotScripts() {
+        return new DeployPhaseScript[] {
+                new com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript(),
+                new com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript()
+        };
     }
 
     private static Method findMethod(Class<?> type, String name, Class<?>... parameterTypes)

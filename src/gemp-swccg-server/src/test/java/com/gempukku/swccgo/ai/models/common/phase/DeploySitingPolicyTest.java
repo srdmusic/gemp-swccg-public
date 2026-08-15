@@ -22,7 +22,7 @@ public class DeploySitingPolicyTest {
         assertEquals("DEPLOY_SITING_DIRECT_POLICY", result.producerId());
         assertOperations(result.operations(),
                 new String[]{"V89", "V136", "V193", "V96"},
-                new float[]{-1500.0f, -275.0f, 400.0f, 500.0f},
+                new float[]{-1500.0f, -275.0f, 300.0f, 500.0f},
                 new PolicyOperationKind[]{PolicyOperationKind.ADD, PolicyOperationKind.ADD,
                         PolicyOperationKind.ADD, PolicyOperationKind.ADD});
         assertOutputKinds(result.operations(),
@@ -40,7 +40,7 @@ public class DeploySitingPolicyTest {
         assertEquals("DEPLOY_SITING_DESTINATION_POLICY", result.producerId());
         assertOperations(result.operations(),
                 new String[]{"V89-CS", "FS-L3-solo-deploy-hard", "V136-CS", "V193-CS"},
-                new float[]{-1500.0f, 0.0f, 325.0f, 2000.0f},
+                new float[]{-1500.0f, 0.0f, 325.0f, 300.0f},
                 new PolicyOperationKind[]{PolicyOperationKind.ADD, PolicyOperationKind.HARD_VETO,
                         PolicyOperationKind.ADD, PolicyOperationKind.ADD});
         assertEquals(TraceDomainId.SOLO_FORMATION,
@@ -57,7 +57,7 @@ public class DeploySitingPolicyTest {
                 "no exact same-site buddy plan", 150.0f, true, 400.0f));
         assertOperations(defer.operations(),
                 new String[]{"V201-deploy-siting", "V136-CS", "V193-CS"},
-                new float[]{-800.0f, 150.0f, 2000.0f},
+                new float[]{-800.0f, 150.0f, 300.0f},
                 new PolicyOperationKind[]{PolicyOperationKind.DEFER, PolicyOperationKind.ADD,
                         PolicyOperationKind.ADD});
 
@@ -87,7 +87,7 @@ public class DeploySitingPolicyTest {
     }
 
     @Test
-    public void v193PreservesDeliberateRouteAsymmetry() {
+    public void v193UsesOneBoundedPreferenceOnBothRoutes() {
         PolicyOperation direct = DeploySitingPolicy.evaluateDirect(directFacts(
                 false, 0.0f, true, 475.0f,
                 false, 0.0f, 0.0f)).operations().get(0);
@@ -96,9 +96,11 @@ public class DeploySitingPolicyTest {
                 "", 0.0f, true, 475.0f)).operations().get(0);
 
         assertEquals("V193", direct.ruleArmId().id());
-        assertEquals(475.0f, direct.delta(), 0.0f);
+        assertEquals(300.0f, direct.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT, direct.domainId());
         assertEquals("V193-CS", destination.ruleArmId().id());
-        assertEquals(2075.0f, destination.delta(), 0.0f);
+        assertEquals(300.0f, destination.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT, destination.domainId());
     }
 
     @Test
@@ -124,9 +126,9 @@ public class DeploySitingPolicyTest {
                 false, DeploySitingPolicy.FormationState.ALLOW, "", 0.0f,
                 true, true, 1600.0f, "Neimoidian at Throne Room",
                 false, 0.0f, 0.0f);
-        assertEquals(1600.0f, DeploySitingPolicy.evaluateDirect(supported)
+        assertEquals(300.0f, DeploySitingPolicy.evaluateDirect(supported)
                 .operations().get(0).delta(), 0.0f);
-        assertEquals(3200.0f, DeploySitingPolicy.evaluateDestination(supported)
+        assertEquals(300.0f, DeploySitingPolicy.evaluateDestination(supported)
                 .operations().get(0).delta(), 0.0f);
     }
 
@@ -447,7 +449,10 @@ public class DeploySitingPolicyTest {
     private static void assertSitingMetadata(List<PolicyOperation> operations) {
         for (PolicyOperation operation : operations) {
             assertEquals("action-1", operation.actionId());
-            assertEquals(TraceDomainId.DEPLOY_SITING, operation.domainId());
+            assertEquals(operation.ruleArmId().id().equals("V193")
+                            ? TraceDomainId.OBJECTIVE_INTENT
+                            : TraceDomainId.DEPLOY_SITING,
+                    operation.domainId());
         }
     }
 

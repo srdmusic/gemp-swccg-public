@@ -44,12 +44,12 @@ public final class DeployPlanPolicy {
                             "High priority deployment"));
                 }
                 if (facts.objectiveFormationPlan()) {
-                    operations.add(add(facts.actionId(),
+                    operations.add(addObjective(facts.actionId(),
                             "DEPLOY.FORMATION.OBJECTIVE_TIE_BREAK", 25.0f,
                             "Objective formation plan wins deploy ties within 25 points"));
                 }
                 if (facts.eopBunkerGarrisonPlan()) {
-                    operations.add(add(facts.actionId(),
+                    operations.add(addObjective(facts.actionId(),
                             "DEPLOY.EOP.BUNKER_GARRISON",
                             EndorOperationsTacticalPolicy
                                     .BUNKER_GARRISON_DEPLOY_BONUS,
@@ -65,9 +65,9 @@ public final class DeployPlanPolicy {
                                 "V40: DEPLOY_LOCATIONS incomplete but turn "
                                         + facts.turnNumber() + " \u2014 deploy freely!"));
                     } else if (facts.tdigwatt()) {
-                        operations.add(add(facts.actionId(), "V40-plan-location-first", -1000.0f,
-                                "BLOCKED: Plan is DEPLOY_LOCATIONS ONLY (turn 1, TDIGWATT) - deploy locations first!"));
-                        step = AdapterStep.CONTINUE_ACTION;
+                        operations.add(addObjective(facts.actionId(),
+                                "V40-plan-location-first", -300.0f,
+                                "TDIGWATT turn-one plan prefers deploying locations first"));
                     } else {
                         operations.add(add(facts.actionId(), "V40-plan-non-tdigwatt", 0.0f,
                                 "V40: Not TDIGWATT \u2014 deploy freely on turn 1!"));
@@ -76,7 +76,6 @@ public final class DeployPlanPolicy {
                     if (facts.availableForce() < 8) {
                         operations.add(add(facts.actionId(), "V40-plan-save-force", 0.0f,
                                 "V40: Saving force for planned cards (neutral)"));
-                        step = AdapterStep.CONTINUE_ACTION;
                     } else {
                         operations.add(add(facts.actionId(), "V40-plan-force-surplus", 0.0f,
                                 "V40: Plenty of Force \u2014 deploy off-plan!"));
@@ -136,14 +135,7 @@ public final class DeployPlanPolicy {
             // every overpower row from comparison instead of outscoring it. The -100
             // add above still applies; only the defer is skipped.
             // if (facts.plannedTargetOffered()) {
-            if (facts.plannedTargetOffered() && !facts.dominantAlternative()) {
-                operations.add(PolicyOperation.defer(
-                        facts.actionId(), TraceRuleId.of("deploy-plan-target-defer"),
-                        TraceDomainId.DEPLOY_SEQUENCING, TraceOutputKind.VETO,
-                        0.0f,
-                        "Exact planned target is offered: "
-                                + facts.plannedTargetName()));
-            }
+            // The planned target remains a preference, not a categorical filter.
         }
         return new PolicyResult("DEPLOY_PLAN_DESTINATION_POLICY", operations);
     }
@@ -206,6 +198,13 @@ public final class DeployPlanPolicy {
                                        float delta, String reason) {
         return PolicyOperation.add(actionId, TraceRuleId.of(rule),
                 TraceDomainId.DEPLOY_SEQUENCING,
+                TraceOutputKind.ORDERING, delta, reason);
+    }
+
+    private static PolicyOperation addObjective(
+            String actionId, String rule, float delta, String reason) {
+        return PolicyOperation.add(actionId, TraceRuleId.of(rule),
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.ORDERING, delta, reason);
     }
 

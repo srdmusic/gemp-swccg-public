@@ -384,7 +384,7 @@ public class CaptureMovementEvaluator extends ActionEvaluator {
                 contribution.delta(),
                 TraceRuleId.of(
                     "MOVE.OBJECTIVE.ACTOR_ROUTE_START"),
-                TraceDomainId.MOVE,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED);
         }
     }
@@ -419,7 +419,7 @@ public class CaptureMovementEvaluator extends ActionEvaluator {
                 contribution.delta(),
                 TraceRuleId.of(
                     "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"),
-                TraceDomainId.MOVE,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED);
         }
     }
@@ -437,14 +437,15 @@ public class CaptureMovementEvaluator extends ActionEvaluator {
 
     private void applyCombinedRouteHold(
             EvaluatedAction action) {
-        action.hardVeto(
+        action.addReasoning(
             "OBJECTIVE.CAPTURE_MECHANISM.ROUTE_HOLD:"
                 + " every exact route breaks stable-back"
                 + " or violates FormationSafety",
+            -300.0f,
             TraceRuleId.of(
                 "MOVE.OBJECTIVE.CAPTURE_MECHANISM_ROUTE_HOLD"),
-            TraceDomainId.MOVE,
-            TraceOutputKind.VETO);
+            TraceDomainId.OBJECTIVE_INTENT,
+            TraceOutputKind.BANDED);
     }
 
     private ChildMechanism childMechanism(

@@ -37,7 +37,7 @@ public class MoveHuntTargetSourceParityTest {
     }
 
     @Test
-    public void adaptersRetainObjectiveScoreLogAndLadderOwnership()
+    public void adaptersRetainBoundedObjectiveScoreAndLogOwnership()
             throws IOException {
         String move = evaluatorSource("rando");
 
@@ -46,16 +46,16 @@ public class MoveHuntTargetSourceParityTest {
         assertTrue(move.contains("huntMoveAnalyzer.isHuntDownV()"));
         assertTrue(move.contains("huntTarget.contribution().reason()"));
         assertTrue(move.contains("logger.warn(\"V35 HUNT {}:"));
-        assertTrue(move.contains("ladderClaimR2(\"V35 HUNT \""));
+        assertTrue(move.contains(
+                "\"MOVE.OBJECTIVE.HUNT_DOWN_TARGET\""));
+        assertFalse(move.contains("ladderClaimR2(\"V35 HUNT \""));
 
         int policyCall = move.indexOf("MoveHuntTargetPolicy.evaluate(");
-        int score = move.indexOf("action.addReasoning(", policyCall);
+        int score = move.indexOf("addObjectiveContribution(", policyCall);
         int log = move.indexOf("logger.warn(\"V35 HUNT {}:", score);
-        int claim = move.indexOf("ladderClaimR2(\"V35 HUNT \"", log);
         assertTrue(policyCall >= 0);
         assertTrue(score > policyCall);
         assertTrue(log > score);
-        assertTrue(claim > log);
     }
 
     @Test
@@ -93,7 +93,8 @@ public class MoveHuntTargetSourceParityTest {
             throws IOException {
         String move = evaluatorSource("rando");
 
-        assertTrue(move.contains("// V60 FIX:"));
+        assertTrue(move.contains(
+                "// V60: Corridor landspeed receives a bounded -300 objective preference."));
         assertTrue(move.contains("MovePredicates.canWinAt("));
         assertTrue(move.contains("ladderFinalize(action)"));
         assertFalse(move.contains("MovePhysicalCardResolver"));

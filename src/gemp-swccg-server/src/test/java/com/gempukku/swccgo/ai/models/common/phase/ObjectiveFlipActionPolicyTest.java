@@ -30,7 +30,7 @@ public class ObjectiveFlipActionPolicyTest {
                 operation.domainId());
         assertEquals(TraceOutputKind.BANDED, operation.outputKind());
         assertEquals(PolicyOperationKind.ADD, operation.kind());
-        assertEquals(Float.floatToRawIntBits(600.0f),
+        assertEquals(Float.floatToRawIntBits(300.0f),
                 Float.floatToRawIntBits(operation.delta()));
     }
 

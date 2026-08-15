@@ -45,7 +45,7 @@ public class MoveTransitSourceParityTest {
                 "public static CapacitySlot capacitySlot("));
 
         int hiddenPathStart = move.indexOf(
-                "// === V53b: HIDDEN PATH MANDATORY JEDI TRANSIT ===");
+                "// === V53b: HIDDEN PATH JEDI TRANSIT PREFERENCE ===");
         int hiddenPathEnd = move.indexOf(
                 "// T4.1 (2026-07-06): LADDER FINALIZER", hiddenPathStart);
         String hiddenPathRegion = move.substring(
@@ -85,13 +85,15 @@ public class MoveTransitSourceParityTest {
                 "hiddenPath.contribution().reason()"));
         assertTrue(move.contains("hiddenPath.hardVeto()"));
         assertTrue(move.contains(
+                "MOVE.OBJECTIVE.HIDDEN_PATH.TRANSIT"));
+        assertTrue(move.contains(
+                "V53b HIDDEN PATH: {} Safehouse to Corridor objective preference +300"));
+        assertTrue(move.contains(
+                "V60 HIDDEN PATH: {} receives a bounded -300 preference against landspeed from Corridor"));
+        assertTrue(move.contains(
+                "V53b HIDDEN PATH: {} leaving Mapuzo via landspeed, objective preference +300"));
+        assertFalse(move.contains(
                 "ladderClaimR4Transit(hiddenPath.claimIdentity())"));
-        assertTrue(move.contains(
-                "V53b HIDDEN PATH: {} MUST landspeed"));
-        assertTrue(move.contains(
-                "V60 HIDDEN PATH: {} BLOCKED landspeed"));
-        assertTrue(move.contains(
-                "V53b HIDDEN PATH: {} leaving Mapuzo"));
         assertTrue(move.contains(
                 "capacitySlot.contribution().reason()"));
         assertTrue(move.contains(
@@ -117,15 +119,19 @@ public class MoveTransitSourceParityTest {
         int hiddenPath = move.indexOf(
                 "MoveTransitPolicy.hiddenPathTransit(", spy);
         int hiddenPathScore = move.indexOf(
-                "action.addReasoning(", hiddenPath);
+                "addObjectiveContribution(", hiddenPath);
+        int hiddenPathRule = move.indexOf(
+                "MOVE.OBJECTIVE.HIDDEN_PATH.TRANSIT", hiddenPathScore);
         int hiddenPathVeto = move.indexOf(
-                "if (hiddenPath.hardVeto())", hiddenPathScore);
-        int hiddenPathClaim = move.indexOf(
-                "ladderClaimR4Transit(hiddenPath.claimIdentity())",
+                "if (hiddenPath.hardVeto())", hiddenPathRule);
+        int hiddenPathSafehouseLog = move.indexOf(
+                "V53b HIDDEN PATH: {} Safehouse to Corridor objective preference +300",
                 hiddenPathVeto);
-        int hiddenPathLog = move.indexOf(
-                "V53b HIDDEN PATH: {} MUST landspeed", hiddenPathClaim);
-        int finalizer = move.indexOf("ladderFinalize(action)", hiddenPathLog);
+        int hiddenPathCorridorLog = move.indexOf(
+                "V60 HIDDEN PATH: {} receives a bounded -300 preference against landspeed from Corridor",
+                hiddenPathSafehouseLog);
+        int finalizer = move.indexOf(
+                "ladderFinalize(action)", hiddenPathCorridorLog);
 
         assertTrue(deathStar >= 0);
         assertTrue(pilot > deathStar);
@@ -137,10 +143,11 @@ public class MoveTransitSourceParityTest {
         assertTrue(spy > landing);
         assertTrue(hiddenPath > spy);
         assertTrue(hiddenPathScore > hiddenPath);
-        assertTrue(hiddenPathVeto > hiddenPathScore);
-        assertTrue(hiddenPathClaim > hiddenPathVeto);
-        assertTrue(hiddenPathLog > hiddenPathClaim);
-        assertTrue(finalizer > hiddenPathLog);
+        assertTrue(hiddenPathRule > hiddenPathScore);
+        assertTrue(hiddenPathVeto > hiddenPathRule);
+        assertTrue(hiddenPathSafehouseLog > hiddenPathVeto);
+        assertTrue(hiddenPathCorridorLog > hiddenPathSafehouseLog);
+        assertTrue(finalizer > hiddenPathCorridorLog);
     }
 
     @Test
@@ -247,7 +254,7 @@ public class MoveTransitSourceParityTest {
     }
 
     @Test
-    public void policyPreservesHiddenPathBranchOrderAndExactWeights()
+    public void policyPreservesHiddenPathBranchOrderAndBoundedWeights()
             throws IOException {
         String policy = policySource();
         int objectiveGate = policy.indexOf(
@@ -274,11 +281,13 @@ public class MoveTransitSourceParityTest {
         assertTrue(safehouse > landspeed);
         assertTrue(corridor > safehouse);
         assertTrue(mapuzo > corridor);
-        assertEquals(2, countOccurrences(policy, "800.0f"));
+        assertFalse(policy.contains("800.0f"));
         assertTrue(policy.contains("V53b SAFEHOUSE→CORRIDOR"));
         assertTrue(policy.contains("V53b MAPUZO EXIT"));
         assertTrue(policy.contains(
-                "V60 HIDDEN PATH LANDSPEED BLOCK:"));
+                "V60 HIDDEN PATH LANDSPEED PREFERENCE:"));
+        assertTrue(policy.contains(
+                "prefer the Corridor transit text instead of moving back to Mapuzo"));
     }
 
     @Test
@@ -290,7 +299,7 @@ public class MoveTransitSourceParityTest {
         assertTrue(policy.contains(
                 "public static Contribution positiveHiddenPathTransit("));
         assertTrue(policy.contains(
-                "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor — flips objective! (R4 band)"));
+                "V60 HIDDEN PATH TRANSIT: Move Jedi OUT of Corridor to advance the objective"));
         assertTrue(policy.contains(
                 "Move Jedi transit action — tactical mobility"));
 
@@ -316,9 +325,12 @@ public class MoveTransitSourceParityTest {
                     "MoveTransitPolicy.positiveHiddenPathTransit(",
                     objectiveRead);
             int score = actionText.indexOf(
-                    "action.addReasoning(v60Transit.reason()", contribution);
+                    "addObjectiveContribution(", contribution);
+            int rule = actionText.indexOf(
+                    "MOVE.OBJECTIVE.HIDDEN_PATH.TRANSIT_ACTION", score);
             int log = actionText.indexOf(
-                    "V60 HIDDEN PATH TRANSIT: '{}' — +20000", score);
+                    "V60 HIDDEN PATH TRANSIT: '{}' -> +300 objective preference",
+                    rule);
             int pull = actionText.indexOf("// === REGION: PULL ===", log);
             String branch = actionText.substring(classifier, pull);
 
@@ -327,7 +339,8 @@ public class MoveTransitSourceParityTest {
             assertTrue(objectiveRead > classifier);
             assertTrue(contribution > objectiveRead);
             assertTrue(score > contribution);
-            assertTrue(log > score);
+            assertTrue(rule > score);
+            assertTrue(log > rule);
             assertTrue(pull > log);
             assertFalse(branch.contains("action.setActionType("));
         }

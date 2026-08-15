@@ -43,6 +43,9 @@ import com.gempukku.swccgo.ai.models.common.phase.TwinSunsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.common.Phase;
@@ -671,20 +674,19 @@ public class DeployEvaluator extends ActionEvaluator {
                     && deployObjectiveAnalyzer
                         .isIWantThatMapSelfLosingDeployCandidate(
                             game, playerId, deployActionSource)) {
-                action.hardVeto(
-                    "OBJECTIVE.I_WANT_THAT_MAP.SELF_LOSS: this card would be made lost immediately by the objective package");
-                actions.add(action);
-                continue;
+                addObjectivePenalty(
+                    action,
+                    "OBJECTIVE.I_WANT_THAT_MAP.SELF_LOSS",
+                    "I Want That Map: prefer not to deploy a card that the objective package immediately makes lost");
             }
             if (deployObjectiveAnalyzer != null
                     && deployObjectiveAnalyzer
                         .wouldHiddenPathRouteActionConsumeTransitReserve(
                             game, playerId, deployActionSource,
                             actionText, availableForce)) {
-                action.hardVeto(
-                    "OBJECTIVE.HIDDEN_PATH.TRANSIT_FORCE_RESERVE: preserve the exact Force needed for ready Underground Corridor exits");
-                actions.add(action);
-                continue;
+                addObjectivePenalty(action,
+                    "OBJECTIVE.HIDDEN_PATH.TRANSIT_FORCE_RESERVE",
+                    "Preserve the exact Force needed for ready Underground Corridor exits");
             }
             if (exactShieldFreeWarrior) {
                 // The action deploys a warrior for free. Blizzard 4 is only
@@ -924,12 +926,9 @@ public class DeployEvaluator extends ActionEvaluator {
             boolean objectiveInactivationChecked = false;
             if (earlyLocationCandidate) {
                 objectiveInactivationChecked = true;
-                if (applyRequiredCardInactivationVeto(
+                applyRequiredCardInactivationPreference(
                         context, action, decisionId, actionId,
-                        earlyLocationCard)) {
-                    actions.add(action);
-                    continue;
-                }
+                        earlyLocationCard);
                 // === V24.10: EXTRA LOCATION PRIORITY WHEN PIETT NEEDS FINDING ===
                 // If Piett is stuck in the force pile, deploying more locations means
                 // more force generation → bigger force pile → draw through faster to find him.
@@ -1001,7 +1000,7 @@ public class DeployEvaluator extends ActionEvaluator {
                     LOG.warn("V24.10 PIETT DIG: Piett not accessible — extra location deploy priority (+150) to power force pile draws!");
                 }
                 if (earlyLocation.bespinBoost() > 0.0f) {
-                    LOG.warn("V24.15 BESPIN PRIORITY: Bespin system deploy gets +{} on turn {} — MUST deploy ASAP!",
+                    LOG.warn("V24.15 BESPIN PRIORITY: Bespin system matched +{} bounded objective preference on turn {}",
                         earlyLocation.bespinBoost(), turnNum);
                 }
                 if (earlyLocation.adapterStep()
@@ -1011,12 +1010,10 @@ public class DeployEvaluator extends ActionEvaluator {
                 }
             }
 
-            // === V29: TDIGWATT BESPIN-FIRST GUARD (rewritten) ===
-            // For TDIGWATT objective, Executor MUST deploy before any characters.
-            // Strategy: Bespin system → Executor (via AMSD or hand) → then characters.
-            // V29 FIX: Removed turn limit — guard stays active until Bespin is actually
-            // occupied. Previous V28 used bfTurn <= 2 which expired before Rando could
-            // get Executor out, allowing Lando to deploy before Executor on turn 3.
+            // === V29: TDIGWATT BESPIN-FIRST PREFERENCE (rewritten) ===
+            // Apply bounded -300 to unrelated character deploys while the live route remains
+            // Bespin system -> Executor (via AMSD or hand) -> then characters. Tactical logic
+            // may override this objective preference.
             // Exempt: locations, sites, systems, AMSD, Executor, starships, vehicles, Bespin system.
             {
                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer bespinFirstAnalyzer =
@@ -1136,13 +1133,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                     actionText.length() > 60 ? actionText.substring(0, 60) : actionText,
                                     bfTurn, bespinFirst.releaseReason());
                             } else {
-                                LOG.warn("V29 BESPIN-FIRST: BLOCKING deploy '{}' on turn {} — Bespin not occupied, deploy Executor first!",
+                                LOG.warn("V29 BESPIN-FIRST: bounded preference against deploy '{}' on turn {} because Bespin is not occupied",
                                     actionText.length() > 60 ? actionText.substring(0, 60) : actionText, bfTurn);
-                            }
-                            if (bespinFirst.adapterStep()
-                                    == DeployObjectiveSequencingPolicy.AdapterStep.CONTINUE_ACTION) {
-                                actions.add(action);
-                                continue;
                             }
                         }
                     }
@@ -1254,17 +1246,19 @@ public class DeployEvaluator extends ActionEvaluator {
                             context.getObjectiveAnalyzer();
                         if (objDeploy != null && gameState != null && game != null
                                 && card != null && blueprint != null && actionText != null) {
-                            if (!objectiveInactivationChecked
-                                    && applyRequiredCardInactivationVeto(
-                                        context, action, decisionId, actionId,
-                                        card)) {
-                                actions.add(action);
-                                continue;
+                            if (!objectiveInactivationChecked) {
+                                applyRequiredCardInactivationPreference(
+                                    context, action, decisionId, actionId,
+                                    card);
                             }
                             for (com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.ScoreNote note
                                     : objDeploy.getDeployObjectiveAdjustments(
                                         game, gameState, playerId, card, blueprint, actionText)) {
-                                action.addReasoning(note.reason, note.score);
+                                action.addReasoning(
+                                    note.reason, note.score,
+                                    TraceRuleId.of("OBJECTIVE.ANALYZER.DEPLOY_NOTE"),
+                                    TraceDomainId.OBJECTIVE_INTENT,
+                                    TraceOutputKind.BANDED);
                             }
                         }
                     }
@@ -1373,7 +1367,7 @@ public class DeployEvaluator extends ActionEvaluator {
                     float v212V136Score = 0.0f;
                     boolean v212V193Eligible = false;
                     boolean v212V193FormationSupported = true;
-                    float v212V193Weight = 400.0f;
+                    float v212V193Weight = 300.0f;
                     String v212V193GateCard = "";
                     boolean v212V96Applicable = false;
                     float v212V96FriendlyPower = 0.0f;
@@ -1502,6 +1496,27 @@ public class DeployEvaluator extends ActionEvaluator {
                             boolean v136ObjRelevant = v136Obj != null && v136Obj.isAnalyzed()
                                 && v136Candidate.getTitle() != null
                                 && v136Obj.isObjectiveRelevantLocation(v136Candidate, game, playerId);
+                            if (v136ObjRelevant) {
+                                action.addReasoning(
+                                    "V136 objective-relevant deploy site",
+                                    200.0f,
+                                    TraceRuleId.of("V136-objective-relevant-site"),
+                                    TraceDomainId.OBJECTIVE_INTENT,
+                                    TraceOutputKind.BANDED);
+                            }
+                            float v136EopBunker = com.gempukku.swccgo.ai.models.common.strategy
+                                .CharacterDeploySiteEvaluator
+                                .evaluateEndorOperationsBunkerAdjustment(
+                                    game, gameState, game.getModifiersQuerying(),
+                                    card, v136Candidate, playerId);
+                            if (v136EopBunker != 0.0f) {
+                                action.addReasoning(
+                                    "EOP Bunker garrison deploy preference",
+                                    v136EopBunker,
+                                    TraceRuleId.of("V193-eop-bunker-garrison-deploy"),
+                                    TraceDomainId.OBJECTIVE_INTENT,
+                                    TraceOutputKind.BANDED);
+                            }
                             float v136Score = com.gempukku.swccgo.ai.models.common.strategy
                                 .CharacterDeploySiteEvaluator.evaluateSite(
                                     game, card, v136Candidate, playerId,
@@ -1625,16 +1640,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                     // when an exact buddy is funded or already present at the gate.
                                     if ((!v193AlreadyControls || v193ActorGateCandidate)
                                             && v193CanAdvanceGate) {
-                                        // ObjectivePlaybook consolidation (2026-07-07): the +400 magnitude
-                                        // is now analyzer-owned in ENDOR_PLAYBOOK.weights.deployFlipGateSite.
-                                        // Behavior-preserving: V193 only fires when the analyzer named a
-                                        // flip-gate site (Endor Operations today), which also selects
-                                        // ENDOR_PLAYBOOK (weight = 400). Fall back to the literal if no
-                                        // playbook is active (defensive; unreachable on the Endor path).
-                                        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.ObjectivePlaybook
-                                            v193Playbook = v136Obj.getActivePlaybook();
-                                        float v193Bonus = (v193Playbook != null)
-                                            ? v193Playbook.weights.deployFlipGateSite : 400.0f;
+                                        // The objective channel owns one bounded preference regardless
+                                        // of the historical playbook weight.
+                                        float v193Bonus = 300.0f;
                                         v212V193Eligible = true;
                                         v212V193Weight = v193Bonus;
                                         v212V193GateCard = v193GateCard;
@@ -2017,7 +2025,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                 exactCaptureDeployPayment);
                     } else if (unknownCaptureDeployPayment) {
                         action.hardVeto(
-                            "CAPTURE.BUDGET.UNKNOWN: cannot prove this deploy preserves the exact capture move Force");
+                            "CAPTURE.BUDGET.UNKNOWN: cannot prove this deploy preserves the exact capture move Force",
+                            TraceRuleId.of("CAPTURE.BUDGET.UNKNOWN"),
+                            TraceDomainId.FORCE_BUDGET,
+                            TraceOutputKind.VETO);
                     }
 
                     // === V24.5: RESERVE FORCE FOR EXISTING MAINTENANCE CARDS ===
@@ -2093,17 +2104,19 @@ public class DeployEvaluator extends ActionEvaluator {
                                 - countedOperativeDeployPayment >= 1) {
                         action.addReasoning(
                             "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_CONTINUITY: complete the planned contested team while retaining the initiation fee",
-                            800.0f);
+                            300.0f,
+                            TraceRuleId.of("DEPLOY.OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_CONTINUITY"),
+                            TraceDomainId.OBJECTIVE_INTENT,
+                            TraceOutputKind.BANDED);
                     }
                     if (massassiDeployPayment > 0
                             && "deploy".equals(actionLower.trim())
                             && massassiRouteReserve > 0
                             && availableForce - massassiDeployPayment
                                 < massassiRouteReserve) {
-                        action.hardVeto(
-                            "OBJECTIVE.MASSASSI.ATTACK_RUN_FORCE_RESERVE: preserve exact Force for the remaining Attack Run package and carrier movement");
-                        actions.add(action);
-                        continue;
+                        addObjectivePenalty(action,
+                            "OBJECTIVE.MASSASSI.ATTACK_RUN_FORCE_RESERVE",
+                            "Preserve exact Force for the remaining Attack Run package and carrier movement");
                     }
                     if (!exactSetYourCourseSuperlaserDeploy
                             && (exactNormalDeployPayment != null
@@ -2115,27 +2128,26 @@ public class DeployEvaluator extends ActionEvaluator {
                                 - (exactNormalDeployPayment != null
                                     ? exactNormalDeployPayment : cost)
                                 < setYourCourseRouteReserve) {
-                        action.hardVeto(
-                            "OBJECTIVE.SET_YOUR_COURSE.NEXT_PAYMENT_RESERVE: preserve the exact next Death Star movement payment");
-                        actions.add(action);
-                        continue;
+                        addObjectivePenalty(action,
+                            "OBJECTIVE.SET_YOUR_COURSE.NEXT_PAYMENT_RESERVE",
+                            "Preserve the exact next Death Star movement payment");
                     }
                     if (cost > 0
                             && firstOrderReignsRouteReserve > 0
                             && availableForce - cost
                                 < firstOrderReignsRouteReserve) {
-                        action.hardVeto(
-                            "OBJECTIVE.FIRST_ORDER_REIGNS.RESERVE_7: preserve Force for the Tracked Fleet chase ship, crew, and movement");
+                        addObjectivePenalty(action,
+                            "OBJECTIVE.FIRST_ORDER_REIGNS.RESERVE_7",
+                            "Preserve Force for the Tracked Fleet chase ship, crew, and movement");
                     }
                     if (cost > 0
                             && "deploy".equals(actionLower.trim())
                             && shieldRouteMoveReserve > 0
                             && availableForce - cost
                                 < shieldRouteMoveReserve) {
-                        action.hardVeto(
-                            "HOTH.SHIELD.MOVE_FORCE_RESERVE: preserve the selected walker's exact next forward landspeed payment");
-                        actions.add(action);
-                        continue;
+                        addObjectivePenalty(action,
+                            "HOTH.SHIELD.MOVE_FORCE_RESERVE",
+                            "Preserve the selected walker's exact next forward landspeed payment");
                     }
                     boolean countedOperativeOrdinaryDeploy =
                         !reservePull
@@ -2160,10 +2172,6 @@ public class DeployEvaluator extends ActionEvaluator {
                         noMoneyMoveBudget);
                     PolicyOperationAdapter.apply(
                         action, noMoneyMoveBudgetLedger);
-                    if (!noMoneyMoveBudget.operations().isEmpty()) {
-                        actions.add(action);
-                        continue;
-                    }
                     PolicyResult twinSunsRouteBudget =
                         TwinSunsObjectivePolicy
                             .preserveRouteForceForOrdinaryDeploy(
@@ -2184,10 +2192,6 @@ public class DeployEvaluator extends ActionEvaluator {
                         twinSunsRouteBudget);
                     PolicyOperationAdapter.apply(
                         action, twinSunsRouteBudgetLedger);
-                    if (!twinSunsRouteBudget.operations().isEmpty()) {
-                        actions.add(action);
-                        continue;
-                    }
                     PolicyResult ralltiirRouteBudget =
                         RalltiirOperationsObjectivePolicy
                             .preserveRouteForceForOrdinaryDeploy(
@@ -2208,10 +2212,6 @@ public class DeployEvaluator extends ActionEvaluator {
                         ralltiirRouteBudget);
                     PolicyOperationAdapter.apply(
                         action, ralltiirRouteBudgetLedger);
-                    if (!ralltiirRouteBudget.operations().isEmpty()) {
-                        actions.add(action);
-                        continue;
-                    }
                     if (countedOperativeOrdinaryDeploy
                             && agentsOfBlackSunMoveReserve > 0) {
                         int boundedDeployPayment =
@@ -2222,10 +2222,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                 && availableForce
                                     - boundedDeployPayment
                                     < agentsOfBlackSunMoveReserve) {
-                            action.hardVeto(
-                                "OBJECTIVE.AGENTS_OF_BLACK_SUN.MOVE_FORCE_RESERVE: preserve the current actor's exact battleground move payment");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.AGENTS_OF_BLACK_SUN.MOVE_FORCE_RESERVE",
+                                "Preserve the current actor's exact battleground move payment");
                         }
                     }
                     if (countedOperativeOrdinaryDeploy
@@ -2238,10 +2237,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                 && availableForce
                                     - boundedDeployPayment
                                     < iWantThatMapRouteReserve) {
-                            action.hardVeto(
-                                "OBJECTIVE.I_WANT_THAT_MAP.ROUTE_FORCE_RESERVE: preserve the exact executable actor movement, deployment, and blocker-battle payment");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.I_WANT_THAT_MAP.ROUTE_FORCE_RESERVE",
+                                "Preserve the exact executable actor movement, deployment, and blocker-battle payment");
                         }
                     }
                     if (countedOperativeOrdinaryDeploy
@@ -2254,124 +2252,111 @@ public class DeployEvaluator extends ActionEvaluator {
                                 && availableForce
                                     - boundedDeployPayment
                                     < shadowCollectiveBattleReserve) {
-                            action.hardVeto(
-                                "OBJECTIVE.SHADOW_COLLECTIVE.BATTLE_FORCE_RESERVE: preserve the exact safe battle payment that completes the second gangster battleground");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.SHADOW_COLLECTIVE.BATTLE_FORCE_RESERVE",
+                                "Preserve the exact safe battle payment that completes the second gangster battleground");
                         }
                     }
                     if (countedOperativeOrdinaryDeploy
                             && countedOperativeMoveReserve > 0) {
                         if (exactNormalDeployPayment == null
                                 && massassiDeployPayment > 0) {
-                            action.hardVeto(
-                                "OBJECTIVE.COUNTED_OPERATIVE.MOVE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the exact net-progress landspeed payment");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.COUNTED_OPERATIVE.MOVE_PAYMENT_UNKNOWN",
+                                "Cannot prove this deploy preserves the exact net-progress landspeed payment");
                         }
                         if (exactNormalDeployPayment != null
                                 && availableForce
                                     - exactNormalDeployPayment
                                     < countedOperativeMoveReserve) {
-                            action.hardVeto(
-                                "OBJECTIVE.COUNTED_OPERATIVE.MOVE_FORCE_RESERVE: preserve the exact net-progress landspeed payment");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.COUNTED_OPERATIVE.MOVE_FORCE_RESERVE",
+                                "Preserve the exact net-progress landspeed payment");
                         }
                     }
                     if (countedOperativeOrdinaryDeploy
                             && countedOperativeBattleReserve > 0) {
                         if (exactNormalDeployPayment == null
                                 && massassiDeployPayment > 0) {
-                            action.hardVeto(
-                                "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the pending winnable battle payment");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_PAYMENT_UNKNOWN",
+                                "Cannot prove this deploy preserves the pending winnable battle payment");
                         }
                         if (exactNormalDeployPayment != null
                                 && availableForce
                                     - exactNormalDeployPayment
                                     < countedOperativeBattleReserve) {
-                            action.hardVeto(
-                                "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_RESERVE: preserve the pending winnable battle payment after the formation plan completes");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_RESERVE",
+                                "Preserve the pending winnable battle payment after the formation plan completes");
                         }
                     }
                     if (countedOperativeOrdinaryDeploy
                             && isbRebelBaseMoveReserve > 0) {
                         if (exactNormalDeployPayment == null
                                 && massassiDeployPayment > 0) {
-                            action.hardVeto(
-                                "OBJECTIVE.ISB.REBEL_BASE_MOVE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the exact route move payment");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.ISB.REBEL_BASE_MOVE_PAYMENT_UNKNOWN",
+                                "Cannot prove this deploy preserves the exact route move payment");
                         }
                         if (exactNormalDeployPayment != null
                                 && availableForce
                                     - exactNormalDeployPayment
                                     < isbRebelBaseMoveReserve) {
-                            action.hardVeto(
-                                "OBJECTIVE.ISB.REBEL_BASE_MOVE_FORCE_RESERVE: preserve the exact safe landspeed payment that completes the second Rebel Base location");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.ISB.REBEL_BASE_MOVE_FORCE_RESERVE",
+                                "Preserve the exact safe landspeed payment that completes the second Rebel Base location");
                         }
                     }
                     if (countedOperativeOrdinaryDeploy
                             && isbRebelBaseBattleReserve > 0) {
                         if (exactNormalDeployPayment == null
                                 && massassiDeployPayment > 0) {
-                            action.hardVeto(
-                                "OBJECTIVE.ISB.REBEL_BASE_BATTLE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the exact route battle payment");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.ISB.REBEL_BASE_BATTLE_PAYMENT_UNKNOWN",
+                                "Cannot prove this deploy preserves the exact route battle payment");
                         }
                         if (exactNormalDeployPayment != null
                                 && availableForce
                                     - exactNormalDeployPayment
                                     < isbRebelBaseBattleReserve) {
-                            action.hardVeto(
-                                "OBJECTIVE.ISB.REBEL_BASE_BATTLE_FORCE_RESERVE: preserve the exact winnable battle payment that completes the second Rebel Base location");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.ISB.REBEL_BASE_BATTLE_FORCE_RESERVE",
+                                "Preserve the exact winnable battle payment that completes the second Rebel Base location");
                         }
                     }
                     if (countedOperativeOrdinaryDeploy
                             && oldAlliesRouteReserve > 0) {
                         if (exactNormalDeployPayment == null
                                 && massassiDeployPayment > 0) {
-                            action.hardVeto(
-                                "OBJECTIVE.OLD_ALLIES.ROUTE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the summed Jakku route payments");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.OLD_ALLIES.ROUTE_PAYMENT_UNKNOWN",
+                                "Cannot prove this deploy preserves the summed Jakku route payments");
                         }
                         if (exactNormalDeployPayment != null
                                 && availableForce
                                     - exactNormalDeployPayment
                                     < oldAlliesRouteReserve) {
-                            action.hardVeto(
-                                "OBJECTIVE.OLD_ALLIES.ROUTE_FORCE_RESERVE: preserve the remaining system, two-site, move, and battle payments");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.OLD_ALLIES.ROUTE_FORCE_RESERVE",
+                                "Preserve the remaining system, two-site, move, and battle payments");
                         }
                     }
                     if (countedOperativeOrdinaryDeploy
                             && theyHaveNoIdeaRouteReserve > 0) {
                         if (exactNormalDeployPayment == null
                                 && massassiDeployPayment > 0) {
-                            action.hardVeto(
-                                "OBJECTIVE.THNI.ROUTE_PAYMENT_UNKNOWN: cannot prove this deploy preserves the exact Rogue One, pilot, and Data Vault payments");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.THNI.ROUTE_PAYMENT_UNKNOWN",
+                                "Cannot prove this deploy preserves the exact Rogue One, pilot, and Data Vault payments");
                         }
                         if (exactNormalDeployPayment != null
                                 && availableForce
                                     - exactNormalDeployPayment
                                     < theyHaveNoIdeaRouteReserve) {
-                            action.hardVeto(
-                                "OBJECTIVE.THNI.ROUTE_FORCE_RESERVE: preserve the remaining Rogue One, pilot, and Data Vault payments");
-                            actions.add(action);
-                            continue;
+                            addObjectivePenalty(action,
+                                "OBJECTIVE.THNI.ROUTE_FORCE_RESERVE",
+                                "Preserve the remaining Rogue One, pilot, and Data Vault payments");
                         }
                     }
 
@@ -2900,7 +2885,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                     applySharedPolicy(action, decisionId, actionId,
                                         "deploy-vader-flip", vaderFlip);
                                     if (!vaderFlip.operations().isEmpty()) {
-                                        LOG.warn("V51 VADER FLIP: Vader to {}, all live Hunt Down conditions met (+900)", vfTarget.getTitle());
+                                        LOG.warn("V51 VADER FLIP: Vader to {}, all live Hunt Down conditions met (+300 objective preference)", vfTarget.getTitle());
                                     }
                                 } catch (Exception e) { /* ignore */ }
                             }
@@ -3577,7 +3562,7 @@ public class DeployEvaluator extends ActionEvaluator {
 
                     // === V51: CLOUD CITY ARMY PRE-FLIP — Stack characters at CC sites ===
                     // For TDIGWATT/Dark Deal: before objective flips, build your Cloud City army.
-                    // +500 for deploying characters to Cloud City sites pre-flip.
+                    // +300 bounded objective preference for Cloud City character deploys pre-flip.
                     if (blueprint.getCardCategory() == CardCategory.CHARACTER && gameState != null) {
                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer ccAnalyzer =
                             context.getObjectiveAnalyzer();
@@ -3594,7 +3579,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                         DeployObjectiveSitingPolicy.scoreCloudCityArmy(
                                             new DeployObjectiveSitingPolicy.CloudCityArmyFacts(
                                                 actionId, ccLoc.getTitle())));
-                                    LOG.warn("V51 CC ARMY: {} to {} pre-flip — +500", card.getTitle(), ccLoc.getTitle());
+                                    LOG.warn("V51 CC ARMY: {} to {} pre-flip, +300 objective preference", card.getTitle(), ccLoc.getTitle());
                                 }
                                 break;
                             }
@@ -3720,7 +3705,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                         DeployObjectiveSitingPolicy.scoreKeyCharacter(
                                             new DeployObjectiveSitingPolicy.KeyCharacterFacts(
                                                 actionId, card.getTitle())));
-                                    LOG.warn("V67ak KEY CHARACTER: {} matches strategy token — +800 deploy priority",
+                                    LOG.warn("V67ak KEY CHARACTER: {} matches strategy token, +300 objective preference",
                                         card.getTitle());
                                 } else {
                                     LOG.info("V67ak KEY CHARACTER skip: {} role already filled by an on-table card",
@@ -3930,7 +3915,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                 "deploy-cloud-city-engine", cloudCityEngine.result());
                             if (cloudCityEngine.outcome()
                                     == DeployObjectiveSitingPolicy.CloudCityEngineOutcome.ENGINE_PRIORITY) {
-                                LOG.warn("V24 TDIGWATT ENGINE: {} gets +300 — CRITICAL engine piece, deploy ASAP!", card.getTitle());
+                                LOG.warn("V24 TDIGWATT ENGINE: {} gets +300 bounded objective preference for the engine piece", card.getTitle());
                             }
                         }
                     }
@@ -4390,7 +4375,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                         "deploy-flip-siting", flipSiting.result());
                                     if (flipSiting.outcome()
                                             == DeployObjectiveSitingPolicy.FlipSitingOutcome.POSTFLIP_HOLD) {
-                                        LOG.warn("V31 POST-FLIP: {} reinforcing hold location (+200)", card.getTitle());
+                                        LOG.warn("V31 POST-FLIP: {} reinforcing hold location (+300 bounded objective preference)", card.getTitle());
                                     } else if (flipSiting.outcome()
                                             == DeployObjectiveSitingPolicy.FlipSitingOutcome.POSTFLIP_THIRD_NEUTRAL) {
                                         LOG.warn("V40 POST-FLIP: {} deploy to 3rd obj loc — neutral (was -100)", card.getTitle());
@@ -4616,7 +4601,7 @@ public class DeployEvaluator extends ActionEvaluator {
                     // deploy them together NOW with maximum priority (+1000).
                     // This applies to ALL matching pilot/ship combos universally:
                     //   Piett + Executor, Han + Falcon, Wedge + Red Squadron, etc.
-                    // Also: deploy them to the system mentioned in the objective (+1000).
+                    // Also: apply the bounded objective preference at a system named by the objective.
                     //
                     // If only the pilot is in hand and matching ship is in reserve with
                     // AMSD on table, soft-prefer AMSD (-500) but allow manual fallback.
@@ -4689,7 +4674,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                             for (String objLoc : objLocations) {
                                                 if (actionLwr.contains(objLoc.toLowerCase(java.util.Locale.ROOT))) {
                                                     v213PilotObjectiveLocation = objLoc;
-                                                    LOG.warn("V30 OBJECTIVE SYSTEM: {} deploying to objective location '{}' — +1000!",
+                                                    LOG.warn("V30 OBJECTIVE SYSTEM: {} deploying to objective location '{}' matched bounded objective preference",
                                                         card.getTitle(), objLoc);
                                                     break;
                                                 }
@@ -4774,7 +4759,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                         for (String objLoc : objLocations) {
                                             if (actionLwr.contains(objLoc.toLowerCase(java.util.Locale.ROOT))) {
                                                 v213ShipObjectiveLocation = objLoc;
-                                                LOG.warn("V30 OBJECTIVE SYSTEM: {} to objective location '{}' — +1000!",
+                                                LOG.warn("V30 OBJECTIVE SYSTEM: {} to objective location '{}' matched bounded objective preference",
                                                     card.getTitle(), objLoc);
                                                 break;
                                             }
@@ -5258,11 +5243,9 @@ public class DeployEvaluator extends ActionEvaluator {
                     boolean v213OpponentAtBespin = false;
                     if (v213StarshipOrVehicle) {
 
-                        // === V24.6A+V24.9: EXECUTOR DEPLOY PRIORITY ===
-                        // Executor is THE key ship for TDIGWATT — it force drains at Bespin,
-                        // enables Dark Deal + CC Occupation. If it's in hand, deploy it NOW.
-                        // V24.9: MUST come out turn 1 or 2 at the latest. If AMSD didn't pull it
-                        // from reserve, deploy it manually from hand — no excuses.
+                        // === V24.6A+V24.9: EXECUTOR DEPLOY PREFERENCE ===
+                        // Executor supports the TDIGWATT Bespin engine. Apply a bounded +300
+                        // objective preference when its Bespin route is available.
                         if (v213ExecutorOrFlagship) {
                             com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer execObjAnalyzer =
                                 context.getObjectiveAnalyzer();
@@ -5270,10 +5253,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                 && execObjAnalyzer.needsBespinSystemPresence()) {
                                 v213ObjectiveNeedsBespin = true;
 
-                                // V24.10: BESPIN MUST BE ON TABLE BEFORE EXECUTOR
-                                // Executor needs to deploy TO Bespin system. If Bespin isn't on the
-                                // table yet, deploying Executor sends it to Tatooine or another system
-                                // where it's completely useless for TDIGWATT. HARD BLOCK until Bespin is out.
+                                // V24.10: PREFER BESPIN BEFORE EXECUTOR
+                                // Without Bespin on table, the Executor route receives a bounded
+                                // -300 objective preference. Tactical logic may override it.
                                 boolean bespinOnTable = false;
                                 try {
                                     for (com.gempukku.swccgo.game.PhysicalCard loc : gameState.getLocationsInOrder()) {
@@ -5290,13 +5272,13 @@ public class DeployEvaluator extends ActionEvaluator {
                                 }
 
                                 if (!bespinOnTable) {
-                                    LOG.warn("V24.10 EXECUTOR BLOCKED: {} in hand but Bespin not on table — CANNOT deploy to wrong system!", card.getTitle());
+                                    LOG.warn("V24.10 EXECUTOR PREFERENCE: {} receives -300 while Bespin is not on table", card.getTitle());
                                 } else {
                                     int execTurn = context.getTurnNumber();
                                     if (execTurn <= 2) {
-                                        LOG.warn("V24.9 EXECUTOR CRITICAL: {} on turn {} + Bespin on table — MAXIMUM priority (+800)!", card.getTitle(), execTurn);
+                                        LOG.warn("V24.9 EXECUTOR CRITICAL: {} on turn {} + Bespin on table, +300 objective preference", card.getTitle(), execTurn);
                                     } else {
-                                        LOG.warn("V24.6 EXECUTOR: {} in hand + Bespin on table — deploy priority (+800)!", card.getTitle());
+                                        LOG.warn("V24.6 EXECUTOR: {} in hand + Bespin on table, +300 objective preference", card.getTitle());
                                     }
                                 }
                                 v213BespinOnTable = bespinOnTable;
@@ -5354,7 +5336,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                 if (opponentAtBespin) {
                                     LOG.warn("V23 BESPIN CONTEST: {} gets +300 — opponent has presence at Bespin!", card.getTitle());
                                 } else {
-                                    LOG.warn("V23 BESPIN SHIP: {} gets +250 — no ship at Bespin system yet!", card.getTitle());
+                                    LOG.warn("V23 BESPIN SHIP: {} gets +300 bounded objective preference, no ship at Bespin system yet", card.getTitle());
                                 }
                                 v213OpponentAtBespin = opponentAtBespin;
                             }
@@ -5627,7 +5609,7 @@ public class DeployEvaluator extends ActionEvaluator {
                 obligation.responseTargetLocation().permanentCardId());
     }
 
-    private boolean applyRequiredCardInactivationVeto(
+    private void applyRequiredCardInactivationPreference(
             DecisionContext context, EvaluatedAction action,
             String decisionId,
             String actionId, PhysicalCard card) {
@@ -5638,7 +5620,7 @@ public class DeployEvaluator extends ActionEvaluator {
         String playerId = context.getPlayerId();
         if (objective == null || game == null || gameState == null
                 || playerId == null || card == null) {
-            return false;
+            return;
         }
         boolean inactivatesRequiredCard =
                 objective.wouldDeployPreventRequiredCardActivity(
@@ -5654,7 +5636,6 @@ public class DeployEvaluator extends ActionEvaluator {
                     .blockRequiredCardInactivation(
                         actionId, inactivatesRequiredCard));
         PolicyOperationAdapter.apply(action, ledger);
-        return inactivatesRequiredCard;
     }
 
     private void applySharedPolicy(EvaluatedAction action, String decisionId,
@@ -5683,6 +5664,12 @@ public class DeployEvaluator extends ActionEvaluator {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private void addObjectivePenalty(
+            EvaluatedAction action, String ruleId, String reason) {
+        action.addReasoning(reason, -300.0f, TraceRuleId.of(ruleId),
+                TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED);
     }
 
     /**

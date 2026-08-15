@@ -29,7 +29,7 @@ public class ObjectiveFlipActionSourceOwnershipTest {
                 "TraceDomainId.OBJECTIVE_INTENT"));
         assertTrue(policy.contains(
                 "TraceOutputKind.BANDED"));
-        assertTrue(policy.contains("600.0f"));
+        assertTrue(policy.contains("300.0f"));
         for (String forbidden : new String[] {
                 "DecisionContext", "EvaluatedAction", "PhysicalCard",
                 "SwccgGame", "GameState", "ModifiersQuerying",
@@ -40,7 +40,7 @@ public class ObjectiveFlipActionSourceOwnershipTest {
     }
 
     @Test
-    public void mirroredAdaptersDelegateOnceAfterLoopVetoesAndEarlyReturn()
+    public void mirroredAdaptersDelegateOnceAfterLoopVetoesAndContinueDispatch()
             throws IOException {
         String rando = evaluatorSource("rando");
         String chosen = evaluatorSource("chosenone");
@@ -97,9 +97,9 @@ public class ObjectiveFlipActionSourceOwnershipTest {
             String seam = evaluator.substring(flip, genericObjective);
             assertEquals(1, occurrences(seam,
                     "PolicyOperationAdapter.apply("));
-            assertEquals(1, occurrences(seam,
+            assertEquals(0, occurrences(seam,
                     "actions.add(action);"));
-            assertEquals(1, occurrences(seam, "continue;"));
+            assertEquals(0, occurrences(seam, "continue;"));
         }
     }
 

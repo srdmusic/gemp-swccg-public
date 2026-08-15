@@ -6,6 +6,7 @@ import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveGateHoldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveBattlePolicy;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -821,16 +822,16 @@ public class BespinObjectiveEngineContractTest {
                 analyzer.advancesPreFlipRequirementAt(
                         scn.game(), VirtualTableScenario.LS,
                         xwing, sector));
-        assertTrue("The parent deploy action reserves the same exact route",
+        assertTrue("The parent deploy action receives the bounded route preference",
                 analyzer.getDeployObjectiveAdjustments(
                         scn.game(), scn.gameState(),
                         VirtualTableScenario.LS, xwing,
                         xwing.getBlueprint(), "Deploy X-wing")
-                        .stream().anyMatch(note -> note.score == 600.0f
+                        .stream().anyMatch(note -> note.score == 300.0f
                                 && note.reason.contains(
                                     "OBJECTIVE ACTOR LOCATION")));
-        assertEquals("Movement uses the established exact-route band",
-                1000.0f,
+        assertEquals("Movement uses the bounded exact-route preference",
+                300.0f,
                 MoveDestinationPolicy.objectiveActorLocationDestination(
                         analyzer
                             .advancesPreFlipPlainPresenceAtRequiredLocation(
@@ -852,8 +853,8 @@ public class BespinObjectiveEngineContractTest {
         assertTrue("Movement cannot dismantle the sole sector controller",
                 MoveObjectiveGateHoldPolicy.evaluateCountedFormation(
                         true, role, 5.0f, 0.0f).hardVeto());
-        assertEquals("Battle forfeit protects that same formation source",
-                -9999.0f,
+        assertEquals("Battle forfeit prefers keeping that same formation source",
+                -300.0f,
                 BattleForfeitPolicy.scoreFlipGateFormationProtection(
                         "qmc-sector", role, true)
                         .operations().getFirst().delta(), 0.0f);
@@ -874,10 +875,12 @@ public class BespinObjectiveEngineContractTest {
                                 .ObjectiveProgressCandidateRole
                                 .REQUIRED_ACTOR,
                         false));
-        assertTrue("The selected last legal route ship survives Force loss",
+        assertTrue("The selected last legal route ship receives bounded Force-loss preference",
                 forceLoss.operations().stream().anyMatch(operation ->
                         operation.ruleArmId().id().equals("V21-objective")
-                                && operation.delta() == -9999.0f));
+                                && operation.domainId()
+                                    == TraceDomainId.OBJECTIVE_INTENT
+                                && operation.delta() == -300.0f));
 
         scn.MoveCardsToLocation(sector, scn.GetLSCard("falconLando"));
         assertEquals("Redundant sector presence is released",
@@ -1007,7 +1010,7 @@ public class BespinObjectiveEngineContractTest {
                 scn.game(), VirtualTableScenario.LS, xwing);
         assertEquals(ObjectiveAnalyzer.FlipGateFormationRole
                 .LAST_FLIP_BACK_BLOCKER, role);
-        assertEquals(-9999.0f,
+        assertEquals(-300.0f,
                 BattleForfeitPolicy.scoreFlipGateFormationProtection(
                         "qmc-system", role, true)
                         .operations().getFirst().delta(), 0.0f);
@@ -1076,12 +1079,12 @@ public class BespinObjectiveEngineContractTest {
                 analyzer.advancesPreFlipRequirementAt(
                         scn.game(), VirtualTableScenario.LS,
                         xwing, system));
-        assertTrue("CITC parent deployment recognizes the Bespin occupier",
+        assertTrue("CITC parent deployment gives the occupier bounded preference",
                 analyzer.getDeployObjectiveAdjustments(
                         scn.game(), scn.gameState(),
                         VirtualTableScenario.LS, xwing,
                         xwing.getBlueprint(), "Deploy X-wing")
-                        .stream().anyMatch(note -> note.score == 600.0f
+                        .stream().anyMatch(note -> note.score == 300.0f
                                 && note.reason.contains(
                                     "OBJECTIVE ACTOR LOCATION")));
         assertFalse("An empty unpiloted ship does not occupy Bespin",
@@ -1099,8 +1102,8 @@ public class BespinObjectiveEngineContractTest {
         assertTrue("Movement preserves the sole Bespin occupier",
                 MoveObjectiveGateHoldPolicy.evaluateCountedFormation(
                         true, role, 5.0f, 0.0f).hardVeto());
-        assertEquals("Battle forfeit preserves the same occupier",
-                -9999.0f,
+        assertEquals("Battle forfeit prefers keeping the same occupier",
+                -300.0f,
                 BattleForfeitPolicy.scoreFlipGateFormationProtection(
                         "citc-bespin", role, true)
                         .operations().getFirst().delta(), 0.0f);
@@ -1116,10 +1119,12 @@ public class BespinObjectiveEngineContractTest {
                         false, false, false, false, false),
                 new ForceLossPolicy.ObjectiveFlags(
                         false, false, true, false));
-        assertTrue("The last legal Bespin route ship survives Force loss",
+        assertTrue("The last legal Bespin route ship receives bounded Force-loss preference",
                 forceLoss.operations().stream().anyMatch(operation ->
                         operation.ruleArmId().id().equals("V21-objective")
-                                && operation.delta() == -9999.0f));
+                                && operation.domainId()
+                                    == TraceDomainId.OBJECTIVE_INTENT
+                                && operation.delta() == -300.0f));
     }
 
     @Test

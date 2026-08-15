@@ -38,11 +38,9 @@ import java.util.regex.Pattern;
  *
  * STRICT ORDER:
  *   STEP 1  LOCATIONS         — anything that puts a LOCATION on table
- *   STEP 2  OBJECTIVE ROUTE ASSETS — exact still-needed objective package pieces
- *   STEP 3  KEY CHARACTERS    — chars matching ObjectiveAnalyzer.getStrategyCharacterTokens
- *   STEP 4  OTHER CHARACTERS  — remaining char/starship/vehicle deploys
- *   STEP 5  WEAPONS           — weapon deploys / pulls
- *   STEP 6  DEVICES           — device deploys / pulls
+ *   STEP 2  OTHER CHARACTERS: character/starship/vehicle deploys
+ *   STEP 3  WEAPONS: weapon deploys / pulls
+ *   STEP 4  DEVICES: device deploys / pulls
  *   (PASS only when every step has 0 candidates)
  *
  * KEY MECHANIC — per-action card RESOLUTION:
@@ -87,7 +85,7 @@ public abstract class DeployPhaseScript {
     // scorer disagree: a location the scorer ranks +1800 gets dropped from the
     // LOCATIONS bucket and a key character deploys instead. Real bug (replay
     // aab2jiaa5sca): "Deploy a farm from Reserve Deck" → token 'farm' → not in
-    // the old thin list → no LOCATIONS bucket → Young Skywalker (KEY_CHARACTERS)
+    // the old thin list → no LOCATIONS bucket → Young Skywalker deployed first
     // deployed every turn while the free drain-site farm rotted in Reserve.
     private static final String[] LOCATION_HINT_KEYWORDS = new String[] {
         "site", "battleground", "location", "system", "farm",
@@ -111,8 +109,6 @@ public abstract class DeployPhaseScript {
 
     public enum Step {
         LOCATIONS,
-        OBJECTIVE_ROUTE_ASSETS,
-        KEY_CHARACTERS,
         OTHER_CHARACTERS,
         WEAPONS,
         DEVICES
@@ -136,10 +132,6 @@ public abstract class DeployPhaseScript {
 
         int turn = gameState.getPlayersLatestTurnNumber(playerId);
 
-        Set<String> keyCharTokens = objectiveAnalyzer != null
-            ? objectiveAnalyzer.getStrategyCharacterTokens(game, playerId)
-            : Collections.emptySet();
-
         // 1) RESOLVE every action to the SET of steps it could satisfy.
         Map<Step, LinkedHashSet<String>> byStep = new EnumMap<>(Step.class);
         for (Step s : Step.values()) byStep.put(s, new LinkedHashSet<>());
@@ -152,7 +144,7 @@ public abstract class DeployPhaseScript {
 
             String cidStr = (cardIds != null && i < cardIds.length) ? cardIds[i] : null;
             Set<Step> steps = resolveSteps(txt, cidStr, gameState, game, playerId,
-                                            keyCharTokens, objectiveAnalyzer);
+                                            objectiveAnalyzer);
             if (steps != null && !steps.isEmpty()) {
                 for (Step s : steps) byStep.get(s).add(aid);
                 classifiedCount++;
@@ -215,7 +207,6 @@ public abstract class DeployPhaseScript {
     private Set<String> qualify(Step step, Set<String> ids, GameState gameState,
                                 SwccgGame game, String playerId, int turn) {
         switch (step) {
-            case KEY_CHARACTERS:
             case OTHER_CHARACTERS: {
                 boolean bgExists = anyBattlegroundOnTable(gameState, game);
                 if (bgExists) return ids;
@@ -233,14 +224,13 @@ public abstract class DeployPhaseScript {
      */
     private Set<Step> resolveSteps(String actionText, String cardIdStr,
                                     GameState gameState, SwccgGame game, String playerId,
-                                    Set<String> keyCharTokens) {
+                                    Set<String> ignoredKeyCharTokens) {
         return resolveSteps(actionText, cardIdStr, gameState, game, playerId,
-                keyCharTokens, null);
+                (ObjectiveAnalyzer) null);
     }
 
     private Set<Step> resolveSteps(String actionText, String cardIdStr,
                                     GameState gameState, SwccgGame game, String playerId,
-                                    Set<String> keyCharTokens,
                                     ObjectiveAnalyzer objectiveAnalyzer) {
         EnumSet<Step> steps = EnumSet.noneOf(Step.class);
         if (actionText == null) return steps;
@@ -298,7 +288,7 @@ public abstract class DeployPhaseScript {
         if (objectiveAnalyzer != null
                 && objectiveAnalyzer.isHiddenPathSurvivorRouteAction(
                     game, playerId, sourceCard, actionText)) {
-            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+            steps.add(Step.OTHER_CHARACTERS);
             return steps;
         }
         if (objectiveAnalyzer != null
@@ -312,15 +302,7 @@ public abstract class DeployPhaseScript {
                     .isFirstOrderReignsNavyRouteAction(
                         game, playerId,
                         sourceCard, actionText)) {
-            steps.add(Step.LOCATIONS);
-            return steps;
-        }
-        if (objectiveAnalyzer != null
-                && objectiveAnalyzer
-                    .isMassassiAttackRunPackageUploadAction(
-                        game, playerId,
-                        sourceCard, actionText)) {
-            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+            steps.add(Step.OTHER_CHARACTERS);
             return steps;
         }
         if (objectiveAnalyzer != null
@@ -340,7 +322,7 @@ public abstract class DeployPhaseScript {
                         game, playerId, sourceCard)) {
                 steps.add(Step.LOCATIONS);
             } else {
-                steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+                steps.add(Step.OTHER_CHARACTERS);
             }
             return steps;
         }
@@ -364,7 +346,9 @@ public abstract class DeployPhaseScript {
                     .isTwinSunsOccupationPullAction(
                         game, playerId,
                         sourceCard, actionText)) {
-            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+            // This action deploys an Effect, not a Tatooine location. Keep it
+            // outside the deploy-card hierarchy so its bounded objective score
+            // competes only after viable deploy buckets are exhausted.
             return steps;
         }
         if (objectiveAnalyzer != null
@@ -372,15 +356,7 @@ public abstract class DeployPhaseScript {
                     .isNoMoneyNoPartsWattoPullAction(
                         game, playerId,
                         sourceCard, actionText)) {
-            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
-            return steps;
-        }
-        if (objectiveAnalyzer != null
-                && objectiveAnalyzer
-                    .isNoMoneyNoPartsBackGambitAction(
-                        game, playerId,
-                        sourceCard, actionText)) {
-            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
+            steps.add(Step.OTHER_CHARACTERS);
             return steps;
         }
         if (objectiveAnalyzer != null
@@ -397,31 +373,17 @@ public abstract class DeployPhaseScript {
         if (objectiveAnalyzer != null
                 && objectiveAnalyzer.isOnTheVergeKrennicDeployAction(
                     game, playerId, sourceCard, actionText)) {
-            // Krennic completes the Scarif-location route. Keep the exact action
-            // in the route's first bucket so a redundant Scarif site pull cannot
-            // pre-empt a funded flip; the dedicated policy still hard-vetoes him
-            // when his deploy would consume the Death Star movement payment.
-            steps.add(Step.LOCATIONS);
+            // Krennic remains a character action. Objective preference is additive
+            // and may not promote him into the earlier location bucket.
+            steps.add(Step.OTHER_CHARACTERS);
             return steps;
         }
-        if (NoMoneyNoPartsObjectivePolicy
-                .isExactOpponentWattoRemovalAction(
-                    game, playerId, sourceCard, actionText)) {
-            steps.add(Step.OBJECTIVE_ROUTE_ASSETS);
-            return steps;
-        }
-
         // EXCLUDE pulls that go INTO HAND / pile, not to table — these are not
-        // deploy-step actions. The narrow exception is an upload that fetches a
-        // still-missing typed objective actor needed by this phase's formation.
+        // deploy-step actions. Objective preference is scored by the normal
+        // evaluator and may not promote an upload into a deploy-card bucket.
         if (txt.contains("into hand") || txt.contains("into your hand")
                 || txt.contains("into used pile") || txt.contains("into reserve")
                 || txt.contains("into force pile")) {
-            if (objectiveAnalyzer != null
-                    && objectiveAnalyzer.isFlipGateActorUploadIntoHandAction(
-                        game, playerId, sourceCard, actionText)) {
-                steps.add(Step.KEY_CHARACTERS);
-            }
             return steps;
         }
 
@@ -430,9 +392,7 @@ public abstract class DeployPhaseScript {
         if (cardIdStr != null && (txt.equals("deploy") || txt.equals("deploy a card"))) {
             PhysicalCard card = findCardByIdSafe(gameState, cardIdStr);
             if (card != null && card.getBlueprint() != null) {
-                Step s = stepForCard(
-                        card, keyCharTokens,
-                        objectiveAnalyzer, game, playerId);
+                Step s = stepForCard(card, objectiveAnalyzer, game, playerId);
                 if (s != null) {
                     steps.add(s);
                     return steps;
@@ -451,8 +411,7 @@ public abstract class DeployPhaseScript {
                         for (PhysicalCard hc : hand) {
                             if (hc == null || hc.getBlueprint() == null) continue;
                             Step s = stepForCard(
-                                    hc, keyCharTokens,
-                                    objectiveAnalyzer, game, playerId);
+                                    hc, objectiveAnalyzer, game, playerId);
                             if (s != null) steps.add(s);
                         }
                     }
@@ -471,8 +430,7 @@ public abstract class DeployPhaseScript {
             PhysicalCard bpCard = findCardByBlueprint(gameState, bpId);
             if (bpCard != null && bpCard.getBlueprint() != null) {
                 Step s = stepForCard(
-                        bpCard, keyCharTokens,
-                        objectiveAnalyzer, game, playerId);
+                        bpCard, objectiveAnalyzer, game, playerId);
                 if (s != null
                         && !(s == Step.LOCATIONS
                             && exhaustedObjectiveLocationPull)) {
@@ -540,61 +498,18 @@ public abstract class DeployPhaseScript {
 
     /** Map a card's category → step bucket. Returns null for non-deploy categories. */
     private Step stepForCard(
-            PhysicalCard card, Set<String> keyCharTokens,
-            ObjectiveAnalyzer objectiveAnalyzer,
+            PhysicalCard card, ObjectiveAnalyzer objectiveAnalyzer,
             SwccgGame game, String playerId) {
         if (card == null || card.getBlueprint() == null) return null;
         CardCategory cat = card.getBlueprint().getCardCategory();
         if (cat == null) return null;
-        if (objectiveAnalyzer != null
-                && objectiveAnalyzer
-                    .isSetYourCourseCompatibleSuperlaserDeployCandidate(
-                        game, playerId, card)) {
-            return Step.OBJECTIVE_ROUTE_ASSETS;
-        }
-        if (objectiveAnalyzer != null
-                && (objectiveAnalyzer
-                    .isMassassiAttackRunPackageDeployCandidate(
-                        game, playerId, card)
-                    || objectiveAnalyzer
-                    .isMassassiAttackRunCarrierDeployCandidate(
-                        game, playerId, card))) {
-            return Step.OBJECTIVE_ROUTE_ASSETS;
-        }
-        if (objectiveAnalyzer != null
-                && objectiveAnalyzer.isOldAlliesRouteDeployCandidate(
-                    game, playerId, card)) {
-            return Step.OBJECTIVE_ROUTE_ASSETS;
-        }
-        if (objectiveAnalyzer != null
-                && objectiveAnalyzer.isTheyHaveNoIdeaRouteDeployCandidate(
-                    game, playerId, card)) {
-            return Step.OBJECTIVE_ROUTE_ASSETS;
-        }
-        if (cat == CardCategory.WEAPON
-                && objectiveAnalyzer != null
-                && objectiveAnalyzer
-                    .isShieldMainGeneratorPriorityCannonDeploy(
-                        game, playerId, card)) {
-            return Step.OBJECTIVE_ROUTE_ASSETS;
-        }
         switch (cat) {
             case LOCATION: return Step.LOCATIONS;
-            case CHARACTER: {
-                boolean keyCharacter = objectiveAnalyzer != null
-                        ? objectiveAnalyzer.isStrategyKeyCharacter(
-                                game, playerId, card)
-                        : isKeyCharacter(
-                                card.getTitle(), keyCharTokens);
-                return keyCharacter
-                        ? Step.KEY_CHARACTERS
-                        : Step.OTHER_CHARACTERS;
-            }
+            case CHARACTER:
             case STARSHIP:
             case VEHICLE:
             case CREATURE:
-                return isKeyCharacter(card.getTitle(), keyCharTokens)
-                    ? Step.KEY_CHARACTERS : Step.OTHER_CHARACTERS;
+                return Step.OTHER_CHARACTERS;
             case WEAPON: return Step.WEAPONS;
             case DEVICE: return Step.DEVICES;
             default:    return null;  // EFFECT/INTERRUPT/EPIC_EVENT/OBJECTIVE/etc.
@@ -670,17 +585,6 @@ public abstract class DeployPhaseScript {
             return Step.OTHER_CHARACTERS;
         }
         return null;
-    }
-
-    private boolean isKeyCharacter(String title, Set<String> keyTokens) {
-        if (title == null || keyTokens == null || keyTokens.isEmpty()) return false;
-        String t = title.toLowerCase(Locale.ROOT);
-        for (String tok : keyTokens) {
-            if (tok == null) continue;
-            String tk = tok.toLowerCase(Locale.ROOT);
-            if (!tk.isEmpty() && t.contains(tk)) return true;
-        }
-        return false;
     }
 
     private String extractBlueprintId(String actionText) {

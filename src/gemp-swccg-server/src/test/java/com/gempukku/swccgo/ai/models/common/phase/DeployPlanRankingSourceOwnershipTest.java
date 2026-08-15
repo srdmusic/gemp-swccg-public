@@ -34,7 +34,7 @@ public class DeployPlanRankingSourceOwnershipTest {
                 "float postOurAbility = targetLoc.ourAbility + plannedAbility",
                 "targetLoc.theirCardCount == 0",
                 "PublicImmediateReactAnalyzer.analyze(",
-                "EndorOperationsTacticalPolicy.isBunkerGarrisonPlan(",
+                "DeployPlanRankingPolicy.evaluateEndorAdjustment(",
                 "hasPlannedSpyAtTarget(plan, locId)",
                 "card.getBlueprint().hasKeyword(Keyword.SPY)",
                 "inst.setAbilityContribution(\n            instructionAbilityContribution(card))",
@@ -66,6 +66,7 @@ public class DeployPlanRankingSourceOwnershipTest {
                 "score -= 20 + (ourPower * 2)",
                 "float establishBonus = 40",
                 "establishBonus -= 500",
+                "EndorOperationsTacticalPolicy.isBunkerGarrisonPlan(",
                 "ability = Math.min(inst.getPowerContribution(), 3)",
                 "scorePlan(executorPlan, allLocations, turn) + 200.0f"};
         String[] internalReasons = {

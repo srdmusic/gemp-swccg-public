@@ -88,7 +88,7 @@ public final class DeploySequencingPolicy {
         } else {
             operations.add(add(actionId, "V162", TraceOutputKind.ORDERING, 500.0f,
                     "V162 LOCATION FIRST: deploy locations before anything else (life force "
-                            + lifeForce + " > 10) \u2014 foundation for drains/objective +500"));
+                            + lifeForce + " > 10), generic location-order +500"));
             operations.add(add(actionId, "V67ai", TraceOutputKind.ORDERING, 1400.0f,
                     "V67ai LOCATION DEPLOY ORDER [Tier 4 HAND]: deploy location from hand \u2014 force generation foundation!"));
         }
@@ -129,18 +129,18 @@ public final class DeploySequencingPolicy {
             boolean jediDeploy = facts.actionLower().contains("jedi survivor")
                     || facts.actionLower().contains("fallen order");
             if (jediCharacter) {
-                operations.add(add(facts.actionId(), "V52b", TraceOutputKind.ORDERING, 800.0f,
+                operations.add(addObjective(facts.actionId(), "V52b", TraceOutputKind.ORDERING, 300.0f,
                         "V52b HIDDEN PATH: Jedi character \u2014 deploy FIRST!"));
             } else if (jediDeploy) {
-                operations.add(add(facts.actionId(), "V52b", TraceOutputKind.ORDERING, 800.0f,
+                operations.add(addObjective(facts.actionId(), "V52b", TraceOutputKind.ORDERING, 300.0f,
                         "V52b HIDDEN PATH: Fallen Order Jedi deploy \u2014 deploy FIRST!"));
             } else if (facts.cardTitleLower().contains("lightsaber")
                     || facts.cardTitleLower().contains("shoto")) {
-                operations.add(add(facts.actionId(), "V52b", TraceOutputKind.ORDERING, 700.0f,
+                operations.add(addObjective(facts.actionId(), "V52b", TraceOutputKind.ORDERING, 300.0f,
                         "V52b HIDDEN PATH: Lightsaber \u2014 arm the Jedi!"));
             } else if (facts.cardTitleLower().contains("holocron")
                     || facts.actionLower().contains("holocron")) {
-                operations.add(add(facts.actionId(), "V52b", TraceOutputKind.ORDERING, 600.0f,
+                operations.add(addObjective(facts.actionId(), "V52b", TraceOutputKind.ORDERING, 300.0f,
                         "V52b HIDDEN PATH: Jedi Holocron!"));
             }
         }
@@ -194,22 +194,22 @@ public final class DeploySequencingPolicy {
         }
         String title = facts.cardTitleLower();
         if (title.contains("bespin") && facts.actionLower().contains("system")) {
-            operations.add(add(facts.actionId(), "V52-TDIGWATT-T1", TraceOutputKind.ORDERING,
-                    1500.0f, "V52 TDIGWATT T1: Bespin system \u2014 FOUNDATION!"));
+            operations.add(addObjective(facts.actionId(), "V52-TDIGWATT-T1", TraceOutputKind.ORDERING,
+                    300.0f, "V52 TDIGWATT T1: Bespin system \u2014 FOUNDATION!"));
         } else if (title.contains("cloud city")
                 || facts.actionLower().contains("i'm sorry")
                 || facts.actionLower().contains("i am sorry")) {
-            operations.add(add(facts.actionId(), "V52-TDIGWATT-T1", TraceOutputKind.ORDERING,
-                    1200.0f, "V52 TDIGWATT T1: Cloud City site via I'm Sorry!"));
+            operations.add(addObjective(facts.actionId(), "V52-TDIGWATT-T1", TraceOutputKind.ORDERING,
+                    300.0f, "V52 TDIGWATT T1: Cloud City site via I'm Sorry!"));
         } else if (title.contains("lando") && title.contains("broker")) {
-            operations.add(add(facts.actionId(), "V52-TDIGWATT-T1", TraceOutputKind.ORDERING,
-                    1000.0f, "V52 TDIGWATT T1: Lando as Broker \u2014 key engine piece!"));
+            operations.add(addObjective(facts.actionId(), "V52-TDIGWATT-T1", TraceOutputKind.ORDERING,
+                    300.0f, "V52 TDIGWATT T1: Lando as Broker \u2014 key engine piece!"));
         } else if (title.contains("executor") || title.contains("flagship")) {
-            operations.add(add(facts.actionId(), "V52-TDIGWATT-T1", TraceOutputKind.ORDERING,
-                    900.0f, "V52 TDIGWATT T1: Executor/Flagship \u2014 Bespin control!"));
+            operations.add(addObjective(facts.actionId(), "V52-TDIGWATT-T1", TraceOutputKind.ORDERING,
+                    300.0f, "V52 TDIGWATT T1: Executor/Flagship \u2014 Bespin control!"));
         } else if (title.contains("chiraneau")) {
-            operations.add(add(facts.actionId(), "V52-TDIGWATT-T1", TraceOutputKind.ORDERING,
-                    850.0f, "V52 TDIGWATT T1: Chiraneau \u2014 pilot for Executor!"));
+            operations.add(addObjective(facts.actionId(), "V52-TDIGWATT-T1", TraceOutputKind.ORDERING,
+                    300.0f, "V52 TDIGWATT T1: Chiraneau \u2014 pilot for Executor!"));
         }
     }
 
@@ -273,6 +273,13 @@ public final class DeploySequencingPolicy {
                                        String reason) {
         return PolicyOperation.add(actionId, TraceRuleId.of(rule),
                 TraceDomainId.DEPLOY_SEQUENCING, kind, delta, reason);
+    }
+
+    private static PolicyOperation addObjective(
+            String actionId, String rule, TraceOutputKind kind,
+            float delta, String reason) {
+        return PolicyOperation.add(actionId, TraceRuleId.of(rule),
+                TraceDomainId.OBJECTIVE_INTENT, kind, delta, reason);
     }
 
     private static Evaluation evaluation(String producer,

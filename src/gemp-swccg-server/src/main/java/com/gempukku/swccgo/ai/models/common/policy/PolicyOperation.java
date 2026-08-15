@@ -47,6 +47,9 @@ public record PolicyOperation(
                 && Float.floatToRawIntBits(delta) != Float.floatToRawIntBits(0.0f)) {
             throw new IllegalArgumentException("HARD_VETO must not carry an additive delta");
         }
+        if (kind == PolicyOperationKind.ADD) {
+            delta = ObjectivePreferencePolicy.normalize(domainId, delta);
+        }
     }
 
     public static PolicyOperation add(String actionId, TraceRuleId ruleArmId,

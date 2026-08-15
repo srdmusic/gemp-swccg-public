@@ -61,7 +61,7 @@ public class PullOwnershipSourceTest {
                 "V53 BLOCK WOKLING: Don't waste 3 force searching for effects!",
                 "Search for Effect from Reserve Deck",
                 "V29.7 NO TARGET: No admirals/generals in Reserve Deck — skip!",
-                "CRITICAL: Admiral pilot enables Executor deploy to Bespin — must pull T1!",
+                "OBJECTIVE: prefer an admiral pilot for the Executor-to-Bespin route (+300 bounded preference)",
                 "V29.7 PULL FIRST: Retrieve admiral/general into hand before deploying!"}) {
             assertFalse(movedReason, adapter.contains(movedReason));
             assertTrue(movedReason, policy.contains(movedReason));

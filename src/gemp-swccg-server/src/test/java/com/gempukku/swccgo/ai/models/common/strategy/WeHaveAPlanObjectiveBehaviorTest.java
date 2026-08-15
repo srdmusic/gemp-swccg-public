@@ -5,7 +5,9 @@ import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveGateHoldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveBattlePolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Persona;
@@ -224,9 +226,11 @@ public class WeHaveAPlanObjectiveBehaviorTest {
                         fixture.game, fixture.gameState, PLAYER_ID,
                         fixture.padme, fixture.padme.getBlueprint(),
                         "Deploy Padme Naberrie");
-        assertTrue(padmeNotes.stream().anyMatch(
-                note -> note.score == 600.0f
-                        && note.reason.contains("stage")));
+        List<ObjectiveAnalyzer.ScoreNote> padmeStageNotes = padmeNotes.stream()
+                .filter(note -> note.reason.contains("stage"))
+                .toList();
+        assertEquals(1, padmeStageNotes.size());
+        assertEquals(300.0f, padmeStageNotes.getFirst().score, 0.0f);
 
         List<ObjectiveAnalyzer.ScoreNote> panakaNotes =
                 fixture.analyzer.getDeployObjectiveAdjustments(
@@ -311,10 +315,16 @@ public class WeHaveAPlanObjectiveBehaviorTest {
                 decision, candidate,
                 ForceLossPolicy.ObjectiveFlags.none());
 
-        assertTrue(protectedLoss.operations().stream().anyMatch(
-                operation -> operation.ruleArmId().id()
-                        .equals("V21-objective")
-                        && operation.delta() == -9999.0f));
+        var objectiveHold = protectedLoss.operations().stream()
+                .filter(operation -> operation.ruleArmId().id()
+                        .equals("V21-objective"))
+                .findFirst().orElseThrow();
+        assertEquals(-300.0f, objectiveHold.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                objectiveHold.domainId());
+        assertFalse(protectedLoss.operations().stream().anyMatch(
+                operation -> operation.kind()
+                        == PolicyOperationKind.HARD_VETO));
         assertFalse(ordinaryLoss.operations().stream().anyMatch(
                 operation -> operation.ruleArmId().id()
                         .equals("V21-objective")));
@@ -397,12 +407,17 @@ public class WeHaveAPlanObjectiveBehaviorTest {
         PolicyResult protectedForfeit =
                 BattleForfeitPolicy.scoreFlipGateFormationProtection(
                         "padme", contestedRole, true);
-        assertTrue(protectedForfeit.operations().stream().anyMatch(
-                operation -> operation.ruleArmId().id().equals(
-                        "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD")
-                        && operation.delta() == -9999.0f
-                        && operation.reason().contains(
-                                "sole flip-back blocker")));
+        var forfeitHold = protectedForfeit.operations().stream()
+                .filter(operation -> operation.ruleArmId().id().equals(
+                        "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD"))
+                .findFirst().orElseThrow();
+        assertEquals(-300.0f, forfeitHold.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                forfeitHold.domainId());
+        assertTrue(forfeitHold.reason().contains("sole flip-back blocker"));
+        assertFalse(protectedForfeit.operations().stream().anyMatch(
+                operation -> operation.kind()
+                        == PolicyOperationKind.HARD_VETO));
         assertTrue(BattleForfeitPolicy
                 .scoreFlipGateFormationProtection(
                         "padme", contestedRole, false)

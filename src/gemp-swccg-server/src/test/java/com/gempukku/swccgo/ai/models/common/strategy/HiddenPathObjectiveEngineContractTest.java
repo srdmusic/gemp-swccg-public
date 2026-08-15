@@ -1,6 +1,10 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
+import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Phase;
@@ -67,6 +71,215 @@ public class HiddenPathObjectiveEngineContractTest {
                     randoResponse, chosenResponse);
             return randoResponse;
         }
+    }
+
+    private record FocusedOutcome(
+            String actionId,
+            float score,
+            List<String> reasoning,
+            boolean hardVeto,
+            String vetoReason) {
+    }
+
+    private record TracedFocusedOutcomes(
+            List<FocusedOutcome> outcomes,
+            DecisionTrace trace) {
+    }
+
+    private record FocusedDecision(
+            String type,
+            String text,
+            String decisionId,
+            List<String> actionIds,
+            List<String> actionTexts,
+            List<String> cardIds,
+            List<String> blueprints,
+            List<String> titles,
+            boolean cardSelection,
+            Integer sourcePermanentId) {
+    }
+
+    private TracedFocusedOutcomes evaluateRelocationParent(
+            VirtualTableScenario scn,
+            PhysicalCard objective) {
+        return evaluateFocused(
+                scn, objective,
+                new FocusedDecision(
+                    "CARD_ACTION_CHOICE",
+                    "Choose Move action or Pass",
+                    "hidden-path-relocate-parent",
+                    List.of("relocate"),
+                    List.of("Relocate a Jedi"),
+                    List.of(Integer.toString(
+                        objective.getCardId())),
+                    List.of(objective.getBlueprintId(true)),
+                    List.of(objective.getTitle()),
+                    false, null));
+    }
+
+    private TracedFocusedOutcomes evaluateRelocationMovers(
+            VirtualTableScenario scn,
+            PhysicalCard objective,
+            List<PhysicalCard> candidates) {
+        return evaluateFocused(
+                scn, objective,
+                new FocusedDecision(
+                    "CARD_SELECTION",
+                    "Choose Jedi to relocate",
+                    "hidden-path-relocate-mover",
+                    List.of(), List.of(),
+                    candidates.stream()
+                        .map(card -> Integer.toString(
+                            card.getCardId()))
+                        .toList(),
+                    candidates.stream()
+                        .map(card -> card.getBlueprintId(true))
+                        .toList(),
+                    candidates.stream()
+                        .map(PhysicalCard::getTitle)
+                        .toList(),
+                    true, objective.getPermanentCardId()));
+    }
+
+    private TracedFocusedOutcomes evaluateFocused(
+            VirtualTableScenario scn,
+            PhysicalCard objective,
+            FocusedDecision decision) {
+        List<String> candidateIds = decision.cardSelection()
+                ? decision.cardIds() : decision.actionIds();
+        assertTrue(TraceSession.open(
+                "RANDO",
+                decision.decisionId(), decision.type(),
+                decision.text(), candidateIds, null,
+                List.of("objective route cap"), false));
+        List<FocusedOutcome> outcomes;
+        DecisionTrace trace;
+        try {
+            var context = randoFocusedContext(
+                    scn, objective, decision);
+            outcomes = decision.cardSelection()
+                    ? new com.gempukku.swccgo.ai.models.rando
+                        .evaluators.CardSelectionEvaluator()
+                        .evaluate(context).stream()
+                        .map(HiddenPathObjectiveEngineContractTest
+                            ::focused)
+                        .toList()
+                    : new com.gempukku.swccgo.ai.models.rando
+                        .evaluators.ActionTextEvaluator()
+                        .evaluate(context).stream()
+                        .map(HiddenPathObjectiveEngineContractTest
+                            ::focused)
+                        .toList();
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(trace);
+        return new TracedFocusedOutcomes(outcomes, trace);
+    }
+
+    private com.gempukku.swccgo.ai.models.rando.evaluators
+            .DecisionContext randoFocusedContext(
+                    VirtualTableScenario scn,
+                    PhysicalCard objective,
+                    FocusedDecision decision) {
+        var analyzer = new com.gempukku.swccgo.ai.models.rando
+                .strategy.ObjectiveAnalyzer();
+        analyzer.analyze(
+                scn.game(), VirtualTableScenario.LS, Side.LIGHT);
+        var context = new com.gempukku.swccgo.ai.models.rando
+                .evaluators.DecisionContext(
+                    scn.gameState(), VirtualTableScenario.LS,
+                    decision.type(), decision.text(),
+                    decision.decisionId(), Phase.MOVE);
+        configureFocused(
+                context, scn, objective, analyzer, decision);
+        return context;
+    }
+
+    private void configureFocused(
+            com.gempukku.swccgo.ai.models.rando.evaluators
+                .DecisionContext context,
+            VirtualTableScenario scn,
+            PhysicalCard objective,
+            com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer analyzer,
+            FocusedDecision decision) {
+        context.setGame(scn.game());
+        context.setSide(Side.LIGHT);
+        context.setObjectiveAnalyzer(analyzer);
+        configureFocusedInputs(context, objective, decision);
+    }
+
+    private void configureFocusedInputs(
+            com.gempukku.swccgo.ai.models.rando.evaluators
+                .DecisionContext context,
+            PhysicalCard objective,
+            FocusedDecision decision) {
+        context.setActionIds(decision.actionIds());
+        context.setActionTexts(decision.actionTexts());
+        context.setCardIds(decision.cardIds());
+        context.setBlueprints(decision.blueprints());
+        context.setTestingTexts(decision.titles());
+        if (decision.cardSelection()) {
+            context.setSelectable(List.of(true, true));
+            context.setNoPass(true);
+            context.setMin(1);
+            context.setMax(1);
+            context.setExtra(
+                com.gempukku.swccgo.ai.models.common.phase
+                    .BhbmForceDripUrgencyFactsReader
+                    .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA,
+                decision.sourcePermanentId());
+        }
+    }
+
+    private static FocusedOutcome focused(
+            com.gempukku.swccgo.ai.models.rando.evaluators
+                .EvaluatedAction action) {
+        return new FocusedOutcome(
+                action.getActionId(), action.getScore(),
+                List.copyOf(action.getReasoning()),
+                action.isHardVetoed(), action.getVetoReason());
+    }
+
+    private static FocusedOutcome findFocused(
+            TracedFocusedOutcomes traced,
+            PhysicalCard candidate) {
+        String actionId = Integer.toString(candidate.getCardId());
+        return traced.outcomes().stream()
+                .filter(outcome -> actionId.equals(
+                    outcome.actionId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(
+                    "Missing focused action " + actionId));
+    }
+
+    private static void assertObjectiveDelta(
+            TracedFocusedOutcomes traced,
+            FocusedOutcome outcome,
+            String ruleId,
+            float delta) {
+        assertFalse(outcome.hardVeto());
+        assertEquals(delta, outcome.score(), 0.0f);
+        assertTrue(
+                "Expected typed objective operation '" + ruleId
+                    + "' at " + delta + " in "
+                    + traced.trace().getOperations(),
+                traced.trace().getOperations().stream()
+                    .anyMatch(operation ->
+                        outcome.actionId().equals(
+                            operation.getActionId())
+                        && operation.getRuleId() != null
+                        && ruleId.equals(
+                            operation.getRuleId().id())
+                        && operation.getDomainId()
+                            == TraceDomainId.OBJECTIVE_INTENT
+                        && operation.getOutputKind()
+                            == TraceOutputKind.BANDED
+                        && operation.getDeltaBits() != null
+                        && operation.getDeltaBits()
+                            == Float.floatToRawIntBits(delta)
+                        && !operation.isVetoed()));
     }
 
     private static final StartingSetup HIDDEN_PATH = new StartingSetup() {
@@ -907,12 +1120,14 @@ public class HiddenPathObjectiveEngineContractTest {
     }
 
     @Test
-    public void publicBotsRefuseRelocationThatWouldFlipTheObjectiveBack() {
+    public void publicBotsPreferSafeRelocationWhenNothingOverridesTheHold() {
         var scn = hiddenPathRelocationScenario();
         var objective = scn.GetLSCard("objective");
         var poc = scn.GetLSCard("poc");
         var village = scn.GetLSCard("village");
+        var corridor = scn.GetLSCard("corridor");
         var marketplace = scn.GetDSStartingLocation();
+        var kelleran = scn.GetLSCard("kelleran");
         var obiwan = scn.GetLSCard("obiwan");
         var quinlan = scn.GetLSCard("quinlan");
         var pulse = scn.GetLSFiller(1);
@@ -929,6 +1144,7 @@ public class HiddenPathObjectiveEngineContractTest {
         resolveRequiredWindows(scn);
         assertTrue("Fixture must reach Gather Allies And Train",
                 objective.isFlipped());
+        scn.MoveCardsToLocation(corridor, kelleran);
 
         var relocationAnalyzer =
                 new com.gempukku.swccgo.ai.models.rando.strategy
@@ -948,6 +1164,45 @@ public class HiddenPathObjectiveEngineContractTest {
         assertFalse("No offered relocation may trade away the flipped objective",
                 relocationAnalyzer.hasUsefulHiddenPathRelocation(
                     scn.game(), VirtualTableScenario.LS));
+        assertTrue(
+                "A legal, formation-safe relocation still exists even though it does not advance the hold",
+                relocationAnalyzer.hasFormationSafeHiddenPathRelocation(
+                    scn.game(), VirtualTableScenario.LS,
+                    quinlan));
+        assertFalse(
+                "The Corridor Jedi has no legal back-side relocation route",
+                relocationAnalyzer.hasFormationSafeHiddenPathRelocation(
+                    scn.game(), VirtualTableScenario.LS,
+                    kelleran));
+
+        TracedFocusedOutcomes parentEvaluation =
+                evaluateRelocationParent(scn, objective);
+        FocusedOutcome parentOutcome =
+                parentEvaluation.outcomes().stream()
+                    .filter(outcome ->
+                        "relocate".equals(outcome.actionId()))
+                    .findFirst().orElseThrow();
+        assertObjectiveDelta(
+                parentEvaluation, parentOutcome,
+                "ACTION.OBJECTIVE.HIDDEN_PATH.RELOCATE_HOLD",
+                -300.0f);
+
+        TracedFocusedOutcomes moverEvaluation =
+                evaluateRelocationMovers(
+                    scn, objective,
+                    List.of(quinlan, kelleran));
+        FocusedOutcome boundedMover = findFocused(
+                moverEvaluation, quinlan);
+        assertObjectiveDelta(
+                moverEvaluation, boundedMover,
+                "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_HOLD",
+                -300.0f);
+        FocusedOutcome safetyMover = findFocused(
+                moverEvaluation, kelleran);
+        assertTrue(safetyMover.hardVeto());
+        assertTrue(safetyMover.reasoning().stream()
+                .anyMatch(reason -> reason.contains(
+                    "RELOCATE_MOVER_SAFETY")));
 
         while (scn.GetLSForcePileCount() > 2) {
             scn.MoveCardsToTopOfLSUsedPile(
@@ -968,7 +1223,7 @@ public class HiddenPathObjectiveEngineContractTest {
         assertEquals(objective,
                 AiActionSourceProvenance.selectedActionSource(
                     parent, relocate));
-        assertFalse("Every offered relocation collapses the two-site hold, so never select it",
+        assertFalse("The bounded hold preference selects Pass in this fixture",
                 relocate.equals(
                     PublicBots.forGame(scn).decideBoth(scn)));
         assertEquals(2, scn.GetLSForcePileCount());
@@ -1223,7 +1478,7 @@ public class HiddenPathObjectiveEngineContractTest {
     }
 
     @Test
-    public void publicBotsPullJabiimThenFundTwoSurvivorsBeforeHolocron() {
+    public void publicBotsPullJabiimAndFundTwoSurvivorsWithBoundedTransitReserve() {
         var scn = hiddenPathRouteScenario();
         var objective = scn.GetLSCard("objective");
         var fallenOrder = scn.GetLSCard("fallenOrder");
@@ -1326,10 +1581,18 @@ public class HiddenPathObjectiveEngineContractTest {
                 "Deploy a holocron from Reserve Deck");
         assertNotNull("The optional holocron remains legally offered",
                 holocronAction);
-        assertEquals("With both Jabiim sites out and exactly two Force, the public bots must pass instead of spending the transit budget",
-                "", bots.decideBoth(scn));
+        assertEquals(
+                "The reversible transit reserve is only -300, so normal"
+                    + " deploy scoring may choose the offered holocron",
+                holocronAction, bots.decideBoth(scn));
         assertTrue(holocron.getZone() == Zone.RESERVE_DECK
                 || holocron.getZone() == Zone.TOP_OF_RESERVE_DECK);
+
+        // Preserve the fixture's Force only to continue proving the two
+        // native transit children below. The bot preference itself was
+        // observed above and is intentionally not categorical.
+        scn.LSDecided("");
+        scn.PassAllResponses();
 
         scn.SkipToPhase(Phase.MOVE);
         CorridorTransit firstTransit =

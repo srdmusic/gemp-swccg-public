@@ -12,14 +12,14 @@ public class TwinSunsObjectivePolicyTest {
     public void exactObjectiveActionsOwnTheirPriorityBands() {
         var site = TwinSunsObjectivePolicy.scoreFrontSiteRoute(
                 "site", true, false);
-        assertEquals(2000.0f,
+        assertEquals(300.0f,
                 site.operations().get(0).delta(), 0.0f);
         assertEquals("OBJECTIVE.TWIN_SUNS.SITE_ROUTE",
                 site.operations().get(0).ruleArmId().id());
 
         var occupation = TwinSunsObjectivePolicy.scoreOccupationRoute(
                 "occupation", true);
-        assertEquals(2000.0f,
+        assertEquals(300.0f,
                 occupation.operations().get(0).delta(), 0.0f);
 
         var peek = TwinSunsObjectivePolicy.scorePeek(
@@ -43,15 +43,17 @@ public class TwinSunsObjectivePolicyTest {
     }
 
     @Test
-    public void ordinaryDeployCannotSpendTheExactTwinSunsRoutePayment() {
-        var blocked = TwinSunsObjectivePolicy
+    public void ordinaryDeployGetsBoundedTwinSunsRoutePenalty() {
+        var penalized = TwinSunsObjectivePolicy
                 .preserveRouteForceForOrdinaryDeploy(
                     "deploy", true, 2, 2, 1, 1);
-        assertEquals(1, blocked.operations().size());
-        assertEquals(PolicyOperationKind.HARD_VETO,
-                blocked.operations().get(0).kind());
+        assertEquals(1, penalized.operations().size());
+        assertEquals(PolicyOperationKind.ADD,
+                penalized.operations().get(0).kind());
+        assertEquals(-300.0f,
+                penalized.operations().get(0).delta(), 0.0f);
         assertEquals("OBJECTIVE.TWIN_SUNS.ROUTE_FORCE_RESERVE",
-                blocked.operations().get(0).ruleArmId().id());
+                penalized.operations().get(0).ruleArmId().id());
 
         assertTrue(TwinSunsObjectivePolicy
                 .preserveRouteForceForOrdinaryDeploy(

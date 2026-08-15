@@ -38,7 +38,7 @@ public class TheChosenOneDeployActionTextParityTest
     }
 
     @Test
-    public void approvedAmsdStacksAndMissingPiettKeepsTerminalMutation() {
+    public void approvedAmsdKeepsBoundedReasonsAndMissingPiettKeepsTerminalMutation() {
         GameState gameState = bespinGameState();
 
         DeckOracle approvedOracle = mock(DeckOracle.class);
@@ -46,10 +46,10 @@ public class TheChosenOneDeployActionTextParityTest
         when(approvedOracle.isCardInHand("Admiral Piett")).thenReturn(true);
         when(approvedOracle.isCardInHand("Executor")).thenReturn(true);
         EvaluatedAction approved = evaluateAmsd(gameState, approvedOracle);
-        assertEquals(Float.floatToRawIntBits(1800.0f),
+        assertEquals(Float.floatToRawIntBits(300.0f),
                 Float.floatToRawIntBits(approved.getScore()));
         assertTrue(approved.getReasoningString().contains(
-                "V24.15 AMSD MEGA PRIORITY"));
+                "V24.15 AMSD OBJECTIVE PREFERENCE"));
         assertTrue(approved.getReasoningString().contains(
                 "V22.5 CRITICAL: Deploy ship to Bespin"));
 
@@ -73,7 +73,7 @@ public class TheChosenOneDeployActionTextParityTest
                 .thenReturn(true);
         EvaluatedAction pushed = evaluateText(active,
                 "Target The Main Generator");
-        assertEquals(Float.floatToRawIntBits(800.0f),
+        assertEquals(Float.floatToRawIntBits(300.0f),
                 Float.floatToRawIntBits(pushed.getScore()));
         assertTrue(pushed.getReasoningString().contains(
                 "V160 PUSH TARGET THE MAIN GENERATOR"));

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -87,7 +88,7 @@ public class SenateObjectiveCombinedEvaluatorDecisionTest {
     }
 
     @Test
-    public void senatorDeploysToGalacticSenateInsteadOfTheOtherStartSite() {
+    public void senatorObjectiveSitingDoesNotOverrideTacticalSoloPenalty() {
         for (Family family : FAMILIES) {
             List<Outcome> outcomes = new ArrayList<>();
             for (Bot bot : Bot.values()) {
@@ -107,12 +108,26 @@ public class SenateObjectiveCombinedEvaluatorDecisionTest {
 
                 List<Outcome> candidates = cardSelectionAdapter(
                         bot, fixture, decision);
+                Outcome senate = only(
+                        candidates, String.valueOf(SENATE_ID));
+                Outcome otherSite = only(
+                        candidates, String.valueOf(OTHER_SITE_ID));
                 Outcome result = combined(bot, fixture, decision);
                 assertEquals(label(bot, family) + " " + result
                                 + " candidates=" + candidates,
-                        String.valueOf(SENATE_ID), result.actionId);
-                assertContains(result, "V88 MY LORD");
-                assertContains(result, "SENATE OBJECTIVE FORMATION");
+                        String.valueOf(OTHER_SITE_ID), result.actionId);
+                assertFalse(label(bot, family) + " " + senate,
+                        senate.hardVeto);
+                assertFalse(label(bot, family) + " " + otherSite,
+                        otherSite.hardVeto);
+                assertContains(senate,
+                        "OBJECTIVE LOCATION - deploy here helps flip! (+300.0)");
+                assertContains(senate,
+                        "V88 MY LORD: senator");
+                assertContains(otherSite,
+                        "wrong site! (-300.0)");
+                assertTrue(label(bot, family) + " " + candidates,
+                        otherSite.score > senate.score);
                 outcomes.add(result);
             }
             assertParity(outcomes);
@@ -161,7 +176,7 @@ public class SenateObjectiveCombinedEvaluatorDecisionTest {
     }
 
     @Test
-    public void postFlipMoveOfEitherLastTwoSenatorsLosesToPass() {
+    public void postFlipSenatorHoldIsBoundedAndTacticsStillChoosePass() {
         for (Family family : FAMILIES) {
             List<Outcome> outcomes = new ArrayList<>();
             for (Bot bot : Bot.values()) {
@@ -176,9 +191,11 @@ public class SenateObjectiveCombinedEvaluatorDecisionTest {
                 Outcome move = only(
                         moveAdapter(bot, fixture, decision),
                         "move-senator");
-                assertTrue(label(bot, family) + " " + move,
-                        move.score <= -90000.0f);
+                assertFalse(label(bot, family) + " " + move,
+                        move.hardVeto);
                 assertContains(move, "FLIP_BACK_BLOCKER_HOLD");
+                assertContains(move,
+                        "keep the sole blocker preventing immediate flip-back (-300.0)");
 
                 Outcome winner = combined(bot, fixture, decision);
                 assertEquals(label(bot, family), "pass", winner.actionId);
@@ -189,7 +206,7 @@ public class SenateObjectiveCombinedEvaluatorDecisionTest {
     }
 
     @Test
-    public void preFlipMoveCannotAbandonAnExactSenatorCount() {
+    public void preFlipSenatorCountHoldIsBoundedAndTacticsStillChoosePass() {
         for (Family family : FAMILIES) {
             List<Outcome> outcomes = new ArrayList<>();
             for (Bot bot : Bot.values()) {
@@ -204,9 +221,11 @@ public class SenateObjectiveCombinedEvaluatorDecisionTest {
                 Outcome move = only(
                         moveAdapter(bot, fixture, decision),
                         "move-senator");
-                assertTrue(label(bot, family) + " " + move,
-                        move.score <= -90000.0f);
+                assertFalse(label(bot, family) + " " + move,
+                        move.hardVeto);
                 assertContains(move, "COUNTED_FORMATION_HOLD");
+                assertContains(move,
+                        "prefer retaining the last required actor at the gate (-300) (-300.0)");
 
                 Outcome winner = combined(bot, fixture, decision);
                 assertEquals(label(bot, family), "pass", winner.actionId);

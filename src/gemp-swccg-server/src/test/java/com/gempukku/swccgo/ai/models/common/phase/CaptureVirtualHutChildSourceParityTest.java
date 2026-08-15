@@ -95,6 +95,18 @@ public class CaptureVirtualHutChildSourceParityTest {
                 "CaptureObjectivePolicy.scoreCaptureRoute(");
         assertTrue(source.contains(
                 "Choice.HARD_VETO"));
+        int boundedAlternative = source.indexOf(
+                "Choice.HARD_VETO");
+        int branchEnd = source.indexOf(
+                "actions.add(action);", boundedAlternative);
+        String alternativeBranch = source.substring(
+                boundedAlternative, branchEnd);
+        assertTrue(alternativeBranch.contains(
+                "addObjectiveContribution(action,"));
+        assertTrue(alternativeBranch.contains("-300.0f"));
+        assertTrue(alternativeBranch.contains(
+                "MOVE.OBJECTIVE.TIGIH.VIRTUAL_HUT_CHILD_HOLD"));
+        assertTrue(!alternativeBranch.contains("action.hardVeto("));
     }
 
     @Test

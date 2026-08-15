@@ -32,7 +32,7 @@ public class DeployMapuzoPlanDestinationSourceParityTest {
         assertTrue(source.contains(
                 "isPlannedTargetFormationHardBlocked(context,"));
         assertTrue(source.contains(
-                "if (!isPlannedTarget || !plannedTargetBlocked)"));
+                "if ((!isPlannedTarget || !plannedTargetBlocked)"));
         assertTrue(source.contains(
                 "plannedTargetOffered && !plannedTargetBlocked"));
         for (String retired : new String[]{
@@ -57,8 +57,8 @@ public class DeployMapuzoPlanDestinationSourceParityTest {
         int blueprint = source.indexOf(
                 "getBlueprintFromId(context, deployingBlueprintId)",
                 blueprintGuard);
-        int gameText = source.indexOf("deployBp.getGameText()", blueprint);
-        int survivor = source.indexOf("contains(\"jedi survivor\")", gameText);
+        int keywordRead = source.indexOf("deployBp.hasKeyword(", blueprint);
+        int survivor = source.indexOf("Keyword.JEDI_SURVIVOR", keywordRead);
         int mapuzoPolicy = source.indexOf(
                 "DeploySitingPolicy.evaluateMapuzoDestination(", survivor);
         int mapuzoLog = source.indexOf("logger.info", mapuzoPolicy);
@@ -76,7 +76,7 @@ public class DeployMapuzoPlanDestinationSourceParityTest {
 
         assertTrue(mapuzoGuard >= 0 && opponent > mapuzoGuard
                 && blueprintGuard > opponent && blueprint > blueprintGuard
-                && gameText > blueprint && survivor > gameText
+                && keywordRead > blueprint && survivor > keywordRead
                 && mapuzoPolicy > survivor && mapuzoLog > mapuzoPolicy
                 && planGuard > mapuzoLog && physicalComparison > planGuard
                 && apply > physicalComparison && planPolicy > apply

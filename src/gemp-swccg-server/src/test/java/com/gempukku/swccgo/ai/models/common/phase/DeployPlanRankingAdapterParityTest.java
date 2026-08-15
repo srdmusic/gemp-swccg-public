@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Icon;
@@ -173,7 +174,7 @@ public class DeployPlanRankingAdapterParityTest {
     }
 
     @Test
-    public void bothBotsApplyPublicReactPenaltyAndExactPlanWaivers()
+    public void bothBotsApplyPublicReactPenaltyDespiteObjectivePlanLabels()
             throws Exception {
         VirtualTableScenario scn = hothReactScenario();
         var target = scn.GetDSStartingLocation();
@@ -205,18 +206,18 @@ public class DeployPlanRankingAdapterParityTest {
 
         randoExposed.setReason("V297 objective flip-gate formation test");
         chosenExposed.setReason("V297 objective flip-gate formation test");
-        assertBits(116.0f,
+        assertBits(-34.0f,
                 scoreRando(randoPlanner, randoExposed, List.of(emptyTarget)));
-        assertBits(116.0f,
+        assertBits(-34.0f,
                 scoreChosen(chosenPlanner, chosenExposed, List.of(emptyTarget)));
 
         randoExposed.setReason(
                 EndorOperationsTacticalPolicy.bunkerGarrisonPlanReason());
         chosenExposed.setReason(
                 EndorOperationsTacticalPolicy.bunkerGarrisonPlanReason());
-        assertBits(116.0f,
+        assertBits(-34.0f,
                 scoreRando(randoPlanner, randoExposed, List.of(emptyTarget)));
-        assertBits(116.0f,
+        assertBits(-34.0f,
                 scoreChosen(chosenPlanner, chosenExposed, List.of(emptyTarget)));
 
         var randoSpyInstruction = randoInstruction(
@@ -256,7 +257,7 @@ public class DeployPlanRankingAdapterParityTest {
                 new Scenario("establish_5_4", 5, 4, 0.0f, false, false),
                 new Scenario("objective_capital", 8, 4, 4.0f, true, true));
         float[] expected = {38.0f, 65.0f, 131.0f, -452.0f,
-                50.0f, 75.0f, 481.0f};
+                50.0f, 75.0f, 431.0f};
 
         var randoPlanner = newRandoPlanner();
         var chosenPlanner = newChosenPlanner();
@@ -280,8 +281,8 @@ public class DeployPlanRankingAdapterParityTest {
         }
 
         Scenario objective = scenarios.get(scenarios.size() - 1);
-        assertBits(281.0f, scoreRandoCoreScenario(randoPlanner, objective));
-        assertBits(281.0f, scoreChosenCoreScenario(chosenPlanner, objective));
+        assertBits(431.0f, scoreRandoCoreScenario(randoPlanner, objective));
+        assertBits(431.0f, scoreChosenCoreScenario(chosenPlanner, objective));
 
         Collections.sort(randoPlans);
         Collections.sort(chosenPlans);
@@ -1167,7 +1168,7 @@ public class DeployPlanRankingAdapterParityTest {
     }
 
     @Test
-    public void fundedInvasionNeedWinsLowerCorridorAndMayRespondAtItself() {
+    public void persistentCorridorDamageMayOverrideBoundedInvasionProgress() {
         GameState gameState = mock(GameState.class);
         SwccgGame game = mock(SwccgGame.class);
         ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
@@ -1245,18 +1246,24 @@ public class DeployPlanRankingAdapterParityTest {
                         82, new PersistentResponsePolicy.DrainHistory(
                                 82, "Lower Corridor", 2, 2, 1, 2)));
 
-        var mandatoryWinner = PersistentResponsePlanAdapter.select(
+        var responseWinner = PersistentResponsePlanAdapter.select(
                 new PersistentResponsePlanAdapter.Input<>(
                         game, "player", analyzer, corridorThreat,
                         List.of(corridorFacts, nabooOpen),
                         10, 10, List.of(corridorPlan, nabooPlan)))
                 .orElseThrow();
-        assertEquals("invasion-naboo", mandatoryWinner.source());
-        assertEquals(PersistentResponsePolicy.CandidateKind.EXISTING_PLAN,
-                mandatoryWinner.obligation().kind());
-        assertEquals("funded-mandatory-objective",
-                mandatoryWinner.obligation().reasonCode());
-        assertNull(mandatoryWinner.obligation().responseBank());
+        assertEquals("corridor-response", responseWinner.source());
+        assertEquals(PersistentResponsePolicy.CandidateKind.RESPONSE_TARGET,
+                responseWinner.obligation().kind());
+        assertEquals(PersistentResponsePolicy.TargetRole.PERSISTENT_DAMAGE,
+                responseWinner.obligation().role());
+        var boundedInvasion = DeployObjectiveSitingPolicy
+                .scoreActorRuntimeLocation("invasion-naboo", true);
+        assertEquals(1, boundedInvasion.operations().size());
+        assertBits(300.0f,
+                boundedInvasion.operations().getFirst().delta());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                boundedInvasion.operations().getFirst().domainId());
 
         when(analyzer.hasOpponentBattleParticipantAt(
                 game, "player", naboo)).thenReturn(true);
@@ -1277,18 +1284,22 @@ public class DeployPlanRankingAdapterParityTest {
                                 new PersistentResponsePlanAdapter
                                         .InstructionView(
                                         13, 1013, "400", 2)));
-        var sameTargetWinner = PersistentResponsePlanAdapter.select(
+        var sameTargetSelection = PersistentResponsePlanAdapter.select(
                 new PersistentResponsePlanAdapter.Input<>(
                         game, "player", analyzer, corridorThreat,
                         List.of(nabooOccupied), 10, 10,
-                        List.of(nabooResponsePlan))).orElseThrow();
-        assertEquals(PersistentResponsePolicy.CandidateKind.RESPONSE_TARGET,
-                sameTargetWinner.obligation().kind());
-        assertEquals(PersistentResponsePolicy.TargetRole
-                        .MISSING_REQUIRED_LOCATION,
-                sameTargetWinner.obligation().role());
-        assertEquals(250, sameTargetWinner.obligation().criticalBonus());
-        assertNull(sameTargetWinner.obligation().responseBank());
+                        List.of(nabooResponsePlan)));
+        assertTrue("An ordinary missing objective location must not become a"
+                        + " mandatory response obligation",
+                sameTargetSelection.isEmpty()
+                        || !"funded-mandatory-objective".equals(
+                            sameTargetSelection.get().obligation()
+                                .reasonCode()));
+        assertFalse("The +300 objective preference remains overridable",
+                boundedInvasion.operations().stream().anyMatch(operation ->
+                        operation.kind()
+                            == com.gempukku.swccgo.ai.models.common.policy
+                                .PolicyOperationKind.HARD_VETO));
     }
 
     @Test
@@ -1354,11 +1365,17 @@ public class DeployPlanRankingAdapterParityTest {
 
         when(analyzer.hasCountedOperativeCompanionAtLocation(
                 game, "player", site)).thenReturn(false);
-        var requiredCompanion = PersistentResponsePlanAdapter.select(input)
-                .orElseThrow();
-        assertEquals("ordinary-complete-site", requiredCompanion.source());
-        assertEquals("funded-mandatory-objective",
-                requiredCompanion.obligation().reasonCode());
+        assertTrue("A missing ordinary companion is bounded objective intent,"
+                        + " not a structural response obligation",
+                PersistentResponsePlanAdapter.select(input).isEmpty());
+        var boundedCompanion = DeployObjectiveSitingPolicy
+                .scoreCountedObjectiveProgress(
+                        "ordinary-complete-site", true);
+        assertEquals(1, boundedCompanion.operations().size());
+        assertBits(300.0f,
+                boundedCompanion.operations().getFirst().delta());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                boundedCompanion.operations().getFirst().domainId());
     }
 
     @Test
@@ -1694,7 +1711,7 @@ public class DeployPlanRankingAdapterParityTest {
     }
 
     @Test
-    public void bothBotsSpendTheBattleReserveToCompleteTheExactFlipFormation() {
+    public void bothBotsKeepBattleReserveWhenExactFlipFormationIsUnaffordable() {
         PlanRefreshFixture fixture = planRefreshFixture();
         fixture.locations().set(List.of(fixture.swamp(), fixture.throneRoom()));
         GameState gameState = fixture.game().getGameState();
@@ -1722,20 +1739,23 @@ public class DeployPlanRankingAdapterParityTest {
         var chosenPlan = chosenPlanner.createPlan(
                 fixture.game(), "player", Side.DARK);
 
-        assertTrue(randoPlan.getReason().startsWith(
+        assertFalse(randoPlan.getReason().startsWith(
                 "V297 objective flip-gate formation"));
-        assertTrue(chosenPlan.getReason().startsWith(
+        assertFalse(chosenPlan.getReason().startsWith(
                 "V297 objective flip-gate formation"));
-        assertEquals(1, randoPlan.getInstructions().size());
-        assertEquals(1, chosenPlan.getInstructions().size());
-        assertEquals("Neimoidian",
-                randoPlan.getInstructions().get(0).getCardName());
-        assertEquals("Neimoidian",
-                chosenPlan.getInstructions().get(0).getCardName());
-        assertEquals(3,
-                randoPlan.getInstructions().get(0).getDeployCost());
-        assertEquals(3,
-                chosenPlan.getInstructions().get(0).getDeployCost());
+        assertEquals(randoPlan.getReason(), chosenPlan.getReason());
+        assertEquals(randoPlan.getInstructions().size(),
+                chosenPlan.getInstructions().size());
+        assertTrue(randoPlan.getInstructions().stream()
+                .mapToInt(instruction -> instruction.getDeployCost())
+                .sum() <= 1);
+        var oversizedPreference = DeployPlanRankingPolicy
+                .evaluateFlipGateFormation(
+                    new DeployPlanRankingPolicy.FlipGateFormationFacts(
+                        "exact-flip-formation", true, 1600.0f));
+        assertBits(300.0f,
+                DeployPlanRankingPolicy.apply(
+                    0.0f, oversizedPreference));
     }
 
     @Test

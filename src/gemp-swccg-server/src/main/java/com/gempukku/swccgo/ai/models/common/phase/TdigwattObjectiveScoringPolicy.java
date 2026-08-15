@@ -20,20 +20,18 @@ public final class TdigwattObjectiveScoringPolicy {
     public static final String PRODUCER_ID =
             "TDIGWATT_OBJECTIVE_SCORING_POLICY";
 
-    public static final float PULL_PARENT_BONUS = 200.0f;
-    public static final float PULL_CHILD_BONUS = 400.0f;
-    public static final float DEPLOY_ADVANCE_BONUS = 600.0f;
-    public static final float DEPLOY_COMPLETE_BONUS = 1200.0f;
-    public static final float DEPLOY_STABLE_BACK_BONUS = 900.0f;
-    public static final float ENGINE_DEPLOY_BONUS = 900.0f;
+    public static final float PULL_PARENT_BONUS = 300.0f;
+    public static final float PULL_CHILD_BONUS = 300.0f;
+    public static final float DEPLOY_ADVANCE_BONUS = 300.0f;
+    public static final float DEPLOY_COMPLETE_BONUS = 300.0f;
+    public static final float DEPLOY_STABLE_BACK_BONUS = 300.0f;
+    public static final float ENGINE_DEPLOY_BONUS = 300.0f;
     /**
-     * Exact safe objective movement uses the existing +600 objective-advance
-     * band. Individual ordinary Control drains top at +300 and their strongest
-     * current safe additive stack is +440. This remains below completion and
-     * cannot defeat a categorical hard veto.
+     * Exact safe objective movement uses the bounded +300 objective preference.
+     * It cannot defeat a categorical hard veto.
      */
-    public static final float LANDO_PARENT_BONUS = 600.0f;
-    public static final float LANDO_DESTINATION_BONUS = 600.0f;
+    public static final float LANDO_PARENT_BONUS = 300.0f;
+    public static final float LANDO_DESTINATION_BONUS = 300.0f;
     public static final float BATTLE_DESTINY_POINT_BONUS = 40.0f;
     public static final float LANDO_DESTINY_ADJUSTMENT_BONUS = 20.0f;
     public static final float MAX_BATTLE_PAYOFF_BONUS = 200.0f;
@@ -441,11 +439,13 @@ public final class TdigwattObjectiveScoringPolicy {
                     >= reserve) {
             return neutral();
         }
-        return hardVeto(
+        return add(
                 facts.actionId(),
                 facts.reservedMove().objective(),
                 "CONTROL.LANDO_FORCE_RESERVE",
-                TraceDomainId.FORCE_BUDGET,
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED,
+                -300.0f,
                 "Preserve the exact positive Force reserve for the source-granted virtual Lando move",
                 Outcome.CONTROL_LANDO_FORCE_RESERVED);
     }
@@ -701,18 +701,17 @@ public final class TdigwattObjectiveScoringPolicy {
 
         String suffix = route == RetentionRoute.FORCE_LOSS
                 ? "FORCE_LOSS.RETAIN" : "FORFEIT.RETAIN";
-        TraceDomainId domain = route == RetentionRoute.FORCE_LOSS
-                ? TraceDomainId.FORCE_LOSS_PAYMENT
-                : TraceDomainId.BATTLE_FORFEIT;
         Outcome outcome = route == RetentionRoute.FORCE_LOSS
                 ? Outcome.FORCE_LOSS_RETAIN
                 : Outcome.FORFEIT_RETAIN;
-        return hardVeto(
+        return add(
                 actionId,
                 objective,
                 suffix,
-                domain,
-                "Preserve positive exact objective margin "
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED,
+                -300.0f,
+                "Prefer to preserve positive exact objective margin "
                         + positiveExactMargin
                         + " while an unprotected legal loss exists",
                 outcome);
@@ -727,10 +726,16 @@ public final class TdigwattObjectiveScoringPolicy {
             float delta,
             String reason,
             Outcome outcome) {
+        TraceDomainId scoreDomain = switch (outcome) {
+            case BATTLE_PAYOFF,
+                 LANDO_DESTINY_PARENT,
+                 LANDO_DESTINY_DIRECTION -> domain;
+            default -> TraceDomainId.OBJECTIVE_INTENT;
+        };
         PolicyOperation operation = PolicyOperation.add(
                 actionId,
                 ruleId(objective, suffix),
-                domain,
+                scoreDomain,
                 outputKind,
                 delta,
                 reason);

@@ -6,7 +6,10 @@ import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import org.junit.Test;
+
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -379,7 +382,7 @@ public class PullSpecificActionPolicyTest {
     }
 
     @Test
-    public void admiralGeneralPullPreservesMutuallyExclusiveOrder() {
+    public void admiralGeneralPullPreservesMutuallyExclusiveOrderAndObjectiveDomain() {
         assertResult(PullSpecificActionPolicy.scoreAdmiralGeneralPull(
                         new PullSpecificActionFacts.AdmiralGeneralPull(
                                 ACTION_ID, false, true)),
@@ -389,15 +392,42 @@ public class PullSpecificActionPolicyTest {
         assertResult(PullSpecificActionPolicy.scoreAdmiralGeneralPull(
                         new PullSpecificActionFacts.AdmiralGeneralPull(
                                 ACTION_ID, true, true)),
-                expected("PULL-executor-chain", TraceOutputKind.ORDERING,
+                expectedObjective("PULL-executor-chain", TraceOutputKind.ORDERING,
                         300.0f,
-                        "CRITICAL: Admiral pilot enables Executor deploy to Bespin — must pull T1!"));
+                        "OBJECTIVE: prefer an admiral pilot for the Executor-to-Bespin route (+300 bounded preference)"));
         assertResult(PullSpecificActionPolicy.scoreAdmiralGeneralPull(
                         new PullSpecificActionFacts.AdmiralGeneralPull(
                                 ACTION_ID, true, false)),
                 expected("V29.7-admiral-general-first",
                         TraceOutputKind.ORDERING, 250.0f,
                         "V29.7 PULL FIRST: Retrieve admiral/general into hand before deploying!"));
+    }
+
+    @Test
+    public void executorChainPreferenceSharesTheObjectiveIntentCap() {
+        PolicyOperation executorChain = PullSpecificActionPolicy
+                .scoreAdmiralGeneralPull(
+                        new PullSpecificActionFacts.AdmiralGeneralPull(
+                                ACTION_ID, true, true))
+                .operations().getFirst();
+        PolicyResult sharedCap = new PolicyResult(
+                "objective-cap-sharing",
+                List.of(
+                        executorChain,
+                        PolicyOperation.add(
+                                ACTION_ID,
+                                TraceRuleId.of("TEST.SECOND.OBJECTIVE"),
+                                TraceDomainId.OBJECTIVE_INTENT,
+                                TraceOutputKind.BANDED,
+                                300.0f,
+                                "Second bounded objective preference")));
+
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                sharedCap.operations().get(0).domainId());
+        assertEquals(300.0f,
+                sharedCap.operations().get(0).delta(), 0.0f);
+        assertEquals(0.0f,
+                sharedCap.operations().get(1).delta(), 0.0f);
     }
 
     @Test
@@ -473,7 +503,7 @@ public class PullSpecificActionPolicyTest {
             Expected value = expected[i];
             assertEquals(ACTION_ID, operation.actionId());
             assertEquals(value.ruleId, operation.ruleArmId().id());
-            assertEquals(TraceDomainId.PULL_SEARCH, operation.domainId());
+            assertEquals(value.domainId, operation.domainId());
             assertEquals(value.outputKind, operation.outputKind());
             assertEquals(PolicyOperationKind.ADD, operation.kind());
             assertEquals(Float.floatToRawIntBits(value.delta),
@@ -485,18 +515,29 @@ public class PullSpecificActionPolicyTest {
     private static Expected expected(String ruleId,
                                      TraceOutputKind outputKind,
                                      float delta, String reason) {
-        return new Expected(ruleId, outputKind, delta, reason);
+        return new Expected(ruleId, TraceDomainId.PULL_SEARCH,
+                outputKind, delta, reason);
+    }
+
+    private static Expected expectedObjective(
+            String ruleId, TraceOutputKind outputKind,
+            float delta, String reason) {
+        return new Expected(ruleId, TraceDomainId.OBJECTIVE_INTENT,
+                outputKind, delta, reason);
     }
 
     private static final class Expected {
         private final String ruleId;
+        private final TraceDomainId domainId;
         private final TraceOutputKind outputKind;
         private final float delta;
         private final String reason;
 
-        private Expected(String ruleId, TraceOutputKind outputKind,
-                         float delta, String reason) {
+        private Expected(String ruleId, TraceDomainId domainId,
+                         TraceOutputKind outputKind, float delta,
+                         String reason) {
             this.ruleId = ruleId;
+            this.domainId = domainId;
             this.outputKind = outputKind;
             this.delta = delta;
             this.reason = reason;

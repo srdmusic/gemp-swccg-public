@@ -41,17 +41,41 @@ public class BattleForfeitPolicyTest {
                     ObjectiveAnalyzer.FlipGateFormationRole
                         .LAST_FLIP_BACK_BLOCKER,
                     true);
-        PolicyResult terminalActor = BattleForfeitPolicy
+        PolicyResult requiredRetention = BattleForfeitPolicy
                 .scoreFlipGateFormationProtection(
                     ACTION_ID,
                     ObjectiveAnalyzer.FlipGateFormationRole
-                        .TERMINAL_OBJECTIVE_ACTOR,
+                        .REQUIRED_CARD_RETENTION_DEFENDER,
                     true);
         PolicyResult pendingTrigger = BattleForfeitPolicy
                 .scoreFlipGateFormationProtection(
                     ACTION_ID,
                     ObjectiveAnalyzer.FlipGateFormationRole
                         .LAST_PENDING_TRIGGER_CONTROL_SOURCE,
+                    true);
+        PolicyResult attackRunEnabler = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .MASSASSI_ATTACK_RUN_ENABLER,
+                    true);
+        PolicyResult terminalSurvival = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .LAST_OBJECTIVE_SURVIVAL_ACTOR,
+                    true);
+        PolicyResult hardLossLocation = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .HARD_LOSS_LOCATION_DEFENDER,
+                    true);
+        PolicyResult terminalActor = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                    ACTION_ID,
+                    ObjectiveAnalyzer.FlipGateFormationRole
+                        .TERMINAL_OBJECTIVE_ACTOR,
                     true);
         PolicyResult surplus = BattleForfeitPolicy
                 .scoreFlipGateFormationProtection(
@@ -66,29 +90,49 @@ public class BattleForfeitPolicyTest {
                     false);
 
         assertOperations(actor,
-                op("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
-                    -9999.0f,
+                objectiveOp("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
+                    -300.0f,
                     "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the last required actor while another legal loss exists",
-                    TraceOutputKind.VETO));
+                    TraceOutputKind.BANDED));
         assertOperations(buddy,
-                op("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
-                    -9999.0f,
+                objectiveOp("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
+                    -300.0f,
                     "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the required actor's last buddy while another legal loss exists",
-                    TraceOutputKind.VETO));
+                    TraceOutputKind.BANDED));
         assertOperations(flipBackBlocker,
-                op("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
-                    -9999.0f,
+                objectiveOp("BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD",
+                    -300.0f,
                     "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the sole flip-back blocker while another legal loss exists",
+                    TraceOutputKind.BANDED));
+        assertOperations(requiredRetention,
+                objectiveOp("BATTLE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD",
+                    -300.0f,
+                    "BATTLE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD: preserve the sole defender preventing an active required card from removing itself while another legal loss exists",
+                    TraceOutputKind.BANDED));
+        assertOperations(pendingTrigger,
+                objectiveOp("BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD",
+                    -300.0f,
+                    "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD: preserve the sole control source until the mandatory objective trigger resolves",
+                    TraceOutputKind.BANDED));
+        assertOperations(attackRunEnabler,
+                objectiveOp("BATTLE.OBJECTIVE.MASSASSI_ATTACK_RUN_HOLD",
+                    -300.0f,
+                    "BATTLE.OBJECTIVE.MASSASSI_ATTACK_RUN_HOLD: preserve the sole executable Attack Run enabler while another legal loss exists",
+                    TraceOutputKind.BANDED));
+        assertOperations(terminalSurvival,
+                op("BATTLE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD",
+                    -9999.0f,
+                    "BATTLE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD: preserve the last actor keeping the objective in play while another legal loss exists",
+                    TraceOutputKind.VETO));
+        assertOperations(hardLossLocation,
+                op("BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_HOLD",
+                    -9999.0f,
+                    "BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_HOLD: preserve the sole defender of a terminal-loss location while another legal loss exists",
                     TraceOutputKind.VETO));
         assertOperations(terminalActor,
                 op("BATTLE.OBJECTIVE.TERMINAL_ACTOR_HOLD",
                     -9999.0f,
                     "BATTLE.OBJECTIVE.TERMINAL_ACTOR_HOLD: do not forfeit the actor whose loss would place the objective out of play while another legal loss exists",
-                    TraceOutputKind.VETO));
-        assertOperations(pendingTrigger,
-                op("BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD",
-                    -9999.0f,
-                    "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD: preserve the sole control source until the mandatory objective trigger resolves",
                     TraceOutputKind.VETO));
         assertOperations(surplus);
         assertOperations(unavoidable);
@@ -134,10 +178,24 @@ public class BattleForfeitPolicyTest {
                 op("V22.4-zero-forfeit", -80.0f,
                         "Optional forfeit but zero forfeit value",
                         TraceOutputKind.BANDED),
-                op("V21-optional-required", -9999.0f,
+                objectiveOp("V21-optional-required", -300.0f,
                         "OBJECTIVE CRITICAL - don't voluntarily forfeit",
-                        TraceOutputKind.VETO));
+                        TraceOutputKind.BANDED));
         assertOperations(evaluation.afterRoute());
+
+        BattleForfeitPolicy.Evaluation pullable =
+                BattleForfeitPolicy.evaluateOptional(
+                        decision(0, 6, candidate), candidate,
+                        new BattleForfeitFacts.ObjectiveFlags(false, true));
+        assertOperations(pullable.beforeRoute(),
+                op("V159-hit", 3000.0f,
+                        "V159 FORFEIT (attr=0 dmg=6 fv=5 hit=true)"),
+                op("V22.4-zero-forfeit", -80.0f,
+                        "Optional forfeit but zero forfeit value",
+                        TraceOutputKind.BANDED),
+                objectiveOp("V21-optional-pullable", -300.0f,
+                        "OBJECTIVE PULLABLE - don't voluntarily forfeit",
+                        TraceOutputKind.BANDED));
     }
 
     @Test
@@ -161,9 +219,9 @@ public class BattleForfeitPolicyTest {
                         "V139 High power - prefer keeping for battle"),
                 op("V139-valuable-unique", -300.0f,
                         "V139 VALUABLE UNIQUE - never forfeit unless forced"),
-                op("V21-forfeit-required", -9999.0f,
-                        "OBJECTIVE CRITICAL - NEVER FORFEIT!", TraceOutputKind.VETO));
-        assertBits(-20318.0f, 50.0f + shipWithCrew.operations().get(0).delta()
+                objectiveOp("V21-forfeit-required", -300.0f,
+                        "OBJECTIVE CRITICAL: prefer to retain (-300 objective preference)", TraceOutputKind.BANDED));
+        assertBits(-10619.0f, 50.0f + shipWithCrew.operations().get(0).delta()
                 + residual.operations().stream().map(PolicyOperation::delta)
                 .reduce(0.0f, Float::sum));
     }
@@ -232,8 +290,8 @@ public class BattleForfeitPolicyTest {
                         "Low power - cheap loss, forfeit first"),
                 op("V139-generic-unique", -100.0f,
                         "V139 Unique - avoid forfeiting"),
-                op("V21-forfeit-pullable", -9999.0f,
-                        "OBJECTIVE PULLABLE - NEVER FORFEIT!", TraceOutputKind.VETO));
+                objectiveOp("V21-forfeit-pullable", -300.0f,
+                        "OBJECTIVE PULLABLE: prefer to retain (-300 objective preference)", TraceOutputKind.BANDED));
 
         PolicyResult middlePower = BattleForfeitPolicy.scoreStandaloneResidual(
                 new BattleForfeitPolicy.StandaloneResidualFacts(
@@ -246,8 +304,8 @@ public class BattleForfeitPolicyTest {
                         ACTION_ID, false, false, null, null, false, null, null,
                         new BattleForfeitFacts.ObjectiveFlags(true, false)));
         assertOperations(objectiveOnly,
-                op("V21-forfeit-required", -9999.0f,
-                        "OBJECTIVE CRITICAL - NEVER FORFEIT!", TraceOutputKind.VETO));
+                objectiveOp("V21-forfeit-required", -300.0f,
+                        "OBJECTIVE CRITICAL: prefer to retain (-300 objective preference)", TraceOutputKind.BANDED));
     }
 
     @Test
@@ -486,12 +544,20 @@ public class BattleForfeitPolicyTest {
     private static Expected op(String ruleArmId, float delta, String reason,
                                TraceOutputKind outputKind) {
         return new Expected(ruleArmId, delta, reason, outputKind,
-                PolicyOperationKind.ADD);
+                TraceDomainId.BATTLE_FORFEIT, PolicyOperationKind.ADD);
+    }
+
+    private static Expected objectiveOp(
+            String ruleArmId, float delta, String reason,
+            TraceOutputKind outputKind) {
+        return new Expected(ruleArmId, delta, reason, outputKind,
+                TraceDomainId.OBJECTIVE_INTENT, PolicyOperationKind.ADD);
     }
 
     private static Expected hardVeto(String ruleArmId, String reason) {
         return new Expected(ruleArmId, 0.0f, reason,
-                TraceOutputKind.VETO, PolicyOperationKind.HARD_VETO);
+                TraceOutputKind.VETO, TraceDomainId.BATTLE_FORFEIT,
+                PolicyOperationKind.HARD_VETO);
     }
 
     private static void assertOperations(PolicyResult result, Expected... expected) {
@@ -506,7 +572,7 @@ public class BattleForfeitPolicyTest {
             assertBits(expectedOperation.delta(), operation.delta());
             assertEquals(expectedOperation.reason(), operation.reason());
             assertEquals(expectedOperation.outputKind(), operation.outputKind());
-            assertEquals(TraceDomainId.BATTLE_FORFEIT, operation.domainId());
+            assertEquals(expectedOperation.domainId(), operation.domainId());
             assertEquals(expectedOperation.kind(), operation.kind());
             assertEquals(ACTION_ID, operation.actionId());
         }
@@ -519,6 +585,7 @@ public class BattleForfeitPolicyTest {
 
     private record Expected(String ruleArmId, float delta, String reason,
                             TraceOutputKind outputKind,
+                            TraceDomainId domainId,
                             PolicyOperationKind kind) {
     }
 

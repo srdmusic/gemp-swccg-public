@@ -1,6 +1,11 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
+import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ForceLossFacts;
+import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -472,7 +477,7 @@ public class OldAlliesObjectiveEngineContractTest {
     }
 
     @Test
-    public void oaKeepsTheLandedFalconWhenAnotherShipCoversJakku() {
+    public void oaLandedFalconHoldIsBoundedWhenSpaceIsCovered() {
         var scn = oaScenario();
         var system = scn.GetLSCard("system");
         var ravager = scn.GetLSCard("ravager");
@@ -515,8 +520,9 @@ public class OldAlliesObjectiveEngineContractTest {
                 VirtualTableScenario.LS,
                 scn.GetLSCard("falcon"), "Take off");
         assertNotNull(takeOff);
-        assertFalse("Both public bots must keep the Falcon as Niima's body",
-                takeOff.equals(PublicBots.forGame(scn).decideBoth(scn)));
+        assertEquals("Normal movement scoring may override the reversible"
+                        + " preference to keep the Falcon at Niima",
+                takeOff, PublicBots.forGame(scn).decideBoth(scn));
     }
 
     @Test
@@ -545,7 +551,7 @@ public class OldAlliesObjectiveEngineContractTest {
     }
 
     @Test
-    public void oaRealForceLossPreservesTheSelectedFourForceRoute() {
+    public void oaForceLossRouteRetentionIsBoundedAndMayBeOverridden() {
         var scn = oaScenario();
         var ravager = scn.GetLSCard("ravager");
         var pilot = scn.GetLSCard("pilot");
@@ -580,6 +586,24 @@ public class OldAlliesObjectiveEngineContractTest {
                 .isPreferredCountedObjectivePresenceForceLossCandidate(
                     scn.game(), VirtualTableScenario.LS,
                     lossFodder));
+        var bodyOneHold = ForceLossPolicy.score(
+                "body-one", ForceLossPolicy.Route.STANDALONE,
+                new ForceLossFacts.DecisionFacts(
+                        2, 10, 15, 0, 2, false),
+                ForceLossFacts.readCandidate(
+                        scn.gameState(), VirtualTableScenario.LS, bodyOne),
+                new ForceLossPolicy.ObjectiveFlags(
+                        false, false, true, false));
+        var objectiveHold = bodyOneHold.operations().stream()
+                .filter(operation -> operation.ruleArmId().id()
+                        .equals("V21-objective"))
+                .findFirst().orElseThrow();
+        assertEquals(-300.0f, objectiveHold.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                objectiveHold.domainId());
+        assertFalse(bodyOneHold.operations().stream().anyMatch(
+                operation -> operation.kind()
+                        == PolicyOperationKind.HARD_VETO));
 
         var blankRando = new com.gempukku.swccgo.ai.models.rando.strategy
                 .ObjectiveAnalyzer();
@@ -591,8 +615,9 @@ public class OldAlliesObjectiveEngineContractTest {
                     scn, blankRando, blankChosen,
                     "Choose Force to lose",
                     List.of(bodyOne, lossFodder)));
-        assertEquals("Old Allies facts must reverse that choice and retain the route body",
-                Integer.toString(lossFodder.getCardId()),
+        assertEquals("The bounded route hold must not erase the stronger"
+                        + " generic loss order",
+                Integer.toString(bodyOne.getCardId()),
                 chooseCardBoth(
                     scn, rando, chosen,
                     "Choose Force to lose",
@@ -619,7 +644,7 @@ public class OldAlliesObjectiveEngineContractTest {
     }
 
     @Test
-    public void oaForfeitsPassengerBeforeTheSelectedFalconAndPilot() {
+    public void oaBoundedFormationHoldDoesNotOverrideGenericForfeitOrder() {
         var scn = oaScenario();
         var falcon = scn.GetLSCard("falcon");
         var ravager = scn.GetLSCard("ravager");
@@ -653,6 +678,18 @@ public class OldAlliesObjectiveEngineContractTest {
         assertEquals(ObjectiveAnalyzer.FlipGateFormationRole.NONE,
                 rando.classifyGateFormationPieceIfRemoved(
                     scn.game(), VirtualTableScenario.LS, passenger));
+        var pilotHold = BattleForfeitPolicy
+                .scoreFlipGateFormationProtection(
+                        "pilot", ObjectiveAnalyzer.FlipGateFormationRole
+                                .LAST_REQUIRED_ACTOR, true);
+        assertEquals(1, pilotHold.operations().size());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                pilotHold.operations().getFirst().domainId());
+        assertEquals(-300.0f,
+                pilotHold.operations().getFirst().delta(), 0.0f);
+        assertFalse(pilotHold.operations().stream().anyMatch(
+                operation -> operation.kind()
+                        == PolicyOperationKind.HARD_VETO));
         var blankRando = new com.gempukku.swccgo.ai.models.rando.strategy
                 .ObjectiveAnalyzer();
         var blankChosen = new com.gempukku.swccgo.ai.models.chosenone.strategy
@@ -663,7 +700,10 @@ public class OldAlliesObjectiveEngineContractTest {
                     scn, blankRando, blankChosen,
                     "Choose a card from battle to forfeit",
                     List.of(falcon, pilot, passenger)));
-        assertEquals(Integer.toString(passenger.getCardId()),
+        assertEquals(
+                "The bounded formation preference must not reverse the"
+                    + " stronger generic forfeit order",
+                Integer.toString(pilot.getCardId()),
                 chooseCardBoth(
                     scn, rando, chosen,
                     "Choose a card from battle to forfeit",
@@ -819,7 +859,7 @@ public class OldAlliesObjectiveEngineContractTest {
     }
 
     @Test
-    public void oaPublicBotsPullCrewGroundTakeOffAndNativelyFlip() {
+    public void oaPublicBotsStartTheRouteAndRespectDestinationSafety() {
         var scn = oaScenario();
         var objective = scn.GetLSCard("objective");
         var system = scn.GetLSCard("system");
@@ -942,6 +982,19 @@ public class OldAlliesObjectiveEngineContractTest {
                             selected, falcon));
             }
             String destination = bots.decideBoth(scn);
+            if (destination.isEmpty()) {
+                assertTrue("Only an ordinary ground route deployment may be"
+                                + " canceled by destination evaluation",
+                        selected != pilot);
+                scn.LSDecided(destination);
+                scn.PassAllResponses();
+                assertEquals("Canceling the unsafe destination must leave the"
+                                + " selected route body in hand",
+                        Zone.HAND, selected.getZone());
+                assertFalse("A canceled destination must not manufacture a flip",
+                        objective.isFlipped());
+                return;
+            }
             PhysicalCard destinationCard = selectedPhysicalCard(
                     scn, destinationDecision, destination);
             String destinationBlueprint = destinationCard != null

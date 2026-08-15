@@ -113,9 +113,9 @@ public class MoveDrainRoutingPolicyTest {
         assertEquals(
                 MoveDrainRoutingPolicy.DestinationDrainBranch.TRANSIT_STAGING,
                 transit.branch());
-        assertFloat(1500.0f, transit.contribution().delta());
+        assertFloat(300.0f, transit.contribution().delta());
         assertEquals(
-                "V67n TRANSIT STAGING DEST: Mapuzo: Underground Corridor is the Hidden Path transit hub — Jedi MUST channel through here!",
+                "V67n TRANSIT STAGING DEST: Mapuzo: Underground Corridor is the Hidden Path transit hub; prefer routing Jedi through here (+300 objective preference)",
                 transit.contribution().reason());
         assertEquals(
                 MoveDrainRoutingPolicy.DestinationDrainBranch.ZERO_DRAIN,
@@ -328,7 +328,7 @@ public class MoveDrainRoutingPolicyTest {
                 "Printed Zero", 4.0f, 1, 2, 1).delta();
 
         assertFloat(-700.0f, ordinaryZeroDrain + twoIconDrop);
-        assertFloat(1500.0f, transit + transitDrop);
+        assertFloat(300.0f, transit + transitDrop);
         assertFloat(150.0f, contest + ordinaryZeroDrain);
     }
 
@@ -634,7 +634,7 @@ public class MoveDrainRoutingPolicyTest {
                 "move to tatooine: mos eisley")
                 .contribution().delta();
 
-        assertFloat(5560.0f, 6000.0f + v85 + v2913 + v73);
+        assertFloat(560.0f, 1000.0f + v85 + v2913 + v73);
     }
 
     private static void assertShuttle(

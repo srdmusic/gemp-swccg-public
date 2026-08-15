@@ -170,8 +170,8 @@ public class CharacterDeploySiteEvaluatorTest {
                 Collections.singletonList(buddy),
                 8, 4, 0, false);
 
-        assertScore(-300f, unsupported);
-        assertScore(800f, supported);
+        assertScore(-500f, unsupported);
+        assertScore(-500f, supported);
     }
 
     @Test

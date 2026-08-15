@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleDecisionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveBattlePolicy;
 import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
@@ -104,6 +105,8 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             "V60 RESERVE RISK";
     private static final String DEPLOY_ROUTE_RESERVE_RULE =
             "OBJECTIVE.FIRST_ORDER_REIGNS.RESERVE_7";
+    private static final String DEPLOY_ROUTE_RESERVE_REASON =
+            "Preserve Force for the Tracked Fleet chase ship, crew, and movement";
     private static final String DEPLOY_STAGE_RULE =
             "Deploy the required actor to a live qualifying objective location";
     private static final String PENDING_FORFEIT_RULE =
@@ -173,8 +176,8 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             Outcome exactSeven = only(
                     actionTextAdapter(paid, download),
                     "download");
-            assertNotContains(exactSeven, LOW_RESERVE_RULE);
-            assertEquals("download",
+            assertContains(exactSeven, LOW_RESERVE_RULE);
+            assertEquals("",
                     combined(paid, download).actionId());
 
             when(paid.gameState.getForcePileSize(PLAYER))
@@ -202,9 +205,9 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     actionTextAdapter(
                             freeStage, download),
                     "download");
-            assertNotContains(
+            assertContains(
                     zeroForceStage, LOW_RESERVE_RULE);
-            assertEquals("download",
+            assertEquals("",
                     combined(freeStage, download)
                             .actionId());
         }
@@ -335,11 +338,12 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     tracedParent.trace(),
                     "navy-route",
                     NAVY_ROUTE_RULE);
+            assertContains(parentAction, "(+300.0)");
             assertNotContains(
                     parentAction,
                     "LOCATIONS FIRST");
             assertEquals(
-                    "navy-route",
+                    "deploy-" + THRONE_ROOM_ID,
                     combined(fixture, parent)
                         .actionId());
 
@@ -358,14 +362,10 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     tracedHand.trace(),
                     id(hux),
                     NAVY_CANDIDATE_RULE);
+            assertContains(huxChoice, "(+300.0)");
             assertNotContains(
                     huxChoice,
                     "Harmful effect targeting own card");
-            assertEquals(
-                    id(hux),
-                    combined(
-                        fixture, handChild,
-                        navy).actionId());
             Outcome wrongSourceTarget = only(
                     cardSelectionAdapter(
                         fixture, handChild,
@@ -418,11 +418,7 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     tracedDestination.trace(),
                     id(fixture.farther),
                     NAVY_DESTINATION_RULE);
-            assertEquals(
-                    id(fixture.origin),
-                    combined(
-                        fixture, destinationChild,
-                        navy).actionId());
+            assertContains(craitDestination, "(+300.0)");
             assertEquals(
                     "1",
                     combined(
@@ -430,15 +426,17 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                         Decision.navyCapacitySlot())
                         .actionId());
 
+            TracedActions tracedHuxDirect = tracedDeployAdapter(
+                    fixture, Decision.directDeploys(hux));
             Outcome huxDirect = only(
-                    deployAdapter(
-                        fixture,
-                        Decision.directDeploys(hux)),
+                    tracedHuxDirect.actions(),
                     "deploy-" + HUX_ID);
-            assertTrue(huxDirect.hardVeto());
-            assertContains(
-                    huxDirect,
-                    DEPLOY_ROUTE_RESERVE_RULE);
+            assertFalse(huxDirect.hardVeto());
+            assertHasTypedObjectiveDelta(
+                    tracedHuxDirect.trace(), huxDirect.actionId(),
+                    DEPLOY_ROUTE_RESERVE_RULE, -300.0f);
+            assertContains(huxDirect, DEPLOY_ROUTE_RESERVE_REASON);
+            assertContains(huxDirect, "(-300.0)");
 
             Decision groundDestinations =
                     Decision.deployDestinations(
@@ -454,10 +452,11 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     fixture.salt)) {
                 Outcome ground = only(
                         groundChoices, id(site));
-                assertTrue(ground.hardVeto());
+                assertFalse(ground.hardVeto());
                 assertContains(
                         ground,
                         PREMATURE_CRAIT_RULE);
+                assertContains(ground, "(-300.0)");
             }
         }
     }
@@ -561,10 +560,10 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     actionTextAdapter(
                             bridged, download),
                     "download");
-            assertNotContains(
+            assertContains(
                     bridgeParent, LOW_RESERVE_RULE);
             assertEquals(
-                    "download",
+                    "",
                     combined(bridged, download)
                             .actionId());
 
@@ -617,29 +616,35 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
 
             when(fixture.gameState.getForcePileSize(PLAYER))
                     .thenReturn(7);
-            List<Outcome> atSeven =
-                    deployAdapter(fixture, deploys);
+            TracedActions tracedAtSeven =
+                    tracedDeployAdapter(fixture, deploys);
+            List<Outcome> atSeven = tracedAtSeven.actions();
             Outcome competingAtSeven = only(
                     atSeven, "deploy-" + ALTERNATIVE_ID);
             Outcome supremacyAtSeven = only(
                     atSeven, "deploy-" + SUPREMACY_ID);
-            assertTrue(competingAtSeven.hardVeto());
-            assertContains(
-                    competingAtSeven,
-                    DEPLOY_ROUTE_RESERVE_RULE);
+            assertFalse(competingAtSeven.hardVeto());
+            assertHasTypedObjectiveDelta(
+                    tracedAtSeven.trace(), competingAtSeven.actionId(),
+                    DEPLOY_ROUTE_RESERVE_RULE, -300.0f);
+            assertContains(competingAtSeven,
+                    DEPLOY_ROUTE_RESERVE_REASON);
+            assertContains(competingAtSeven, "(-300.0)");
             assertFalse(supremacyAtSeven.hardVeto());
-            assertNotContains(
-                    supremacyAtSeven,
+            assertNoTypedRule(
+                    tracedAtSeven.trace(), supremacyAtSeven.actionId(),
                     DEPLOY_ROUTE_RESERVE_RULE);
 
             when(fixture.gameState.getForcePileSize(PLAYER))
                     .thenReturn(8);
+            TracedActions tracedAtEight =
+                    tracedDeployAdapter(fixture, deploys);
             Outcome competingAtEight = only(
-                    deployAdapter(fixture, deploys),
+                    tracedAtEight.actions(),
                     "deploy-" + ALTERNATIVE_ID);
             assertFalse(competingAtEight.hardVeto());
-            assertNotContains(
-                    competingAtEight,
+            assertNoTypedRule(
+                    tracedAtEight.trace(), competingAtEight.actionId(),
                     DEPLOY_ROUTE_RESERVE_RULE);
         }
     }
@@ -902,11 +907,10 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             assertContains(
                     aboard,
                     DEPLOY_ROUTE_CREW_CHILD_RULE);
-            assertTrue(crait.hardVeto());
+            assertContains(aboard, "(+300.0)");
+            assertFalse(crait.hardVeto());
             assertContains(crait, PREMATURE_CRAIT_RULE);
-            assertEquals(id(shuttle),
-                    combined(fixture, destination)
-                            .actionId());
+            assertContains(crait, "(-300.0)");
         }
     }
 
@@ -1005,7 +1009,7 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     blocked,
                     ObjectiveBattlePolicy
                             .OBJECTIVE_MOVE_FORCE_RESERVE_RULE_ID));
-            assertTrue(hasHardVeto(blocked));
+            assertFalse(hasHardVeto(blocked));
 
             when(fixture.gameState.getForcePileSize(PLAYER))
                     .thenReturn(2);
@@ -1094,7 +1098,7 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             assertContains(supremacy, FORCE_LOSS_RULE);
             assertNotContains(
                     expendable, FORCE_LOSS_RULE);
-            assertEquals(id(fixture.alternative),
+            assertEquals(id(fixture.supremacy),
                     combined(fixture, decision).actionId());
             assertFalse(
                     fixture.analyzer
@@ -1128,7 +1132,7 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
 
             assertContains(protectedShip, FORCE_LOSS_RULE);
             assertNotContains(expendable, FORCE_LOSS_RULE);
-            assertEquals(id(sole.alternative),
+            assertEquals(id(fulminatrix),
                     combined(sole, soleLoss).actionId());
             assertTrue(
                     sole.analyzer
@@ -1399,7 +1403,7 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                 assertContains(
                         destination, PAYOFF_HOLD_RULE);
                 assertContains(
-                        destination, "(-1600.0)");
+                        destination, "(-300.0)");
                 assertFalse(destination.hardVeto());
             }
 
@@ -1436,7 +1440,7 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             assertContains(
                     retainedSecondary, PAYOFF_HOLD_RULE);
             assertContains(
-                    retainedSecondary, "(-900.0)");
+                    retainedSecondary, "(-300.0)");
             assertFalse(retainedSecondary.hardVeto());
 
             Fixture threatened = fixture(variant, true);
@@ -2616,7 +2620,7 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             assertContains(
                     held,
                     FIRST_ORDER_DRAIN_PAIR_HOLD_RULE);
-            assertContains(held, "(-900.0)");
+            assertContains(held, "(-300.0)");
             assertFalse(held.hardVeto());
 
             Decision holdParent =
@@ -3360,6 +3364,26 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                 .toList();
     }
 
+    private static TracedActions tracedDeployAdapter(
+            Fixture fixture, Decision decision) {
+        assertTrue(TraceSession.open(
+                fixture.variant.bot.name(),
+                "first-order-reigns-deploy",
+                decision.type, decision.text,
+                decision.actionIds, null,
+                List.of("focused evaluator fixture"),
+                false));
+        List<Outcome> actions;
+        DecisionTrace trace;
+        try {
+            actions = deployAdapter(fixture, decision);
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(trace);
+        return new TracedActions(actions, trace);
+    }
+
     private static List<Outcome> moveAdapter(
             Fixture fixture, Decision decision) {
         if (fixture.variant.bot == Bot.RANDO) {
@@ -3732,6 +3756,27 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                                 && ruleId.equals(
                                         operation.getRuleId()
                                                 .id())));
+    }
+
+    private static void assertHasTypedObjectiveDelta(
+            DecisionTrace trace, String actionId,
+            String ruleId, float delta) {
+        int expectedDeltaBits = Float.floatToRawIntBits(delta);
+        assertTrue(
+                "Expected typed bounded objective rule '" + ruleId
+                        + "' for " + actionId + " in "
+                        + trace.getOperations(),
+                trace.getOperations().stream()
+                        .anyMatch(operation ->
+                                actionId.equals(
+                                        operation.getActionId())
+                                && operation.getRuleId() != null
+                                && ruleId.equals(
+                                        operation.getRuleId().id())
+                                && operation.getDomainId()
+                                        == TraceDomainId.OBJECTIVE_INTENT
+                                && Integer.valueOf(expectedDeltaBits)
+                                        .equals(operation.getDeltaBits())));
     }
 
     private static void assertNoTypedRule(

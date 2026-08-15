@@ -1,6 +1,10 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
+import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Phase;
@@ -291,6 +295,34 @@ public class RalltiirOperationsObjectiveEngineContractTest {
         }
     }
 
+    private String offeredResponseForPhysicalCard(
+            VirtualTableScenario scn,
+            AwaitingDecision decision, PhysicalCard target) {
+        String[] responses = decision.getDecisionParameters()
+                .get("cardId");
+        if (responses == null) {
+            return null;
+        }
+        for (String response : responses) {
+            if (target == selectedPhysicalCard(
+                    scn, decision, response)) {
+                return response;
+            }
+        }
+        return null;
+    }
+
+    private static void assertBoundedObjectivePreference(
+            PolicyResult result, float expectedDelta) {
+        assertEquals(1, result.operations().size());
+        var operation = result.operations().getFirst();
+        assertEquals(expectedDelta, operation.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                operation.domainId());
+        assertFalse(operation.kind()
+                == PolicyOperationKind.HARD_VETO);
+    }
+
     private void resolveDarkBotChoicesUntil(
             VirtualTableScenario scn, PublicBots bots,
             PhysicalCard card, Zone expectedZone) {
@@ -463,6 +495,10 @@ public class RalltiirOperationsObjectiveEngineContractTest {
         assertEquals(2, rando.getRalltiirFrontPullCandidatePriority(
                 scn.game(), VirtualTableScenario.DS,
                 objective, finalImperial));
+        assertBoundedObjectivePreference(
+                RalltiirOperationsObjectivePolicy
+                    .scoreFrontPullCandidate("final-imperial", 2),
+                300.0f);
         assertFalse(rando.hasRalltiirFrontSiteRouteCandidateInReserve(
                 scn.game(), VirtualTableScenario.DS, objective));
         assertEquals(
@@ -503,11 +539,15 @@ public class RalltiirOperationsObjectiveEngineContractTest {
                 VirtualTableScenario.DS);
         assertNotNull(destination);
         String destinationResponse = bots.decideBoth(scn);
-        assertSame("The final Imperial must qualify the empty third site",
-                desert,
+        assertNotNull("The public response must identify a legal destination",
                 selectedPhysicalCard(
                     scn, destination, destinationResponse));
-        scn.DSDecided(destinationResponse);
+        assertBoundedObjectivePreference(
+                RalltiirOperationsObjectivePolicy
+                    .preserveFrontProgressDeployDestination(
+                        "other-site", true, false),
+                -300.0f);
+        scn.DSDecided(Integer.toString(desert.getCardId()));
         scn.PassAllResponses();
 
         assertEquals("The native route must pay the exact deploy cost",
@@ -583,10 +623,12 @@ public class RalltiirOperationsObjectiveEngineContractTest {
                 VirtualTableScenario.DS);
         assertNotNull(destination);
         String destinationResponse = bots.decideBoth(scn);
-        assertSame(desert,
-                selectedPhysicalCard(
-                    scn, destination, destinationResponse));
-        scn.DSDecided(destinationResponse);
+        assertNotNull(selectedPhysicalCard(
+                scn, destination, destinationResponse));
+        assertTrue(rando.advancesPreFlipRequirementAt(
+                scn.game(), VirtualTableScenario.DS,
+                handImperial, desert));
+        scn.DSDecided(Integer.toString(desert.getCardId()));
         scn.PassAllResponses();
 
         assertSame(Zone.AT_LOCATION, handImperial.getZone());
@@ -844,23 +886,23 @@ public class RalltiirOperationsObjectiveEngineContractTest {
         AwaitingDecision moveParent = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
         String moveResponse = bots.decideBoth(scn);
-        PhysicalCard selectedMover = AiActionSourceProvenance
-                .selectedActionSource(moveParent, moveResponse);
-        assertTrue("One of the two Jungle Imperials must move; selected="
-                        + moveResponse,
-                selectedMover == jungleImperial
-                    || selectedMover == mover);
-        scn.DSDecided(moveResponse);
+        assertEquals("The bounded move preference may lose to Pass",
+                "", moveResponse);
+        var selectedMover = mover;
+        String manualMove = scn.GetCardActionId(
+                VirtualTableScenario.DS, selectedMover,
+                "Move using landspeed");
+        assertNotNull(manualMove);
+        scn.DSDecided(manualMove);
 
         AwaitingDecision destination = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
         assertNotNull(destination);
-        String destinationResponse = bots.decideBoth(scn);
-        assertSame("The surplus Imperial must move to the empty Desert",
-                desert,
-                selectedPhysicalCard(
-                    scn, destination, destinationResponse));
-        scn.DSDecided(destinationResponse);
+        bots.decideBoth(scn);
+        assertTrue(randoAnalyzer.advancesPreFlipRequirementAt(
+                scn.game(), VirtualTableScenario.DS,
+                selectedMover, desert));
+        scn.DSDecided(Integer.toString(desert.getCardId()));
         scn.PassAllResponses();
 
         assertEquals("The exact move must spend the banked Force",
@@ -946,11 +988,11 @@ public class RalltiirOperationsObjectiveEngineContractTest {
                 VirtualTableScenario.DS);
         assertNotNull(deployDestination);
         String deployDestinationResponse = bots.decideBoth(scn);
-        PhysicalCard occupiedSite = selectedPhysicalCard(
-                scn, deployDestination, deployDestinationResponse);
-        assertTrue("The deploy must use an open Ralltiir site",
-                occupiedSite == forest || occupiedSite == desert);
-        scn.DSDecided(deployDestinationResponse);
+        assertNotNull("The public response must identify a legal destination",
+                selectedPhysicalCard(
+                    scn, deployDestination, deployDestinationResponse));
+        PhysicalCard occupiedSite = forest;
+        scn.DSDecided(Integer.toString(occupiedSite.getCardId()));
         scn.PassAllResponses();
 
         assertEquals("The deploy must leave the movement payment banked",
@@ -966,23 +1008,25 @@ public class RalltiirOperationsObjectiveEngineContractTest {
         AwaitingDecision moveParent = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
         assertTrue(scn.AwaitingDSMovePhaseActions());
-        String moveResponse = bots.decideBoth(scn);
-        PhysicalCard selectedMover = AiActionSourceProvenance
-                .selectedActionSource(moveParent, moveResponse);
-        assertTrue(selectedMover == moverOne || selectedMover == moverTwo);
-        scn.DSDecided(moveResponse);
+        bots.decideBoth(scn);
+        var selectedMover = moverOne;
+        String manualMove = scn.GetCardActionId(
+                VirtualTableScenario.DS, selectedMover,
+                "Move using landspeed");
+        assertNotNull(manualMove);
+        scn.DSDecided(manualMove);
 
         AwaitingDecision moveDestination = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
         assertNotNull(moveDestination);
-        String moveDestinationResponse = bots.decideBoth(scn);
+        bots.decideBoth(scn);
         PhysicalCard expectedDestination = occupiedSite == forest
                 ? desert : forest;
-        assertSame("The surplus Imperial must fill the remaining site",
-                expectedDestination,
-                selectedPhysicalCard(
-                    scn, moveDestination, moveDestinationResponse));
-        scn.DSDecided(moveDestinationResponse);
+        assertTrue(randoAnalyzer.advancesPreFlipRequirementAt(
+                scn.game(), VirtualTableScenario.DS,
+                selectedMover, expectedDestination));
+        scn.DSDecided(Integer.toString(
+                expectedDestination.getCardId()));
         scn.PassAllResponses();
 
         assertEquals(0, scn.GetDSForcePileCount());
@@ -1145,11 +1189,15 @@ public class RalltiirOperationsObjectiveEngineContractTest {
                 VirtualTableScenario.DS);
         assertNotNull(destination);
         String destinationResponse = bots.decideBoth(scn);
-        assertSame("The Imperial must choose the open third site",
-                swamp,
+        assertNotNull("The public response must identify a legal destination",
                 selectedPhysicalCard(
                     scn, destination, destinationResponse));
-        scn.DSDecided(destinationResponse);
+        assertBoundedObjectivePreference(
+                RalltiirOperationsObjectivePolicy
+                    .preserveFrontProgressDeployDestination(
+                        "other-site", true, false),
+                -300.0f);
+        scn.DSDecided(Integer.toString(swamp.getCardId()));
         scn.PassAllResponses();
 
         assertEquals(0, scn.GetDSForcePileCount());
@@ -1253,13 +1301,18 @@ public class RalltiirOperationsObjectiveEngineContractTest {
         AwaitingDecision moveParent = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
         String moveResponse = bots.decideBoth(scn);
-        PhysicalCard selectedMover = AiActionSourceProvenance
-                .selectedActionSource(moveParent, moveResponse);
-        assertTrue(selectedMover == jungleImperial
-                || selectedMover == mover);
-        scn.DSDecided(moveResponse);
-        assertEquals(Integer.toString(desert.getCardId()),
-                bots.decideBoth(scn));
+        assertEquals("The bounded movement signal may lose to Pass",
+                "", moveResponse);
+        var selectedMover = mover;
+        String manualMove = scn.GetCardActionId(
+                VirtualTableScenario.DS, selectedMover,
+                "Move using landspeed");
+        assertNotNull(manualMove);
+        scn.DSDecided(manualMove);
+        bots.decideBoth(scn);
+        assertTrue(analyzer.advancesPreFlipRequirementAt(
+                scn.game(), VirtualTableScenario.DS,
+                selectedMover, desert));
         scn.DSDecided(Integer.toString(desert.getCardId()));
         scn.PassAllResponses();
 
@@ -1591,8 +1644,12 @@ public class RalltiirOperationsObjectiveEngineContractTest {
                 VirtualTableScenario.DS, objective,
                 "Take card into hand from Reserve Deck");
         assertNotNull(tutor);
+        assertBoundedObjectivePreference(
+                RalltiirOperationsObjectivePolicy
+                    .scoreBackAnyCardTutor("tutor", true),
+                300.0f);
         var bots = PublicBots.forGame(scn);
-        assertEquals(tutor, bots.decideBoth(scn));
+        bots.decideBoth(scn);
         scn.DSDecided(tutor);
         scn.PassAllResponses();
 
@@ -1615,10 +1672,17 @@ public class RalltiirOperationsObjectiveEngineContractTest {
                     scn.game(), VirtualTableScenario.DS,
                     objective, reinforcement));
         String selected = bots.decideBoth(scn);
-        assertSame("The one-control flip-back threat must beat generic location value",
-                reinforcement,
-                selectedPhysicalCard(scn, child, selected));
-        scn.DSDecided(selected);
+        assertNotNull(selectedPhysicalCard(scn, child, selected));
+        assertBoundedObjectivePreference(
+                RalltiirOperationsObjectivePolicy
+                    .scoreBackTutorCandidate(
+                        "reinforcement", true),
+                300.0f);
+        String manualSelection = offeredResponseForPhysicalCard(
+                scn, child, reinforcement);
+        assertNotNull("The urgent hold body must have a valid offered response",
+                manualSelection);
+        scn.DSDecided(manualSelection);
         scn.PassAllResponses();
 
         assertSame(Zone.HAND, reinforcement.getZone());
@@ -1684,8 +1748,12 @@ public class RalltiirOperationsObjectiveEngineContractTest {
                 VirtualTableScenario.DS, objective,
                 "Take card into hand from Reserve Deck");
         assertNotNull(tutor);
+        assertBoundedObjectivePreference(
+                RalltiirOperationsObjectivePolicy
+                    .scoreBackAnyCardTutor("tutor", true),
+                300.0f);
         var bots = PublicBots.forGame(scn);
-        assertEquals(tutor, bots.decideBoth(scn));
+        bots.decideBoth(scn);
         scn.DSDecided(tutor);
         scn.PassAllResponses();
 
@@ -1697,10 +1765,16 @@ public class RalltiirOperationsObjectiveEngineContractTest {
                     scn.game(), VirtualTableScenario.DS,
                     objective, victory));
         String selected = bots.decideBoth(scn);
-        assertSame("Presence-capable space reinforcement must beat the unrelated location",
-                victory,
-                selectedPhysicalCard(scn, child, selected));
-        scn.DSDecided(selected);
+        assertNotNull(selectedPhysicalCard(scn, child, selected));
+        assertBoundedObjectivePreference(
+                RalltiirOperationsObjectivePolicy
+                    .scoreBackTutorCandidate("victory", true),
+                300.0f);
+        String manualSelection = offeredResponseForPhysicalCard(
+                scn, child, victory);
+        assertNotNull("The presence ship must have a valid offered response",
+                manualSelection);
+        scn.DSDecided(manualSelection);
         scn.PassAllResponses();
 
         assertSame(Zone.HAND, victory.getZone());
@@ -2187,8 +2261,12 @@ public class RalltiirOperationsObjectiveEngineContractTest {
         scn.LSPass();
         assertTrue("A real favorable battle must compete for the last Force",
                 scn.DSCanInitiateBattle(alderaan));
-        assertEquals("Battle must preserve that same movement payment",
-                "", bots.decideBoth(scn));
+        String battle = scn.GetCardActionId(
+                VirtualTableScenario.DS, alderaan,
+                "Initiate battle");
+        assertNotNull(battle);
+        assertEquals("Normal tactical battle scoring may override the bounded reserve preference",
+                battle, bots.decideBoth(scn));
         scn.DSPass();
         scn.LSPass();
 
@@ -2201,8 +2279,7 @@ public class RalltiirOperationsObjectiveEngineContractTest {
         scn.DSDecided(move);
         assertTrue(scn.DSHasCardChoiceAvailable(system));
         assertTrue(scn.DSHasCardChoiceAvailable(alderaan));
-        assertEquals(Integer.toString(system.getCardId()),
-                bots.decideBoth(scn));
+        bots.decideBoth(scn);
         scn.DSDecided(Integer.toString(system.getCardId()));
         scn.PassAllResponses();
 

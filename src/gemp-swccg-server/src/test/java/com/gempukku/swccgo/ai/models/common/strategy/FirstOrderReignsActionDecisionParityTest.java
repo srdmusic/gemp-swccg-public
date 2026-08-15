@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Production evaluator proof for The First Order Reigns' unusual parent
- * action, its ordered child choices, and its narrow low-Reserve exception.
+ * action, its ordered child choices, and the shared low-Reserve guard.
  */
 public class FirstOrderReignsActionDecisionParityTest {
     private static final String PLAYER = "dark";
@@ -52,7 +52,7 @@ public class FirstOrderReignsActionDecisionParityTest {
     private static final int OPPONENT_COARSE_ID = 253;
 
     @Test
-    public void exactParentDownloadBeatsPassOnlyWhenTheRouteHasAReserveCandidate() {
+    public void exactParentDownloadKeepsLowReserveGuardWithRouteCandidate() {
         List<Outcome> openWinners = new ArrayList<>();
         List<Outcome> openActions = new ArrayList<>();
         List<Outcome> closedWinners = new ArrayList<>();
@@ -64,10 +64,10 @@ public class FirstOrderReignsActionDecisionParityTest {
 
             Outcome openAction = only(
                     actionText(bot, open, decision), "download");
-            assertFalse(hasReason(openAction, "V60 RESERVE RISK"));
+            assertReason(openAction, "V60 RESERVE RISK");
             Outcome openWinner = combined(bot, open, decision);
-            assertEquals("download", openWinner.actionId());
-            assertTrue(openWinner.score() > 5.0f);
+            assertEquals("", openWinner.actionId());
+            assertTrue(openAction.score() < -100.0f);
             openActions.add(openAction);
             openWinners.add(openWinner);
 
@@ -125,7 +125,7 @@ public class FirstOrderReignsActionDecisionParityTest {
     }
 
     @Test
-    public void deployEvaluatorUsesTheSameExactLowReserveException() {
+    public void deployEvaluatorKeepsTheSameLowReserveGuard() {
         List<Outcome> openActions = new ArrayList<>();
         List<Outcome> closedActions = new ArrayList<>();
 
@@ -135,8 +135,8 @@ public class FirstOrderReignsActionDecisionParityTest {
             Outcome open = only(
                     deploy(bot, fixture(bot, true), decision),
                     "download");
-            assertFalse(hasReason(open, "V60 RESERVE RISK"));
-            assertTrue(open.score() > -100.0f);
+            assertReason(open, "V60 RESERVE RISK");
+            assertTrue(open.score() < -100.0f);
             openActions.add(open);
 
             Outcome closed = only(

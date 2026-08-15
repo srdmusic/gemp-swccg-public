@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.state.ForceDrainState;
 import com.gempukku.swccgo.game.state.GameState;
@@ -372,7 +373,7 @@ public class PersistentResponsePolicyTest {
     }
 
     @Test
-    public void mandatoryObjectiveWinsButResponseAtThatNeedIsNotSuppressed() {
+    public void ordinaryObjectivePlansDoNotPreemptButTerminalDefenseDoes() {
         PersistentResponsePolicy.CandidateFacts lowerCorridor = response(
                 "lower-corridor", 82, "Lower Corridor",
                 PersistentResponsePolicy.Mode.CONTEST,
@@ -383,7 +384,7 @@ public class PersistentResponsePolicyTest {
         PersistentResponsePolicy.CandidateFacts invasion = mandatoryPlan(
                 "invasion-naboo", 82, "Lower Corridor", 400, "Naboo");
 
-        assertEquals("invasion-naboo", PersistentResponsePolicy.select(
+        assertEquals("lower-corridor", PersistentResponsePolicy.select(
                 List.of(lowerCorridor, invasion)).orElseThrow()
                 .candidateKey().value());
 
@@ -396,13 +397,21 @@ public class PersistentResponsePolicyTest {
                 DeployTacticalPolicy.ResponseFormationRoute
                         .EXISTING_FORMATION_REINFORCEMENT,
                 true);
-        assertEquals("throne-eviction", PersistentResponsePolicy.select(
+        assertEquals("lower-corridor", PersistentResponsePolicy.select(
                 List.of(lowerCorridor, mandatoryEviction)).orElseThrow()
+                .candidateKey().value());
+
+        PersistentResponsePolicy.CandidateFacts terminalDefense =
+                terminalMandatoryPlan(
+                        "terminal-defense", 82, "Lower Corridor",
+                        403, "Terminal objective site");
+        assertEquals("terminal-defense", PersistentResponsePolicy.select(
+                List.of(lowerCorridor, terminalDefense)).orElseThrow()
                 .candidateKey().value());
     }
 
     @Test
-    public void objectiveCriticalWinsEqualValueWithStableKeyLast() {
+    public void ordinaryObjectiveRoleDoesNotBypassStableEqualValueOrder() {
         PersistentResponsePolicy.CandidateFacts ordinary = response(
                 "a-ordinary", 117, "Carbonite Chamber",
                 PersistentResponsePolicy.Mode.CONTEST,
@@ -422,8 +431,8 @@ public class PersistentResponsePolicyTest {
         PersistentResponsePolicy.Obligation selected =
                 PersistentResponsePolicy.select(
                         List.of(ordinary, critical)).orElseThrow();
-        assertEquals("z-critical", selected.candidateKey().value());
-        assertEquals(550, selected.totalNewBonus());
+        assertEquals("a-ordinary", selected.candidateKey().value());
+        assertEquals(300, selected.totalNewBonus());
 
         PersistentResponsePolicy.CandidateFacts tieB = response(
                 "b-key", 501, "Lane B",
@@ -591,9 +600,13 @@ public class PersistentResponsePolicyTest {
         assertEquals(PersistentResponsePolicy.PERSISTENT_RULE_ID,
                 full.operations().get(0).ruleArmId().id());
         assertEquals(300.0f, full.operations().get(0).delta(), 0.0f);
+        assertEquals(TraceDomainId.DEPLOY_SITING,
+                full.operations().get(0).domainId());
         assertEquals(PersistentResponsePolicy.CRITICAL_RULE_ID,
                 full.operations().get(1).ruleArmId().id());
-        assertEquals(250.0f, full.operations().get(1).delta(), 0.0f);
+        assertEquals(300.0f, full.operations().get(1).delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                full.operations().get(1).domainId());
         assertTrue(full.operations().stream().allMatch(operation ->
                 operation.kind() == PolicyOperationKind.ADD));
         assertTrue(full.operations().stream().allMatch(operation ->
@@ -606,7 +619,9 @@ public class PersistentResponsePolicyTest {
         assertEquals(1, v166Covered.operations().size());
         assertEquals(PersistentResponsePolicy.CRITICAL_RULE_ID,
                 v166Covered.operations().get(0).ruleArmId().id());
-        assertEquals(250.0f, v166Covered.operations().get(0).delta(), 0.0f);
+        assertEquals(300.0f, v166Covered.operations().get(0).delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                v166Covered.operations().get(0).domainId());
         assertTrue(v166Covered.operations().get(0).reason().contains(
                 "target=Theed Palace Throne Room#401"));
     }
@@ -680,7 +695,7 @@ public class PersistentResponsePolicyTest {
                         new PersistentResponsePolicy.DeployActionKey(
                                 9002, 10002)),
                 selected.responseActions());
-        assertEquals(550.0f, anchored.operations().stream()
+        assertEquals(600.0f, anchored.operations().stream()
                 .map(operation -> operation.delta())
                 .reduce(0.0f, Float::sum), 0.0f);
     }
@@ -796,7 +811,7 @@ public class PersistentResponsePolicyTest {
                 legacyBuckets, legacyLabels).isEmpty());
 
         PersistentResponsePolicy.Obligation mandatoryAlternative =
-                PersistentResponsePolicy.select(List.of(mandatoryPlan(
+                PersistentResponsePolicy.select(List.of(terminalMandatoryPlan(
                         "mandatory", 401, "Critical lane",
                         402, "Objective target"))).orElseThrow();
         assertEquals(PersistentResponsePolicy.CandidateKind.EXISTING_PLAN,
@@ -956,6 +971,24 @@ public class PersistentResponsePolicyTest {
         return withFormation(plan,
                 DeployTacticalPolicy.ResponseFormationRoute.NOT_APPLICABLE,
                 false);
+    }
+
+    private PersistentResponsePolicy.CandidateFacts terminalMandatoryPlan(
+            String key, int threatId, String threatTitle,
+            int targetId, String targetTitle) {
+        PersistentResponsePolicy.CandidateFacts plan = mandatoryPlan(
+                key, threatId, threatTitle, targetId, targetTitle);
+        return new PersistentResponsePolicy.CandidateFacts(
+                plan.candidateKey(), plan.kind(), plan.responseActions(),
+                plan.threatLocation(), plan.responseTargetLocation(),
+                plan.mode(),
+                PersistentResponsePolicy.TargetRole
+                        .OBJECTIVE_HARD_LOSS_DEFENSE,
+                plan.consecutiveOpponentTurns(),
+                plan.projectedAvoidedDamage(), plan.strategicIncome(),
+                plan.currentFriendlyDrainIncome(), plan.raceValue(),
+                plan.opponentPresent(), plan.fundedMandatoryObjective(),
+                plan.execution(), plan.formation());
     }
 
     private PersistentResponsePolicy.CandidateFacts withExecution(

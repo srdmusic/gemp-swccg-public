@@ -83,7 +83,10 @@ public class SetupPolicyTest {
     public void cloudCityBothIconsUsesInteriorArm() {
         assertContribution(SetupPolicy.startingLocationCloudCity(
                         "Cloud City: Mixed Site", true, true),
-                SetupPolicy.Branch.LOCATION_CC_INTERIOR, -500.0f);
+                SetupPolicy.Branch.LOCATION_CC_INTERIOR, -300.0f);
+        assertTrue(SetupPolicy.startingLocationCloudCity(
+                        "Cloud City: Upper Walkway", true, false)
+                .objectivePreference());
     }
 
     @Test
@@ -131,7 +134,7 @@ public class SetupPolicyTest {
                 SetupPolicy.Branch.EFFECT_PREFERRED,
                 SetupPolicy.Branch.EFFECT_SHADOW_COLLECTIVE,
                 SetupPolicy.Branch.EFFECT_IWTM);
-        assertDeltas(result, -300.0f, 200.0f, 500.0f, 1000.0f);
+        assertDeltas(result, -300.0f, 200.0f, 300.0f, 300.0f);
     }
 
     @Test
@@ -158,10 +161,10 @@ public class SetupPolicyTest {
         assertBranches(result,
                 SetupPolicy.Branch.EFFECT_SKYWALKER,
                 SetupPolicy.Branch.EFFECT_HUNT_DOWN_OTHER);
-        assertDeltas(result, 1000.0f, -300.0f);
+        assertDeltas(result, 300.0f, -300.0f);
         assertContribution(SetupPolicy.startingEffectDeck(
                         "I Am Your Father", true).get(0),
-                SetupPolicy.Branch.EFFECT_HUNT_DOWN_REQUIRED, 500.0f);
+                SetupPolicy.Branch.EFFECT_HUNT_DOWN_REQUIRED, 300.0f);
         assertTrue("Legacy Hunt Down must bypass the Vader-deck whitelist",
                 SetupPolicy.startingEffectDeck(
                         "A Sith's Plans", false).isEmpty());
@@ -185,7 +188,7 @@ public class SetupPolicyTest {
                 SetupPolicy.Branch.EFFECT_RESERVE_ACCESS,
                 SetupPolicy.Branch.EFFECT_FORCE_ECONOMY,
                 SetupPolicy.Branch.EFFECT_EPIC);
-        assertDeltas(result, 250.0f, 200.0f, 100.0f, 50.0f, 25.0f, 1500.0f);
+        assertDeltas(result, 250.0f, 200.0f, 100.0f, 50.0f, 25.0f, 300.0f);
     }
 
     @Test

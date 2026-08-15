@@ -170,16 +170,16 @@ public final class RandoConfig {
     // =========================================================================
 
     /** Bonus for Vader deploying/moving to a location with Jedi */
-    public static final int SCORE_VADER_SEEK_JEDI = 350;
+    public static final int SCORE_VADER_SEEK_JEDI = 300;
 
     /** Bonus for hatred placement when Inquisitor is at opponent location */
-    public static final int SCORE_HATRED_WITH_INQUISITOR = 400;
+    public static final int SCORE_HATRED_WITH_INQUISITOR = 300;
 
     /** Bonus for deploying Inquisitor to location with hatted opponent */
     public static final int SCORE_INQUISITOR_HATRED_SYNERGY = 300;
 
     /** Bonus for FMFTD lost mode with full synergy (Inquisitor+Jedi+Hatred) */
-    public static final int SCORE_FMFTD_FULL_SYNERGY = 500;
+    public static final int SCORE_FMFTD_FULL_SYNERGY = 300;
 
     /** Vader expendability multiplier (1.0 = normal, 0.3 = expendable in Hunt Down) */
     public static final float VADER_EXPENDABILITY_FACTOR = 0.3f;

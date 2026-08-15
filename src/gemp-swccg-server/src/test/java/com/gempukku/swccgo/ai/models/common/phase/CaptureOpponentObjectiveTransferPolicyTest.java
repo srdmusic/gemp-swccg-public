@@ -87,7 +87,7 @@ public class CaptureOpponentObjectiveTransferPolicyTest {
         assertEquals(
                 TraceOutputKind.BANDED,
                 bleedStop.outputKind());
-        assertEquals(250.0f, bleedStop.delta(), 0.0f);
+        assertEquals(300.0f, bleedStop.delta(), 0.0f);
 
         PolicyOperation lethalHold = only(
                 CaptureObjectivePolicy.scoreTransferLukeToVader(
@@ -96,7 +96,7 @@ public class CaptureOpponentObjectiveTransferPolicyTest {
                                 "hold", true,
                                 true, 8.0f)));
         assertEquals(
-                PolicyOperationKind.HARD_VETO,
+                PolicyOperationKind.ADD,
                 lethalHold.kind());
         assertEquals(
                 "OBJECTIVE.TIGIH.OPPONENT_TRANSFER_HOLD",
@@ -105,8 +105,9 @@ public class CaptureOpponentObjectiveTransferPolicyTest {
                 TraceDomainId.OBJECTIVE_INTENT,
                 lethalHold.domainId());
         assertEquals(
-                TraceOutputKind.VETO,
+                TraceOutputKind.BANDED,
                 lethalHold.outputKind());
+        assertEquals(-300.0f, lethalHold.delta(), 0.0f);
 
         assertTrue(
                 CaptureObjectivePolicy.scoreTransferLukeToVader(
@@ -136,7 +137,7 @@ public class CaptureOpponentObjectiveTransferPolicyTest {
         assertEquals(
                 "OBJECTIVE.BHBM.OPPONENT_TARGET_DOWNLOAD",
                 download.ruleArmId().id());
-        assertEquals(250.0f, download.delta(), 0.0f);
+        assertEquals(300.0f, download.delta(), 0.0f);
         assertTrue(
                 CaptureObjectivePolicy
                     .scoreBhbmOpponentTargetDownload(

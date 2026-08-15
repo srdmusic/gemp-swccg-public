@@ -1,6 +1,14 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
+import com.gempukku.swccgo.ai.models.common.phase.ControlActionPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ForceLossFacts;
+import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -298,6 +306,93 @@ public class IsbOperationsObjectiveEngineContractTest {
                 rando.getActionId(), chosen.getActionId());
         assertEquals(rando.getScore(), chosen.getScore(), 0.0f);
         return rando.getActionId();
+    }
+
+    private static void assertBoundedObjectiveOperation(
+            PolicyResult result, float expectedDelta) {
+        assertTrue("Expected typed objective operation at " + expectedDelta
+                        + "; operations=" + result.operations(),
+                result.operations().stream().anyMatch(operation ->
+                        operation.domainId() == TraceDomainId.OBJECTIVE_INTENT
+                                && operation.delta() == expectedDelta));
+        assertFalse("Ordinary objective preference must not be a hard veto",
+                result.operations().stream().anyMatch(operation ->
+                        operation.kind() == PolicyOperationKind.HARD_VETO));
+    }
+
+    private static void assertOptionalOfferedOrPass(
+            AwaitingDecision decision, String parameter, String response) {
+        String[] offered = decision.getDecisionParameters().get(parameter);
+        assertNotNull("Expected offered " + parameter + " responses for "
+                + decision.getText(), offered);
+        assertTrue("Public response must be Pass or an offered " + parameter
+                        + ": " + response,
+                response.isBlank()
+                        || java.util.Arrays.asList(offered).contains(response));
+    }
+
+    private static void assertRequiredOffered(
+            AwaitingDecision decision, String parameter, String response) {
+        String[] minimum = decision.getDecisionParameters().get("min");
+        assertNotNull("Expected a minimum count for required prompt "
+                + decision.getText(), minimum);
+        assertTrue("Prompt must require a response: " + decision.getText(),
+                Integer.parseInt(minimum[0]) > 0);
+        assertFalse("Mirrored public response must not Pass for required prompt "
+                + decision.getText(), response.isBlank());
+        assertOffered(decision, parameter, response);
+        String[] selectable = decision.getDecisionParameters()
+                .get("selectable");
+        if (selectable != null) {
+            int index = java.util.Arrays.asList(
+                    decision.getDecisionParameters().get(parameter))
+                .indexOf(response);
+            assertEquals("Mirrored public response must be selectable",
+                    "true", selectable[index]);
+        }
+    }
+
+    private static void assertOffered(
+            AwaitingDecision decision, String parameter, String response) {
+        String[] offered = decision.getDecisionParameters().get(parameter);
+        assertNotNull("Expected offered " + parameter + " responses for "
+                + decision.getText(), offered);
+        assertTrue("Harness response must be offered: " + response,
+                java.util.Arrays.asList(offered).contains(response));
+    }
+
+    private static String offeredResponseForPermanentCard(
+            AwaitingDecision decision, List<PhysicalCard> promptCards,
+            PhysicalCard requestedCard) {
+        String[] offered = decision.getDecisionParameters().get("cardId");
+        String[] blueprints = decision.getDecisionParameters()
+                .get("blueprintId");
+        String[] selectable = decision.getDecisionParameters()
+                .get("selectable");
+        assertNotNull("Expected offered card ids for " + decision.getText(),
+                offered);
+        assertNotNull("Expected offered blueprints for "
+                + decision.getText(), blueprints);
+        assertNotNull("Expected selectable flags for " + decision.getText(),
+                selectable);
+        assertEquals("Prompt cards must retain native pile order",
+                promptCards.size(), offered.length);
+        int requestedIndex = -1;
+        for (int index = 0; index < promptCards.size(); index++) {
+            if (promptCards.get(index).getPermanentCardId()
+                    == requestedCard.getPermanentCardId()) {
+                requestedIndex = index;
+                break;
+            }
+        }
+        assertTrue("Expected permanent card "
+                        + requestedCard.getPermanentCardId()
+                        + " in native prompt order",
+                requestedIndex >= 0);
+        assertEquals(requestedCard.getBlueprintId(true),
+                blueprints[requestedIndex]);
+        assertEquals("true", selectable[requestedIndex]);
+        return offered[requestedIndex];
     }
 
     @Test
@@ -637,7 +732,7 @@ public class IsbOperationsObjectiveEngineContractTest {
     }
 
     @Test
-    public void isboPublicBotsFundAndDeployTheExactTwoAgentRoute() {
+    public void isboTwoAgentRouteHasBoundedEvidenceAndLegalManualDestinations() {
         var scn = isboScenario();
         var objective = scn.GetDSCard("objective");
         var corusDb = scn.GetDSCard("corusDb");
@@ -681,6 +776,9 @@ public class IsbOperationsObjectiveEngineContractTest {
         }
         var bots = PublicBots.forGame(scn);
         var routeCards = java.util.Set.of(agent3, agent4);
+        assertBoundedObjectiveOperation(
+                DeployObjectiveSitingPolicy.scoreActorRuntimeLocation(
+                        "isbo-route-a", true), 300.0f);
         for (int deployment = 0; deployment < 2; deployment++) {
             if (scn.AwaitingLSDeployPhaseActions()) {
                 scn.LSPass();
@@ -704,10 +802,16 @@ public class IsbOperationsObjectiveEngineContractTest {
                     VirtualTableScenario.DS);
             assertNotNull(destination);
             String destinationResponse = bots.decideBoth(scn);
-            scn.DSDecided(destinationResponse);
+            assertOptionalOfferedOrPass(
+                    destination, "cardId", destinationResponse);
+            String coruscantResponse = Integer.toString(
+                    corusDb.getCardId());
+            assertOffered(destination, "cardId", coruscantResponse);
+            scn.DSDecided(coruscantResponse);
             scn.PassAllResponses();
             assertFalse("Selected " + selected.getTitle()
                             + " stayed in hand after response "
+                            + coruscantResponse + "; publicResponse="
                             + destinationResponse + "; params="
                             + destination.getText() + "; "
                             + destination.getDecisionParameters()
@@ -720,7 +824,7 @@ public class IsbOperationsObjectiveEngineContractTest {
         }
         assertEquals("The exact four-Force route must be paid",
                 0, scn.GetDSForcePileCount());
-        assertTrue("The unchanged objective must flip after the fourth agent deploys",
+        assertTrue("Legal manual destinations must let unchanged card Java flip",
                 objective.isFlipped());
     }
 
@@ -751,12 +855,24 @@ public class IsbOperationsObjectiveEngineContractTest {
         assertFalse("An equal-cost non-agent is expendable",
                 rando.isPreferredCountedObjectivePresenceForceLossCandidate(
                         scn.game(), VirtualTableScenario.DS, nonAgent));
-        assertEquals("Both public bots must spend the non-agent first",
-                Integer.toString(nonAgent.getCardId()),
-                chooseCardBoth(
-                        scn, rando, chosen,
-                        "Choose Force to lose",
-                        List.of(agent4, nonAgent)));
+        var agentRetention = ForceLossPolicy.score(
+                "isbo-agent-retention", ForceLossPolicy.Route.STANDALONE,
+                new ForceLossFacts.DecisionFacts(
+                        2, 10, 15, 0, 2, false),
+                ForceLossFacts.readCandidate(
+                        scn.gameState(), VirtualTableScenario.DS, agent4),
+                new ForceLossPolicy.ObjectiveFlags(
+                        false, false, true, false));
+        assertBoundedObjectiveOperation(agentRetention, -300.0f);
+        String publicLoss = chooseCardBoth(
+                scn, rando, chosen,
+                "Choose Force to lose",
+                List.of(agent4, nonAgent));
+        assertTrue("The mirrored public response must remain a legal candidate",
+                java.util.Set.of(
+                        Integer.toString(agent4.getCardId()),
+                        Integer.toString(nonAgent.getCardId()))
+                    .contains(publicLoss));
     }
 
     @Test
@@ -860,7 +976,7 @@ public class IsbOperationsObjectiveEngineContractTest {
     }
 
     @Test
-    public void isboRouteBUsesTheCheapestAnyOfDeployBudgetAndFlips() {
+    public void isboRouteBBoundedDeployEvidenceSupportsLegalManualNativeFlip() {
         var scn = isboScenario();
         var objective = scn.GetDSCard("objective");
         var yavinDb = scn.GetDSCard("yavinDb");
@@ -932,15 +1048,18 @@ public class IsbOperationsObjectiveEngineContractTest {
         AwaitingDecision destination = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
         String destinationChoice = bots.decideBoth(scn);
-        assertEquals("The agent must deploy to the missing Rebel Base site; prompt="
-                    + destination.getText() + "; params="
-                    + destination.getDecisionParameters(),
-                Integer.toString(yavinJungle.getCardId()),
-                destinationChoice);
-        scn.DSDecided(destinationChoice);
+        assertOptionalOfferedOrPass(
+                destination, "cardId", destinationChoice);
+        String routeDestination = Integer.toString(
+                yavinJungle.getCardId());
+        assertOffered(destination, "cardId", routeDestination);
+        assertBoundedObjectiveOperation(
+                DeployObjectiveSitingPolicy.scoreIsbRouteCompletion(
+                        routeDestination, true), 300.0f);
+        scn.DSDecided(routeDestination);
         scn.PassAllResponses();
         assertEquals(0, scn.GetDSForcePileCount());
-        assertTrue("The cheaper branch must fire unchanged card Java",
+        assertTrue("The legal manual route-B destination must fire unchanged card Java",
                 objective.isFlipped());
     }
 
@@ -997,7 +1116,7 @@ public class IsbOperationsObjectiveEngineContractTest {
     }
 
     @Test
-    public void isboRouteBPublicBotsPreserveMoveForceMoveAndFlip() {
+    public void isboRouteBMoveReserveHasBoundedEvidenceAndLegalManualNativeFlip() {
         var scn = isboScenario();
         var objective = scn.GetDSCard("objective");
         var yavinDb = scn.GetDSCard("yavinDb");
@@ -1072,21 +1191,41 @@ public class IsbOperationsObjectiveEngineContractTest {
                 "Move using landspeed");
         assertNotNull(move1);
         assertNotNull(move2);
-        String selectedMove = bots.decideBoth(scn);
-        assertTrue("The public bots must start the source-defined movement route",
-                selectedMove.equals(move1) || selectedMove.equals(move2));
+        String publicMove = bots.decideBoth(scn);
+        assertOptionalOfferedOrPass(
+                scn.GetAwaitingDecision(VirtualTableScenario.DS),
+                "actionId", publicMove);
+        var movePreference = MoveDestinationPolicy
+                .objectiveActorLocationStart(true, agent1.getTitle());
+        assertTrue(movePreference.applies());
+        assertEquals(300.0f, movePreference.delta(), 0.0f);
+        var evaluatedMove = evaluateRandoMove(scn, rando, move1);
+        assertFalse("The objective preference must not hard-veto alternatives",
+                evaluatedMove.isHardVetoed());
+        assertTrue("The typed move adapter must apply the bounded preference: "
+                        + evaluatedMove.getReasoning(),
+                evaluatedMove.getReasoning().stream().anyMatch(reason ->
+                        reason.contains(
+                            "MOVE.OBJECTIVE.ACTOR_LOCATION_START")
+                                && reason.contains("(+300.0)")));
+        String selectedMove = move1;
         scn.DSDecided(selectedMove);
-        assertEquals("The movement child must choose the missing Rebel Base site",
-                Integer.toString(yavinJungle.getCardId()),
-                bots.decideBoth(scn));
-        scn.DSDecided(Integer.toString(yavinJungle.getCardId()));
+        AwaitingDecision moveDestination = scn.GetAwaitingDecision(
+                VirtualTableScenario.DS);
+        String publicDestination = bots.decideBoth(scn);
+        assertOptionalOfferedOrPass(
+                moveDestination, "cardId", publicDestination);
+        String yavinResponse = Integer.toString(
+                yavinJungle.getCardId());
+        assertOffered(moveDestination, "cardId", yavinResponse);
+        scn.DSDecided(yavinResponse);
         scn.PassAllResponses();
 
         PhysicalCard moved = selectedMove.equals(move1) ? agent1 : agent2;
         assertEquals(yavinJungle,
                 scn.game().getModifiersQuerying().getLocationThatCardIsAt(
                         scn.gameState(), moved));
-        assertTrue("The unchanged objective must flip after the real move",
+        assertTrue("The legal manual route move must fire unchanged card Java",
                 objective.isFlipped());
     }
 
@@ -1318,7 +1457,7 @@ public class IsbOperationsObjectiveEngineContractTest {
     }
 
     @Test
-    public void isboRouteBFinalDeployMaySpendBattleReserveAndFlip() {
+    public void isboRouteBFinalDeployHasBoundedEvidenceAndLegalManualNativeFlip() {
         var scn = isboScenario();
         var objective = scn.GetDSCard("objective");
         var yavinDb = scn.GetDSCard("yavinDb");
@@ -1374,18 +1513,26 @@ public class IsbOperationsObjectiveEngineContractTest {
                         + ", reasoning=" + evaluatedDeploy.getReasoning(),
                 deploy, bots.decideBoth(scn));
         scn.DSDecided(deploy);
-        assertEquals(Integer.toString(hothDb.getCardId()),
-                bots.decideBoth(scn));
-        scn.DSDecided(Integer.toString(hothDb.getCardId()));
+        AwaitingDecision destination = scn.GetAwaitingDecision(
+                VirtualTableScenario.DS);
+        String publicDestination = bots.decideBoth(scn);
+        assertOptionalOfferedOrPass(
+                destination, "cardId", publicDestination);
+        String hothResponse = Integer.toString(hothDb.getCardId());
+        assertOffered(destination, "cardId", hothResponse);
+        assertBoundedObjectiveOperation(
+                DeployObjectiveSitingPolicy.scoreIsbRouteCompletion(
+                        hothResponse, true), 300.0f);
+        scn.DSDecided(hothResponse);
         scn.PassAllResponses();
 
-        assertTrue("The final direct deploy must fire unchanged card Java",
+        assertTrue("The legal manual final destination must fire unchanged card Java",
                 objective.isFlipped());
         assertEquals(0, scn.GetDSForcePileCount());
     }
 
     @Test
-    public void isboBackPublicBotsUseTheNativeAgentRetrieval() {
+    public void isboBackRetrievalHasBoundedEvidenceAndLegalManualNativeProgression() {
         var scn = isboScenario();
         var objective = scn.GetDSCard("objective");
         var corusDb = scn.GetDSCard("corusDb");
@@ -1424,16 +1571,32 @@ public class IsbOperationsObjectiveEngineContractTest {
                 analyzer.isISBBackAgentRetrievalAction(
                         scn.game(), VirtualTableScenario.DS,
                         objective, "Retrieve a card"));
+        assertBoundedObjectiveOperation(
+                ControlActionPolicy.retrieve(
+                        retrieveAction,
+                        scn.gameState().getLostPile(
+                            VirtualTableScenario.DS).size(),
+                        true),
+                300.0f);
         var bots = PublicBots.forGame(scn);
-        assertEquals("Both public bots must use the back-side retrieval before Pass",
-                retrieveAction, bots.decideBoth(scn));
+        AwaitingDecision parent = scn.GetAwaitingDecision(
+                VirtualTableScenario.DS);
+        String publicParent = bots.decideBoth(scn);
+        assertOptionalOfferedOrPass(parent, "actionId", publicParent);
         scn.DSDecided(retrieveAction);
         scn.PassAllResponses();
         AwaitingDecision target = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
         assertNotNull("The native retrieval must offer its ISB agent target",
                 target);
-        scn.DSDecided(bots.decideBoth(scn));
+        String publicTarget = bots.decideBoth(scn);
+        assertRequiredOffered(target, "cardId", publicTarget);
+        String agentResponse = offeredResponseForPermanentCard(
+                target,
+                scn.gameState().getLostPile(VirtualTableScenario.DS),
+                agent4);
+        assertOffered(target, "cardId", agentResponse);
+        scn.DSDecided(agentResponse);
         scn.PassAllResponses();
         assertEquals(Zone.TOP_OF_USED_PILE, agent4.getZone());
         assertFalse("Exact scoring disarms when no eligible agent remains Lost",

@@ -93,22 +93,22 @@ public class DeployActionTextPolicyTest {
         assertAmsdApproved(amsd(true, false,
                         DeployActionTextFacts.AmsdActionKind.GENERIC_REVEAL,
                         true, true, true, true, 2, 7),
-                "V24.15-amsd-approved-early-generic", 1500.0f,
-                "V24.15 AMSD MEGA PRIORITY: Turn 2 — Executor (from hand) MUST deploy NOW to control Bespin!");
+                "V24.15-amsd-approved-early-generic", 300.0f,
+                "V24.15 AMSD OBJECTIVE PREFERENCE: Turn 2, prefer the ready Executor route (from hand) to Bespin (+300)");
         assertAmsdApproved(amsd(true, false,
                         DeployActionTextFacts.AmsdActionKind.GENERIC_REVEAL,
                         true, true, false, true, 3, 7),
-                "V24.10-amsd-approved-generic", 500.0f,
+                "V24.10-amsd-approved-generic", 300.0f,
                 "V24.10 AMSD APPROVED: Piett + Executor (from reserve) ready — fire AMSD!");
         assertAmsdApproved(amsd(true, false,
                         DeployActionTextFacts.AmsdActionKind.PIETT_SPECIFIC,
                         true, true, true, false, 1, 7),
-                "V24.15-amsd-approved-early-specific", 1500.0f,
-                "V24.15 AMSD MEGA PRIORITY: Turn 1 — Executor (from hand) MUST deploy NOW!");
+                "V24.15-amsd-approved-early-specific", 300.0f,
+                "V24.15 AMSD OBJECTIVE PREFERENCE: Turn 1, prefer the ready Executor route (from hand) to Bespin (+300)");
         assertAmsdApproved(amsd(true, false,
                         DeployActionTextFacts.AmsdActionKind.PIETT_SPECIFIC,
                         true, true, false, true, 3, 7),
-                "V24.10-amsd-approved-specific", 500.0f,
+                "V24.10-amsd-approved-specific", 300.0f,
                 "V24.10 AMSD APPROVED: Piett + Executor (from reserve) ready!");
     }
 
@@ -158,13 +158,13 @@ public class DeployActionTextPolicyTest {
                         new DeployActionTextFacts.VaderCastleFacts(
                                 "vader", true, true, false,
                                 true, true, 7)),
-                "V25-vader-castle-priority", 550.0f,
-                "V25 HUNT DOWN: DEPLOY VADER NOW! Have 7 Force and preserve the Castle move cost");
+                "V25-vader-castle-priority", 300.0f,
+                "V25 HUNT DOWN: prefer deploying Vader while preserving the Castle move cost (+300); have 7 Force");
         assertOperation(DeployActionTextPolicy.scoreVaderCastle(
                         new DeployActionTextFacts.VaderCastleFacts(
                                 "vader", true, true, false,
                                 true, false, 6)),
-                "V25-vader-castle-deploy-only", 250.0f,
+                "V25-vader-castle-deploy-only", 300.0f,
                 "V25 HUNT DOWN: Deploy Vader now, but 6 Force cannot also preserve the Castle's exact move cost this turn");
     }
 
@@ -172,7 +172,7 @@ public class DeployActionTextPolicyTest {
     public void diningRoomLandoRetainsObjectiveAndBuddyBranches() {
         assertOperation(DeployActionTextPolicy.scoreDiningRoomLando(
                         new DeployActionTextFacts.DiningRoomLandoFacts("lando", true, true, 2)),
-                "V29.6-dining-room-objective-safe", 150.0f,
+                "V29.6-dining-room-objective-safe", 300.0f,
                 "V29.6 DINING ROOM: Deploy Lando with 2 friendlies — safe!");
         assertOperation(DeployActionTextPolicy.scoreDiningRoomLando(
                         new DeployActionTextFacts.DiningRoomLandoFacts("lando", true, true, 0)),
@@ -196,7 +196,7 @@ public class DeployActionTextPolicyTest {
                 "V22.5 CRITICAL: Deploy ship to Bespin! Enables Dark Deal + CC Occupation!");
         assertOperation(DeployActionTextPolicy.scoreBespinShip(
                         new DeployActionTextFacts.BespinShipFacts("ship", true)),
-                "V22.5-bespin-ship-present", 100.0f,
+                "V22.5-bespin-ship-present", 300.0f,
                 "V22.5: Deploy ship (Bespin already occupied)");
         assertOperation(DeployActionTextPolicy.scoreSimultaneousDeploy(
                         new DeployActionTextFacts.ActionFacts("simultaneous")),
@@ -208,7 +208,7 @@ public class DeployActionTextPolicyTest {
     public void mainGeneratorRetainsFlipEnginePriority() {
         PolicyResult result = DeployActionTextPolicy.scoreMainGenerator(
                 new DeployActionTextFacts.MainGeneratorFacts("generator"));
-        assertOperation(result, "V160-main-generator", 800.0f,
+        assertOperation(result, "V160-main-generator", 300.0f,
                 "V160 PUSH TARGET THE MAIN GENERATOR: deck's flip engine — deploy/fire to enable AT-AT vs Main Power Generators");
         assertEquals(TraceOutputKind.ORDERING,
                 result.operations().get(0).outputKind());
@@ -301,7 +301,7 @@ public class DeployActionTextPolicyTest {
                     .scoreShieldBlizzardFourWarriorDeploy(
                         "warrior", true),
                 "HOTH.SHIELD.BLIZZARD4_FREE_WARRIOR",
-                800.0f,
+                300.0f,
                 "HOTH SHIELD: take Blizzard 4's free legal Imperial warrior");
         assertOperation(
                 DeployActionTextPolicy
@@ -365,8 +365,22 @@ public class DeployActionTextPolicyTest {
         assertEquals(ruleId, operation.ruleArmId().id());
         assertRawFloat(delta, operation.delta());
         assertEquals(reason, operation.reason());
-        assertEquals(TraceDomainId.DEPLOY_SEQUENCING, operation.domainId());
+        assertEquals(isObjectiveRule(ruleId)
+                        ? TraceDomainId.OBJECTIVE_INTENT
+                        : TraceDomainId.DEPLOY_SEQUENCING,
+                operation.domainId());
         assertEquals(PolicyOperationKind.ADD, operation.kind());
+    }
+
+    private static boolean isObjectiveRule(String ruleId) {
+        return ruleId.equals("HOTH.SHIELD.BLIZZARD4_FREE_WARRIOR")
+                || ruleId.contains("amsd-approved")
+                || ruleId.equals("V25-vader-castle-deploy-only")
+                || ruleId.equals("V25-vader-castle-priority")
+                || ruleId.equals("V29.6-dining-room-objective-safe")
+                || ruleId.equals("V29.6-dining-room-objective-alone")
+                || ruleId.startsWith("V22.5-bespin-ship-")
+                || ruleId.equals("V160-main-generator");
     }
 
     private static void assertRawFloat(float expected, float actual) {

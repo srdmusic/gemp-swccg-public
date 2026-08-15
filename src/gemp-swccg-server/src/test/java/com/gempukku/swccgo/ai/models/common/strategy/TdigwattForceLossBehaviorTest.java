@@ -63,7 +63,7 @@ public class TdigwattForceLossBehaviorTest {
         assertTrue(classic.chosenAnalyzer
                 .isRequiredCardForFlip(classic.darkDeal));
         assertContains(classicEvaluation.darkDeal(),
-                "OBJECTIVE CRITICAL - NEVER LOSE!");
+                "OBJECTIVE CRITICAL: prefer to retain");
         assertNotContains(classicEvaluation.darkDeal(),
                 "OBJECTIVE PULLABLE");
         assertNoInventedTdigwattProjection(
@@ -106,7 +106,7 @@ public class TdigwattForceLossBehaviorTest {
                 evaluateBoth(classic, COMBINED_PROMPT);
 
         assertContains(classicEvaluation.darkDeal(),
-                "OBJECTIVE CRITICAL - NEVER LOSE!");
+                "OBJECTIVE CRITICAL: prefer to retain");
         assertNotContains(classicEvaluation.darkDeal(),
                 "OBJECTIVE PULLABLE");
         assertNoInventedTdigwattProjection(
@@ -123,7 +123,7 @@ public class TdigwattForceLossBehaviorTest {
                 evaluateBoth(virtual, COMBINED_PROMPT);
 
         assertContains(virtualEvaluation.darkDeal(),
-                "OBJECTIVE PULLABLE - NEVER LOSE!");
+                "OBJECTIVE PULLABLE: prefer to retain");
         assertNotContains(virtualEvaluation.darkDeal(),
                 "OBJECTIVE CRITICAL");
         assertNoInventedTdigwattProjection(

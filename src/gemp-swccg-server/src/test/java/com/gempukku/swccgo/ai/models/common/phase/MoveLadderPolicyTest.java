@@ -36,15 +36,15 @@ public class MoveLadderPolicyTest {
     }
 
     @Test
-    public void bandIntegrityPreservesDocumentedBoundaryMath() {
+    public void r2IsIntentionallyTacticalAndMayBeOverridden() {
         MoveLadderPolicy.BandIntegrity bands =
                 MoveLadderPolicy.bandIntegrity();
 
-        assertFloat(2650.0f, bands.r2Floor());
+        assertFloat(-2350.0f, bands.r2Floor());
         assertFloat(1920.0f, bands.r1Ceiling());
-        assertFloat(730.0f, bands.margin());
-        assertFalse(bands.inverted());
-        assertFloat(6000.0f, bands.rankR2Score());
+        assertFloat(-4270.0f, bands.margin());
+        assertTrue(bands.inverted());
+        assertFloat(1000.0f, bands.rankR2Score());
         assertFloat(2800.0f, bands.fineClamp());
         assertFloat(550.0f, bands.actionTextCrossNegative());
         assertFloat(1670.0f, bands.r1FineCeiling());
@@ -120,7 +120,7 @@ public class MoveLadderPolicyTest {
         assertEquals(MoveLadderPolicy.StepKind.CAN_WIN_RETAINED,
                 retainedR2.get(0).kind());
         assertStep(retainedR2.get(1), MoveLadderPolicy.StepKind.RANK_BASE,
-                "LADDER: R2 DOCTRINE base", 6000.0f);
+                "LADDER: R2 DOCTRINE base", 1000.0f);
         assertEquals(MoveLadderPolicy.StepKind.CAN_WIN_RETAINED,
                 retainedR3.get(0).kind());
         assertStep(retainedR3.get(1), MoveLadderPolicy.StepKind.RANK_BASE,
@@ -159,7 +159,7 @@ public class MoveLadderPolicyTest {
                 "LADDER CLAMP: fines +3000 clamped to +2800", -200.0f);
         assertStep(positiveR2.get(1),
                 MoveLadderPolicy.StepKind.RANK_BASE,
-                "LADDER: R2 DOCTRINE base", 6000.0f);
+                "LADDER: R2 DOCTRINE base", 1000.0f);
 
         assertEquals(2, negativeR2.size());
         assertStep(negativeR2.get(0),
@@ -174,7 +174,7 @@ public class MoveLadderPolicyTest {
                 negativeR3.get(1).kind());
         assertStep(negativeR3.get(2),
                 MoveLadderPolicy.StepKind.RANK_BASE,
-                "LADDER: R2 DOCTRINE base", 6000.0f);
+                "LADDER: R2 DOCTRINE base", 1000.0f);
         assertEquals(MoveLadderPolicy.StepKind.NEGATIVE_CLAMP,
                 negativeR4.get(0).kind());
         assertStep(negativeR4.get(1),

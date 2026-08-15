@@ -68,7 +68,7 @@ public class MovePostFlipConsolidationSourceParityTest {
     }
 
     @Test
-    public void adapterPreservesGateReadDecisionApplyClaimAndCatchOrder()
+    public void adapterPreservesGateReadDecisionBoundedApplyAndCatchOrder()
             throws IOException {
         String block = v31Block(evaluatorSource("rando"));
         int analyzer = block.indexOf("context.getObjectiveAnalyzer()");
@@ -99,13 +99,13 @@ public class MovePostFlipConsolidationSourceParityTest {
                 "getTotalPowerAtLocation(", locationMatch);
         int decision = block.indexOf(
                 "MovePostFlipConsolidationPolicy.evaluate(", power);
-        int apply = block.indexOf("action.addReasoning(", decision);
+        int apply = block.indexOf("addObjectiveContribution(", decision);
+        int rule = block.indexOf(
+                "\"MOVE.OBJECTIVE.POST_FLIP_CONSOLIDATE\"", apply);
         int log = block.indexOf(
-                "V31 POST-FLIP CONSOLIDATE: {} should leave", apply);
-        int claim = block.indexOf(
-                "ladderClaimR2(\"V31 POST-FLIP CONSOLIDATE\"", log);
+                "V31 POST-FLIP CONSOLIDATE: {} should leave", rule);
         int catchBlock = block.indexOf(
-                "V31 MOVE CONSOLIDATE: Error", claim);
+                "V31 MOVE CONSOLIDATE: Error", log);
 
         assertTrue(analyzer >= 0);
         assertTrue(analyzed > analyzer);
@@ -122,9 +122,11 @@ public class MovePostFlipConsolidationSourceParityTest {
         assertTrue(power > locationMatch);
         assertTrue(decision > power);
         assertTrue(apply > decision);
-        assertTrue(log > apply);
-        assertTrue(claim > log);
-        assertTrue(catchBlock > claim);
+        assertTrue(rule > apply);
+        assertTrue(log > rule);
+        assertTrue(catchBlock > log);
+        assertFalse(block.contains(
+                "ladderClaimR2(\"V31 POST-FLIP CONSOLIDATE\""));
     }
 
     @Test

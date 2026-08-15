@@ -106,17 +106,17 @@ public final class DeployBudgetPolicy {
         int forceAfterDeploy = facts.availableForce() - facts.deployCost();
         if (facts.objectiveFormationReserve() > 0
                 && forceAfterDeploy < facts.objectiveFormationReserve()) {
-            operations.add(add(facts.actionId(),
-                    "DEPLOY.BUDGET.OBJECTIVE_FORMATION_RESERVE", -500.0f,
+            operations.add(addObjective(facts.actionId(),
+                    "DEPLOY.BUDGET.OBJECTIVE_FORMATION_RESERVE", -300.0f,
                     String.format("Off-plan deploy leaves %d Force; offered objective formation needs %d",
                             forceAfterDeploy, facts.objectiveFormationReserve())));
         }
         if (facts.objectiveRequiredCardReserve() > 0
                 && forceAfterDeploy
                     < facts.objectiveRequiredCardReserve()) {
-            operations.add(add(facts.actionId(),
+            operations.add(addObjective(facts.actionId(),
                     "DEPLOY.BUDGET.OBJECTIVE_REQUIRED_CARD_RESERVE",
-                    -500.0f,
+                    -300.0f,
                     String.format("Off-plan deploy leaves %d Force; a missing required objective card needs %d",
                             forceAfterDeploy,
                             facts.objectiveRequiredCardReserve())));
@@ -124,18 +124,10 @@ public final class DeployBudgetPolicy {
         if (facts.captureMoveForceReserve() > 0
                 && forceAfterDeploy
                     < facts.captureMoveForceReserve()) {
-            // A representative ordinary character deploy carries +1520 before
-            // budgeting, so the former -500 contribution did not change the
-            // winner. Keep this additive, not terminal: the public decision row
-            // does not expose every action-specific cost modifier, and exact
-            // +20000 capture-route actions must remain dominant.
-            operations.add(PolicyOperation.add(
+            operations.add(addObjective(
                     facts.actionId(),
-                    TraceRuleId.of(
-                        "DEPLOY.BUDGET.CAPTURE_MOVE_RESERVE"),
-                    TraceDomainId.FORCE_BUDGET,
-                    TraceOutputKind.BANDED,
-                    -2000.0f,
+                    "DEPLOY.BUDGET.CAPTURE_MOVE_RESERVE",
+                    -300.0f,
                     String.format(
                         "Off-plan deploy leaves %d Force; the exact capture move needs %d",
                         forceAfterDeploy,
@@ -143,20 +135,20 @@ public final class DeployBudgetPolicy {
         }
         if (facts.vaderMoveReserve() > 0
                 && forceAfterDeploy < facts.vaderMoveReserve()) {
-            operations.add(add(facts.actionId(), "V48", -500.0f,
+            operations.add(addObjective(facts.actionId(), "V48", -300.0f,
                     String.format("V48 VADER MOVE RESERVE: Deploy costs %d, leaves %d \u2014 need %d for Vader to move!",
                             facts.deployCost(), forceAfterDeploy, facts.vaderMoveReserve())));
         }
         if (facts.hiddenPathTransitReserve() > 0
                 && forceAfterDeploy < facts.hiddenPathTransitReserve()) {
-            operations.add(add(facts.actionId(), "V67z", -1500.0f,
+            operations.add(addObjective(facts.actionId(), "V67z", -300.0f,
                     String.format("V67z TRANSIT RESERVE: Deploy costs %d, leaves %d \u2014 need %d to transit Jedi off Mapuzo (flip the objective)!",
                             facts.deployCost(), forceAfterDeploy,
                             facts.hiddenPathTransitReserve())));
         }
         if (facts.vergeMoveReserve() > 0
                 && forceAfterDeploy < facts.vergeMoveReserve()) {
-            operations.add(add(facts.actionId(), "V79", -500.0f,
+            operations.add(addObjective(facts.actionId(), "V79", -300.0f,
                     String.format("V79 VERGE MOVE RESERVE: Deploy costs %d, leaves %d \u2014 need %d for Death Star to move toward Scarif!",
                             facts.deployCost(), forceAfterDeploy, facts.vergeMoveReserve())));
         }
@@ -249,6 +241,13 @@ public final class DeployBudgetPolicy {
         return PolicyOperation.add(actionId, TraceRuleId.of(rule),
                 TraceDomainId.DEPLOY_SEQUENCING,
                 TraceOutputKind.VETO, delta, reason);
+    }
+
+    private static PolicyOperation addObjective(
+            String actionId, String rule, float delta, String reason) {
+        return PolicyOperation.add(actionId, TraceRuleId.of(rule),
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, delta, reason);
     }
 
     private static Evaluation evaluation(String producer,

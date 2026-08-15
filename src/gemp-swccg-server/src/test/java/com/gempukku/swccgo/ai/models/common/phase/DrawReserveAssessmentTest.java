@@ -7,6 +7,17 @@ import static org.junit.Assert.assertEquals;
 public class DrawReserveAssessmentTest {
 
     @Test
+    public void baseSeparatesGeneralReserveFromVergeWithoutChangingTotal() {
+        DrawReserveAssessment assessment = DrawReserveAssessment.base(
+                true, true, true, true, true, true, 2);
+
+        assertEquals(8, assessment.generalForceToReserve());
+        assertEquals(1, assessment.vergeForceToReserve());
+        assertEquals(0, assessment.hiddenPathForceToReserve());
+        assertEquals(9, assessment.forceToReserve());
+    }
+
+    @Test
     public void baseAddsEachLegacyComponentInSequence() {
         assertEquals(0, reserve(false, false, false, false, false, false, 0));
         assertEquals(1, reserve(true, false, false, false, false, false, 0));
@@ -22,9 +33,17 @@ public class DrawReserveAssessmentTest {
     public void baseCapsAtTenBeforeCorridorCharactersAreAdded() {
         DrawReserveAssessment capped = DrawReserveAssessment.base(
                 true, true, true, true, true, true, 20);
+        DrawReserveAssessment withTransit =
+                capped.plusHiddenPathTransitReserve(4);
 
         assertEquals(10, capped.forceToReserve());
-        assertEquals(14, capped.plusHiddenPathTransitReserve(4).forceToReserve());
+        assertEquals(10, capped.generalForceToReserve());
+        assertEquals(0, capped.vergeForceToReserve());
+        assertEquals(0, capped.hiddenPathForceToReserve());
+        assertEquals(14, withTransit.forceToReserve());
+        assertEquals(10, withTransit.generalForceToReserve());
+        assertEquals(0, withTransit.vergeForceToReserve());
+        assertEquals(4, withTransit.hiddenPathForceToReserve());
     }
 
     @Test

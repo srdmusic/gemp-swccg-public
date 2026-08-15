@@ -358,10 +358,10 @@ public class ObjectiveAnalyzerSharedGoldenTest {
                     "Deploy Test Character to Coruscant: Galactic Senate");
 
             assertEquals(2, notes.size());
-            assertEquals(-2000.0f, notes.get(0).score, 0.0f);
-            assertEquals("V110 MY LORD: HOLD non-senator 'Test Character' - no non-Senate site on table yet, would land at Senate",
+            assertEquals(-300.0f, notes.get(0).score, 0.0f);
+            assertEquals("V110 MY LORD: prefer delaying non-senator 'Test Character'; no non-Senate site on table yet, would land at Senate (-300 objective preference)",
                     notes.get(0).reason.replace('\u2014', '-'));
-            assertEquals(-1500.0f, notes.get(1).score, 0.0f);
+            assertEquals(-300.0f, notes.get(1).score, 0.0f);
             assertEquals("V99 SENATE GUARD: non-senator 'Test Character' -> Galactic Senate (opp 0 <= my senator 0) - wasted, deploy elsewhere",
                     notes.get(1).reason.replace("\u2192", "->").replace('\u2014', '-'));
         }
@@ -403,7 +403,7 @@ public class ObjectiveAnalyzerSharedGoldenTest {
 
             assertFalse(analyzer.isAnalyzed());
             assertEquals(1, notes.size());
-            assertEquals(-1500.0f, notes.get(0).score, 0.0f);
+            assertEquals(-300.0f, notes.get(0).score, 0.0f);
             assertEquals("V99 SENATE GUARD: non-senator 'Test Character' -> Galactic Senate (opp 0 <= my senator 0) - wasted, deploy elsewhere",
                     notes.get(0).reason.replace("\u2192", "->").replace('\u2014', '-'));
         }

@@ -52,7 +52,7 @@ public class CaptureObjectiveAdapterSourceParityTest {
     }
 
     @Test
-    public void emperorPullBypassIsExactAndCoversBothGuards()
+    public void emperorPullBypassIsClosedWhileSafetyGuardsRemain()
             throws IOException {
         String adapter =
                 botSource("rando",
@@ -65,20 +65,16 @@ public class CaptureObjectiveAdapterSourceParityTest {
         String policy = commonSource(
                 "phase/PullActionPolicy.java");
 
-        assertOrdered(route,
-                "CaptureObjectiveFacts.objectiveKind(objective)",
-                "ObjectiveKind.BHBM",
-                "CaptureObjectiveFacts.isOwnedExactSource(",
-                "\"9_151\"",
-                "\"deploy emperor from reserve deck\"",
-                "canAffordBhbmEmperorDownload(");
-        assertFalse(route.contains("objective.isFlipped()"));
+        assertTrue(route.contains("return false;"));
+        assertFalse(route.contains("CaptureObjectiveFacts.objectiveKind"));
+        assertFalse(route.contains("canAffordBhbmEmperorDownload("));
         assertTrue(reader.contains(
                 "&& !objectiveRoutePullVetoBypass\n"
                     + "                && cheapestCost != null"));
         assertTrue(policy.contains(
-                "&& !facts.objectiveRoutePullVetoBypass()\n"
-                    + "                && facts.cheapestTargetCost() != null"));
+                "&& facts.cheapestTargetCost() != null"));
+        assertFalse(policy.contains(
+                "!facts.objectiveRoutePullVetoBypass()"));
     }
 
     @Test

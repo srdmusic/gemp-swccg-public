@@ -174,7 +174,7 @@ public final class MoveObjectiveGateHoldPolicy {
             return new Evaluation(
                     Branch.HOLD_LAST_ACTOR,
                     true,
-                    "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: the last required actor must remain");
+                    "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD: prefer retaining the last required actor at the gate (-300)");
         }
         return new Evaluation(
                 Branch.HOLD_LAST_BUDDY,
@@ -336,7 +336,7 @@ public final class MoveObjectiveGateHoldPolicy {
             return new Evaluation(
                     Branch.HOLD_LAST_ACTOR,
                     true,
-                    "V297 OBJECTIVE GATE HOLD: the last required actor must remain at the gate");
+                    "V297 OBJECTIVE GATE HOLD: prefer retaining the last required actor at the gate (-300)");
         }
 
         int remainingCharacters = friendlyCharactersAtGate - 1;

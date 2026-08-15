@@ -41,7 +41,7 @@ public class MoveLadderSourceParityTest {
 
         assertTrue(policy.contains("private static final float RANK_R4_SCORE = 20000.0f"));
         assertTrue(policy.contains("private static final float RANK_R3_SCORE = 12000.0f"));
-        assertTrue(policy.contains("private static final float RANK_R2_SCORE = 6000.0f"));
+        assertTrue(policy.contains("private static final float RANK_R2_SCORE = 1000.0f"));
         assertTrue(policy.contains("private static final float LADDER_VETO = -100000.0f"));
         assertTrue(policy.contains("private static final float FINE_CLAMP = 2800.0f"));
         assertTrue(policy.contains("public static RankTwoClaim claimR2("));
@@ -55,14 +55,16 @@ public class MoveLadderSourceParityTest {
         String move = evaluatorSource("rando");
 
         assertTrue(move.contains("private static boolean ladderBandsChecked = false"));
-        assertTrue(move.contains("MoveLadderPolicy.claimR4(ladderRank)"));
+        assertFalse(move.contains("MoveLadderPolicy.claimR4(ladderRank)"));
         assertTrue(move.contains("MoveLadderPolicy.claimR3(ladderRank)"));
         assertTrue(move.contains("MoveLadderPolicy.claimR2("));
         assertTrue(move.contains("MoveLadderPolicy.bandIntegrity()"));
+        assertFalse(move.contains("LADDER BAND INVERSION"));
+        assertTrue(move.contains("LADDER R2 TACTICAL RANGE"));
         assertTrue(move.contains("MoveLadderPolicy.finalizeAction("));
         assertTrue(move.contains("action.addReasoning(step.reasoning(), step.delta())"));
         assertTrue(move.contains("logger.warn("));
-        assertTrue(move.contains("ladderClaimR4Transit(hiddenPath.claimIdentity())"));
+        assertFalse(move.contains("ladderClaimR4Transit("));
         assertTrue(move.contains("ladderClaimR3(\"THREAT RETREAT\")"));
         assertTrue(move.contains("ladderClaimR2(\"ATTACK\""));
         assertTrue(move.contains("ladderVetoHard = true"));

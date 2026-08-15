@@ -123,8 +123,8 @@ public final class MoveDrainRoutingPolicy {
                             true,
                             "V67n TRANSIT STAGING DEST: "
                                     + destinationTitle
-                                    + " is the Hidden Path transit hub — Jedi MUST channel through here!",
-                            1500.0f));
+                                    + " is the Hidden Path transit hub; prefer routing Jedi through here (+300 objective preference)",
+                            300.0f));
         }
         return new DestinationDrain(
                 DestinationDrainBranch.ZERO_DRAIN,

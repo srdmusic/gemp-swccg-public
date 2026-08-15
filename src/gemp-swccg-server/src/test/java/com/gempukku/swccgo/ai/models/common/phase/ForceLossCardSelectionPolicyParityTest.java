@@ -564,10 +564,10 @@ public class ForceLossCardSelectionPolicyParityTest {
                 .evaluate(chosenContext);
 
         assertActionParity(rando, chosen);
-        assertBits(-8949.0f, rando.get(0).getScore());
+        assertBits(750.0f, rando.get(0).getScore());
         assertReasons(rando.get(0).getReasoning(),
                 "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+1000.0)",
-                "OBJECTIVE CRITICAL IN HAND - NEVER LOSE! (-9999.0)");
+                "OBJECTIVE CRITICAL IN HAND: prefer to retain (-300.0)");
     }
 
     @Test
@@ -617,14 +617,14 @@ public class ForceLossCardSelectionPolicyParityTest {
                 .evaluate(chosenContext);
 
         assertActionParity(rando, chosen);
-        assertBits(-9849.0f, action(rando, "28").getScore());
-        assertBits(-9349.0f, action(rando, "29").getScore());
+        assertBits(-150.0f, action(rando, "28").getScore());
+        assertBits(350.0f, action(rando, "29").getScore());
         assertReasons(action(rando, "28").getReasoning(),
                 "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+100.0)",
-                "OBJECTIVE CRITICAL IN HAND - NEVER LOSE! (-9999.0)");
+                "OBJECTIVE CRITICAL IN HAND: prefer to retain (-300.0)");
         assertReasons(action(rando, "29").getReasoning(),
                 "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+600.0)",
-                "OBJECTIVE CRITICAL IN HAND - NEVER LOSE! (-9999.0)");
+                "OBJECTIVE CRITICAL IN HAND: prefer to retain (-300.0)");
     }
 
     private static void assertCombinedDamageTier(int damageRemaining,

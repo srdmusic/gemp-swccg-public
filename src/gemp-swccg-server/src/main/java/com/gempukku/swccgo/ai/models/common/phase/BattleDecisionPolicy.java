@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
+import com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
@@ -248,6 +249,7 @@ public final class BattleDecisionPolicy {
         private final float baseScore;
         private final List<Contribution> contributions = new ArrayList<>();
         private float score;
+        private float objectivePreferenceScore;
 
         private ScoreCollector(String actionId, String actionText, float baseScore) {
             this.actionId = actionId;
@@ -277,14 +279,41 @@ public final class BattleDecisionPolicy {
             }
         }
 
+        private float applyObjective(
+                BattleInitiationPolicy.Contribution contribution,
+                TraceRuleId ruleArmId) {
+            if (!contribution.applies()) {
+                return 0.0f;
+            }
+            float delta = ObjectivePreferencePolicy.applyWithinCeiling(
+                    objectivePreferenceScore,
+                    ObjectivePreferencePolicy.normalize(
+                            TraceDomainId.OBJECTIVE_INTENT,
+                            contribution.delta()));
+            objectivePreferenceScore += delta;
+            contributions.add(new Contribution(
+                    contribution.reason(), delta, false,
+                    ruleArmId, TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.BANDED));
+            score += delta;
+            return delta;
+        }
+
         private void apply(PolicyResult result) {
             for (PolicyOperation operation : result.operations()) {
                 switch (operation.kind()) {
                     case ADD -> {
+                        float delta = operation.delta();
+                        if (ObjectivePreferencePolicy.isObjective(
+                                operation.domainId())) {
+                            delta = ObjectivePreferencePolicy.applyWithinCeiling(
+                                    objectivePreferenceScore, delta);
+                            objectivePreferenceScore += delta;
+                        }
                         contributions.add(new Contribution(
-                            operation.reason(), operation.delta(), false,
+                            operation.reason(), delta, false,
                             operation.ruleArmId(), operation.domainId(), operation.outputKind()));
-                        score += operation.delta();
+                        score += delta;
                     }
                     case HARD_VETO -> contributions.add(new Contribution(
                         operation.reason(), 0.0f, true,
@@ -595,9 +624,11 @@ public final class BattleDecisionPolicy {
                                             ourVaderHere, ourVaderArmed,
                                             huntDownV, lukeHere);
                                     if (huntAggression.applies()) {
-                                        action.apply(huntAggression);
+                                        float applied = action.applyObjective(
+                                                huntAggression,
+                                                TraceRuleId.of("V29.9-huntdown-aggro"));
                                         logger.warn("V29.9 HUNT DOWN: Armed Vader aggressiveness boost +{} (Luke: {})",
-                                            (int)huntAggression.delta(), lukeHere);
+                                            (int)applied, lukeHere);
                                     }
                                 }
 
@@ -641,10 +672,12 @@ public final class BattleDecisionPolicy {
                                                 hatredAtLocation,
                                                 jediAtLocation);
                                         if (inquisitorDestiny.applies()) {
-                                            action.apply(inquisitorDestiny);
+                                            float applied = action.applyObjective(
+                                                    inquisitorDestiny,
+                                                    TraceRuleId.of("V35-inquisitor-destiny"));
                                             logger.warn("V35 HUNT DESTINY at {}: Inquisitor={}, hatred={}, jedi={} — bonus +{}",
                                                 targetLocation.getTitle(), inquisitorInBattle, hatredAtLocation,
-                                                jediAtLocation, (int)inquisitorDestiny.delta());
+                                                jediAtLocation, (int)applied);
                                         }
                                     }
                                 }

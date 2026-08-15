@@ -38,7 +38,7 @@ public final class PullSelectionCandidatePolicy {
         Objects.requireNonNull(facts, "facts");
         return facts.starkillerSystem()
                 ? one(facts.actionId(), "V186-iwtm-system",
-                TraceDomainId.SETUP_STARTING, TraceOutputKind.ORDERING, 400.0f,
+                TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.ORDERING, 300.0f,
                 "V186 STARKILLER BASE SYSTEM - download engine for the 2-battleground flip")
                 : empty();
     }
@@ -56,20 +56,20 @@ public final class PullSelectionCandidatePolicy {
         }
         if (requiredActor) {
             return one(actionId, "PULL.OBJECTIVE.COUNTED_REQUIRED_ACTOR",
-                    TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED,
-                    400.0f,
+                    TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED,
+                    300.0f,
                     "Pull the typed actor required by the counted objective");
         }
         if (requiredCompanion) {
             return one(actionId,
                     "PULL.OBJECTIVE.COUNTED_REQUIRED_COMPANION",
-                    TraceDomainId.DECK_PLAYBOOK,
-                    TraceOutputKind.BANDED, 400.0f,
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.BANDED, 300.0f,
                     "Pull the control companion required by the counted objective");
         }
         if (requiredLocation) {
             return one(actionId, "PULL.OBJECTIVE.COUNTED_REQUIRED_LOCATION",
-                    TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED,
+                    TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED,
                     300.0f,
                     "Pull a missing location required by the counted objective");
         }
@@ -82,7 +82,7 @@ public final class PullSelectionCandidatePolicy {
         return expandsHoldRoute
                 ? one(actionId,
                     "PULL.OBJECTIVE.COUNTED_HOLD_LOCATION",
-                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED, 300.0f,
                     "Pull a third selected-planet site to buffer the two-site back hold")
                 : empty();
@@ -94,8 +94,8 @@ public final class PullSelectionCandidatePolicy {
         return preferredWarRoom
                 ? one(actionId,
                     "PULL.OBJECTIVE.MASSASSI_WAR_ROOM",
-                    TraceDomainId.DECK_PLAYBOOK,
-                    TraceOutputKind.BANDED, 350.0f,
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.BANDED, 300.0f,
                     "MASSASSI: pull the War Room so Rebel Tech adds to Attack Run while tutoring the Trench")
                 : empty();
     }
@@ -106,7 +106,7 @@ public final class PullSelectionCandidatePolicy {
         return expandsAtRiskBack
                 ? one(actionId,
                     "PULL.OBJECTIVE.IMPERIAL_ENTANGLEMENTS_BACK_SITE",
-                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED, 300.0f,
                     "IMPERIAL ENTANGLEMENTS BACK: expand the Tatooine control route while the relative count is at risk")
                 : empty();
@@ -123,8 +123,8 @@ public final class PullSelectionCandidatePolicy {
                 : "THNI: Landing Pad Nine is staged, secure Rogue One for the Scarif system and back-side exception";
         return one(actionId,
                 "PULL.OBJECTIVE.THEY_HAVE_NO_IDEA." + stage,
-                TraceDomainId.DECK_PLAYBOOK,
-                TraceOutputKind.BANDED, 800.0f,
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, 300.0f,
                 reason);
     }
 
@@ -134,9 +134,9 @@ public final class PullSelectionCandidatePolicy {
         if (prerequisitePriority <= 0) return empty();
         return one(actionId,
                 "PULL.OBJECTIVE.MASSASSI_ATTACK_RUN_PACKAGE",
-                TraceDomainId.DECK_PLAYBOOK,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
-                prerequisitePriority * 200.0f,
+                300.0f,
                 "MASSASSI: select the next missing executable Attack Run prerequisite");
     }
 
@@ -154,13 +154,13 @@ public final class PullSelectionCandidatePolicy {
         return routeReady
                 ? one(actionId,
                     "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
-                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
-                    500.0f,
+                    300.0f,
                     "Pull the missing card whose active table presence is required to flip")
                 : one(actionId,
                     "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD_ROUTE_BLOCKED",
-                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
                     150.0f,
                     "Keep the required card available, but rank it below a printing whose deploy route is ready");
@@ -177,15 +177,15 @@ public final class PullSelectionCandidatePolicy {
         if (requiredActor) {
             return one(actionId,
                     "PULL.OBJECTIVE.REQUIRED_CARD_ENABLER_ACTOR",
-                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
-                    350.0f,
+                    300.0f,
                     "Pull an actor required to make a missing objective card deployable");
         }
         if (requiredLocation) {
             return one(actionId,
                     "PULL.OBJECTIVE.REQUIRED_CARD_ENABLER_LOCATION",
-                    TraceDomainId.DECK_PLAYBOOK,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
                     250.0f,
                     "Pull a location required to make a missing objective card deployable");
@@ -215,12 +215,12 @@ public final class PullSelectionCandidatePolicy {
         }
         if (facts.gainDecision() && facts.huntDownLightsaber()) {
             operations.add(add(facts.actionId(), "V25-hunt-down-lightsaber",
-                    TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED, 200.0f,
+                    TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED, 200.0f,
                     "V25 HUNT DOWN: LIGHTSABER — critical for deck engine!"));
         }
         if (facts.gainDecision() && facts.activeObjectiveFlipGate()) {
             operations.add(add(facts.actionId(), "PULL.OBJECTIVE.FLIP_GATE_SITE",
-                    TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED, 300.0f,
+                    TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED, 300.0f,
                     "Pull the exact pre-flip objective control site"));
         }
 
@@ -328,15 +328,15 @@ public final class PullSelectionCandidatePolicy {
         if (facts.cloudCityMode() == PullSelectionCandidateFacts.CloudCityMode.OBJECTIVE) {
             switch (facts.cloudCitySite()) {
                 case UPPER_WALKWAY -> operations.add(add(facts.actionId(),
-                        "V26-objective-exterior", TraceDomainId.DECK_PLAYBOOK,
-                        TraceOutputKind.ORDERING, 500.0f,
+                        "V26-objective-exterior", TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.ORDERING, 300.0f,
                         "V26 OBJECTIVE: Upper Walkway is EXTERIOR — only way to get it out! I'm Sorry can't pull this!"));
                 case DINING_ROOM -> operations.add(add(facts.actionId(),
-                        "V26-objective-dining", TraceDomainId.DECK_PLAYBOOK,
-                        TraceOutputKind.ORDERING, -400.0f,
+                        "V26-objective-dining", TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.ORDERING, -300.0f,
                         "V26 OBJECTIVE: Dining Room is INTERIOR — save for Slip Sliding Away!"));
                 default -> operations.add(add(facts.actionId(),
-                        "V26-objective-interior", TraceDomainId.DECK_PLAYBOOK,
+                        "V26-objective-interior", TraceDomainId.OBJECTIVE_INTENT,
                         TraceOutputKind.ORDERING, -200.0f,
                         "V26 OBJECTIVE: Interior CC site — save for I'm Sorry, deploy Exterior first!"));
             }

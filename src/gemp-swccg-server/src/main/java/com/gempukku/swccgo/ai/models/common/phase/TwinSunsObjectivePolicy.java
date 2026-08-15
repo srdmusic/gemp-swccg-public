@@ -31,7 +31,7 @@ public final class TwinSunsObjectivePolicy {
                     actionId,
                     "OBJECTIVE.TWIN_SUNS.SITE_ROUTE",
                     TraceOutputKind.BANDED,
-                    2000.0f,
+                    300.0f,
                     "TWIN SUNS: spend 1 Force on the exact battleground-site route before unrelated deploys"))
                 : empty();
     }
@@ -43,7 +43,7 @@ public final class TwinSunsObjectivePolicy {
                     actionId,
                     "OBJECTIVE.TWIN_SUNS.TATOOINE_OCCUPATION",
                     TraceOutputKind.BANDED,
-                    2000.0f,
+                    300.0f,
                     "TWIN SUNS BACK: use the once-per-game Tatooine Occupation route"))
                 : empty();
     }
@@ -71,12 +71,11 @@ public final class TwinSunsObjectivePolicy {
         if (exactPayment == null) {
             return fallback > 0
                     && forceAvailable - fallback < routeForceReserve
-                    ? result(PolicyOperation.hardVeto(
+                    ? result(add(
                         actionId,
-                        TraceRuleId.of(
-                            "OBJECTIVE.TWIN_SUNS.ROUTE_PAYMENT_UNKNOWN"),
-                        TraceDomainId.OBJECTIVE_INTENT,
-                        TraceOutputKind.VETO,
+                        "OBJECTIVE.TWIN_SUNS.ROUTE_PAYMENT_UNKNOWN",
+                        TraceOutputKind.BANDED,
+                        -300.0f,
                         "TWIN SUNS: cannot prove this deploy preserves the exact site and movement payments"))
                     : empty();
         }
@@ -85,12 +84,11 @@ public final class TwinSunsObjectivePolicy {
                 || forceAvailable - payment >= routeForceReserve) {
             return empty();
         }
-        return result(PolicyOperation.hardVeto(
+        return result(add(
                 actionId,
-                TraceRuleId.of(
-                    "OBJECTIVE.TWIN_SUNS.ROUTE_FORCE_RESERVE"),
-                TraceDomainId.OBJECTIVE_INTENT,
-                TraceOutputKind.VETO,
+                "OBJECTIVE.TWIN_SUNS.ROUTE_FORCE_RESERVE",
+                TraceOutputKind.BANDED,
+                -300.0f,
                 "TWIN SUNS: preserve exact Force for the next site pull or formation move"));
     }
 

@@ -27,7 +27,7 @@ public class PullSelectionCandidatePolicyTest {
                         new PullSelectionCandidateFacts.IwtmLocation(
                                 ACTION_ID, true)));
         assertOperation(operation, "V186-iwtm-system",
-                TraceDomainId.SETUP_STARTING, TraceOutputKind.ORDERING, 400.0f,
+                TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.ORDERING, 300.0f,
                 "V186 STARKILLER BASE SYSTEM - download engine for the 2-battleground flip");
     }
 
@@ -44,15 +44,15 @@ public class PullSelectionCandidatePolicyTest {
                         ACTION_ID, false, false, true));
 
         assertOperation(actor, "PULL.OBJECTIVE.COUNTED_REQUIRED_ACTOR",
-                TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED, 400.0f,
+                TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED, 300.0f,
                 "Pull the typed actor required by the counted objective");
         assertOperation(companion,
                 "PULL.OBJECTIVE.COUNTED_REQUIRED_COMPANION",
-                TraceDomainId.DECK_PLAYBOOK,
-                TraceOutputKind.BANDED, 400.0f,
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED, 300.0f,
                 "Pull the control companion required by the counted objective");
         assertOperation(location, "PULL.OBJECTIVE.COUNTED_REQUIRED_LOCATION",
-                TraceDomainId.DECK_PLAYBOOK, TraceOutputKind.BANDED, 300.0f,
+                TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED, 300.0f,
                 "Pull a missing location required by the counted objective");
     }
 
@@ -66,8 +66,8 @@ public class PullSelectionCandidatePolicyTest {
                         ACTION_ID, false, false, true)).delta();
 
         assertTrue(locationScore > 10.0f);
-        assertTrue(actorScore > locationScore);
-        assertTrue(actorScore < 500.0f);
+        assertEquals(locationScore, actorScore, 0.0f);
+        assertEquals(300.0f, actorScore, 0.0f);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class PullSelectionCandidatePolicyTest {
                 .scoreCountedObjectiveHoldLocation(ACTION_ID, true));
         assertOperation(hold,
                 "PULL.OBJECTIVE.COUNTED_HOLD_LOCATION",
-                TraceDomainId.DECK_PLAYBOOK,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED, 300.0f,
                 "Pull a third selected-planet site to buffer the two-site back hold");
     }
@@ -110,12 +110,12 @@ public class PullSelectionCandidatePolicyTest {
                 "V24.13-im-sorry-carbonite", "pull-unknown-priority",
                 "V24.10-amsd-safety-block");
         assertDomains(result, TraceDomainId.PULL_SEARCH,
-                TraceDomainId.DECK_PLAYBOOK, TraceDomainId.DECK_PLAYBOOK,
+                TraceDomainId.OBJECTIVE_INTENT, TraceDomainId.DECK_PLAYBOOK,
                 TraceDomainId.PULL_SEARCH, TraceDomainId.DECK_PLAYBOOK);
         assertKinds(result, TraceOutputKind.ORDERING, TraceOutputKind.BANDED,
                 TraceOutputKind.BANDED, TraceOutputKind.BANDED,
                 TraceOutputKind.VETO);
-        assertDeltas(result, 10.0f, 200.0f, 150.0f, 30.000002f, -9999.0f);
+        assertDeltas(result, 10.0f, 300.0f, 150.0f, 30.000002f, -9999.0f);
     }
 
     @Test
@@ -163,7 +163,7 @@ public class PullSelectionCandidatePolicyTest {
         assertIds(result, "pull-unknown-location",
                 "PULL.OBJECTIVE.FLIP_GATE_SITE");
         assertDomains(result, TraceDomainId.PULL_SEARCH,
-                TraceDomainId.DECK_PLAYBOOK);
+                TraceDomainId.OBJECTIVE_INTENT);
         assertKinds(result, TraceOutputKind.ORDERING,
                 TraceOutputKind.BANDED);
         assertDeltas(result, 10.0f, 300.0f);
@@ -180,11 +180,11 @@ public class PullSelectionCandidatePolicyTest {
                         "Deploy locations first"));
 
         assertIds(result, "V26-objective-exterior", "pull-plan-match");
-        assertDomains(result, TraceDomainId.DECK_PLAYBOOK,
+        assertDomains(result, TraceDomainId.OBJECTIVE_INTENT,
                 TraceDomainId.DEPLOY_SEQUENCING);
         assertKinds(result, TraceOutputKind.ORDERING,
                 TraceOutputKind.ORDERING);
-        assertDeltas(result, 500.0f, 100.0f);
+        assertDeltas(result, 300.0f, 100.0f);
         assertEquals("IN DEPLOYMENT PLAN: Deploy locations first",
                 result.operations().get(1).reason());
     }
@@ -193,7 +193,7 @@ public class PullSelectionCandidatePolicyTest {
     public void blueprintCloudCityModesPreserveEverySiteBand() {
         assertSingleBlueprint(PullSelectionCandidateFacts.CloudCityMode.OBJECTIVE,
                 PullSelectionCandidateFacts.CloudCitySite.DINING_ROOM,
-                "V26-objective-dining", TraceOutputKind.ORDERING, -400.0f);
+                "V26-objective-dining", TraceOutputKind.ORDERING, -300.0f);
         assertSingleBlueprint(PullSelectionCandidateFacts.CloudCityMode.OBJECTIVE,
                 PullSelectionCandidateFacts.CloudCitySite.OTHER,
                 "V26-objective-interior", TraceOutputKind.ORDERING, -200.0f);
@@ -301,7 +301,10 @@ public class PullSelectionCandidatePolicyTest {
                         ACTION_ID, mode, site,
                         PullSelectionCandidateFacts.PlanState.NONE, ""));
         assertIds(result, ruleId);
-        assertDomains(result, TraceDomainId.DECK_PLAYBOOK);
+        assertDomains(result,
+                mode == PullSelectionCandidateFacts.CloudCityMode.OBJECTIVE
+                        ? TraceDomainId.OBJECTIVE_INTENT
+                        : TraceDomainId.DECK_PLAYBOOK);
         assertKinds(result, outputKind);
         assertDeltas(result, delta);
     }

@@ -9,15 +9,17 @@ import static org.junit.Assert.assertTrue;
 public class NoMoneyNoPartsObjectivePolicyTest {
 
     @Test
-    public void ordinaryDeployCannotSpendTheExactMosEspaMovePayment() {
-        var blocked = NoMoneyNoPartsObjectivePolicy
+    public void ordinaryDeployGetsBoundedMosEspaMovePenalty() {
+        var penalized = NoMoneyNoPartsObjectivePolicy
                 .preserveMoveForceForOrdinaryDeploy(
                     "deploy", true, 1, 1, 1, 1);
-        assertEquals(1, blocked.operations().size());
-        assertEquals(PolicyOperationKind.HARD_VETO,
-                blocked.operations().get(0).kind());
+        assertEquals(1, penalized.operations().size());
+        assertEquals(PolicyOperationKind.ADD,
+                penalized.operations().get(0).kind());
+        assertEquals(-300.0f,
+                penalized.operations().get(0).delta(), 0.0f);
         assertEquals("OBJECTIVE.NO_MONEY.MOVE_FORCE_RESERVE",
-                blocked.operations().get(0).ruleArmId().id());
+                penalized.operations().get(0).ruleArmId().id());
 
         assertTrue(NoMoneyNoPartsObjectivePolicy
                 .preserveMoveForceForOrdinaryDeploy(
@@ -34,15 +36,17 @@ public class NoMoneyNoPartsObjectivePolicyTest {
     }
 
     @Test
-    public void unknownPaidDeployFailsClosedWhileTheMoveReserveIsLive() {
-        var blocked = NoMoneyNoPartsObjectivePolicy
+    public void unknownPaidDeployGetsBoundedPenaltyWhileMoveReserveIsLive() {
+        var penalized = NoMoneyNoPartsObjectivePolicy
                 .preserveMoveForceForOrdinaryDeploy(
                     "deploy", true, 1, 2, null, 2);
-        assertEquals(1, blocked.operations().size());
-        assertEquals(PolicyOperationKind.HARD_VETO,
-                blocked.operations().get(0).kind());
+        assertEquals(1, penalized.operations().size());
+        assertEquals(PolicyOperationKind.ADD,
+                penalized.operations().get(0).kind());
+        assertEquals(-300.0f,
+                penalized.operations().get(0).delta(), 0.0f);
         assertEquals("OBJECTIVE.NO_MONEY.MOVE_PAYMENT_UNKNOWN",
-                blocked.operations().get(0).ruleArmId().id());
+                penalized.operations().get(0).ruleArmId().id());
 
         assertTrue("A conservative fallback that leaves the reserve is allowed",
                 NoMoneyNoPartsObjectivePolicy

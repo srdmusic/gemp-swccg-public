@@ -44,7 +44,8 @@ public class DeployObjectiveSequencingSourceParityTest {
     }
 
     @Test
-    public void policyCallsRetainTerminalAndLazyReadOrder() throws IOException {
+    public void policyCallsRetainLazyReadOrderWithoutObjectivePreemption()
+            throws IOException {
         for (String bot : new String[] {"rando", "chosenone"}) {
             String source = adapterSource(bot);
             int locationCard = source.indexOf("PhysicalCard earlyLocationCard = null;");
@@ -69,10 +70,9 @@ public class DeployObjectiveSequencingSourceParityTest {
             int oracleRead = source.indexOf("context.getDeckOracle();", oracleGuard);
             int evaluate = source.indexOf(
                     "DeployObjectiveSequencingPolicy.evaluateBespinFirst(", oracleRead);
-            int bespinTerminal = source.indexOf(
-                    "== DeployObjectiveSequencingPolicy.AdapterStep.CONTINUE_ACTION", evaluate);
-            int addPenalized = source.indexOf("actions.add(action);", bespinTerminal);
-            int continuePenalized = source.indexOf("continue;", addPenalized);
+            int mainLookup = source.indexOf(
+                    "// === Look up the card using multiple methods", evaluate);
+            String bespinWindow = source.substring(evaluate, mainLookup);
             assertTrue(bot + ": migrated calls must retain order",
                     locationCard >= 0 && titleNull > locationCard
                             && legacyEarlyCard > titleNull
@@ -81,8 +81,10 @@ public class DeployObjectiveSequencingSourceParityTest {
                             && classify > earlyContinue && candidate > classify
                             && objectiveForbid > candidate && oracleGuard > objectiveForbid
                             && oracleRead > oracleGuard && evaluate > oracleRead
-                            && bespinTerminal > evaluate && addPenalized > bespinTerminal
-                            && continuePenalized > addPenalized);
+                            && mainLookup > evaluate);
+            assertFalse(bot, bespinWindow.contains(
+                    "AdapterStep.CONTINUE_ACTION"));
+            assertFalse(bot, bespinWindow.contains("continue;"));
         }
     }
 
@@ -90,7 +92,7 @@ public class DeployObjectiveSequencingSourceParityTest {
     public void v29UsesResolvedCategoryButUnknownEnvelopeRetainsLegacyCard() throws IOException {
         for (String bot : new String[] {"rando", "chosenone"}) {
             String source = adapterSource(bot);
-            int v29 = source.indexOf("// === V29: TDIGWATT BESPIN-FIRST GUARD");
+            int v29 = source.indexOf("// === V29: TDIGWATT BESPIN-FIRST PREFERENCE");
             int mainLookup = source.indexOf("// === Look up the card using multiple methods", v29);
             assertTrue(bot + ": V29 block bounds", v29 >= 0 && mainLookup > v29);
             String v29Block = source.substring(v29, mainLookup);

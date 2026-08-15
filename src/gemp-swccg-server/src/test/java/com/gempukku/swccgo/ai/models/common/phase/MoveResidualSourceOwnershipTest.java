@@ -83,7 +83,7 @@ public class MoveResidualSourceOwnershipTest {
                 "No icons at location - low value",
                 "V29.7 Move to battleground — force drains!",
                 "V24.9: Unoccupied CC site — free force drain if we move here!",
-                "V47 LANDO STAY: Lando should stay put — moving wastes force and loses occupation!",
+                "V47 LANDO STAY: prefer Lando staying for occupation",
                 "V24.14B VEHICLE TO SPACE: Vehicles don't belong in space!",
                 "V24.3 EVAZAN COMBO: Move here — combo partner at this site for weapon kill combo!"}) {
             assertFalse(reason, adapters.contains("\"" + reason + "\""));
@@ -101,6 +101,28 @@ public class MoveResidualSourceOwnershipTest {
                 "action.addReasoning(\"V24.14B WEAPON CHAR TO SPACE:",
                 "action.addReasoning(\"V24.3 EVAZAN COMBO:"}) {
             assertFalse(inlineArithmetic, moveDestination.contains(inlineArithmetic));
+        }
+    }
+
+    @Test
+    public void objectiveRouteAlternativesRemainSelectableAtBoundedCost()
+            throws IOException {
+        String selection = evaluator(
+                "rando", "CardSelectionEvaluator.java");
+        for (String rule : new String[] {
+                "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_ALTERNATIVE",
+                "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_ALTERNATIVE",
+                "SELECT.OBJECTIVE.HIDDEN_PATH.CORRIDOR_ALTERNATIVE",
+                "MOVE.OBJECTIVE.TIGIH.VIRTUAL_HUT_CHILD_HOLD",
+                "DEPLOY.OBJECTIVE.OLD_ALLIES.GROUND_ROUTE_HOLD"}) {
+            int ruleIndex = selection.indexOf('"' + rule + '"');
+            assertTrue(rule, ruleIndex >= 0);
+            int from = Math.max(0, ruleIndex - 500);
+            String window = selection.substring(from,
+                    Math.min(selection.length(), ruleIndex + 100));
+            assertTrue(rule, window.contains("addObjectiveContribution("));
+            assertTrue(rule, window.contains("-300.0f"));
+            assertFalse(rule, window.contains("action.hardVeto("));
         }
     }
 

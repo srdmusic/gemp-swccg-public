@@ -20,7 +20,7 @@ public class NabooDuelObjectivePolicyTest {
                                 .FRONT_TARGET_LOSS),
                 "light-front",
                 NabooDuelObjectivePolicy.FRONT_TARGET_LOSS_RULE_ID,
-                400.0f);
+                300.0f);
         assertOperation(
                 NabooDuelObjectivePolicy.score(
                         "dark-front",
@@ -28,7 +28,7 @@ public class NabooDuelObjectivePolicyTest {
                                 .FRONT_TARGET_LOSS),
                 "dark-front",
                 NabooDuelObjectivePolicy.FRONT_TARGET_LOSS_RULE_ID,
-                400.0f);
+                300.0f);
     }
 
     @Test
@@ -59,8 +59,8 @@ public class NabooDuelObjectivePolicyTest {
                         "front-route", true),
                 "front-route",
                 NabooDuelObjectivePolicy.FRONT_DEPLOY_ROUTE_RULE_ID,
-                TraceDomainId.DEPLOY_SITING,
-                1200.0f);
+                TraceDomainId.OBJECTIVE_INTENT,
+                300.0f);
         assertEquals(0, NabooDuelObjectivePolicy
                 .scoreFrontDeployDestination(
                     "wrong-route", false)

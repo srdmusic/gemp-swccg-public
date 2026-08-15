@@ -39,7 +39,7 @@ public class MoveHuntGroupSourceParityTest {
     }
 
     @Test
-    public void adaptersRetainObjectiveScoreLogCatchAndLadderOwnership()
+    public void adaptersRetainBoundedObjectiveScoreLogAndCatchOwnership()
             throws IOException {
         String move = evaluatorSource("rando");
 
@@ -52,27 +52,23 @@ public class MoveHuntGroupSourceParityTest {
         assertTrue(move.contains(
                 "V29.13 HUNT SCATTER: Vader moving away"));
         assertTrue(move.contains(
-                "ladderClaimR2(\"V29.13 HUNT GROUP MOVE (Vader→allies)\""));
-        assertTrue(move.contains(
-                "ladderClaimR2(\"V29.13 HUNT GROUP MOVE (→Vader)\""));
+                "\"MOVE.OBJECTIVE.HUNT_DOWN_GROUP\""));
+        assertFalse(move.contains(
+                "ladderClaimR2(\"V29.13 HUNT GROUP MOVE"));
         assertTrue(move.contains(
                 "logger.debug(\"V29.13 HUNT GROUP MOVE: Error:"));
 
         int policyCall = move.indexOf("MoveHuntGroupPolicy.evaluate(");
         int scoreApplication = move.indexOf(
-                "action.addReasoning(", policyCall);
+                "addObjectiveContribution(", policyCall);
         int positiveLog = move.indexOf(
                 "V29.13 HUNT GROUP: Vader moving to allies", scoreApplication);
-        int positiveClaim = move.indexOf(
-                "ladderClaimR2(\"V29.13 HUNT GROUP MOVE (Vader→allies)\"",
-                positiveLog);
         int adapterCatch = move.indexOf(
-                "V29.13 HUNT GROUP MOVE: Error:", positiveClaim);
+                "V29.13 HUNT GROUP MOVE: Error:", positiveLog);
         assertTrue(policyCall >= 0);
         assertTrue(scoreApplication > policyCall);
         assertTrue(positiveLog > scoreApplication);
-        assertTrue(positiveClaim > positiveLog);
-        assertTrue(adapterCatch > positiveClaim);
+        assertTrue(adapterCatch > positiveLog);
     }
 
     @Test
@@ -120,7 +116,8 @@ public class MoveHuntGroupSourceParityTest {
             throws IOException {
         String move = evaluatorSource("rando");
 
-        assertTrue(move.contains("// V60 FIX:"));
+        assertTrue(move.contains(
+                "// V60: Corridor landspeed receives a bounded -300 objective preference."));
         assertTrue(move.contains("MovePredicates.canWinAt("));
         assertTrue(move.contains("oppWeaponBonusAt("));
         assertTrue(move.contains("ladderFinalize(action)"));

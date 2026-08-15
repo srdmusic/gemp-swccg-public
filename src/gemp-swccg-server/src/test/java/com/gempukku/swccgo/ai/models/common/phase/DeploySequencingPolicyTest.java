@@ -72,7 +72,7 @@ public class DeploySequencingPolicyTest {
                 DeploySequencingPolicy.tailScripts(facts).result().operations();
         assertOperations(operations,
                 new String[]{"V52-momentum", "V55", "V52b"},
-                new float[]{200.0f, 500.0f, 800.0f});
+                new float[]{200.0f, 500.0f, 300.0f});
     }
 
     @Test
@@ -81,7 +81,7 @@ public class DeploySequencingPolicyTest {
                 "a", 1, 0, true, false, false,
                 "Bespin", "bespin", "deploy system", false, 0.0f);
         assertOperations(DeploySequencingPolicy.tailScripts(tdigwatt).result().operations(),
-                new String[]{"V52-TDIGWATT-T1"}, new float[]{1500.0f});
+                new String[]{"V52-TDIGWATT-T1"}, new float[]{300.0f});
 
         DeploySequencingPolicy.TailFacts skywalker = new DeploySequencingPolicy.TailFacts(
                 "a", 2, 0, false, true, false,

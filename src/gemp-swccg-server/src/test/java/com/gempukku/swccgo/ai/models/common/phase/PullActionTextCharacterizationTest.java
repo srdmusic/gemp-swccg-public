@@ -109,7 +109,7 @@ public class PullActionTextCharacterizationTest {
         var chosen = evaluateChosen(fixture, chosenObjective);
 
         assertMirrored(rando, chosen);
-        assertBits(950.0f, rando.getScore());
+        assertBits(450.0f, rando.getScore());
         assertEquals(2, rando.getReasoning().size());
         assertTrue(rando.getReasoning().get(0).startsWith("V67ak KEY-CHARACTER PULL:"));
         assertTrue(rando.getReasoning().get(1).startsWith("V192 PULL SCORER (DEPLOY-GRADE):"));

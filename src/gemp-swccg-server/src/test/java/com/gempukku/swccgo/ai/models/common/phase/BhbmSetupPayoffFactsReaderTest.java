@@ -78,7 +78,7 @@ public class BhbmSetupPayoffFactsReaderTest {
         assertEquals(
                 "BATTLE.OBJECTIVE.BHBM.INSIGNIFICANT_REBELLION",
                 battle.ruleArmId().id());
-        assertEquals(80.0f, battle.delta(), 0.0f);
+        assertEquals(300.0f, battle.delta(), 0.0f);
     }
 
     @Test

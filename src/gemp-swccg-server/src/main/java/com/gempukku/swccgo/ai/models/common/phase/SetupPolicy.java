@@ -67,6 +67,22 @@ public final class SetupPolicy {
     }
 
     public record Contribution(Branch branch, String reason, float delta) {
+        /** True only for ordinary objective preference, never generic setup quality. */
+        public boolean objectivePreference() {
+            return switch (branch) {
+                case LOCATION_OBJECTIVE,
+                     LOCATION_CC_EXTERIOR,
+                     LOCATION_CC_INTERIOR,
+                     EFFECT_SHADOW_COLLECTIVE,
+                     EFFECT_IWTM,
+                     EFFECT_HUNT_DOWN_REQUIRED,
+                     EFFECT_HUNT_DOWN_OTHER,
+                     EFFECT_OBJECTIVE_LOCATION,
+                     EFFECT_OBJECTIVE_REQUIRED_CARD,
+                     RESERVE_SHADOW_COLLECTIVE -> true;
+                default -> false;
+            };
+        }
     }
 
     public record StartingCandidate(String actionId, String title) {
@@ -217,12 +233,12 @@ public final class SetupPolicy {
                 return new Contribution(
                         Branch.LOCATION_CC_EXTERIOR,
                         "V24.10 EXTERIOR CC STARTING LOCATION: Only way to deploy — I'm Sorry can't pull this!",
-                        500.0f);
+                        300.0f);
             } else if (interior) {
                 return new Contribution(
                         Branch.LOCATION_CC_INTERIOR,
                         "V24.10 INTERIOR CC: Slip Sliding or I'm Sorry will pull this — save starting slot for exterior!",
-                        -500.0f);
+                        -300.0f);
             }
         }
         return null;
@@ -390,14 +406,14 @@ public final class SetupPolicy {
                     Branch.EFFECT_SHADOW_COLLECTIVE,
                     "V22 PREFERRED STARTING EFFECT (Shadow Collective payoff): "
                             + title,
-                    500.0f));
+                    300.0f));
         }
         if (iwtmPreferred) {
             contributions.add(new Contribution(
                     Branch.EFFECT_IWTM,
                     "V186 PREFERRED STARTING EFFECT (I Want That Map): "
                             + title,
-                    1000.0f));
+                    300.0f));
         }
         return List.copyOf(contributions);
     }
@@ -450,7 +466,7 @@ public final class SetupPolicy {
                     Branch.EFFECT_SKYWALKER,
                     "V80 SKYWALKER STARTING EFFECT: " + title
                             + " — required for Rey/Luke Saga deck!",
-                    1000.0f));
+                    300.0f));
         }
 
         if (huntDown) {
@@ -461,7 +477,7 @@ public final class SetupPolicy {
                         Branch.EFFECT_HUNT_DOWN_REQUIRED,
                         "V25 HUNT DOWN STARTING EFFECT: " + title
                                 + " — REQUIRED!",
-                        500.0f));
+                        300.0f));
             } else {
                 contributions.add(new Contribution(
                         Branch.EFFECT_HUNT_DOWN_OTHER,
@@ -536,7 +552,7 @@ public final class SetupPolicy {
                 contributions.add(new Contribution(
                         Branch.EFFECT_EPIC,
                         "V43 EPIC: starting card deploys Epic Event — critical for deck strategy!",
-                        1500.0f));
+                        300.0f));
         }
         return List.copyOf(contributions);
     }
@@ -551,14 +567,14 @@ public final class SetupPolicy {
                     Branch.RESERVE_SKYWALKER,
                     "V80 SKYWALKER STARTING EFFECT: " + title
                             + " — required for Rey/Luke Saga deck!",
-                    1000.0f));
+                    300.0f));
         }
         if (setupTurn && isShadowCollectivePayoff(titleLower)) {
             contributions.add(new Contribution(
                     Branch.RESERVE_SHADOW_COLLECTIVE,
                     "V22 PREFERRED STARTING EFFECT (Shadow Collective payoff): "
                             + title,
-                    500.0f));
+                    300.0f));
         }
         return List.copyOf(contributions);
     }

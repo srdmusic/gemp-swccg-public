@@ -313,10 +313,10 @@ public class DeployTacticalPolicyTest {
         assertEmpty(DeployTacticalPolicy.scoreV51VaderFlip(
                 new DeployTacticalPolicy.VaderFlipFacts(
                         "deploy-42", "Cloud City: Guest Quarters", false)));
-        assertOperation(DeployTacticalPolicy.scoreV51VaderFlip(
+        assertObjectiveOperation(DeployTacticalPolicy.scoreV51VaderFlip(
                         new DeployTacticalPolicy.VaderFlipFacts(
                                 "deploy-42", "Cloud City: Guest Quarters", true)),
-                "V51", 900.0f,
+                "V51", 300.0f,
                 "V51 VADER FLIP: Deploy Vader to Cloud City: Guest Quarters, all live flip conditions are met");
     }
 
@@ -525,8 +525,9 @@ public class DeployTacticalPolicyTest {
         assertOperationAt(tippedObjective.result(), 0,
                 "V22.3-TIPS-BALANCE", 0.0f,
                 "V22.3: Would tip balance at contested location (10 vs 10)");
-        assertOperationAt(tippedObjective.result(), 1, "V22.7", 90.0f,
-                "V22.7: Objective-critical location — must contest!");
+        assertOperationAt(tippedObjective.result(), 1,
+                TraceDomainId.OBJECTIVE_INTENT, "V22.7", 300.0f,
+                "V22.7: Objective-critical location, prefer contesting");
         assertOperationAt(tippedObjective.result(), 2, "V22.3", -150.0f,
                 "CONTESTED & LOSING (0 vs 10 power, gap=10)");
         PolicyContributionLedger contestLedger =
@@ -822,13 +823,30 @@ public class DeployTacticalPolicyTest {
         assertOperationAt(result, 0, ruleId, delta, reason);
     }
 
+    private static void assertObjectiveOperation(PolicyResult result,
+                                                 String ruleId,
+                                                 float delta,
+                                                 String reason) {
+        assertEquals(1, result.operations().size());
+        assertOperationAt(result, 0, TraceDomainId.OBJECTIVE_INTENT,
+                ruleId, delta, reason);
+    }
+
     private static void assertOperationAt(PolicyResult result, int index,
+                                          String ruleId,
+                                          float delta, String reason) {
+        assertOperationAt(result, index, TraceDomainId.DEPLOY_SITING,
+                ruleId, delta, reason);
+    }
+
+    private static void assertOperationAt(PolicyResult result, int index,
+                                          TraceDomainId domainId,
                                           String ruleId,
                                           float delta, String reason) {
         PolicyOperation operation = result.operations().get(index);
         assertEquals("deploy-42", operation.actionId());
         assertEquals(ruleId, operation.ruleArmId().id());
-        assertEquals(TraceDomainId.DEPLOY_SITING, operation.domainId());
+        assertEquals(domainId, operation.domainId());
         assertEquals(TraceOutputKind.BANDED, operation.outputKind());
         assertEquals(PolicyOperationKind.ADD, operation.kind());
         assertEquals(delta, operation.delta(), 0.0f);

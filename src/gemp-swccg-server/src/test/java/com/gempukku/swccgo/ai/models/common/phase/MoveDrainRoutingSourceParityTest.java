@@ -298,7 +298,8 @@ public class MoveDrainRoutingSourceParityTest {
         assertTrue(move.contains("ladderClaimR2(\"V111 BG ADVANCE\""));
         assertTrue(move.contains("ladderWrongDirVeto = true"));
         assertTrue(move.contains("ladderVetoHard = true"));
-        assertTrue(move.contains("// V60 FIX:"));
+        assertTrue(move.contains(
+                "// V60: Corridor landspeed receives a bounded -300 objective preference."));
         assertTrue(move.contains("ladderFinalize(action)"));
         assertTrue(move.contains("MovePredicates.canWinAt("));
     }

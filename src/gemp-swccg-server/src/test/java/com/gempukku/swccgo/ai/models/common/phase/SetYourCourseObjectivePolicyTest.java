@@ -21,15 +21,16 @@ public class SetYourCourseObjectivePolicyTest {
         assertEquals(SetYourCourseObjectivePolicy.Stage.ORBITING_ALDERAAN,
                 SetYourCourseObjectivePolicy.classify(facts(2, "Alderaan", false, true)));
 
-        var blockedMove = SetYourCourseObjectivePolicy.scoreMoveParent(
+        var delayedMove = SetYourCourseObjectivePolicy.scoreMoveParent(
                 SetYourCourseObjectivePolicy.Stage.WAITING_FOR_SUPERLASER,
                 true);
-        assertTrue(blockedMove.hardVeto());
+        assertFalse(delayedMove.hardVeto());
+        assertEquals(-300.0f, delayedMove.delta(), 0.0f);
 
         var armedMove = SetYourCourseObjectivePolicy.scoreMoveParent(
                 SetYourCourseObjectivePolicy.Stage.READY_AT_ZERO, true);
         assertTrue(armedMove.mandatory());
-        assertEquals(0.0f, armedMove.delta(), 0.0f);
+        assertEquals(300.0f, armedMove.delta(), 0.0f);
 
         assertTrue(SetYourCourseObjectivePolicy.scoreParsecChoice(
                 SetYourCourseObjectivePolicy.Stage.READY_AT_ZERO, 1).mandatory());
@@ -49,9 +50,11 @@ public class SetYourCourseObjectivePolicyTest {
         assertTrue(SetYourCourseObjectivePolicy.scoreOrbitSystemChoice(
                 SetYourCourseObjectivePolicy.Stage.READY_AT_ONE,
                 true).mandatory());
-        assertTrue(SetYourCourseObjectivePolicy.scoreMoveParent(
+        var orbitHold = SetYourCourseObjectivePolicy.scoreMoveParent(
                 SetYourCourseObjectivePolicy.Stage.ORBITING_ALDERAAN,
-                true).hardVeto());
+                true);
+        assertFalse(orbitHold.hardVeto());
+        assertEquals(-300.0f, orbitHold.delta(), 0.0f);
     }
 
     @Test
@@ -91,7 +94,7 @@ public class SetYourCourseObjectivePolicyTest {
     }
 
     @Test
-    public void onlyExactRouteAssetsAndChoicesReceiveDominatingScores() {
+    public void onlyExactRouteAssetsAndChoicesReceiveBoundedScores() {
         var waiting = SetYourCourseObjectivePolicy.Stage.WAITING_FOR_SUPERLASER;
         var orbiting = SetYourCourseObjectivePolicy.Stage.ORBITING_ALDERAAN;
         assertTrue(SetYourCourseObjectivePolicy.scoreSuperlaserDeploy(waiting, true).mandatory());
@@ -100,21 +103,22 @@ public class SetYourCourseObjectivePolicyTest {
                 "Attempt to 'blow away' Alderaan").mandatory());
         assertFalse(SetYourCourseObjectivePolicy.scoreCpiAction(orbiting, false,
                 "Attempt to 'blow away' site").applies());
-        assertTrue(SetYourCourseObjectivePolicy.scoreParsecChoice(
-                SetYourCourseObjectivePolicy.Stage.READY_AT_ZERO, 0).hardVeto());
-        assertTrue(SetYourCourseObjectivePolicy.scoreDestinationChoice(
+        assertEquals(-300.0f, SetYourCourseObjectivePolicy.scoreParsecChoice(
+                SetYourCourseObjectivePolicy.Stage.READY_AT_ZERO, 0).delta(), 0.0f);
+        assertEquals(-300.0f, SetYourCourseObjectivePolicy.scoreDestinationChoice(
                 SetYourCourseObjectivePolicy.Stage.RECOVER_AT_TWO_DEEP_SPACE,
-                "Deep Space").hardVeto());
-        assertTrue(SetYourCourseObjectivePolicy.scoreOrbitSystemChoice(
+                "Deep Space").delta(), 0.0f);
+        assertEquals(-300.0f, SetYourCourseObjectivePolicy.scoreOrbitSystemChoice(
                 SetYourCourseObjectivePolicy.Stage.RECOVER_AT_TWO_DEEP_SPACE,
-                false).hardVeto());
+                false).delta(), 0.0f);
     }
 
     @Test
-    public void controlSpendCannotConsumeTheNextHyperspeedPayment() {
-        assertTrue(SetYourCourseObjectivePolicy
-                .preserveRouteForceDuringControl(1, 3, 3.0f)
-                .hardVeto());
+    public void controlSpendGetsBoundedNextHyperspeedPenalty() {
+        var penalty = SetYourCourseObjectivePolicy
+                .preserveRouteForceDuringControl(1, 3, 3.0f);
+        assertFalse(penalty.hardVeto());
+        assertEquals(-300.0f, penalty.delta(), 0.0f);
         assertFalse(SetYourCourseObjectivePolicy
                 .preserveRouteForceDuringControl(1, 4, 3.0f)
                 .applies());

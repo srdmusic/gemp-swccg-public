@@ -45,15 +45,16 @@ public class MoveLandoStayPolicyTest {
     }
 
     @Test
-    public void passingGatesProduceExactHardVetoReason() {
+    public void passingGatesProduceBoundedObjectivePenalty() {
         MoveLandoStayPolicy.Evaluation result =
                 MoveLandoStayPolicy.evaluate(
                         "Cloud City: East Platform (Docking Bay)", true, true);
 
-        assertTrue(result.hardVeto());
+        assertTrue(result.applies());
+        assertEquals(-300.0f, result.delta(), 0.0f);
         assertEquals(
                 "V47 LANDO STAY: Lando at Cloud City: East Platform (Docking Bay)"
-                        + " — stay for occupation! Don't move!",
+                        + ": prefer staying for occupation",
                 result.reason());
     }
 
@@ -70,14 +71,15 @@ public class MoveLandoStayPolicyTest {
                         true, 1, true, true);
 
         assertEquals(250.0f, support.totalDelta(), 0.0f);
-        assertEquals(-9999.0f, stay.totalDelta(), 0.0f);
-        assertEquals(-9749.0f, both.totalDelta(), 0.0f);
+        assertEquals(-300.0f, stay.totalDelta(), 0.0f);
+        assertEquals(-50.0f, both.totalDelta(), 0.0f);
         assertTrue(both.support().applies());
         assertTrue(both.stay().applies());
     }
 
     private static void assertNone(MoveLandoStayPolicy.Evaluation result) {
-        assertFalse(result.hardVeto());
+        assertFalse(result.applies());
         assertNull(result.reason());
+        assertEquals(0.0f, result.delta(), 0.0f);
     }
 }

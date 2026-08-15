@@ -623,11 +623,12 @@ public final class PersistentResponsePolicy {
         }
 
         List<CandidateFacts> mandatory = eligible.stream()
-                .filter(CandidateFacts::fundedMandatoryObjective)
+                .filter(candidate -> candidate.fundedMandatoryObjective()
+                        && isTerminalHardLoss(candidate.role()))
                 .toList();
         if (!mandatory.isEmpty()) {
             return Optional.of(toObligation(bestOverall(mandatory),
-                    "funded-mandatory-objective"));
+                    "objective-hard-loss-defense"));
         }
 
         Map<Integer, List<CandidateFacts>> responsesByThreat =
@@ -692,7 +693,7 @@ public final class PersistentResponsePolicy {
             }
             if (obligation.criticalBonus() > 0
                     && criticalRoleStillCurrent) {
-                operations.add(add(actionId, CRITICAL_RULE_ID,
+                operations.add(addObjective(actionId, CRITICAL_RULE_ID,
                         obligation.criticalBonus(),
                         "Selected executable response clears a typed objective-critical location; "
                                 + target));
@@ -750,7 +751,8 @@ public final class PersistentResponsePolicy {
             return false;
         }
         if (candidate.kind() == CandidateKind.EXISTING_PLAN) {
-            if (candidate.fundedMandatoryObjective()) {
+            if (candidate.fundedMandatoryObjective()
+                    && isTerminalHardLoss(candidate.role())) {
                 return true;
             }
             return candidate.formation().route()
@@ -766,7 +768,7 @@ public final class PersistentResponsePolicy {
         }
         boolean persistent = candidate.consecutiveOpponentTurns() >= 2
                 && candidate.projectedAvoidedDamage() > 0;
-        boolean critical = isCritical(candidate.role());
+        boolean critical = isTerminalHardLoss(candidate.role());
         if (!persistent && !critical) {
             return false;
         }
@@ -793,7 +795,8 @@ public final class PersistentResponsePolicy {
             if (candidate.kind() != CandidateKind.EXISTING_PLAN
                     || candidate.threatLocation().permanentCardId()
                     != threatPermanentId
-                    || candidate.fundedMandatoryObjective()) {
+                    || candidate.fundedMandatoryObjective()
+                    && isTerminalHardLoss(candidate.role())) {
                 continue;
             }
             if (best == null || compareAlternative(candidate, best) > 0) {
@@ -856,8 +859,11 @@ public final class PersistentResponsePolicy {
 
     private static int compareOverall(CandidateFacts left,
                                       CandidateFacts right) {
-        int comparison = Boolean.compare(left.fundedMandatoryObjective(),
-                right.fundedMandatoryObjective());
+        int comparison = Boolean.compare(
+                left.fundedMandatoryObjective()
+                        && isTerminalHardLoss(left.role()),
+                right.fundedMandatoryObjective()
+                        && isTerminalHardLoss(right.role()));
         if (comparison != 0) return comparison;
         comparison = Integer.compare(publicValue(left), publicValue(right));
         if (comparison != 0) return comparison;
@@ -903,11 +909,15 @@ public final class PersistentResponsePolicy {
     private static boolean isCriticalCandidate(CandidateFacts candidate) {
         return candidate.formation().route()
                 != DeployTacticalPolicy.ResponseFormationRoute.V170_SPY
-                && isCritical(candidate.role());
+                && isTerminalHardLoss(candidate.role());
     }
 
-    private static boolean isCritical(TargetRole role) {
-        return role == TargetRole.OBJECTIVE_HARD_LOSS_DEFENSE
+    private static boolean isTerminalHardLoss(TargetRole role) {
+        return role == TargetRole.OBJECTIVE_HARD_LOSS_DEFENSE;
+    }
+
+    private static boolean isObjectivePreferenceRole(TargetRole role) {
+        return isTerminalHardLoss(role)
                 || role == TargetRole.ACTIVE_FLIP_GATE
                 || role == TargetRole.POST_FLIP_PROTECTION
                 || role == TargetRole.MISSING_REQUIRED_LOCATION;
@@ -923,7 +933,8 @@ public final class PersistentResponsePolicy {
                 && selected.consecutiveOpponentTurns() >= 2
                 && selected.projectedAvoidedDamage() > 0
                 ? PERSISTENT_RESPONSE_BONUS : 0;
-        int criticalBonus = scoredResponse && isCritical(selected.role())
+        int criticalBonus = scoredResponse
+                && isObjectivePreferenceRole(selected.role())
                 ? CRITICAL_OCCUPATION_BONUS : 0;
         return new Obligation(selected.candidateKey(), selected.kind(),
                 selected.responseActions(),
@@ -936,6 +947,13 @@ public final class PersistentResponsePolicy {
                                        float delta, String reason) {
         return PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
                 TraceDomainId.DEPLOY_SITING, TraceOutputKind.BANDED,
+                delta, reason);
+    }
+
+    private static PolicyOperation addObjective(
+            String actionId, String ruleId, float delta, String reason) {
+        return PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED,
                 delta, reason);
     }
 

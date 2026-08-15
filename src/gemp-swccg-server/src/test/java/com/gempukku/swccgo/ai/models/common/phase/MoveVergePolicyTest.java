@@ -26,8 +26,8 @@ public class MoveVergePolicyTest {
                         "Move from parsec 4 to ORBIT Scarif at parsec 7");
 
         assertContribution(result, MoveVergePolicy.Branch.ORBIT_SCARIF,
-                1500.0f,
-                "V79 DEATH STAR ORBIT SCARIF: arrive at Scarif — must take this!");
+                300.0f,
+                "V79 DEATH STAR ORBIT SCARIF: prefer arriving at Scarif (+300 objective preference)");
         assertEquals(
                 "move from parsec 4 to orbit scarif at parsec 7",
                 result.actionLower());
@@ -41,7 +41,7 @@ public class MoveVergePolicyTest {
 
         assertContribution(result,
                 MoveVergePolicy.Branch.ONE_HOP_FROM_SCARIF,
-                1000.0f,
+                300.0f,
                 "V79 DEATH STAR → parsec 6 (1 hop from Scarif at 7)");
         assertEquals(Integer.valueOf(6), result.destinationParsec());
     }
@@ -52,7 +52,7 @@ public class MoveVergePolicyTest {
                 MoveVergePolicy.evaluate(true, false, false, "to parsec 7");
 
         assertContribution(result, MoveVergePolicy.Branch.PARSEC_SEVEN,
-                1200.0f,
+                300.0f,
                 "V79 DEATH STAR → parsec 7 (Scarif's parsec) — take orbit option next!");
     }
 
@@ -63,7 +63,7 @@ public class MoveVergePolicyTest {
 
         assertContribution(result,
                 MoveVergePolicy.Branch.ONE_HOP_FROM_SCARIF,
-                1000.0f,
+                300.0f,
                 "V79 DEATH STAR → parsec 8 (1 hop from Scarif at 7)");
     }
 
@@ -74,7 +74,7 @@ public class MoveVergePolicyTest {
                     true, false, false, "to parsec " + parsec);
             assertEquals(MoveVergePolicy.Branch.TOWARD_SCARIF,
                     result.branch());
-            assertEquals(700.0f, result.contribution().delta(), 0.0f);
+            assertEquals(300.0f, result.contribution().delta(), 0.0f);
             assertEquals(Integer.valueOf(parsec),
                     result.destinationParsec());
             assertEquals(
@@ -107,7 +107,7 @@ public class MoveVergePolicyTest {
             MoveVergePolicy.Evaluation result = MoveVergePolicy.evaluate(
                     true, false, false, displayText);
             assertContribution(result, MoveVergePolicy.Branch.DEFAULT_MOVE,
-                    500.0f,
+                    300.0f,
                     "V79 DEATH STAR MOVE: Verge active, default move");
             assertNull(result.destinationParsec());
         }
@@ -125,17 +125,16 @@ public class MoveVergePolicyTest {
     }
 
     @Test
-    public void preFlipOrbitHardHoldsUntilTheActorGateCompletes() {
+    public void preFlipOrbitHoldIsABoundedPreference() {
         MoveVergePolicy.Evaluation result = MoveVergePolicy.evaluate(
                 true, true, false, "Move using hyperspeed");
 
         assertEquals(MoveVergePolicy.Branch.PRE_FLIP_HOLD,
                 result.branch());
-        assertFalse(result.contribution().applies());
-        assertTrue(result.hardVeto());
-        assertEquals(
-                "V79 FRONT FLIP HOLD: Death Star must remain orbiting Scarif until Krennic or Tarkin completes the site gate",
-                result.hardVetoReason());
+        assertTrue(result.contribution().applies());
+        assertEquals(-300.0f, result.contribution().delta(), 0.0f);
+        assertFalse(result.hardVeto());
+        assertNull(result.hardVetoReason());
     }
 
     @Test
@@ -169,14 +168,14 @@ public class MoveVergePolicyTest {
         assertParsecChoice(
                 MoveVergePolicy.evaluateParsecChoice(7),
                 MoveVergePolicy.ParsecChoiceBranch.PARSEC_SEVEN,
-                7, 0, 1500.0f,
+                7, 0, 300.0f,
                 "V79 PARSEC 7 (Scarif!) — pick this");
 
         for (int parsec : new int[]{6, 8}) {
             assertParsecChoice(
                     MoveVergePolicy.evaluateParsecChoice(parsec),
                     MoveVergePolicy.ParsecChoiceBranch.ONE_HOP_FROM_SCARIF,
-                    parsec, 1, 1200.0f,
+                    parsec, 1, 300.0f,
                     "V79 PARSEC " + parsec + " (1 hop from Scarif)");
         }
 
@@ -184,7 +183,7 @@ public class MoveVergePolicyTest {
             assertParsecChoice(
                     MoveVergePolicy.evaluateParsecChoice(parsec),
                     MoveVergePolicy.ParsecChoiceBranch.TOWARD_SCARIF,
-                    parsec, Math.abs(parsec - 7), 800.0f,
+                    parsec, Math.abs(parsec - 7), 300.0f,
                     "V79 PARSEC " + parsec + " (toward Scarif)");
         }
 
@@ -192,7 +191,7 @@ public class MoveVergePolicyTest {
             assertParsecChoice(
                     MoveVergePolicy.evaluateParsecChoice(parsec),
                     MoveVergePolicy.ParsecChoiceBranch.WRONG_DIRECTION,
-                    parsec, Math.abs(parsec - 7), -800.0f,
+                    parsec, Math.abs(parsec - 7), -300.0f,
                     "V79 PARSEC " + parsec + " — WRONG DIRECTION");
         }
     }
@@ -202,8 +201,8 @@ public class MoveVergePolicyTest {
         assertParsecChoice(
                 MoveVergePolicy.evaluateDestinationChoice(true),
                 MoveVergePolicy.ParsecChoiceBranch.ORBIT_SCARIF,
-                null, null, 1500.0f,
-                "V79 ORBIT SCARIF — must take!");
+                null, null, 300.0f,
+                "V79 ORBIT SCARIF: preferred objective destination (+300)");
         assertParsecChoice(
                 MoveVergePolicy.evaluateDestinationChoice(false),
                 MoveVergePolicy.ParsecChoiceBranch.OTHER_DESTINATION,

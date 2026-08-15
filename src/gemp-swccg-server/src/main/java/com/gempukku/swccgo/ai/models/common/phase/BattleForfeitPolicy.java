@@ -112,6 +112,7 @@ public final class BattleForfeitPolicy {
         String ruleId =
                 "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD";
         String reason;
+        boolean terminalProtection = false;
         switch (role) {
             case LAST_REQUIRED_ACTOR:
                 reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the last required actor while another legal loss exists";
@@ -126,6 +127,7 @@ public final class BattleForfeitPolicy {
                 reason = "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD: preserve the sole flip-back blocker while another legal loss exists";
                 break;
             case LAST_OBJECTIVE_SURVIVAL_ACTOR:
+                terminalProtection = true;
                 ruleId =
                         "BATTLE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD";
                 reason = "BATTLE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD: preserve the last actor keeping the objective in play while another legal loss exists";
@@ -136,11 +138,13 @@ public final class BattleForfeitPolicy {
                 reason = "BATTLE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD: preserve the sole defender preventing an active required card from removing itself while another legal loss exists";
                 break;
             case HARD_LOSS_LOCATION_DEFENDER:
+                terminalProtection = true;
                 ruleId =
                         "BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_HOLD";
                 reason = "BATTLE.OBJECTIVE.HARD_LOSS_LOCATION_HOLD: preserve the sole defender of a terminal-loss location while another legal loss exists";
                 break;
             case TERMINAL_OBJECTIVE_ACTOR:
+                terminalProtection = true;
                 ruleId =
                         "BATTLE.OBJECTIVE.TERMINAL_ACTOR_HOLD";
                 reason = "BATTLE.OBJECTIVE.TERMINAL_ACTOR_HOLD: do not forfeit the actor whose loss would place the objective out of play while another legal loss exists";
@@ -158,9 +162,13 @@ public final class BattleForfeitPolicy {
             default:
                 return result(operations);
         }
-        add(operations, actionId,
-                ruleId,
-                TraceOutputKind.VETO, -9999.0f, reason);
+        if (terminalProtection) {
+            add(operations, actionId, ruleId,
+                    TraceOutputKind.VETO, -9999.0f, reason);
+        } else {
+            addObjective(operations, actionId, ruleId,
+                    TraceOutputKind.BANDED, -300.0f, reason);
+        }
         return result(operations);
     }
 
@@ -186,12 +194,14 @@ public final class BattleForfeitPolicy {
                 TraceOutputKind.BANDED, -80.0f,
                 "Optional forfeit but zero forfeit value");
         if (objective.requiredForFlip()) {
-            add(operations, candidate.actionId(), "V21-optional-required",
-                    TraceOutputKind.VETO, -9999.0f,
+            addObjective(operations, candidate.actionId(),
+                    "V21-optional-required",
+                    TraceOutputKind.BANDED, -300.0f,
                     "OBJECTIVE CRITICAL - don't voluntarily forfeit");
         } else if (objective.pullable()) {
-            add(operations, candidate.actionId(), "V21-optional-pullable",
-                    TraceOutputKind.VETO, -9999.0f,
+            addObjective(operations, candidate.actionId(),
+                    "V21-optional-pullable",
+                    TraceOutputKind.BANDED, -300.0f,
                     "OBJECTIVE PULLABLE - don't voluntarily forfeit");
         }
         return evaluation(Route.OPTIONAL_FORFEIT,
@@ -304,13 +314,15 @@ public final class BattleForfeitPolicy {
             }
         }
         if (facts.objective().requiredForFlip()) {
-            add(operations, facts.actionId(), "V21-forfeit-required",
-                    TraceOutputKind.VETO, -9999.0f,
-                    "OBJECTIVE CRITICAL - NEVER FORFEIT!");
+            addObjective(operations, facts.actionId(),
+                    "V21-forfeit-required",
+                    TraceOutputKind.BANDED, -300.0f,
+                    "OBJECTIVE CRITICAL: prefer to retain (-300 objective preference)");
         } else if (facts.objective().pullable()) {
-            add(operations, facts.actionId(), "V21-forfeit-pullable",
-                    TraceOutputKind.VETO, -9999.0f,
-                    "OBJECTIVE PULLABLE - NEVER FORFEIT!");
+            addObjective(operations, facts.actionId(),
+                    "V21-forfeit-pullable",
+                    TraceOutputKind.BANDED, -300.0f,
+                    "OBJECTIVE PULLABLE: prefer to retain (-300 objective preference)");
         }
         return result(operations);
     }
@@ -532,5 +544,18 @@ public final class BattleForfeitPolicy {
                             String reason) {
         operations.add(PolicyOperation.add(actionId, TraceRuleId.of(ruleArmId),
                 TraceDomainId.BATTLE_FORFEIT, outputKind, delta, reason));
+    }
+
+    private static void addObjective(
+            List<PolicyOperation> operations,
+            String actionId,
+            String ruleArmId,
+            TraceOutputKind outputKind,
+            float delta,
+            String reason) {
+        operations.add(PolicyOperation.add(
+                actionId, TraceRuleId.of(ruleArmId),
+                TraceDomainId.OBJECTIVE_INTENT,
+                outputKind, delta, reason));
     }
 }

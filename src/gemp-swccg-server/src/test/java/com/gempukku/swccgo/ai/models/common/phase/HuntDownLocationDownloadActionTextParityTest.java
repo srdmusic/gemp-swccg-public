@@ -60,7 +60,7 @@ public class HuntDownLocationDownloadActionTextParityTest {
     }
 
     @Test
-    public void castlePriorityRequiresExactSourceAndDoesNotLeakToWeaponLevitation() {
+    public void castlePreferenceRequiresExactSourceAndDoesNotLeakToWeaponLevitation() {
         GameState gameState = gameState();
         SwccgGame game = mock(SwccgGame.class);
         when(game.getGameState()).thenReturn(gameState);
@@ -105,7 +105,7 @@ public class HuntDownLocationDownloadActionTextParityTest {
         assertTrue(randoCastle.getReasoning().toString(),
                 randoCastle.getReasoning().stream().anyMatch(
                         reason -> reason.contains(
-                                "V25 HUNT DOWN: DEPLOY VADER NOW")));
+                                "V25 HUNT DOWN: prefer deploying Vader")));
 
         var randoWeapon = new com.gempukku.swccgo.ai.models.rando.evaluators
                 .ActionTextEvaluator().evaluate(randoVaderContext(

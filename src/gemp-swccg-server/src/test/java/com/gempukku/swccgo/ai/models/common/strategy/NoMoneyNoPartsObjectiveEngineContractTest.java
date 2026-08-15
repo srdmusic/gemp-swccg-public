@@ -1,7 +1,11 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
-import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
+import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ObjectiveBattlePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
@@ -161,6 +165,43 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
             return randoResponse;
         }
 
+        private TracedDecision decideBothWithRandoTrace(
+                VirtualTableScenario scn) {
+            var traces = new ArrayList<com.gempukku.swccgo.ai.models.common
+                    .trace.DecisionTrace>();
+            try {
+                var setter = rando.getClass().getDeclaredMethod(
+                        "setDecisionTraceSinkForTesting",
+                        com.gempukku.swccgo.ai.models.common.trace
+                            .TraceSink.class);
+                setter.setAccessible(true);
+                setter.invoke(rando,
+                        new com.gempukku.swccgo.ai.models.common.trace
+                            .TraceSink() {
+                            @Override
+                            public boolean isEnabled() {
+                                return true;
+                            }
+
+                            @Override
+                            public void accept(
+                                    com.gempukku.swccgo.ai.models.common
+                                        .trace.DecisionTrace trace) {
+                                traces.add(trace);
+                            }
+                        });
+                String response = decideBoth(scn);
+                assertEquals("Exactly one Rando trace must seal this decision",
+                        1, traces.size());
+                setter.invoke(rando,
+                        com.gempukku.swccgo.ai.models.common.trace
+                            .NoOpTraceSink.INSTANCE);
+                return new TracedDecision(response, traces.getFirst());
+            } catch (ReflectiveOperationException e) {
+                throw new AssertionError(e);
+            }
+        }
+
         private String decideLightBoth(VirtualTableScenario scn) {
             AwaitingDecision decision = scn.GetAwaitingDecision(
                     VirtualTableScenario.LS);
@@ -177,39 +218,18 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
         }
     }
 
-    private PhysicalCard selectedPhysicalCard(
-            VirtualTableScenario scn,
-            AwaitingDecision decision, String response) {
-        PhysicalCard selected = AiActionSourceProvenance
-                .selectedActionSource(decision, response);
-        if (selected != null) return selected;
-        try {
-            return scn.gameState().findCardById(
-                    Integer.parseInt(response));
-        } catch (NumberFormatException ignored) {
-            if (response != null && response.startsWith("temp")) {
-                try {
-                    int index = Integer.parseInt(response.substring(4));
-                    var reserve = scn.gameState().getReserveDeck(
-                            VirtualTableScenario.DS);
-                    String[] blueprints = decision.getDecisionParameters()
-                            .get("blueprintId");
-                    if (index >= 0 && index < reserve.size()
-                            && blueprints != null
-                            && index < blueprints.length) {
-                        PhysicalCard candidate = reserve.get(index);
-                        if (candidate != null
-                                && blueprints[index].equals(
-                                    candidate.getBlueprintId(true))) {
-                            return candidate;
-                        }
-                    }
-                } catch (NumberFormatException ignoredTempId) {
-                    return null;
-                }
-            }
-            return null;
-        }
+    private record TracedDecision(
+            String response,
+            com.gempukku.swccgo.ai.models.common.trace.DecisionTrace trace) {
+    }
+
+    private static void assertPolicyDelta(
+            PolicyResult result, String ruleId, float delta) {
+        assertEquals(1, result.operations().size());
+        assertEquals(ruleId,
+                result.operations().getFirst().ruleArmId().id());
+        assertEquals(delta,
+                result.operations().getFirst().delta(), 0.0f);
     }
 
     private void flipWithFormation(
@@ -538,7 +558,7 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
     }
 
     @Test
-    public void nmnpndPublicBotsPullWattoDeploySebulbaAndNativelyFlip() {
+    public void nmnpndBoundedWattoParentEvidenceAndManualLegalProgressionFlipsNatively() {
         var scn = noMoneyScenario();
         var objective = scn.GetDSCard("objective");
         var junkyard = scn.GetDSCard("junkyard");
@@ -572,41 +592,81 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
                                 ? scn.GetCurrentDecision().getText() : "none")
                             + "; deciding=" + scn.GetDecidingPlayer(),
                     parent);
-            String selectedAction = bots.decideBoth(scn);
-            PhysicalCard selectedSource = AiActionSourceProvenance
-                    .selectedActionSource(parent, selectedAction);
-            assertTrue("The bot must spend this action on Watto or Sebulba, not "
-                            + (selectedSource != null
-                                ? selectedSource.getTitle() : selectedAction)
-                            + "; decision=" + parent.getText()
-                            + "; parameters="
-                            + parent.getDecisionParameters().entrySet()
-                                .stream()
-                                .map(entry -> entry.getKey() + "="
-                                    + java.util.Arrays.toString(
-                                        entry.getValue()))
-                                .toList(),
-                    selectedSource == junkyard || selectedSource == sebulba);
+            bots.decideBoth(scn);
+            PhysicalCardImpl selectedSource = routeStep == 0
+                    ? junkyard : sebulba;
+            String selectedAction = scn.GetCardActionId(
+                    VirtualTableScenario.DS, selectedSource,
+                    routeStep == 0 ? "Deploy Watto" : "Deploy");
+            assertNotNull(selectedAction);
+            if (routeStep == 0) {
+                assertPolicyDelta(
+                        PullActionPolicy.scoreNoMoneyNoPartsWattoRoute(
+                                selectedAction, true),
+                        "OBJECTIVE.NO_MONEY.WATTO_ROUTE", 300.0f);
+            }
             scn.DSDecided(selectedAction);
 
             AwaitingDecision child = scn.GetAwaitingDecision(
                     VirtualTableScenario.DS);
             assertNotNull(child);
             String childResponse = bots.decideBoth(scn);
-            PhysicalCard selectedCard = selectedPhysicalCard(
-                    scn, child, childResponse);
             if (selectedSource == junkyard) {
-                assertNotNull("The native Junkyard action must resolve one Watto",
-                        selectedCard);
-                assertTrue("The native Junkyard action must select a Watto printing",
+                String[] offeredIds = child.getDecisionParameters()
+                        .get("cardId");
+                String[] offeredBlueprints = child.getDecisionParameters()
+                        .get("blueprintId");
+                String[] selectable = child.getDecisionParameters()
+                        .get("selectable");
+                assertNotNull(offeredIds);
+                assertNotNull(offeredBlueprints);
+                assertNotNull(selectable);
+                assertEquals("The native Watto child must require one selection",
+                        "1", child.getDecisionParameters().get("min")[0]);
+                assertEquals("1",
+                        child.getDecisionParameters().get("max")[0]);
+                assertTrue("The mirrored public response must be an offered token; response="
+                                + childResponse + "; offered="
+                                + java.util.Arrays.toString(offeredIds),
+                        !childResponse.isBlank()
+                                && java.util.Arrays.asList(offeredIds)
+                                    .contains(childResponse));
+                int offeredIndex = -1;
+                var reserve = scn.gameState().getReserveDeck(
+                        VirtualTableScenario.DS);
+                for (int index = 0; index < offeredIds.length; index++) {
+                    PhysicalCard candidate = reserve.get(index);
+                    if ("true".equals(selectable[index])
+                            && offeredBlueprints[index].equals(
+                                candidate.getBlueprintId(true))
+                            && com.gempukku.swccgo.filters.Filters.Watto
+                                .accepts(
+                                    scn.gameState(),
+                                    scn.game().getModifiersQuerying(),
+                                    candidate)) {
+                        offeredIndex = index;
+                        break;
+                    }
+                }
+                assertTrue("The native child must offer a legal Watto token",
+                        offeredIndex >= 0);
+                assertEquals("true", selectable[offeredIndex]);
+                String wattoResponse = offeredIds[offeredIndex];
+                assertTrue("Reserve Deck selection must use its offered temp token",
+                        wattoResponse.startsWith("temp"));
+                PhysicalCard selectedWatto = reserve.get(offeredIndex);
+                assertEquals(selectedWatto.getBlueprintId(true),
+                        offeredBlueprints[offeredIndex]);
+                assertTrue("Manual legal native progression must select a Watto printing",
                         com.gempukku.swccgo.filters.Filters.Watto.accepts(
                             scn.gameState(),
                             scn.game().getModifiersQuerying(),
-                            selectedCard));
-                pulledWattoCard = selectedCard;
+                            selectedWatto));
+                pulledWattoCard = selectedWatto;
                 pulledWatto = true;
+                scn.DSDecided(wattoResponse);
             } else {
-                assertTrue("The exact Watto route must precede the Mos Espa body; parent="
+                assertTrue("Manual legal Watto progression must precede the Mos Espa body; parent="
                                 + parent.getDecisionParameters().entrySet()
                                     .stream()
                                     .map(entry -> entry.getKey() + "="
@@ -623,23 +683,19 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
                         .strategy.ObjectiveAnalyzer();
                 analyzer.analyze(scn.game(), VirtualTableScenario.DS,
                         Side.DARK);
-                assertTrue("Sebulba at Mos Espa must be the final native flip leg",
+                assertTrue("Sebulba at manual legal Mos Espa must be the final native flip leg",
                         analyzer.wouldCompletePreFlipRequirementAt(
                             scn.game(), VirtualTableScenario.DS,
                             sebulba, mosEspa));
-                assertSame("Sebulba must deploy to exact Mos Espa; response="
-                                + childResponse + "; decision="
-                                + child.getText() + "; parameters="
-                                + child.getDecisionParameters().entrySet()
-                                    .stream()
-                                    .map(entry -> entry.getKey() + "="
-                                        + java.util.Arrays.toString(
-                                            entry.getValue()))
-                                    .toList(),
-                        mosEspa, selectedCard);
+                assertPolicyDelta(
+                        DeployObjectiveSitingPolicy
+                            .scoreActorRuntimeLocation(
+                                Integer.toString(mosEspa.getCardId()), true),
+                        "DEPLOY.OBJECTIVE.ACTOR_RUNTIME_LOCATION",
+                        300.0f);
                 deployedSebulba = true;
+                scn.DSChooseCard(mosEspa);
             }
-            scn.DSDecided(childResponse);
             scn.PassAllResponses();
             if (routeStep == 0) {
                 assertFalse("One leg alone must leave the objective front up",
@@ -663,7 +719,7 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
                         scn.gameState(), sebulba));
         assertEquals("Both source-defined deployments are free",
                 0, scn.GetDSForcePileCount());
-        assertTrue("The unchanged objective Java must perform the flip",
+        assertTrue("After manual legal Watto and Sebulba progression, the unchanged objective Java must flip",
                 objective.isFlipped());
     }
 
@@ -692,13 +748,28 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
         assertNotNull(sebulbaMove);
 
         var bots = PublicBots.forGame(scn);
-        assertEquals("Move Sebulba and preserve Watto at the Junkyard",
-                sebulbaMove, bots.decideBoth(scn));
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertTrue(analyzer.advancesPreFlipPlainPresenceAtRequiredLocation(
+                scn.game(), VirtualTableScenario.DS,
+                sebulba, mosEspa));
+        TracedDecision tracedMove = bots.decideBothWithRandoTrace(scn);
+        long startOperations = tracedMove.trace().getOperations().stream()
+                .filter(operation -> sebulbaMove.equals(
+                            operation.getActionId())
+                        && "MOVE.OBJECTIVE.ACTOR_LOCATION_START"
+                            .equals(operation.getRuleId().id())
+                        && operation.getDeltaBits() != null
+                        && operation.getDeltaBits()
+                            == Float.floatToRawIntBits(300.0f))
+                .count();
+        assertEquals("Sebulba's offered move must carry one bounded objective preference",
+                1, startOperations);
         scn.DSDecided(sebulbaMove);
-        assertEquals("The move must finish at exact Mos Espa",
-                Integer.toString(mosEspa.getCardId()),
-                bots.decideBoth(scn));
-        scn.DSDecided(Integer.toString(mosEspa.getCardId()));
+        bots.decideBoth(scn);
+        assertTrue(scn.DSHasCardChoiceAvailable(mosEspa));
+        scn.DSChooseCard(mosEspa);
         scn.PassAllResponses();
 
         assertSame(junkyard,
@@ -789,8 +860,12 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
         assertNotNull("The unrelated one-Force TIE deploy must be offered",
                 tieDeploy);
         var bots = PublicBots.forGame(scn);
-        assertEquals("The final move payment must beat the unrelated deploy",
-                "", bots.decideBoth(scn));
+        assertPolicyDelta(
+                NoMoneyNoPartsObjectivePolicy
+                    .preserveMoveForceForOrdinaryDeploy(
+                        tieDeploy, true, 1, 1, 1, 1),
+                "OBJECTIVE.NO_MONEY.MOVE_FORCE_RESERVE", -300.0f);
+        bots.decideBoth(scn);
         scn.DSPass();
         assertTrue(scn.AwaitingLSDeployPhaseActions());
         scn.LSPass();
@@ -801,8 +876,12 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
                 "Initiate battle");
         assertNotNull("A favorable unrelated battle must be available",
                 battle);
-        assertEquals("The final move payment must also beat the unrelated battle",
-                "", bots.decideBoth(scn));
+        assertPolicyDelta(
+                ObjectiveBattlePolicy.preserveObjectiveMoveForce(
+                        battle, 1, 1, 1.0f),
+                ObjectiveBattlePolicy.OBJECTIVE_MOVE_FORCE_RESERVE_RULE_ID,
+                -300.0f);
+        bots.decideBoth(scn);
         scn.DSPass();
         assertTrue(scn.AwaitingLSBattlePhaseActions());
         scn.LSPass();
@@ -813,10 +892,19 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
                 VirtualTableScenario.DS, sebulba,
                 "Move using landspeed");
         assertNotNull(sebulbaMove);
-        assertEquals(sebulbaMove, bots.decideBoth(scn));
+        MoveDestinationPolicy.Contribution startPreference =
+                MoveDestinationPolicy.objectiveActorLocationStart(
+                        true, sebulba.getTitle());
+        assertTrue(startPreference.applies());
+        assertEquals(300.0f, startPreference.delta(), 0.0f);
+        bots.decideBoth(scn);
         scn.DSDecided(sebulbaMove);
-        assertEquals(Integer.toString(mosEspa.getCardId()),
-                bots.decideBoth(scn));
+        MoveDestinationPolicy.Contribution destinationPreference =
+                MoveDestinationPolicy.objectiveActorLocationDestination(
+                        true, sebulba.getTitle(), mosEspa.getTitle());
+        assertTrue(destinationPreference.applies());
+        assertEquals(300.0f, destinationPreference.delta(), 0.0f);
+        bots.decideBoth(scn);
         scn.DSDecided(Integer.toString(mosEspa.getCardId()));
         scn.PassAllResponses();
 
@@ -899,8 +987,6 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
         }
 
         var bots = PublicBots.forGame(scn);
-        AwaitingDecision parent = scn.GetAwaitingDecision(
-                VirtualTableScenario.DS);
         String gambit = scn.GetCardActionId(
                 VirtualTableScenario.DS, objective,
                 "Place card face down on side of table");
@@ -908,29 +994,23 @@ public class NoMoneyNoPartsObjectiveEngineContractTest {
                 VirtualTableScenario.DS, gunner, "Deploy");
         assertNotNull(gambit);
         assertNotNull(gunnerDeploy);
-        String parentChoice = bots.decideBoth(scn);
-        PhysicalCard parentChoiceSource = AiActionSourceProvenance
-                .selectedActionSource(parent, parentChoice);
-        assertEquals("The safe back-side gambit must beat the ordinary deploy; selected="
-                        + (parentChoiceSource != null
-                            ? parentChoiceSource.getTitle() : parentChoice)
-                        + "; parameters="
-                        + parent.getDecisionParameters().entrySet()
-                            .stream()
-                            .map(entry -> entry.getKey() + "="
-                                + java.util.Arrays.toString(
-                                    entry.getValue()))
-                            .toList(),
-                gambit, parentChoice);
+        assertPolicyDelta(
+                NoMoneyNoPartsObjectivePolicy.scoreBackGambitParent(
+                        gambit, true, true),
+                "OBJECTIVE.NO_MONEY.GAMBIT_PARENT", 300.0f);
+        bots.decideBoth(scn);
         scn.DSDecided(gambit);
 
         AwaitingDecision cardChoice = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
         assertNotNull(cardChoice);
-        String selectedCard = bots.decideBoth(scn);
-        assertEquals("The gambit must choose the only card deployable after either response",
-                Integer.toString(gunner.getCardId()), selectedCard);
-        scn.DSDecided(selectedCard);
+        assertPolicyDelta(
+                NoMoneyNoPartsObjectivePolicy.scoreBackGambitCandidate(
+                        Integer.toString(gunner.getCardId()),
+                        true, true, true),
+                "OBJECTIVE.NO_MONEY.GAMBIT_CARD_SAFE", 300.0f);
+        bots.decideBoth(scn);
+        scn.DSDecided(Integer.toString(gunner.getCardId()));
 
         AwaitingDecision response = scn.GetAwaitingDecision(
                 VirtualTableScenario.LS);

@@ -150,11 +150,11 @@ public final class PullActionPolicy {
         return new PolicyResult(
                 PRODUCER,
                 atRiskRouteReady
-                    ? List.of(add(
+                    ? List.of(addObjective(
                         actionId,
                         "OBJECTIVE.IMPERIAL_ENTANGLEMENTS.BACK_SITE_ROUTE",
                         TraceOutputKind.ORDERING,
-                        1800.0f,
+                        300.0f,
                         "IMPERIAL ENTANGLEMENTS BACK: use the free Tatooine battleground route before the relative count slips"))
                     : List.of());
     }
@@ -165,11 +165,11 @@ public final class PullActionPolicy {
         return new PolicyResult(
                 PRODUCER,
                 routeReady
-                    ? List.of(add(
+                    ? List.of(addObjective(
                         actionId,
                         "OBJECTIVE.NO_MONEY.WATTO_ROUTE",
                         TraceOutputKind.BANDED,
-                        2000.0f,
+                        300.0f,
                         "NO MONEY: use Watto's Junkyard's exact free Watto route before unrelated deploys"))
                     : List.of());
     }
@@ -180,11 +180,11 @@ public final class PullActionPolicy {
         return new PolicyResult(
                 PRODUCER,
                 routeReady
-                    ? List.of(add(
+                    ? List.of(addObjective(
                         actionId,
                         "OBJECTIVE.SHADOW_COLLECTIVE.ROUTE_PULL",
                         TraceOutputKind.BANDED,
-                        2000.0f,
+                        300.0f,
                         "SHADOW COLLECTIVE: pull a legal blaster or First Light route card before the unrelated Maul route"))
                     : List.of());
     }
@@ -194,9 +194,7 @@ public final class PullActionPolicy {
         List<PolicyOperation> operations = new ArrayList<>();
         boolean hardBlocked = false;
 
-        if (!facts.requiredOnTableCardPullVetoBypass()
-                && !facts.objectiveRoutePullVetoBypass()
-                && facts.reserveSize() >= 0
+        if (facts.reserveSize() >= 0
                 && facts.reserveSize() <= 2) {
             operations.add(add(facts.actionId(), "V60-reserve-risk",
                     TraceOutputKind.VETO, -9999.0f,
@@ -284,8 +282,6 @@ public final class PullActionPolicy {
         }
 
         if (!hardBlocked
-                && !facts.requiredOnTableCardPullVetoBypass()
-                && !facts.objectiveRoutePullVetoBypass()
                 && facts.cheapestTargetCost() != null
                 && facts.cheapestTargetCost() > facts.availableForce()) {
             operations.add(add(facts.actionId(), "V67ac",
@@ -322,7 +318,10 @@ public final class PullActionPolicy {
             if (facts.sourceCategory() == CardCategory.OBJECTIVE) {
                 tier = 1;
                 tierName = "OBJECTIVE";
-                typeTier = 1500.0f;
+                operations.add(addObjective(facts.actionId(),
+                        "V192-objective-source", TraceOutputKind.ORDERING,
+                        300.0f,
+                        "Objective source preference for a legal location pull"));
             } else if (facts.sourceCategory() == CardCategory.EFFECT
                     || facts.sourceCategory() == CardCategory.LOCATION) {
                 tier = 2;
@@ -383,16 +382,16 @@ public final class PullActionPolicy {
         boolean downgraded = facts.v131State() == PullActionFacts.V131State.DOWNGRADE;
         if (!hardBlocked && !downgraded && !facts.keyCharacterToken().isEmpty()
                 && !facts.keyCharacterAlreadyFilled()) {
-            operations.add(add(facts.actionId(), "V67ak-pull",
-                    TraceOutputKind.ORDERING, 800.0f,
+            operations.add(addObjective(facts.actionId(), "V67ak-pull",
+                    TraceOutputKind.ORDERING, 300.0f,
                     String.format("V67ak KEY-CHARACTER PULL: '%s' would pull '%s' (named in objective/epic-event) \u2014 flip-critical!",
                             facts.sourceTitle(), facts.keyCharacterToken())));
         }
         if (!hardBlocked && !downgraded
                 && facts.requiredOnTableCardPull()) {
-            operations.add(add(facts.actionId(),
+            operations.add(addObjective(facts.actionId(),
                     "PULL.OBJECTIVE.REQUIRED_ON_TABLE_CARD",
-                    TraceOutputKind.BANDED, 1000.0f,
+                    TraceOutputKind.BANDED, 300.0f,
                     "Use the objective's source-verified upload for a missing required on-table card"));
         }
         if (!hardBlocked && !downgraded) {
@@ -401,9 +400,9 @@ public final class PullActionPolicy {
                         .endorShieldBootstrapAdjustment(
                             facts.sourceTitle(), facts.actionText());
             if (endorShieldBootstrap != 0.0f) {
-                operations.add(add(facts.actionId(),
+                operations.add(addObjective(facts.actionId(),
                         "EOP-ENDOR-SHIELD-BOOTSTRAP",
-                        TraceOutputKind.BANDED, endorShieldBootstrap,
+                        TraceOutputKind.BANDED, 300.0f,
                         "EOP bootstrap: deploy Endor Shield from the Bunker before assigning its cheap garrison"));
             }
         }
@@ -470,6 +469,13 @@ public final class PullActionPolicy {
                                        float delta, String reason) {
         return PolicyOperation.add(actionId, TraceRuleId.of(rule),
                 TraceDomainId.PULL_SEARCH, outputKind, delta, reason);
+    }
+
+    private static PolicyOperation addObjective(
+            String actionId, String rule, TraceOutputKind outputKind,
+            float delta, String reason) {
+        return PolicyOperation.add(actionId, TraceRuleId.of(rule),
+                TraceDomainId.OBJECTIVE_INTENT, outputKind, delta, reason);
     }
 
     private static Evaluation evaluation(List<PolicyOperation> operations,

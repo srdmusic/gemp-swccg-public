@@ -1,5 +1,9 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
+import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Persona;
@@ -329,10 +333,13 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                     "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE");
             Outcome stranded = cardSelectionAdapter(
                     bot, fixture, decision, true, "0");
-            assertTrue(stranded.hardVeto());
+            Outcome safe = cardSelectionAdapter(
+                    bot, fixture, decision, true, "1");
+            assertFalse(stranded.hardVeto());
             assertContains(
                     stranded,
                     "VADERS_CASTLE_CANDIDATE_HOLD");
+            assertTrue(safe.score() > stranded.score());
             results.add(result);
         }
         assertParity(results);
@@ -657,7 +664,7 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                     bot, fixture, destinationDecision,
                     true,
                     String.valueOf(NON_BATTLEGROUND_ID));
-            assertTrue(nonBattleground.hardVeto());
+            assertFalse(nonBattleground.hardVeto());
             assertContains(
                     nonBattleground,
                     "RUNTIME_ACTOR_DESTINATION_HOLD");
@@ -671,7 +678,7 @@ public class HuntDownCombinedEvaluatorDecisionTest {
     }
 
     @Test
-    public void dockingTransitParentRefusesOnlyRouteThatBreaksSoleVaderLeg() {
+    public void dockingTransitParentBoundsSoleVaderObjectiveHold() {
         List<Outcome> winners = new ArrayList<>();
         List<Outcome> heldActions = new ArrayList<>();
         for (Bot bot : Bot.values()) {
@@ -732,28 +739,89 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                     routes.stream()
                         .noneMatch(route ->
                             route.admissible()));
+            assertTrue(
+                    "The legal route must be held only by objective intent: "
+                        + routes,
+                    routes.stream().allMatch(route ->
+                        route.safetyVeto() == null
+                            && route.objectiveHold()));
 
             Decision decision =
                     Decision.dockingTransitTop(source);
             Outcome winner = combined(
                     bot, fixture, decision);
             assertEquals("", winner.actionId());
-            Outcome held = moveAdapter(
+            TracedOutcome held = tracedMoveAdapter(
                     bot, fixture, decision,
                     true, "0");
-            assertTrue(held.score() <= -10000.0f);
+            assertFalse(held.outcome().hardVeto());
+            assertEquals(-295.0f, held.outcome().score(), 0.0f);
             assertContains(
-                    held,
+                    held.outcome(),
                     "RUNTIME_ACTOR_TRANSIT_HOLD");
+            assertObjectiveDelta(
+                    held,
+                    "MOVE.OBJECTIVE.RUNTIME_ACTOR_TRANSIT_HOLD",
+                    -300.0f);
             winners.add(winner);
-            heldActions.add(held);
+            heldActions.add(held.outcome());
         }
         assertParity(winners);
         assertParity(heldActions);
     }
 
     @Test
-    public void dockingTransitCarriesSourceAcrossRealDestinationAndMoverPrompts() {
+    public void dockingTransitParentKeepsFormationSafetyCategorical() {
+        List<Outcome> heldActions = new ArrayList<>();
+        for (Bot bot : Bot.values()) {
+            Fixture fixture = fixture(bot);
+            PhysicalCard source = fixture.addDockingBay(
+                    BATTLEGROUND_DOCKING_BAY_BP,
+                    BATTLEGROUND_DOCKING_BAY_ID, true);
+            PhysicalCard destination = fixture.addDockingBay(
+                    NON_BATTLEGROUND_DOCKING_BAY_BP,
+                    NON_BATTLEGROUND_DOCKING_BAY_ID, false);
+            PhysicalCard vader = character(
+                    VADER_BP, VADER_ID,
+                    Zone.AT_LOCATION, PLAYER);
+            fixture.place(vader, source);
+            fixture.markPersona(vader, Persona.VADER);
+            when(fixture.modifiers.getTotalPowerAtLocation(
+                    fixture.gameState, destination,
+                    OPPONENT, false, false)).thenReturn(20.0f);
+            fixture.enableActiveIteration();
+
+            var routes = fixture.analyzer
+                    .assessDockingBayTransitRoutes(
+                        fixture.game, PLAYER, source);
+            assertFalse(routes.isEmpty());
+            assertTrue(
+                    "Every offered transit must fail FormationSafety: "
+                        + routes,
+                    routes.stream().allMatch(route ->
+                        route.safetyVeto() != null
+                            && route.safetyVeto().contains(
+                                "L4 SOLO CHARGE")));
+
+            Outcome held = moveAdapter(
+                    bot, fixture,
+                    Decision.dockingTransitTop(source),
+                    true, "0");
+            assertFalse(
+                    "The legacy move ladder represents this categorical stop "
+                        + "with its veto score, not EvaluatedAction.hardVeto",
+                    held.hardVeto());
+            assertTrue(held.score() <= -10000.0f);
+            assertContains(
+                    held,
+                    "RUNTIME_ACTOR_TRANSIT_SAFETY");
+            heldActions.add(held);
+        }
+        assertParity(heldActions);
+    }
+
+    @Test
+    public void dockingTransitCarriesSourceIntoBoundedDestinationScoring() {
         List<List<Outcome>> results = new ArrayList<>();
         for (Bot bot : Bot.values()) {
             Fixture fixture = fixture(bot);
@@ -786,16 +854,21 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                         route.admissible()
                         && route.objectiveAdvance()));
 
-            Decision movers = Decision.dockingMovers(
-                    destination,
-                    List.of(vader, buddy));
+            Decision destinationDecision = Decision.dockingDestination(
+                    List.of(decoy, destination));
+            Outcome advancingDestination =
+                    dockingCardSelectionAdapter(
+                            bot, fixture, destinationDecision,
+                            source, null,
+                            String.valueOf(
+                                    BATTLEGROUND_DOCKING_BAY_ID));
+            assertContains(
+                    advancingDestination,
+                    "MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION");
             List<Outcome> sequence = combinedSequence(
                     bot, fixture,
                     Decision.dockingTransitTop(source),
-                    Decision.dockingDestination(
-                        List.of(decoy, destination)),
-                    movers,
-                    movers);
+                    destinationDecision);
             assertEquals(
                     "0",
                     sequence.get(0).actionId());
@@ -804,22 +877,10 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                     "MOVE.OBJECTIVE.ACTOR_LOCATION_START");
             assertEquals(
                     String.valueOf(
-                        BATTLEGROUND_DOCKING_BAY_ID),
+                        DECOY_DOCKING_BAY_ID),
                     sequence.get(1).actionId());
-            assertContains(
+            assertNotContains(
                     sequence.get(1),
-                    "MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION");
-            assertEquals(
-                    String.valueOf(VADER_ID),
-                    sequence.get(2).actionId());
-            assertContains(
-                    sequence.get(2),
-                    "MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION");
-            assertNotContains(
-                    sequence.get(3),
-                    "DOCKING_TRANSIT");
-            assertNotContains(
-                    sequence.get(3),
                     "MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION");
             results.add(sequence);
         }
@@ -897,20 +958,27 @@ public class HuntDownCombinedEvaluatorDecisionTest {
             assertContains(
                     safeBuddy,
                     "DOCKING_TRANSIT_SAFE_COMPLETION");
-            Outcome heldVader =
-                    dockingCardSelectionAdapter(
+            TracedOutcome heldVader =
+                    tracedDockingCardSelectionAdapter(
                         bot, fixture, movers, source,
                         destination,
                         String.valueOf(VADER_ID));
-            assertTrue(heldVader.hardVeto());
+            assertFalse(heldVader.outcome().hardVeto());
+            assertEquals(
+                    -300.0f,
+                    heldVader.outcome().score(), 0.0f);
             assertContains(
-                    heldVader,
+                    heldVader.outcome(),
                     "RUNTIME_ACTOR_TRANSIT_HOLD");
+            assertObjectiveDelta(
+                    heldVader,
+                    "MOVE.OBJECTIVE.RUNTIME_ACTOR_TRANSIT_HOLD",
+                    -300.0f);
             parentChoices.add(parent);
             transitCandidates.add(transit);
             safeDestinations.add(safeDestination);
             safeBuddies.add(safeBuddy);
-            heldVaders.add(heldVader);
+            heldVaders.add(heldVader.outcome());
         }
         assertParity(parentChoices);
         assertParity(transitCandidates);
@@ -1004,8 +1072,9 @@ public class HuntDownCombinedEvaluatorDecisionTest {
             Outcome held = cardSelectionAdapter(
                     bot, fixture, Decision.recallTarget(),
                     true, String.valueOf(VADER_ID));
-            assertTrue(held.hardVeto());
+            assertFalse(held.hardVeto());
             assertContains(held, "RECALL_TARGET_HOLD");
+            assertTrue(held.score() <= -250.0f);
             Outcome safe = cardSelectionAdapter(
                     bot, fixture, Decision.recallTarget(),
                     true, String.valueOf(SECOND_VADER_ID));
@@ -1167,6 +1236,15 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                         String.valueOf(
                             BLOCKER_BATTLEGROUND_ID));
             assertTrue(unsafeDestination.hardVeto());
+            assertTrue(
+                    "The rejected Castle destination must be a FormationSafety failure",
+                    fixture.analyzer.assessVaderCastleRoutes(
+                            fixture.game, PLAYER,
+                            fixture.castle, true)
+                        .stream().anyMatch(route ->
+                            route.destination()
+                                == fixture.blockerBattleground
+                            && !route.formationSafe()));
 
             String moverPrompt =
                     "Choose card to move to "
@@ -1214,7 +1292,76 @@ public class HuntDownCombinedEvaluatorDecisionTest {
     }
 
     @Test
-    public void activeObjectiveBlockerBattleBeatsEqualNonblockerBattle() {
+    public void castleReturnHoldIsBoundedForOriginAndMoverChildren() {
+        List<Outcome> origins = new ArrayList<>();
+        List<Outcome> movers = new ArrayList<>();
+        for (Bot bot : Bot.values()) {
+            Fixture fixture = fixture(bot);
+            PhysicalCard vader = character(
+                    VADER_BP, VADER_ID,
+                    Zone.AT_LOCATION, PLAYER);
+            fixture.place(vader, fixture.battleground);
+            fixture.markPersona(vader, Persona.VADER);
+            when(fixture.modifiers.getMoveUsingLocationTextCost(
+                    fixture.gameState, vader,
+                    fixture.battleground, fixture.castle,
+                    1.0f, 0.0f)).thenReturn(1.0f);
+            fixture.setLiveAction(
+                    fixture.castle,
+                    "Move from other battleground site to here");
+
+            var routes = fixture.analyzer
+                    .assessVaderCastleRoutes(
+                        fixture.game, PLAYER,
+                        fixture.castle, false);
+            assertTrue(
+                    "Expected a legal, formation-safe Castle return held only by objective intent: "
+                        + routes,
+                    routes.stream().anyMatch(route ->
+                        route.mover() == vader
+                            && route.formationSafe()
+                            && route.returnHeld()
+                            && !route.admissible()));
+
+            Decision originDecision = Decision.castleChoice(
+                    "Choose card to move from",
+                    List.of(String.valueOf(BATTLEGROUND_ID)),
+                    List.of(BATTLEGROUND_BP),
+                    List.of(fixture.battleground.getTitle()));
+            TracedOutcome origin = tracedCardSelectionAdapter(
+                    bot, fixture, originDecision,
+                    true, String.valueOf(BATTLEGROUND_ID));
+            assertFalse(origin.outcome().hardVeto());
+            assertEquals(-300.0f, origin.outcome().score(), 0.0f);
+            assertObjectiveDelta(
+                    origin,
+                    "SELECT.OBJECTIVE.HUNT_DOWN.CASTLE_ROUTE_HOLD",
+                    -300.0f);
+
+            Decision moverDecision = Decision.castleChoice(
+                    "Choose card to move to "
+                        + GameUtils.getCardLink(fixture.castle),
+                    List.of(String.valueOf(VADER_ID)),
+                    List.of(VADER_BP),
+                    List.of(vader.getTitle()));
+            TracedOutcome mover = tracedCardSelectionAdapter(
+                    bot, fixture, moverDecision,
+                    true, String.valueOf(VADER_ID));
+            assertFalse(mover.outcome().hardVeto());
+            assertEquals(-300.0f, mover.outcome().score(), 0.0f);
+            assertObjectiveDelta(
+                    mover,
+                    "SELECT.OBJECTIVE.HUNT_DOWN.CASTLE_ROUTE_HOLD",
+                    -300.0f);
+            origins.add(origin.outcome());
+            movers.add(mover.outcome());
+        }
+        assertParity(origins);
+        assertParity(movers);
+    }
+
+    @Test
+    public void boundedObjectiveBlockerPreferenceDoesNotForceTheBattle() {
         List<Outcome> results = new ArrayList<>();
         for (Bot bot : Bot.values()) {
             Fixture fixture = fixture(bot);
@@ -1245,8 +1392,8 @@ public class HuntDownCombinedEvaluatorDecisionTest {
             Outcome result = combined(
                     bot, fixture, Decision.battle());
 
-            assertEquals("blocker", result.actionId());
-            assertContains(
+            assertEquals("nonblocker", result.actionId());
+            assertNotContains(
                     result,
                     "Remove an opponent actor blocking the objective");
             results.add(result);
@@ -1350,6 +1497,27 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                 actionId);
     }
 
+    private static TracedOutcome tracedMoveAdapter(
+            Bot bot, Fixture fixture, Decision decision,
+            boolean objectiveAware, String actionId) {
+        assertTrue(TraceSession.open(
+                bot.name(), "hunt-down-focused-move",
+                decision.type(), decision.text(),
+                decision.actionIds(), null,
+                List.of("objective route cap"), false));
+        Outcome outcome;
+        DecisionTrace trace;
+        try {
+            outcome = moveAdapter(
+                    bot, fixture, decision,
+                    objectiveAware, actionId);
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(trace);
+        return new TracedOutcome(outcome, trace);
+    }
+
     private static Outcome cardSelectionAdapter(
             Bot bot, Fixture fixture, Decision decision,
             boolean objectiveAware, String actionId) {
@@ -1369,6 +1537,27 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                                 fixture, decision,
                                 objectiveAware)),
                 actionId);
+    }
+
+    private static TracedOutcome tracedCardSelectionAdapter(
+            Bot bot, Fixture fixture, Decision decision,
+            boolean objectiveAware, String actionId) {
+        assertTrue(TraceSession.open(
+                bot.name(), "hunt-down-focused-selection",
+                decision.type(), decision.text(),
+                decision.cardIds(), null,
+                List.of("objective route cap"), false));
+        Outcome outcome;
+        DecisionTrace trace;
+        try {
+            outcome = cardSelectionAdapter(
+                    bot, fixture, decision,
+                    objectiveAware, actionId);
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(trace);
+        return new TracedOutcome(outcome, trace);
     }
 
     private static Outcome dockingCardSelectionAdapter(
@@ -1416,6 +1605,29 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                     .evaluators.CardSelectionEvaluator()
                     .evaluate(context),
                 actionId);
+    }
+
+    private static TracedOutcome tracedDockingCardSelectionAdapter(
+            Bot bot, Fixture fixture, Decision decision,
+            PhysicalCard source,
+            PhysicalCard destination,
+            String actionId) {
+        assertTrue(TraceSession.open(
+                bot.name(), "hunt-down-focused-docking-selection",
+                decision.type(), decision.text(),
+                decision.cardIds(), null,
+                List.of("objective route cap"), false));
+        Outcome outcome;
+        DecisionTrace trace;
+        try {
+            outcome = dockingCardSelectionAdapter(
+                    bot, fixture, decision,
+                    source, destination, actionId);
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(trace);
+        return new TracedOutcome(outcome, trace);
     }
 
     private static com.gempukku.swccgo.ai.models.rando.evaluators
@@ -1571,6 +1783,30 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                         + outcome.reasoning(),
                 outcome.reasoning().stream()
                         .noneMatch(reason -> reason.contains(marker)));
+    }
+
+    private static void assertObjectiveDelta(
+            TracedOutcome traced,
+            String ruleId, float delta) {
+        assertTrue(
+                "Expected typed objective operation '" + ruleId
+                    + "' at " + delta + " in "
+                    + traced.trace().getOperations(),
+                traced.trace().getOperations().stream()
+                    .anyMatch(operation ->
+                        traced.outcome().actionId().equals(
+                            operation.getActionId())
+                        && operation.getRuleId() != null
+                        && ruleId.equals(
+                            operation.getRuleId().id())
+                        && operation.getDomainId()
+                            == TraceDomainId.OBJECTIVE_INTENT
+                        && operation.getOutputKind()
+                            == TraceOutputKind.BANDED
+                        && operation.getDeltaBits() != null
+                        && operation.getDeltaBits()
+                            == Float.floatToRawIntBits(delta)
+                        && !operation.isVetoed()));
     }
 
     private static void assertParity(List<Outcome> outcomes) {
@@ -1958,6 +2194,11 @@ public class HuntDownCombinedEvaluatorDecisionTest {
             List<String> reasoning,
             boolean hardVeto,
             String vetoReason) {
+    }
+
+    private record TracedOutcome(
+            Outcome outcome,
+            DecisionTrace trace) {
     }
 
     private record Decision(

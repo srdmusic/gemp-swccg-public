@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 public class CaptureCriticalRetentionPolicyTest {
 
     @Test
-    public void bothObjectivesProtectCaptureAndPayoffRoles()
+    public void bothObjectivesPreferToRetainCaptureAndPayoffRoles()
             throws Exception {
         for (CaptureObjectivePolicy.ObjectiveKind objective
                 : CaptureObjectivePolicy.ObjectiveKind.values()) {
@@ -29,17 +29,17 @@ public class CaptureCriticalRetentionPolicyTest {
                                         role,
                                         true)));
 
-                assertEquals(PolicyOperationKind.HARD_VETO,
+                assertEquals(PolicyOperationKind.ADD,
                         operation.kind());
                 assertEquals(
                         "FORCE_LOSS.OBJECTIVE.CAPTURE_CRITICAL",
                         operation.ruleArmId().id());
                 assertEquals(
-                        TraceDomainId.FORCE_LOSS_PAYMENT,
+                        TraceDomainId.OBJECTIVE_INTENT,
                         operation.domainId());
-                assertEquals(TraceOutputKind.VETO,
+                assertEquals(TraceOutputKind.BANDED,
                         operation.outputKind());
-                assertRawFloat(0.0f,
+                assertRawFloat(-300.0f,
                         operation.delta());
             }
         }

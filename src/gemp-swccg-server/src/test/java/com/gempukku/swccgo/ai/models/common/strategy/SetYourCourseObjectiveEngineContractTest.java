@@ -1,6 +1,10 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
+import com.gempukku.swccgo.ai.models.common.phase.ForceLossFacts;
+import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -733,7 +737,7 @@ public class SetYourCourseObjectiveEngineContractTest {
     }
 
     @Test
-    public void publicBotsPreserveTheArmedRouteAndLastMoveForceDuringNativeForceLoss() {
+    public void manualForceLossProgressionPreservesTheArmedRouteAfterPublicBotObservation() {
         var scn = sycfaScenario();
         var superlaser = scn.GetDSCard("superlaser");
         var virtualSuperlaser = scn.GetDSCard("virtualSuperlaser");
@@ -753,7 +757,7 @@ public class SetYourCourseObjectiveEngineContractTest {
                     scn.GetTopOfDSForcePile());
         }
         scn.MoveCardsToBottomOfDSReserveDeck(cpi, centralCore);
-        scn.MoveCardsToTopOfDSUsedPile(superlaser);
+        scn.MoveCardsToDSHand(superlaser);
         scn.MoveCardsToTopOfDSForcePile(routeForce);
         scn.MoveCardsToTopOfDSReserveDeck(fodder);
 
@@ -765,16 +769,52 @@ public class SetYourCourseObjectiveEngineContractTest {
         assertTrue(scn.DSHasCardChoiceAvailable(superlaser));
         assertTrue(scn.DSHasCardChoiceAvailable(routeForce));
         assertTrue(scn.DSHasCardChoiceAvailable(fodder));
-        String loss = bots.decideBoth(scn);
-        assertEquals("laser=" + superlaser.getCardId()
-                    + "; routeForce=" + routeForce.getCardId()
-                    + "; fodder=" + fodder.getCardId(),
-                Integer.toString(fodder.getCardId()), loss);
-        scn.DSDecided(loss);
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(
+                scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertTrue(analyzer.isPreferredSetYourCourseForceLossCandidate(
+                scn.game(), VirtualTableScenario.DS, superlaser));
+        assertTrue(analyzer
+                .isSetYourCourseMovementForceLossReserveCandidate(
+                    scn.game(), VirtualTableScenario.DS, routeForce));
+        for (PhysicalCard protectedCard : List.of(
+                superlaser, routeForce)) {
+            var retention = ForceLossPolicy.score(
+                    Integer.toString(protectedCard.getCardId()),
+                    ForceLossPolicy.Route.STANDALONE,
+                    ForceLossFacts.readDecision(
+                            scn.gameState(), VirtualTableScenario.DS,
+                            scn.gameState().getPlayersLatestTurnNumber(
+                                VirtualTableScenario.DS)),
+                    ForceLossFacts.readCandidate(
+                            scn.gameState(), VirtualTableScenario.DS,
+                            protectedCard),
+                    new ForceLossPolicy.ObjectiveFlags(
+                            false, false, true, false));
+            assertTrue("Expected bounded objective retention for "
+                            + protectedCard.getTitle(),
+                    retention.operations().stream().anyMatch(operation ->
+                            operation.domainId()
+                                == TraceDomainId.OBJECTIVE_INTENT
+                                    && operation.delta() == -300.0f));
+            assertFalse(retention.operations().stream().anyMatch(operation ->
+                    operation.kind() == PolicyOperationKind.HARD_VETO));
+        }
+        AwaitingDecision lossDecision = scn.GetAwaitingDecision(
+                VirtualTableScenario.DS);
+        String publicLoss = bots.decideBoth(scn);
+        assertTrue("The mirrored public-bot observation must be an offered card",
+                Arrays.asList(lossDecision.getDecisionParameters()
+                        .get("cardId")).contains(publicLoss));
+        String fodderLoss = Integer.toString(fodder.getCardId());
+        assertTrue("The harness must continue with offered fodder",
+                Arrays.asList(lossDecision.getDecisionParameters()
+                        .get("cardId")).contains(fodderLoss));
+        scn.DSDecided(fodderLoss);
         scn.PassAllResponses();
 
-        assertTrue(superlaser.getZone() == Zone.USED_PILE
-                || superlaser.getZone() == Zone.TOP_OF_USED_PILE);
+        assertEquals(Zone.HAND, superlaser.getZone());
         assertTrue(routeForce.getZone() == Zone.FORCE_PILE
                 || routeForce.getZone() == Zone.TOP_OF_FORCE_PILE);
         assertTrue(fodder.getZone() == Zone.LOST_PILE

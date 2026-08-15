@@ -178,7 +178,7 @@ public class DeployFormationSitingPolicyTest {
         assertEquals(DeployFormationSitingPolicy.LegacySoloOutcome.OBJECTIVE_WITH_ESCAPE,
                 withEscape.outcome());
         assertOperation(withEscape.result().operations().get(0), "V29-obj-flip",
-                TraceDomainId.SOLO_FORMATION, 50.0f,
+                TraceDomainId.OBJECTIVE_INTENT, 300.0f,
                 "V29 OBJ-FLIP: Weak Trooper solo at 'Cloud City: Guest Quarters' to help flip objective — escape route exists!");
 
         DeployFormationSitingPolicy.LegacySoloEvaluation noEscape =
@@ -187,6 +187,8 @@ public class DeployFormationSitingPolicyTest {
         assertEquals(DeployFormationSitingPolicy.LegacySoloOutcome.OBJECTIVE_NO_ESCAPE,
                 noEscape.outcome());
         assertDelta(noEscape.result(), "V29-obj-flip", -150.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                noEscape.result().operations().get(0).domainId());
 
         DeployFormationSitingPolicy.LegacySoloEvaluation staging =
                 DeployFormationSitingPolicy.evaluateLegacySolo(
@@ -261,7 +263,9 @@ public class DeployFormationSitingPolicyTest {
                         huntFacts(true, true, false, 5, 6.0f, false));
         assertEquals(DeployFormationSitingPolicy.HuntGroupingOutcome.GROUP_AND_ENGAGE,
                 engage.outcome());
-        assertDelta(engage.result(), "V35.1-hunt-group", 400.0f);
+        assertDelta(engage.result(), "V35.1-hunt-group", 300.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                engage.result().operations().get(0).domainId());
 
         DeployFormationSitingPolicy.HuntGroupingEvaluation empty =
                 DeployFormationSitingPolicy.evaluateHuntGrouping(

@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
@@ -45,7 +46,7 @@ public final class DeployPlanRankingPolicy {
             Objects.requireNonNull(location, "location");
             requireUnique(contributionIds, location.contributionId());
             if (location.objectiveRelevant()) {
-                add(operations, location.contributionId(),
+                addObjective(operations, location.contributionId(),
                         "V22-plan-ranking-objective-location",
                         location.objectiveBonus(),
                         "V22 objective-relevant location bonus");
@@ -128,7 +129,7 @@ public final class DeployPlanRankingPolicy {
         Objects.requireNonNull(adjunct, "adjunct");
         List<PolicyOperation> operations = new ArrayList<>(1);
         if (adjunct.objectiveCapitalPlan()) {
-            add(operations, adjunct.contributionId(),
+            addObjective(operations, adjunct.contributionId(),
                     "V22-plan-ranking-objective-capital-bespin", 200.0f,
                     "V22 objective capital ship priority for Bespin");
         }
@@ -141,7 +142,7 @@ public final class DeployPlanRankingPolicy {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
         if (facts.completeFormation()) {
-            add(operations, facts.contributionId(),
+            addObjective(operations, facts.contributionId(),
                     "V297-plan-ranking-flip-gate-formation",
                     facts.objectiveBonus(),
                     "V297 objective flip-gate actor and buddy formation");
@@ -149,24 +150,56 @@ public final class DeployPlanRankingPolicy {
         return new PolicyResult(PRODUCER, operations);
     }
 
+    /** Adds one Endor objective adjustment through the shared objective ceiling. */
+    public static PolicyResult evaluateEndorAdjustment(
+            String contributionId, String ruleId, float adjustment,
+            String reason) {
+        requireNonBlank(contributionId, "contributionId");
+        requireNonBlank(ruleId, "ruleId");
+        requireNonBlank(reason, "reason");
+        if (!Float.isFinite(adjustment)) {
+            throw new IllegalArgumentException("adjustment must be finite");
+        }
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (adjustment != 0.0f) {
+            addObjective(operations, contributionId, ruleId,
+                    adjustment, reason);
+        }
+        return new PolicyResult(PRODUCER, operations);
+    }
+
     /** Applies ranking contributions without emitting action reasoning or logger output. */
     public static float apply(float initialScore, PolicyResult result) {
-        Objects.requireNonNull(result, "result");
-        if (!PRODUCER.equals(result.producerId())) {
-            throw new IllegalArgumentException("unexpected ranking producer "
-                    + result.producerId());
-        }
+        return apply(initialScore, new PolicyResult[]{result});
+    }
 
+    /** Applies all ranking producers with one shared objective-preference ceiling. */
+    public static float apply(float initialScore, PolicyResult... results) {
+        Objects.requireNonNull(results, "results");
         PolicyContributionLedger ledger =
                 new PolicyContributionLedger("deploy-plan-ranking-internal");
-        ledger.register(result);
+        for (PolicyResult result : results) {
+            Objects.requireNonNull(result, "result");
+            if (!PRODUCER.equals(result.producerId())) {
+                throw new IllegalArgumentException("unexpected ranking producer "
+                        + result.producerId());
+            }
+            ledger.register(result);
+        }
         float score = initialScore;
+        float objectivePreference = 0.0f;
         for (PolicyOperation operation : ledger.orderedOperations()) {
             if (operation.kind() != PolicyOperationKind.ADD) {
                 throw new IllegalStateException(
                         "deploy plan ranking accepts ADD operations only");
             }
-            score += operation.delta();
+            float delta = operation.delta();
+            if (operation.domainId() == TraceDomainId.OBJECTIVE_INTENT) {
+                delta = ObjectivePreferencePolicy.applyWithinCeiling(
+                        objectivePreference, delta);
+                objectivePreference += delta;
+            }
+            score += delta;
         }
         return score;
     }
@@ -255,6 +288,14 @@ public final class DeployPlanRankingPolicy {
                             String reason) {
         operations.add(PolicyOperation.add(contributionId,
                 TraceRuleId.of(ruleId), DOMAIN, OUTPUT_KIND, delta, reason));
+    }
+
+    private static void addObjective(
+            List<PolicyOperation> operations, String contributionId,
+            String ruleId, float delta, String reason) {
+        operations.add(PolicyOperation.add(contributionId,
+                TraceRuleId.of(ruleId), TraceDomainId.OBJECTIVE_INTENT,
+                OUTPUT_KIND, delta, reason));
     }
 
     private static void requireUnique(Set<String> contributionIds,

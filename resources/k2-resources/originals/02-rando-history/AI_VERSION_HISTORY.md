@@ -10801,3 +10801,69 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     200, zero tables, zero Hall players, byte-identical host/container jars,
     unchanged DB identity, zero restarts, zero OOM, and no exact-game abort,
     timeout, AI-chain guard, or infrastructure error. No push or PR occurred.
+
+  ==== OBJECTIVE SCORE CEILING AND ORDINARY PREEMPTION RETIREMENT (2026-08-15, both bots, source candidate) ====
+
+    Steve set two global scoring boundaries after the latest EOPS and First
+    Order replays: every executable positive +6000 value becomes +1000, and
+    ordinary objective logic contributes at most +300. The source audit found
+    one executable positive AI +6000 literal, MoveLadderPolicy R2. It is now
+    +1000 in the shared policy used by both bots. The old worst modeled R2
+    floor was 6000 - 2800 - 550 = 2650, above the R1 ceiling of 1920. The new
+    floor is 1000 - 2800 - 550 = -2350. An R2 route may therefore lose when
+    tactical evidence says it should. Categorical R3/R4 ranks and the -100000
+    ladder veto remain separate from this ordinary R2 boundary.
+
+    New shared ObjectivePreferencePolicy owns the ordinary objective ceiling.
+    A positive OBJECTIVE_INTENT request normalizes to exactly +300, regardless
+    of its legacy magnitude. Negative objective preferences retain their
+    smaller signed value but bottom at -300. PolicyResult, BattleDecisionPolicy,
+    DeployPlanRankingPolicy, and the mirrored EvaluatedAction accumulators cap
+    the net signed contribution at [-300,+300] for each action in each
+    decision. Multiple matching objective rules cannot rebuild the old score
+    cannon through addition. With all other contributions equal, tactical
+    -350 now defeats objective +300.
+
+    The migration also removes audited ordinary objective control-flow
+    dominance. Reversible route retention, future Force reserves, preferred
+    destinations, objective deploy ordering, and similar holds use typed
+    bounded preferences and allow later tactical evaluation to run. Verge and
+    Hidden Path draw reserves retain their exact marginal Force-economy math
+    but expose it through typed objective deltas. True legality and
+    no-candidate failures, actual terminal objective destruction or loss,
+    FormationSafety rejection, and exact mechanically self-defeating choices
+    remain categorical. Source-proven terminal rank claims remain outside the
+    ordinary objective-preference channel. Objective playbook values,
+    including My Lord's senator weights, are bounded to 300 in magnitude.
+
+    This directly targets two observed pathologies. EOPS could accumulate an
+    unsaturated +900 retention preference and keep adding bodies to the Bunker
+    instead of spreading pressure. First Order could keep an objective-labeled
+    chase above every ordinary alternative, concentrate three large ships at
+    one system, and let the opponent escape while abandoning drains elsewhere.
+    The ceiling does not invent new drain or battle candidates, but it lets
+    existing tactical damage logic override objective preference.
+
+    This is not an Emperor-on-shuttle pairing fix, an unsafe AT-AT destination
+    fix, or a battle-predictor correction. Production scope is shared AI
+    policy and strategy, mirrored bot adapters, and objective playbook data.
+    AI tests, the post-snapshot domain-registry amendment, and approved records
+    are the only other changes. No engine Java, card Java, client, deck
+    library, database schema, or workbook changed.
+
+    Branch codex/objective-score-cap-2026-08-15 has exact parent base
+    efbb36723cd0ce9e33efb42764c2217126f6ea26; the local source commit is the
+    commit containing this entry. The final focused ring passed 126/0/0/0.
+    The 132-class changed-test ring ran 1507/4/0/0 and the full reactor ran
+    3400/4/0/26. Both contained only the same four Endor Operations
+    producer-predicate failures reproduced 4/4 on the untouched base.
+    Independent pinned offline Corretto Java 21 compile passed. Static
+    verification found 216 intended paths, zero prohibited paths, zero
+    executable positive 6000 values, 164 objective-playbook numeric values
+    with zero outside [-300,+300], and exact normalized parity across all 10
+    changed Rando/Chosen One pairs. No package, candidate jar, deployment,
+    restart, loaded-byte proof, semantic-tag firing, or live replay proof
+    exists. The deployed prior jar remains
+    917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf and
+    does not contain this source candidate. Revert the local source commit
+    containing this entry to remove the migration.

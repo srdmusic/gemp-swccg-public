@@ -23,12 +23,10 @@ public class ObjectiveBattlePolicyTest {
         assertEquals(
                 ObjectiveBattlePolicy.REQUIRED_LOCATION_CONTEST_RULE_ID,
                 operation.ruleArmId().id());
-        assertEquals(TraceDomainId.BATTLE_INITIATION, operation.domainId());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT, operation.domainId());
         assertEquals(TraceOutputKind.BANDED, operation.outputKind());
         assertEquals(PolicyOperationKind.ADD, operation.kind());
-        assertEquals(
-                ObjectiveBattlePolicy.REQUIRED_LOCATION_CONTEST_BONUS,
-                operation.delta(), 0.0f);
+        assertEquals(300.0f, operation.delta(), 0.0f);
     }
 
     @Test
@@ -104,21 +102,26 @@ public class ObjectiveBattlePolicyTest {
     }
 
     @Test
-    public void battleCannotSpendTheExactObjectiveMoveReserve() {
-        PolicyResult blocked =
+    public void objectiveMoveReserveIsABoundedBattlePenalty() {
+        PolicyResult penalized =
                 ObjectiveBattlePolicy
                     .preserveObjectiveMoveForce(
                         "battle", 1, 1, 1.0f);
 
-        assertEquals(1, blocked.operations().size());
-        PolicyOperation veto = blocked.operations().get(0);
+        assertEquals(1, penalized.operations().size());
+        PolicyOperation penalty = penalized.operations().get(0);
         assertEquals(
                 ObjectiveBattlePolicy
                     .OBJECTIVE_MOVE_FORCE_RESERVE_RULE_ID,
-                veto.ruleArmId().id());
+                penalty.ruleArmId().id());
         assertEquals(
-                PolicyOperationKind.HARD_VETO,
-                veto.kind());
+                PolicyOperationKind.ADD,
+                penalty.kind());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                penalty.domainId());
+        assertEquals(TraceOutputKind.BANDED,
+                penalty.outputKind());
+        assertEquals(-300.0f, penalty.delta(), 0.0f);
 
         assertEmpty(ObjectiveBattlePolicy
                 .preserveObjectiveMoveForce(

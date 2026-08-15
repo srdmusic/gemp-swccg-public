@@ -21,9 +21,9 @@ public final class MoveLandoStayPolicy {
         }
     }
 
-    public record Evaluation(boolean hardVeto, String reason) {
+    public record Evaluation(boolean applies, String reason, float delta) {
         private static Evaluation none() {
-            return new Evaluation(false, null);
+            return new Evaluation(false, null, 0.0f);
         }
     }
 
@@ -58,7 +58,8 @@ public final class MoveLandoStayPolicy {
         return new Evaluation(
                 true,
                 "V47 LANDO STAY: Lando at " + locationTitle
-                        + " — stay for occupation! Don't move!");
+                        + ": prefer staying for occupation",
+                -300.0f);
     }
 
     public static DestinationEvaluation destination(
@@ -90,8 +91,8 @@ public final class MoveLandoStayPolicy {
         if (landoMover && bespinPresenceObjective) {
             return new Contribution(
                     true,
-                    "V47 LANDO STAY: Lando should stay put — moving wastes force and loses occupation!",
-                    -9999.0f);
+                    "V47 LANDO STAY: prefer Lando staying for occupation",
+                    -300.0f);
         }
         return Contribution.none();
     }

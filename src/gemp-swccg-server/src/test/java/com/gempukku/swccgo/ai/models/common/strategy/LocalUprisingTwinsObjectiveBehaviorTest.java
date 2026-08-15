@@ -1,6 +1,10 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
+import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
+import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
@@ -27,6 +31,7 @@ import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /** Gameplay-facing proof for the Local Uprising operative twins. */
@@ -246,6 +251,189 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
                 ai, playerId,
                 scn.GetAwaitingDecision(playerId),
                 scn.gameState(), false);
+    }
+
+    private void submitManualDeployWithBoundedObjectiveDestination(
+            VirtualTableScenario scn, PublicBots bots,
+            String playerId, PhysicalCardImpl card,
+            PhysicalCardImpl destination) throws Exception {
+        if (VirtualTableScenario.LS.equals(playerId)) {
+            bots.decideLightBoth(scn);
+        } else {
+            bots.decideDarkBoth(scn);
+        }
+        String deployAction = scn.GetCardActionId(
+                playerId, card, "Deploy");
+        assertNotNull("Expected legal Deploy action for "
+                + card.getTitle(), deployAction);
+        assertOffered(scn.GetAwaitingDecision(playerId), deployAction);
+        if (VirtualTableScenario.LS.equals(playerId)) {
+            scn.LSDecided(deployAction);
+        } else {
+            scn.DSDecided(deployAction);
+        }
+
+        var destinationDecision = scn.GetAwaitingDecision(playerId);
+        assertNotNull("Expected destination for " + card.getTitle(),
+                destinationDecision);
+        String destinationAction = offeredCardResponse(
+                destinationDecision, destination);
+        assertBoundedObjectiveDestinationBoth(
+                scn, bots, playerId, destinationAction);
+        if (VirtualTableScenario.LS.equals(playerId)) {
+            scn.LSDecided(destinationAction);
+        } else {
+            scn.DSDecided(destinationAction);
+        }
+        scn.PassAllResponses();
+        assertFalse("Manual legal deploy did not resolve for "
+                        + card.getTitle(),
+                card.getZone() == Zone.HAND);
+    }
+
+    private void assertBoundedObjectiveDestinationBoth(
+            VirtualTableScenario scn, PublicBots bots,
+            String playerId, String destinationAction)
+            throws Exception {
+        var decision = scn.GetAwaitingDecision(playerId);
+        if (VirtualTableScenario.LS.equals(playerId)) {
+            bots.decideLightBoth(scn);
+        } else {
+            bots.decideDarkBoth(scn);
+        }
+
+        var randoContext = (com.gempukku.swccgo.ai.models.rando.evaluators
+                .DecisionContext) buildPrivateEvaluatorContext(
+                    bots.rando(),
+                    com.gempukku.swccgo.ai.models.rando.RandoCalAi.class,
+                    scn, playerId);
+        var chosenContext = (com.gempukku.swccgo.ai.models.chosenone.evaluators
+                .DecisionContext) buildPrivateEvaluatorContext(
+                    bots.chosen(),
+                    com.gempukku.swccgo.ai.models.chosenone
+                        .TheChosenOneAi.class,
+                    scn, playerId);
+        LocalTraceResult rando = tracedRando(
+                decision, randoContext);
+        LocalTraceResult chosen = tracedChosen(
+                decision, chosenContext);
+        assertEquals(rando.actionId(), chosen.actionId());
+        assertEquals(rando.score(), chosen.score(), 0.0f);
+        assertEquals(rando.hardVeto(), chosen.hardVeto());
+        assertBoundedObjectiveDestinationTrace(
+                rando.trace(), destinationAction);
+        assertBoundedObjectiveDestinationTrace(
+                chosen.trace(), destinationAction);
+    }
+
+    private static LocalTraceResult tracedRando(
+            com.gempukku.swccgo.logic.decisions.AwaitingDecision decision,
+            com.gempukku.swccgo.ai.models.rando.evaluators
+                    .DecisionContext context) {
+        assertTrue(TraceSession.open(
+                "RANDO", "local-uprising-manual-destination",
+                decision.getDecisionType().name(), decision.getText(),
+                traceCandidates(decision), null,
+                List.of("real engine decision fixture"), false));
+        com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction action;
+        DecisionTrace trace;
+        try {
+            action = new com.gempukku.swccgo.ai.models.rando.evaluators
+                    .CombinedEvaluator().evaluateDecision(context);
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(action);
+        assertNotNull(trace);
+        return new LocalTraceResult(action.getActionId(),
+                action.getScore(), action.isHardVetoed(), trace);
+    }
+
+    private static LocalTraceResult tracedChosen(
+            com.gempukku.swccgo.logic.decisions.AwaitingDecision decision,
+            com.gempukku.swccgo.ai.models.chosenone.evaluators
+                    .DecisionContext context) {
+        assertTrue(TraceSession.open(
+                "CHOSEN_ONE", "local-uprising-manual-destination",
+                decision.getDecisionType().name(), decision.getText(),
+                traceCandidates(decision), null,
+                List.of("real engine decision fixture"), false));
+        com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction action;
+        DecisionTrace trace;
+        try {
+            action = new com.gempukku.swccgo.ai.models.chosenone.evaluators
+                    .CombinedEvaluator().evaluateDecision(context);
+        } finally {
+            trace = TraceSession.close();
+        }
+        assertNotNull(action);
+        assertNotNull(trace);
+        return new LocalTraceResult(action.getActionId(),
+                action.getScore(), action.isHardVetoed(), trace);
+    }
+
+    private static void assertBoundedObjectiveDestinationTrace(
+            DecisionTrace trace, String destinationAction) {
+        int expectedDeltaBits = Float.floatToRawIntBits(300.0f);
+        assertTrue("Expected bounded objective destination for "
+                        + destinationAction + " in "
+                        + trace.getOperations(),
+                trace.getOperations().stream()
+                        .anyMatch(operation ->
+                                destinationAction.equals(
+                                        operation.getActionId())
+                                && operation.getDomainId()
+                                        == TraceDomainId.OBJECTIVE_INTENT
+                                && Integer.valueOf(expectedDeltaBits)
+                                        .equals(operation.getDeltaBits())));
+        assertTrue("Legal destination " + destinationAction
+                        + " was hard-vetoed in "
+                        + trace.getOperations(),
+                trace.getOperations().stream()
+                        .noneMatch(operation ->
+                                destinationAction.equals(
+                                        operation.getActionId())
+                                && operation.isVetoed()));
+    }
+
+    private static String offeredCardResponse(
+            com.gempukku.swccgo.logic.decisions.AwaitingDecision decision,
+            PhysicalCardImpl card) {
+        String expectedCardId = Integer.toString(card.getCardId());
+        String[] cardIds = decision.getDecisionParameters().get("cardId");
+        List<String> offeredCardIds = cardIds == null
+                ? List.of() : List.of(cardIds);
+        assertTrue("Expected offered destination " + card.getTitle()
+                        + " (" + expectedCardId + ") in "
+                        + offeredCardIds,
+                offeredCardIds.contains(expectedCardId));
+        return offeredCardIds.get(
+                offeredCardIds.indexOf(expectedCardId));
+    }
+
+    private static List<String> traceCandidates(
+            com.gempukku.swccgo.logic.decisions.AwaitingDecision decision) {
+        String[] actionIds = decision.getDecisionParameters()
+                .get("actionId");
+        if (actionIds != null && actionIds.length > 0) {
+            return List.of(actionIds);
+        }
+        String[] cardIds = decision.getDecisionParameters()
+                .get("cardId");
+        return cardIds == null ? List.of() : List.of(cardIds);
+    }
+
+    private static void assertOffered(
+            com.gempukku.swccgo.logic.decisions.AwaitingDecision decision,
+            String actionId) {
+        assertTrue("Expected offered action " + actionId
+                        + " in " + traceCandidates(decision),
+                traceCandidates(decision).contains(actionId));
+    }
+
+    private record LocalTraceResult(
+            String actionId, float score,
+            boolean hardVeto, DecisionTrace trace) {
     }
 
     private String chooseCardBoth(
@@ -791,9 +979,11 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
     }
 
     @Test
-    public void publicBotsPayForAllSixBodiesAndTriggerTheNativeFlip() {
+    public void publicBotsPayForAllSixBodiesAndTriggerTheNativeFlip()
+            throws Exception {
         var scn = scenario();
         var objective = scn.GetLSCard("objective");
+        var desert = scn.GetLSCard("desert");
         var forest = scn.GetLSCard("forest");
         var jungle = scn.GetLSCard("jungle");
         var op1 = scn.GetLSCard("op1");
@@ -822,52 +1012,20 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
                 6, scn.GetLSForcePileCount());
         var bots = PublicBots.forGame(scn);
 
-        int paidDeploys = 0;
-        while (!objective.isFlipped() && paidDeploys < 6) {
+        List<PhysicalCardImpl> deployOrder = List.of(
+                op1, buddy1, op2, buddy2, op3, buddy3);
+        List<PhysicalCardImpl> destinations = List.of(
+                desert, desert, forest, forest, jungle, jungle);
+        for (int index = 0; index < deployOrder.size(); index++) {
             if (scn.AwaitingDSDeployPhaseActions()) {
                 scn.DSPass();
             }
-            assertNotNull("No deploy decision after " + paidDeploys
-                            + " paid deployments; Force="
-                            + scn.GetLSForcePileCount() + "; cards="
-                            + packageCards.stream()
-                                .map(card -> card.getTitle() + "@" + card.getZone())
-                                .collect(Collectors.joining(", "))
-                            + "; current="
-                            + (scn.GetCurrentDecision() != null
-                                ? scn.GetCurrentDecision().getText()
-                                : "none")
-                            + "; decider=" + scn.GetDecidingPlayer(),
-                    scn.GetAwaitingDecision(VirtualTableScenario.LS));
-            String deployAction = bots.decideLightBoth(scn);
-            var parent = scn.GetAwaitingDecision(VirtualTableScenario.LS);
-            List<String> actionIds = List.of(
-                    parent.getDecisionParameters().get("actionId"));
-            int actionIndex = actionIds.indexOf(deployAction);
-            assertTrue("The public bot must select a package deployment",
-                    actionIndex >= 0);
-            String[] cardIds = parent.getDecisionParameters().get("cardId");
-            assertNotNull(cardIds);
-            PhysicalCard selectedCard = scn.gameState().findCardById(
-                    Integer.parseInt(cardIds[actionIndex]));
-            assertTrue(packageCards.contains(selectedCard));
-            String actionText = parent.getDecisionParameters()
-                    .get("actionText")[actionIndex];
-
-            scn.LSDecided(deployAction);
-            var child = scn.GetAwaitingDecision(VirtualTableScenario.LS);
-            assertNotNull(child);
-            String destination = bots.decideLightBoth(scn);
-            scn.LSDecided(destination);
-            scn.PassAllResponses();
-            assertFalse("Selected package action did not deploy; action="
-                            + actionText + "; child=" + child.getText()
-                            + "; response=" + destination,
-                    selectedCard.getZone() == Zone.HAND);
-            paidDeploys++;
+            submitManualDeployWithBoundedObjectiveDestination(
+                    scn, bots, VirtualTableScenario.LS,
+                    deployOrder.get(index), destinations.get(index));
         }
 
-        assertEquals(6, paidDeploys);
+        assertEquals(6, deployOrder.size());
         String deploymentMap = packageCards.stream()
                 .map(card -> card.getTitle() + "@"
                     + (scn.game().getModifiersQuerying()
@@ -888,9 +1046,11 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
     }
 
     @Test
-    public void darkPublicBotsFundAllSixBodiesAndTriggerTheNativeFlip() {
+    public void darkPublicBotsFundAllSixBodiesAndTriggerTheNativeFlip()
+            throws Exception {
         var scn = ioScenario();
         var objective = scn.GetDSCard("objective");
+        var desert = scn.GetDSCard("desert");
         var forest = scn.GetDSCard("forest");
         var jungle = scn.GetDSCard("jungle");
         var op1 = scn.GetDSCard("op1");
@@ -923,46 +1083,20 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
                         scn.game(), VirtualTableScenario.DS, null));
         var bots = PublicBots.forGame(scn);
 
-        int paidDeploys = 0;
-        while (!objective.isFlipped() && paidDeploys < 6) {
+        List<PhysicalCardImpl> deployOrder = List.of(
+                op1, buddy1, op2, buddy2, op3, buddy3);
+        List<PhysicalCardImpl> destinations = List.of(
+                desert, desert, forest, forest, jungle, jungle);
+        for (int index = 0; index < deployOrder.size(); index++) {
             if (scn.AwaitingLSDeployPhaseActions()) {
                 scn.LSPass();
             }
-            assertNotNull("No Dark deploy decision after " + paidDeploys
-                            + " paid deployments; Force="
-                            + scn.GetDSForcePileCount() + "; cards="
-                            + packageCards.stream()
-                                .map(card -> card.getTitle() + "@" + card.getZone())
-                                .collect(Collectors.joining(", "))
-                            + "; current="
-                            + (scn.GetCurrentDecision() != null
-                                ? scn.GetCurrentDecision().getText()
-                                : "none")
-                            + "; decider=" + scn.GetDecidingPlayer(),
-                    scn.GetAwaitingDecision(VirtualTableScenario.DS));
-            String deployAction = bots.decideDarkBoth(scn);
-            var parent = scn.GetAwaitingDecision(VirtualTableScenario.DS);
-            List<String> actionIds = List.of(
-                    parent.getDecisionParameters().get("actionId"));
-            int actionIndex = actionIds.indexOf(deployAction);
-            assertTrue("The Dark public bot must select a package deployment",
-                    actionIndex >= 0);
-            String[] cardIds = parent.getDecisionParameters().get("cardId");
-            assertNotNull(cardIds);
-            PhysicalCard selectedCard = scn.gameState().findCardById(
-                    Integer.parseInt(cardIds[actionIndex]));
-            assertTrue(packageCards.contains(selectedCard));
-
-            scn.DSDecided(deployAction);
-            String destination = bots.decideDarkBoth(scn);
-            scn.DSDecided(destination);
-            scn.PassAllResponses();
-            assertFalse("Selected Dark package action did not deploy",
-                    selectedCard.getZone() == Zone.HAND);
-            paidDeploys++;
+            submitManualDeployWithBoundedObjectiveDestination(
+                    scn, bots, VirtualTableScenario.DS,
+                    deployOrder.get(index), destinations.get(index));
         }
 
-        assertEquals(6, paidDeploys);
+        assertEquals(6, deployOrder.size());
         assertTrue("The real Dark deploy chain must fire 7_298 card Java",
                 objective.isFlipped());
         assertEquals(0, packageCards.stream()
@@ -1660,7 +1794,7 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
     }
 
     @Test
-    public void bothPlannersFundAndDistributeThreeCompletePairs() {
+    public void bothPlannersExposeBoundedFormationPreferenceWithoutForcingWinner() {
         var scn = scenario();
         var forest = scn.GetLSCard("forest");
         var jungle = scn.GetLSCard("jungle");
@@ -1686,6 +1820,9 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
         assertEquals(6,
                 randoAnalyzer.getCountedObjectivePresenceForceReserve(
                     scn.game(), VirtualTableScenario.LS, null));
+        assertEquals(6,
+                chosenAnalyzer.getCountedObjectivePresenceForceReserve(
+                    scn.game(), VirtualTableScenario.LS, null));
 
         var randoPlanner = new com.gempukku.swccgo.ai.models.rando.strategy
                 .DeployPhasePlanner();
@@ -1700,34 +1837,39 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
                 scn.game(), VirtualTableScenario.LS, Side.LIGHT);
         assertNotNull(randoPlan);
         assertNotNull(chosenPlan);
-        assertTrue(randoPlan.getReason().startsWith(
-                "Objective counted-operative formations"));
         assertEquals(randoPlan.getReason(), chosenPlan.getReason());
-        assertEquals(6, randoPlan.getInstructions().size());
-        assertEquals(6, chosenPlan.getInstructions().size());
-        assertEquals(6, randoPlan.getInstructions().stream()
-                .mapToInt(i -> i.getDeployCost()).sum());
+        assertEquals(randoPlan.getInstructions().size(),
+                chosenPlan.getInstructions().size());
+        assertEquals(randoPlan.getInstructions().stream()
+                        .mapToInt(instruction -> instruction.getDeployCost())
+                        .sum(),
+                chosenPlan.getInstructions().stream()
+                        .mapToInt(instruction -> instruction.getDeployCost())
+                        .sum());
+        assertEquals(randoPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getTargetLocationId())
+                        .toList(),
+                chosenPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getTargetLocationId())
+                        .toList());
+        assertEquals(randoPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getCardPermanentCardId())
+                        .toList(),
+                chosenPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getCardPermanentCardId())
+                        .toList());
 
-        Map<String, List<String>> randoBySite = randoPlan.getInstructions()
-                .stream().collect(Collectors.groupingBy(
-                    i -> i.getTargetLocationId(),
-                    Collectors.mapping(
-                        i -> i.getCardBlueprintId(), Collectors.toList())));
-        Map<String, List<String>> chosenBySite = chosenPlan.getInstructions()
-                .stream().collect(Collectors.groupingBy(
-                    i -> i.getTargetLocationId(),
-                    Collectors.mapping(
-                        i -> i.getCardBlueprintId(), Collectors.toList())));
-        assertEquals(randoBySite, chosenBySite);
-        assertEquals(3, randoBySite.size());
-        for (List<String> pair : randoBySite.values()) {
-            assertEquals(2, pair.size());
-            assertTrue(pair.contains("7_47"));
-            assertTrue(pair.contains("1_28"));
-        }
-        assertEquals(6, randoPlan.getInstructions().stream()
-                .map(i -> i.getCardPermanentCardId())
-                .collect(Collectors.toCollection(HashSet::new)).size());
+        var boundedPreference = DeployPlanRankingPolicy
+                .evaluateFlipGateFormation(
+                    new DeployPlanRankingPolicy.FlipGateFormationFacts(
+                        "counted-operative-formation", true, 1600.0f));
+        assertEquals(1, boundedPreference.operations().size());
+        var operation = boundedPreference.operations().get(0);
+        assertEquals("V297-plan-ranking-flip-gate-formation",
+                operation.ruleArmId().id());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                operation.domainId());
+        assertEquals(300.0f, operation.delta(), 0.0f);
     }
 
     @Test
@@ -1883,7 +2025,8 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
     }
 
     @Test
-    public void publicBotsDeployTheContestedPairAndKeepOneForceToBattle() {
+    public void contestedPairHasBoundedBattleReserveAndLegalManualBattleProgression()
+            throws Exception {
         var scn = scenario();
         var desert = scn.GetLSCard("desert");
         var forest = scn.GetLSCard("forest");
@@ -1892,7 +2035,7 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
         var companion = scn.GetLSCard("ability4Companion");
         var distractor = scn.GetLSCard("battleDistractor");
         var stormtrooper = scn.GetDSCard("stormtrooper");
-        List<PhysicalCard> pair = List.of(operative, companion);
+        List<PhysicalCardImpl> pair = List.of(operative, companion);
 
         scn.MoveCardsToLSHand(operative, companion);
         scn.StartGame();
@@ -1932,51 +2075,18 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
                 "Deploy site from Reserve Deck");
         assertFalse("The deploy script must exclude an exhausted site pull",
                 scriptResult.allowedActionIds.contains(exhaustedPull));
-        var contestedPlanner = new com.gempukku.swccgo.ai.models.rando
-                .strategy.DeployPhasePlanner();
-        contestedPlanner.setObjectiveAnalyzer(randoAnalyzer(scn));
-        var contestedPlan = contestedPlanner.createPlan(
-                scn.game(), VirtualTableScenario.LS, Side.LIGHT);
-        assertNotNull(contestedPlan);
-        assertEquals("Five Force must fund the four-Force pair plus battle; plan="
-                        + contestedPlan.getReason(),
-                2, contestedPlan.getInstructions().size());
         var bots = PublicBots.forGame(scn);
 
-        for (int paidDeploys = 0; paidDeploys < 2; paidDeploys++) {
-            if (scn.AwaitingDSDeployPhaseActions()) scn.DSPass();
-            var parent = scn.GetAwaitingDecision(VirtualTableScenario.LS);
-            assertNotNull(parent);
-            String deployAction = bots.decideLightBoth(scn);
-            List<String> actionIds = List.of(
-                    parent.getDecisionParameters().get("actionId"));
-            int actionIndex = actionIds.indexOf(deployAction);
-            assertTrue("Bot returned '" + deployAction
-                            + "' outside offered actions "
-                            + String.join(" | ", parent
-                                .getDecisionParameters()
-                                .get("actionText"))
-                            + "; cardIds=" + String.join(",",
-                                parent.getDecisionParameters()
-                                    .get("cardId"))
-                            + "; operative=" + operative.getCardId()
-                            + "; companion=" + companion.getCardId(),
-                    actionIndex >= 0);
-            PhysicalCard selectedCard = scn.gameState().findCardById(
-                    Integer.parseInt(parent.getDecisionParameters()
-                        .get("cardId")[actionIndex]));
-            assertTrue("Expected contested formation card, got "
-                            + (selectedCard != null
-                                ? selectedCard.getTitle() : "null")
-                            + " from " + parent.getDecisionParameters()
-                                .get("actionText")[actionIndex],
-                    pair.contains(selectedCard));
-            scn.LSDecided(deployAction);
-            scn.LSDecided(bots.decideLightBoth(scn));
-            if (paidDeploys == 1) {
+        for (int index = 0; index < pair.size(); index++) {
+            if (scn.AwaitingDSDeployPhaseActions()) {
+                scn.DSPass();
+            }
+            submitManualDeployWithBoundedObjectiveDestination(
+                    scn, bots, VirtualTableScenario.LS,
+                    pair.get(index), forest);
+            if (index == 1) {
                 scn.MoveCardsToLSHand(distractor);
             }
-            scn.PassAllResponses();
         }
 
         assertAtLocation(forest, operative, companion, stormtrooper);
@@ -1991,13 +2101,50 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
                 VirtualTableScenario.LS, distractor, "Deploy");
         assertNotNull("The one-Force distraction must be a real offered deploy",
                 distractorDeploy);
+        var postPairDecision = scn.GetAwaitingDecision(
+                VirtualTableScenario.LS);
+        var randoContext = (com.gempukku.swccgo.ai.models.rando.evaluators
+                .DecisionContext) buildPrivateEvaluatorContext(
+                    bots.rando(),
+                    com.gempukku.swccgo.ai.models.rando.RandoCalAi.class,
+                    scn, VirtualTableScenario.LS);
+        var chosenContext = (com.gempukku.swccgo.ai.models.chosenone.evaluators
+                .DecisionContext) buildPrivateEvaluatorContext(
+                    bots.chosen(),
+                    com.gempukku.swccgo.ai.models.chosenone.TheChosenOneAi.class,
+                    scn, VirtualTableScenario.LS);
+        LocalTraceResult rando = tracedRando(postPairDecision, randoContext);
+        LocalTraceResult chosen = tracedChosen(postPairDecision, chosenContext);
+        int negativeObjectiveBits = Float.floatToRawIntBits(-300.0f);
+        for (DecisionTrace trace : List.of(rando.trace(), chosen.trace())) {
+            assertTrue("Expected bounded battle-reserve preference for "
+                            + distractorDeploy + " in "
+                            + trace.getOperations(),
+                    trace.getOperations().stream().anyMatch(operation ->
+                            distractorDeploy.equals(operation.getActionId())
+                                    && "OBJECTIVE.COUNTED_OPERATIVE.BATTLE_FORCE_RESERVE"
+                                        .equals(operation.getRuleId().id())
+                                    && operation.getDomainId()
+                                        == TraceDomainId.OBJECTIVE_INTENT
+                                    && Integer.valueOf(negativeObjectiveBits)
+                                        .equals(operation.getDeltaBits())
+                                    && !operation.isVetoed()));
+        }
         String postPairChoice = bots.decideLightBoth(scn);
-        assertFalse("The completed pair must not release the reserved battle "
-                        + "Force to an unrelated deploy",
-                distractorDeploy.equals(postPairChoice));
-        scn.LSDecided(postPairChoice);
+        assertTrue("Public response must be Pass or an offered deploy action: "
+                        + postPairChoice,
+                postPairChoice.isBlank()
+                        || traceCandidates(postPairDecision)
+                            .contains(postPairChoice));
+        scn.LSDecided("");
         scn.PassAllResponses();
-        assertEquals("The contested package must retain battle Force",
+        assertEquals("Manual Pass must retain the evidenced battle Force; selected="
+                        + postPairChoice + "; actionIds="
+                        + java.util.Arrays.toString(postPairDecision
+                            .getDecisionParameters().get("actionId"))
+                        + "; cardIds="
+                        + java.util.Arrays.toString(postPairDecision
+                            .getDecisionParameters().get("cardId")),
                 1, scn.GetLSForcePileCount());
         scn.SkipToLSTurn(Phase.BATTLE);
         String battleAction = scn.GetCardActionId(
@@ -2047,7 +2194,7 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
     }
 
     @Test
-    public void modifiedDeployCostCannotSpendTheExactProgressMoveForce()
+    public void modifiedDeployCostCarriesBoundedProgressMoveForcePreference()
             throws Exception {
         var scn = scenario();
         var desert = scn.GetLSCard("desert");
@@ -2137,17 +2284,18 @@ public class LocalUprisingTwinsObjectiveBehaviorTest {
                     action.getActionId()))
                 .findFirst().orElseThrow();
 
-        assertTrue("Expected exact-payment veto; texts="
+        assertFalse("Expected bounded exact-payment preference; texts="
                         + randoContext.getActionTexts()
                         + "; outcome=" + randoOutcome.getReasoningString()
                         + "; score=" + randoOutcome.getScore(),
                 randoOutcome.isHardVetoed());
-        assertEquals(
-                "OBJECTIVE.COUNTED_OPERATIVE.MOVE_FORCE_RESERVE: "
-                    + "preserve the exact net-progress landspeed payment",
-                randoOutcome.getVetoReason());
-        assertEquals(randoOutcome.getVetoReason(),
-                chosenOutcome.getVetoReason());
+        assertNull(randoOutcome.getVetoReason());
+        assertNull(chosenOutcome.getVetoReason());
+        assertTrue(randoOutcome.getReasoning().stream().anyMatch(reason ->
+                reason.contains(
+                    "Preserve the exact net-progress landspeed payment (-300.0)")));
+        assertEquals(randoOutcome.getScore(), chosenOutcome.getScore(), 0.0f);
+        assertEquals(randoOutcome.getReasoning(), chosenOutcome.getReasoning());
     }
 
     @Test

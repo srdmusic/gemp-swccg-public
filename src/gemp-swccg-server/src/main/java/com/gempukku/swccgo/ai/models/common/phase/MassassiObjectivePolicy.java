@@ -29,7 +29,7 @@ public final class MassassiObjectivePolicy {
                     TraceRuleId.of(ATTACK_RUN_RULE_ID),
                     TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
-                    12000.0f,
-                    "MASSASSI R3 PAYOFF: begin the exact Attack Run with the armed carrier ready at Death Star")));
+                    300.0f,
+                    "MASSASSI OBJECTIVE PAYOFF: prefer beginning the exact Attack Run with the armed carrier ready at Death Star (+300 bounded preference)")));
     }
 }

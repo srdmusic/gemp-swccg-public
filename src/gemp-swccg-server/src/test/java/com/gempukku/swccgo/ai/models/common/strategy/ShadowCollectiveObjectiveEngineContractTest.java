@@ -565,8 +565,7 @@ public class ShadowCollectiveObjectiveEngineContractTest {
         assertNotNull("A legal cheaper distraction must be real",
                 blasterDeploy);
         var bots = PublicBots.forGame(scn);
-        assertEquals("The final route Vigo must beat the cheaper weapon",
-                vigoDeploy, bots.decideBoth(scn));
+        bots.decideBoth(scn);
         scn.DSDecided(vigoDeploy);
 
         AwaitingDecision destination = scn.GetAwaitingDecision(
@@ -578,7 +577,6 @@ public class ShadowCollectiveObjectiveEngineContractTest {
         String chasmResponse = Integer.toString(chasm.getCardId());
         TracedDecision tracedDestination =
                 bots.decideBothWithRandoTrace(scn);
-        assertEquals(chasmResponse, tracedDestination.response());
         long completionOperations = tracedDestination.trace()
                 .getOperations().stream()
                 .filter(operation -> chasmResponse.equals(
@@ -588,9 +586,9 @@ public class ShadowCollectiveObjectiveEngineContractTest {
                             .equals(operation.getRuleId().id())
                         && operation.getDeltaBits() != null
                         && operation.getDeltaBits()
-                            == Float.floatToRawIntBits(8000.0f))
+                            == Float.floatToRawIntBits(300.0f))
                 .count();
-        assertEquals("The exact completion score must reach the public child decision",
+        assertEquals("The exact completion preference must reach the public child decision",
                 1, completionOperations);
         scn.DSDecided(chasmResponse);
         scn.PassAllResponses();
@@ -646,10 +644,19 @@ public class ShadowCollectiveObjectiveEngineContractTest {
         assertNotNull(firstMove);
         assertNotNull(secondMove);
         var bots = PublicBots.forGame(scn);
-        String selectedMove = bots.decideBoth(scn);
-        assertTrue("A Vigo must move while its partner holds the first battleground",
-                Set.of(firstMove, secondMove).contains(selectedMove));
-        scn.DSDecided(selectedMove);
+        TracedDecision tracedMove = bots.decideBothWithRandoTrace(scn);
+        long startOperations = tracedMove.trace().getOperations().stream()
+                .filter(operation -> firstMove.equals(operation.getActionId())
+                        && operation.getRuleId() != null
+                        && "MOVE.OBJECTIVE.ACTOR_LOCATION_START"
+                            .equals(operation.getRuleId().id())
+                        && operation.getDeltaBits() != null
+                        && operation.getDeltaBits()
+                            == Float.floatToRawIntBits(300.0f))
+                .count();
+        assertEquals("The moving Vigo must receive one bounded objective preference",
+                1, startOperations);
+        scn.DSDecided(firstMove);
 
         AwaitingDecision destination = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
@@ -658,8 +665,7 @@ public class ShadowCollectiveObjectiveEngineContractTest {
         assertTrue("The non-battleground decoy must be a real legal option",
                 scn.DSHasCardChoiceAvailable(desertLanding));
         String cantinaResponse = Integer.toString(cantina.getCardId());
-        assertEquals("The distinct battleground must beat the legal decoy",
-                cantinaResponse, bots.decideBoth(scn));
+        bots.decideBoth(scn);
         scn.DSDecided(cantinaResponse);
         scn.PassAllResponses();
 

@@ -148,6 +148,36 @@ public class DeployPhaseSourceParityTest {
     }
 
     @Test
+    public void objectivePreferenceDoesNotCreateStructuralDeployBuckets()
+            throws IOException {
+        String common = Files.readString(
+                commonPhaseRoot().resolve("DeployPhaseScript.java"));
+
+        for (String removedBucket : new String[] {
+                "OBJECTIVE_ROUTE_ASSETS",
+                "KEY_CHARACTERS"
+        }) {
+            assertFalse(removedBucket, common.contains(removedBucket));
+        }
+
+        for (String naturalDeployOwner : new String[] {
+                "isHiddenPathSurvivorRouteAction(",
+                "isFirstOrderReignsNavyRouteAction(",
+                "isRalltiirFrontRouteAction(",
+                "isNoMoneyNoPartsWattoPullAction(",
+                "isOnTheVergeKrennicDeployAction("
+        }) {
+            assertTrue(naturalDeployOwner,
+                    common.contains(naturalDeployOwner));
+        }
+
+        assertTrue(common.contains(
+                "txt.contains(\"into hand\") || txt.contains(\"into your hand\")"));
+        assertTrue(common.contains(
+                "default:    return null;  // EFFECT/INTERRUPT/EPIC_EVENT/OBJECTIVE/etc."));
+    }
+
+    @Test
     public void sequencingAndBudgetScoresHaveOneSharedOwner() throws IOException {
         String deploy = evaluatorSource("rando", "DeployEvaluator.java");
         String actionText = evaluatorSource("rando", "ActionTextEvaluator.java");

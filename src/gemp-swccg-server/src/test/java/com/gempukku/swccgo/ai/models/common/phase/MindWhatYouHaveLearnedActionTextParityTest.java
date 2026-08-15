@@ -27,7 +27,7 @@ public class MindWhatYouHaveLearnedActionTextParityTest {
     private static final String PLAYER_ID = "tester";
 
     @Test
-    public void exactFlipScoresIdenticallyAndReturnsBeforeGenericDispatch() {
+    public void exactFlipScoresIdenticallyWhileGenericDispatchRemainsNeutral() {
         GameState gameState = gameState();
         PhysicalCard objective = objective(
                 PLAYER_ID, "225_53", Zone.SIDE_OF_TABLE, false);
@@ -42,14 +42,13 @@ public class MindWhatYouHaveLearnedActionTextParityTest {
                         gameState, null,
                         List.of("Flip"), List.of("53"))).get(0);
 
-        assertEquals(600.0f, rando.getScore(), 0.0f);
+        assertEquals(300.0f, rando.getScore(), 0.0f);
         assertEquals(rando.getScore(), chosen.getScore(), 0.0f);
         assertEquals(rando.getReasoning(), chosen.getReasoning());
-        assertEquals(1, rando.getReasoning().size());
-        assertTrue(rando.getReasoning().get(0).contains(
-                ObjectiveFlipActionPolicy.MWYHL_FLIP_RULE_ID));
-        assertFalse(rando.getReasoning().get(0).contains(
-                "Unknown action type"));
+        assertEquals(2, rando.getReasoning().size());
+        assertTrue(rando.getReasoning().stream().anyMatch(reason ->
+                reason.contains(ObjectiveFlipActionPolicy.MWYHL_FLIP_RULE_ID)));
+        assertTrue(rando.getReasoning().contains("Unknown action type"));
     }
 
     @Test
@@ -141,7 +140,7 @@ public class MindWhatYouHaveLearnedActionTextParityTest {
         var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators
                 .ActionTextEvaluator().evaluate(chosenContext);
 
-        assertEquals(600.0f, rando.get(0).getScore(), 0.0f);
+        assertEquals(300.0f, rando.get(0).getScore(), 0.0f);
         assertEquals(rando.get(0).getScore(), chosen.get(0).getScore(), 0.0f);
         assertEquals(rando.get(0).getReasoning(),
                 chosen.get(0).getReasoning());
@@ -178,7 +177,7 @@ public class MindWhatYouHaveLearnedActionTextParityTest {
                 .ActionTextEvaluator().evaluate(chosenContext(
                         gameState, game, actionTexts, sourceIds)).get(0);
 
-        assertEquals(600.0f, rando.getScore(), 0.0f);
+        assertEquals(300.0f, rando.getScore(), 0.0f);
         assertEquals(rando.getScore(), chosen.getScore(), 0.0f);
         assertEquals(rando.getReasoning(), chosen.getReasoning());
     }
@@ -204,7 +203,7 @@ public class MindWhatYouHaveLearnedActionTextParityTest {
                 .ActionTextEvaluator().evaluate(chosenContext(
                         gameState, game, actionTexts, sourceIds));
 
-        assertEquals(600.0f, rando.get(0).getScore(), 0.0f);
+        assertEquals(300.0f, rando.get(0).getScore(), 0.0f);
         assertEquals(rando.get(0).getScore(), chosen.get(0).getScore(), 0.0f);
         assertEquals(rando.get(0).getReasoning(),
                 chosen.get(0).getReasoning());
@@ -292,7 +291,7 @@ public class MindWhatYouHaveLearnedActionTextParityTest {
                 .ActionTextEvaluator().evaluate(chosenContext(
                         gameState, game, actionTexts, sourceIds)).get(0);
 
-        assertEquals(600.0f, rando.getScore(), 0.0f);
+        assertEquals(300.0f, rando.getScore(), 0.0f);
         assertEquals(rando.getScore(), chosen.getScore(), 0.0f);
         assertEquals(rando.getReasoning(), chosen.getReasoning());
     }

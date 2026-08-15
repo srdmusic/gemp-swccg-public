@@ -45,11 +45,11 @@ public final class DeployActionTextPolicy {
                     -9999.0f,
                     "HOTH SHIELD: no legal Imperial warrior in Reserve, do not enter the cancel path"));
         }
-        return result(operation(
+        return result(objectiveOperation(
                 actionId,
                 "HOTH.SHIELD.BLIZZARD4_FREE_WARRIOR",
                 TraceOutputKind.ORDERING,
-                800.0f,
+                300.0f,
                 "HOTH SHIELD: take Blizzard 4's free legal Imperial warrior"));
     }
 
@@ -113,28 +113,28 @@ public final class DeployActionTextPolicy {
 
         String source = facts.executorInHand() ? "hand" : "reserve";
         boolean early = facts.currentTurn() <= 2;
-        float delta = early ? 1500.0f : 500.0f;
+        float delta = 300.0f;
         String ruleId;
         String reason;
         if (generic && early) {
             ruleId = "V24.15-amsd-approved-early-generic";
-            reason = "V24.15 AMSD MEGA PRIORITY: Turn " + facts.currentTurn()
-                    + " — Executor (from " + source
-                    + ") MUST deploy NOW to control Bespin!";
+            reason = "V24.15 AMSD OBJECTIVE PREFERENCE: Turn " + facts.currentTurn()
+                    + ", prefer the ready Executor route (from " + source
+                    + ") to Bespin (+300)";
         } else if (generic) {
             ruleId = "V24.10-amsd-approved-generic";
             reason = "V24.10 AMSD APPROVED: Piett + Executor (from " + source
                     + ") ready — fire AMSD!";
         } else if (early) {
             ruleId = "V24.15-amsd-approved-early-specific";
-            reason = "V24.15 AMSD MEGA PRIORITY: Turn " + facts.currentTurn()
-                    + " — Executor (from " + source + ") MUST deploy NOW!";
+            reason = "V24.15 AMSD OBJECTIVE PREFERENCE: Turn " + facts.currentTurn()
+                    + ", prefer the ready Executor route (from " + source + ") to Bespin (+300)";
         } else {
             ruleId = "V24.10-amsd-approved-specific";
             reason = "V24.10 AMSD APPROVED: Piett + Executor (from " + source
                     + ") ready!";
         }
-        return evaluation(operation(facts.actionId(), ruleId,
+        return evaluation(objectiveOperation(facts.actionId(), ruleId,
                         TraceOutputKind.ORDERING, delta, reason),
                 AdapterStep.FALL_THROUGH, false);
     }
@@ -186,7 +186,7 @@ public final class DeployActionTextPolicy {
                             + " Force. Save the action."));
         }
         if (!facts.preservesCastleMoveForce()) {
-            return result(operation(
+            return result(objectiveOperation(
                     facts.actionId(),
                     "V25-vader-castle-deploy-only",
                     TraceOutputKind.BANDED,
@@ -196,11 +196,11 @@ public final class DeployActionTextPolicy {
                             + " Force cannot also preserve the Castle's"
                             + " exact move cost this turn"));
         }
-        return result(operation(facts.actionId(), "V25-vader-castle-priority",
-                TraceOutputKind.ORDERING, 550.0f,
-                "V25 HUNT DOWN: DEPLOY VADER NOW! Have "
+        return result(objectiveOperation(facts.actionId(), "V25-vader-castle-priority",
+                TraceOutputKind.ORDERING, 300.0f,
+                "V25 HUNT DOWN: prefer deploying Vader while preserving the Castle move cost (+300); have "
                         + facts.forceAvailable()
-                        + " Force and preserve the Castle move cost"));
+                        + " Force"));
     }
 
     public static PolicyResult scoreDiningRoomLando(
@@ -210,13 +210,13 @@ public final class DeployActionTextPolicy {
         boolean objectiveNeedsPresence = facts.objectiveAnalyzed()
                 && facts.needsBespinSystemPresence();
         if (objectiveNeedsPresence && friendliesPresent) {
-            return result(operation(facts.actionId(), "V29.6-dining-room-objective-safe",
+            return result(objectiveOperation(facts.actionId(), "V29.6-dining-room-objective-safe",
                     TraceOutputKind.BANDED, 150.0f,
                     "V29.6 DINING ROOM: Deploy Lando with "
                             + facts.friendlyCountAtDiningRoom() + " friendlies — safe!"));
         }
         if (objectiveNeedsPresence) {
-            return result(operation(facts.actionId(), "V29.6-dining-room-objective-alone",
+            return result(objectiveOperation(facts.actionId(), "V29.6-dining-room-objective-alone",
                     TraceOutputKind.VETO, -30.0f,
                     "V29.6 DINING ROOM: Lando would be ALONE — deploy a buddy first!"));
         }
@@ -234,11 +234,11 @@ public final class DeployActionTextPolicy {
             DeployActionTextFacts.BespinShipFacts facts) {
         Objects.requireNonNull(facts, "facts");
         if (!facts.friendlyPowerAtBespin()) {
-            return result(operation(facts.actionId(), "V22.5-bespin-ship-critical",
+            return result(objectiveOperation(facts.actionId(), "V22.5-bespin-ship-critical",
                     TraceOutputKind.ORDERING, 300.0f,
                     "V22.5 CRITICAL: Deploy ship to Bespin! Enables Dark Deal + CC Occupation!"));
         }
-        return result(operation(facts.actionId(), "V22.5-bespin-ship-present",
+        return result(objectiveOperation(facts.actionId(), "V22.5-bespin-ship-present",
                 TraceOutputKind.BANDED, 100.0f,
                 "V22.5: Deploy ship (Bespin already occupied)"));
     }
@@ -254,8 +254,8 @@ public final class DeployActionTextPolicy {
     public static PolicyResult scoreMainGenerator(
             DeployActionTextFacts.MainGeneratorFacts facts) {
         Objects.requireNonNull(facts, "facts");
-        return result(operation(facts.actionId(), "V160-main-generator",
-                TraceOutputKind.ORDERING, 800.0f,
+        return result(objectiveOperation(facts.actionId(), "V160-main-generator",
+                TraceOutputKind.ORDERING, 300.0f,
                 "V160 PUSH TARGET THE MAIN GENERATOR: deck's flip engine — deploy/fire to enable AT-AT vs Main Power Generators"));
     }
 
@@ -359,6 +359,13 @@ public final class DeployActionTextPolicy {
             String reason) {
         return PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
                 TraceDomainId.DEPLOY_SEQUENCING, outputKind, delta, reason);
+    }
+
+    private static PolicyOperation objectiveOperation(
+            String actionId, String ruleId, TraceOutputKind outputKind,
+            float delta, String reason) {
+        return PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                TraceDomainId.OBJECTIVE_INTENT, outputKind, delta, reason);
     }
 
     private static PolicyResult result(PolicyOperation operation) {

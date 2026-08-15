@@ -169,9 +169,7 @@ public class CharacterDeploySiteEvaluator {
             gs, mq, candidateSite, playerId, currentTurn,
             isObjectiveRelevantSite, deckShipCount);
 
-        float eopBunker = endorOperationsBunkerAdjustment(
-            game, gs, mq, deployingCard, candidateSite, playerId);
-        float total = scoreA + scoreB + scoreC + scoreD + eopBunker;
+        float total = scoreA + scoreB + scoreC + scoreD;
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("V136 {} → {}: §A={} §B={} §C={} §D={} total={}",
@@ -181,7 +179,7 @@ public class CharacterDeploySiteEvaluator {
         return total;
     }
 
-    private static float endorOperationsBunkerAdjustment(
+    public static float evaluateEndorOperationsBunkerAdjustment(
             SwccgGame game,
             GameState gs,
             ModifiersQuerying mq,
@@ -572,24 +570,12 @@ public class CharacterDeploySiteEvaluator {
         // Now scoped to a ground BATTLEGROUND site + CHARACTER + NON-objective, and ability/weapon aware:
         //   solo allowed only if ability >= 6, OR ability >= 5 with an affordable matching weapon in hand;
         //   weak solos (<=4, or 5 unarmed) hold for a buddy (-600); an allowed strong solo still prefers a
-        //   buddy when force is available (+250). Objective flip-sites are SKIPPED (deploy-to-flip, then buddy
-        //   up after: Endor / Imperial Enforcements / TDIGWATT — generic via isObjectiveRelevantSite).
+        //   buddy when force is available (+250). Objective relevance does not bypass this hold.
         //   Ships/systems excluded (CHARACTER + isBattleground site gate). Vetted by council + helper agent.
         boolean v156IsBG = false;
         try { v156IsBG = mq.isBattleground(gs, candidateSite, null); } catch (Exception ignore) { /* false */ }
         boolean v156IsChar = deployingCard.getBlueprint() != null
                 && deployingCard.getBlueprint().getCardCategory() == CardCategory.CHARACTER;
-        // 2026-06-28 (Steve, Verge interim): the flip-site SKIP above is too broad — it let a weak
-        // lone Ozzel (ability 2) sit at a Scarif flip-site turn 1 and die before the flip was even
-        // reachable. For On The Verge Of Greatness the flip needs the Death Star ORBITING Scarif;
-        // until then the Scarif flip-sites are NOT "ready", so DON'T peel weak solos there — apply
-        // the hold. (Mirrors the DrawEvaluator V79 dsAtScarif check. To be subsumed by Steve's
-        // general "never leave a low-ability solo" rule.)
-        // V156 UPDATED 2026-07-07: the flip-not-ready scan moved VERBATIM into the shared
-        // static helper isV156FlipNotReady(...) below, so the NEW move-side V156 JOIN-GROUP
-        // arm (MoveEvaluator + CardSelectionEvaluator, both bots) reuses the SAME predicate
-        // instead of forking it. Behavior is unchanged; the former inline scan is in git history.
-        boolean v156FlipNotReady = isV156FlipNotReady(gs, playerId);
         // V156 UPDATED 2026-07-07 (Steve, Fel-at-Beach loss, audit rows deploy-siting-1/-2):
         // the turn<=2 cliff let the SAME deploy the hold correctly blocked on turn 2 sail
         // through on turn 3 — Baron Soontir Fel (ability 3, power 2) solo to Scarif: Beach,
@@ -598,19 +584,15 @@ public class CharacterDeploySiteEvaluator {
         // ALL turns — but only when a buddy plan exists (another character on table or
         // affordable in hand, the existing v156AnyBuddyAvailable); with no buddy anywhere the
         // lone body is all we have, let it deploy. The ability>=4 class keeps the original
-        // turn<=2 gate and ALL exemptions (ability>=6 solo, armed ability-5, objective
-        // flip-site carve-back) exactly as before.
+        // turn<=2 gate and the tactical exemptions for ability>=6 or an armed ability-5 body.
         // Boundary (Fel replay math): §A +500 -> -600 flips V136 CS 800 -> -300; Beach site
         // total 1065 -> -35, loses to Citadel Tower's 615 (join Vader's stack) — exactly the
         // turn-2 behavior (Tagge 905 -> Tower). -600 still beats §A's +500 uncontested reward
-        // by construction; objective-forced deploys stay exempt via the carve-back.
+        // by construction. Objective influence is scored separately and stays bounded.
         // The former turn-only gate remains in git history.
         boolean v156WeakBandAllTurns = v156DeployAbility < 4f && v156AnyBuddyAvailable;
         if ((currentTurn <= 2 || v156WeakBandAllTurns) && teamBodyCount == 1 && oppPower == 0f
-                && v156IsBG && v156IsChar
-                && (!isObjectiveRelevantSite
-                    || !objectiveSoloSafetyExempt
-                    || v156FlipNotReady)) {
+                && v156IsBG && v156IsChar) {
             boolean v156Armed = false;
             if (v156DeployAbility >= 5f && friendlyHand != null) {
                 for (PhysicalCard w : friendlyHand) {
@@ -666,10 +648,8 @@ public class CharacterDeploySiteEvaluator {
         } catch (Exception e) { /* false */ }
 
         if (isBG) score += 100f;
-        if (isObjectiveRelevantSite) score += 200f;
-
         // NBG penalty (two-tier, override-able)
-        boolean nbgOverride = isObjectiveRelevantSite || perSiteEffectActive;
+        boolean nbgOverride = perSiteEffectActive;
         if (!isBG && !nbgOverride) {
             score += (currentTurn <= 2) ? -500f : -300f;
         }
@@ -857,11 +837,11 @@ public class CharacterDeploySiteEvaluator {
         boolean shipHeavyDeck = (deckShipCount >= 5);
 
         // Ground BG cap
-        if (candidateIsGroundBG && currentGroundBGs >= 2 && !isObjectiveRelevantSite) {
+        if (candidateIsGroundBG && currentGroundBGs >= 2) {
             return -700f;
         }
         // System cap
-        if (candidateIsSystem && currentSystems >= 2 && !isObjectiveRelevantSite && !shipHeavyDeck) {
+        if (candidateIsSystem && currentSystems >= 2 && !shipHeavyDeck) {
             return -700f;
         }
         return 0f;

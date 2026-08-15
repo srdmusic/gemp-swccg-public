@@ -19,40 +19,40 @@ import static org.mockito.Mockito.when;
 public class BattleForfeitAdapterParityTest {
 
     @Test
-    public void bothBotsProtectTheLastRequiredActorWhenSurplusCanBeLost() {
+    public void bothBotsPreferKeepingTheLastRequiredActorWhenSurplusCanBeLost() {
         List<com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction>
                 actions = evaluateFormationRoles(
                     ObjectiveAnalyzer.FlipGateFormationRole.LAST_REQUIRED_ACTOR,
                     ObjectiveAnalyzer.FlipGateFormationRole.NONE);
 
-        assertBits(-9949.0f, actions.get(0).getScore());
+        assertBits(-250.0f, actions.get(0).getScore());
         assertBits(50.0f, actions.get(1).getScore());
         assertTrue(actions.get(0).getReasoningString().contains(
                 "preserve the last required actor while another legal loss exists"));
     }
 
     @Test
-    public void bothBotsProtectTheLastRequiredBuddyWhenSurplusCanBeLost() {
+    public void bothBotsPreferKeepingTheLastRequiredBuddyWhenSurplusCanBeLost() {
         List<com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction>
                 actions = evaluateFormationRoles(
                     ObjectiveAnalyzer.FlipGateFormationRole.LAST_REQUIRED_BUDDY,
                     ObjectiveAnalyzer.FlipGateFormationRole.NONE);
 
-        assertBits(-9949.0f, actions.get(0).getScore());
+        assertBits(-250.0f, actions.get(0).getScore());
         assertBits(50.0f, actions.get(1).getScore());
         assertTrue(actions.get(0).getReasoningString().contains(
                 "preserve the required actor's last buddy while another legal loss exists"));
     }
 
     @Test
-    public void bothBotsProtectTheSolePostFlipBlockerWhenSurplusCanBeLost() {
+    public void bothBotsPreferKeepingTheSolePostFlipBlockerWhenSurplusCanBeLost() {
         List<com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction>
                 actions = evaluateFormationRoles(
                     ObjectiveAnalyzer.FlipGateFormationRole
                         .LAST_FLIP_BACK_BLOCKER,
                     ObjectiveAnalyzer.FlipGateFormationRole.NONE);
 
-        assertBits(-9949.0f, actions.get(0).getScore());
+        assertBits(-250.0f, actions.get(0).getScore());
         assertBits(50.0f, actions.get(1).getScore());
         assertTrue(actions.get(0).getReasoningString().contains(
                 "preserve the sole flip-back blocker while another legal loss exists"));
@@ -66,8 +66,8 @@ public class BattleForfeitAdapterParityTest {
                     ObjectiveAnalyzer.FlipGateFormationRole.LAST_REQUIRED_BUDDY,
                     ObjectiveAnalyzer.FlipGateFormationRole.NONE);
 
-        assertBits(-9949.0f, actions.get(0).getScore());
-        assertBits(-9949.0f, actions.get(1).getScore());
+        assertBits(-250.0f, actions.get(0).getScore());
+        assertBits(-250.0f, actions.get(1).getScore());
         assertBits(50.0f, actions.get(2).getScore());
         assertFalse(actions.get(2).getReasoningString().contains(
                 "BATTLE.OBJECTIVE.FLIP_GATE_FORMATION_HOLD"));
@@ -127,13 +127,13 @@ public class BattleForfeitAdapterParityTest {
                 new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
                         .evaluate(chosenContext).get(0);
 
-        assertEquals(Float.floatToRawIntBits(-9949.0f),
+        assertEquals(Float.floatToRawIntBits(-250.0f),
                 Float.floatToRawIntBits(rando.getScore()));
         assertEquals(Float.floatToRawIntBits(rando.getScore()),
                 Float.floatToRawIntBits(chosen.getScore()));
         assertEquals(rando.getReasoningString(), chosen.getReasoningString());
         assertTrue(rando.getReasoningString().contains(
-                "OBJECTIVE CRITICAL - NEVER FORFEIT!"));
+                "OBJECTIVE CRITICAL: prefer to retain (-300 objective preference)"));
         assertFalse(rando.isHardVetoed());
         assertFalse(chosen.isHardVetoed());
     }

@@ -123,8 +123,8 @@ public class TigihTransferLukeToVaderBehaviorTest {
                 randoScore, chosenScore);
         assertFalse(randoScore.hardVeto());
         assertEquals(
-                "The exact +250 objective arm must add to legacy +150",
-                400.0f, randoScore.score(), 0.0f);
+                "The exact +300 objective arm must add to legacy +150",
+                450.0f, randoScore.score(), 0.0f);
         assertTrue(randoScore.allReasoning().contains(
                 "TIGIH BACK: transfer captive Luke to Vader"));
         assertTrue("The older generic transfer arm must remain additive",
@@ -169,7 +169,7 @@ public class TigihTransferLukeToVaderBehaviorTest {
     }
 
     @Test
-    public void lethalCrossoverPressureVetoesTransferAndKeepsOldEscort()
+    public void lethalCrossoverPressureDisfavorsTransferAndKeepsOldEscort()
             throws Exception {
         VirtualTableScenario scn = scenario();
         PhysicalCardImpl objective = scn.GetLSCard("objective");
@@ -219,14 +219,14 @@ public class TigihTransferLukeToVaderBehaviorTest {
                 scoreWithRando(decision, scn, transferId);
         ScoredAction chosenScore =
                 scoreWithChosen(decision, scn, transferId);
-        assertEquals("Mirrored evaluators must veto identically",
+        assertEquals("Mirrored evaluators must score identically",
                 randoScore, chosenScore);
-        assertTrue(randoScore.hardVeto());
-        assertEquals("The legacy +150 remains visible under the veto",
-                150.0f, randoScore.score(), 0.0f);
+        assertFalse(randoScore.hardVeto());
+        assertEquals("The bounded -300 hold offsets legacy +150",
+                -150.0f, randoScore.score(), 0.0f);
         assertTrue(randoScore.allReasoning().contains(
                 "keep Luke with the non-Vader escort"));
-        assertTrue("The older +150 rule remains present but dominated",
+        assertTrue("The older +150 rule remains present but overridden",
                 randoScore.allReasoning().contains(
                     "transfer action \u2014 usually a tactical swap"));
 

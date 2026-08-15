@@ -5,13 +5,12 @@ import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class CaptureObjectivePullPolicyTest {
 
     @Test
-    public void objectiveRouteBypassCoversPrintedCostAffordabilityGuard() {
+    public void printedCostAffordabilityGuardCoversObjectiveRoutes() {
         PullActionPolicy.Evaluation ordinary =
                 PullActionPolicy.evaluateParent(
                         parent(false));
@@ -20,7 +19,7 @@ public class CaptureObjectivePullPolicyTest {
                         parent(true));
 
         assertTrue(hasRule(ordinary, "V67ac"));
-        assertFalse(hasRule(objectiveRoute, "V67ac"));
+        assertTrue(hasRule(objectiveRoute, "V67ac"));
     }
 
     private static PullActionFacts.Parent parent(

@@ -1,7 +1,20 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 /** V194: pure AI owner of the DRAW phase's Force-reserve arithmetic. */
-public record DrawReserveAssessment(int forceToReserve) {
+public record DrawReserveAssessment(
+        int forceToReserve,
+        int vergeForceToReserve,
+        int hiddenPathForceToReserve) {
+
+    public DrawReserveAssessment(int forceToReserve) {
+        this(forceToReserve, 0, 0);
+    }
+
+    public int generalForceToReserve() {
+        return forceToReserve
+                - vergeForceToReserve
+                - hiddenPathForceToReserve;
+    }
 
     public static DrawReserveAssessment base(boolean drawTheirFire,
                                              boolean firstStrike,
@@ -26,16 +39,21 @@ public record DrawReserveAssessment(int forceToReserve) {
         if (imperialArrestOrder) {
             reserve += 2;
         }
-        if (vergeNeedsDeathStarMove) {
-            reserve += 1;
-        }
         reserve += maintenanceObligation;
-        return new DrawReserveAssessment(Math.min(10, reserve));
+        int generalReserve = Math.min(10, reserve);
+        int totalReserve = Math.min(10,
+                reserve + (vergeNeedsDeathStarMove ? 1 : 0));
+        int vergeReserve = totalReserve - generalReserve;
+        return new DrawReserveAssessment(
+                totalReserve, vergeReserve, 0);
     }
 
     /** Hidden Path transit Force is mandatory and added after the base cap. */
     public DrawReserveAssessment plusHiddenPathTransitReserve(
             int transitReserve) {
-        return new DrawReserveAssessment(forceToReserve + transitReserve);
+        return new DrawReserveAssessment(
+                forceToReserve + transitReserve,
+                vergeForceToReserve,
+                hiddenPathForceToReserve + transitReserve);
     }
 }

@@ -43,7 +43,7 @@ public final class NabooDuelObjectivePolicy {
                         : LIGHTSABER_COMBAT_RULE_ID),
                     TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
-                    front ? 400.0f : 300.0f,
+                    300.0f,
                     front
                         ? "NABOO DUEL FRONT: use the exact objective action to make the legal opposing character lost"
                         : "NABOO DUEL BACK: initiate the objective's two-destiny lightsaber combat")));
@@ -60,9 +60,9 @@ public final class NabooDuelObjectivePolicy {
                 List.of(PolicyOperation.add(
                     actionId,
                     TraceRuleId.of(FRONT_DEPLOY_ROUTE_RULE_ID),
-                    TraceDomainId.DEPLOY_SITING,
+                    TraceDomainId.OBJECTIVE_INTENT,
                     TraceOutputKind.BANDED,
-                    1200.0f,
+                    300.0f,
                     "NABOO DUEL FRONT ROUTE: deploy the typed duelist with the legal interior Theed Palace target")));
     }
 }

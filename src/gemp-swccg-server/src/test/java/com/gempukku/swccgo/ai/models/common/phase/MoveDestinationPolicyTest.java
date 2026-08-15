@@ -604,23 +604,23 @@ public class MoveDestinationPolicyTest {
     }
 
     @Test
-    public void wrongDirectionPreservesExemptionPriorityAndVeto() {
+    public void wrongDirectionPreservesSafetyExemptionPriorityAndVeto() {
         assertEquals(MoveDestinationPolicy.WrongDirectionDisposition.NONE,
                 MoveDestinationPolicy.wrongDirection(
                         false, "Empty", "Opponent", false, false, false)
                         .disposition());
         assertEquals(
-                MoveDestinationPolicy.WrongDirectionDisposition.HIDDEN_PATH_EXEMPT,
+                MoveDestinationPolicy.WrongDirectionDisposition.RETREAT_EXEMPT,
                 MoveDestinationPolicy.wrongDirection(
                         true, "Empty", "Opponent", true, true, true)
                         .disposition());
         assertEquals(
-                MoveDestinationPolicy.WrongDirectionDisposition.RETREAT_EXEMPT,
+                MoveDestinationPolicy.WrongDirectionDisposition.JOIN_GROUP_EXEMPT,
                 MoveDestinationPolicy.wrongDirection(
                         true, "Empty", "Opponent", false, true, true)
                         .disposition());
         assertEquals(
-                MoveDestinationPolicy.WrongDirectionDisposition.JOIN_GROUP_EXEMPT,
+                MoveDestinationPolicy.WrongDirectionDisposition.TERMINAL_ESCAPE_EXEMPT,
                 MoveDestinationPolicy.wrongDirection(
                         true, "Empty", "Opponent", false, false, true)
                         .disposition());
@@ -651,36 +651,37 @@ public class MoveDestinationPolicyTest {
                         "Naboo: Theed Palace Courtyard");
 
         assertTrue(parent.applies());
-        assertFloat(600.0f, parent.delta());
+        assertFloat(300.0f, parent.delta());
         assertTrue(parent.reason().startsWith(
                 "MOVE.OBJECTIVE.ACTOR_ROUTE_START:"));
         assertTrue(destination.applies());
-        assertFloat(1000.0f, destination.delta());
+        assertFloat(300.0f, destination.delta());
         assertTrue(destination.reason().startsWith(
                 "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION:"));
         assertFalse(none.applies());
     }
 
     @Test
-    public void objectiveActorRouteExemptsOnlyItsCloserHopFromWrongDirection() {
-        MoveDestinationPolicy.WrongDirectionEvaluation objectiveRoute =
+    public void onlyTerminalObjectiveEscapeBypassesWrongDirection() {
+        MoveDestinationPolicy.WrongDirectionEvaluation ordinaryObjectiveRoute =
                 MoveDestinationPolicy.wrongDirection(
                         true, "Hallway", "Swamp",
-                        false, false, false, true);
-        MoveDestinationPolicy.WrongDirectionEvaluation ordinary =
-                MoveDestinationPolicy.wrongDirection(
-                        true, "Courtyard", "Swamp",
                         false, false, false);
+        MoveDestinationPolicy.WrongDirectionEvaluation terminalEscape =
+                MoveDestinationPolicy.wrongDirection(
+                        true, "Salt Plateau", "Swamp",
+                        false, false, true);
 
         assertEquals(
-                MoveDestinationPolicy.WrongDirectionDisposition
-                        .OBJECTIVE_ROUTE_EXEMPT,
-                objectiveRoute.disposition());
-        assertFalse(objectiveRoute.contribution().applies());
-        assertEquals(
                 MoveDestinationPolicy.WrongDirectionDisposition.VETO,
-                ordinary.disposition());
-        assertFloat(-9999.0f, ordinary.contribution().delta());
+                ordinaryObjectiveRoute.disposition());
+        assertFloat(-9999.0f,
+                ordinaryObjectiveRoute.contribution().delta());
+        assertEquals(
+                MoveDestinationPolicy.WrongDirectionDisposition
+                        .TERMINAL_ESCAPE_EXEMPT,
+                terminalEscape.disposition());
+        assertFalse(terminalEscape.contribution().applies());
     }
 
     @Test
@@ -862,7 +863,7 @@ public class MoveDestinationPolicyTest {
     }
 
     @Test
-    public void postFlipPayoffPreservesPrimaryAndSecondaryOrdering() {
+    public void postFlipPayoffUsesOneBoundedPreferenceForEitherRole() {
         MoveDestinationPolicy.Contribution primary =
                 MoveDestinationPolicy
                     .objectivePostFlipPayoffDestination(
@@ -876,9 +877,9 @@ public class MoveDestinationPolicyTest {
                             .ObjectivePostFlipPayoffRole.SECONDARY,
                         "Kylo Ren", "Crait");
 
-        assertFloat(1200.0f, primary.delta());
-        assertFloat(700.0f, secondary.delta());
-        assertTrue(primary.delta() > secondary.delta());
+        assertFloat(300.0f, primary.delta());
+        assertFloat(300.0f, secondary.delta());
+        assertFloat(primary.delta(), secondary.delta());
         assertFalse(MoveDestinationPolicy
                 .objectivePostFlipPayoffDestination(
                     ObjectiveAnalyzer
@@ -927,7 +928,7 @@ public class MoveDestinationPolicyTest {
     }
 
     @Test
-    public void firstOrderDrainPairAndTerminalEscapeBandsStayOrdered() {
+    public void firstOrderDrainPairAndTerminalEscapeUseBoundedPreference() {
         MoveDestinationPolicy.Contribution pairStart =
                 MoveDestinationPolicy
                     .objectiveFirstOrderDrainPairStart(
@@ -947,12 +948,11 @@ public class MoveDestinationPolicyTest {
                     .objectiveTerminalActorEscapeStart(
                         true, "Kylo Ren");
 
-        assertFloat(600.0f, pairStart.delta());
-        assertFloat(800.0f, pairDestination.delta());
+        assertFloat(300.0f, pairStart.delta());
+        assertFloat(300.0f, pairDestination.delta());
         assertFloat(-900.0f, pairHold.delta());
-        assertFloat(1800.0f, escape.delta());
-        assertTrue(escape.delta()
-                > pairDestination.delta());
+        assertFloat(300.0f, escape.delta());
+        assertFloat(escape.delta(), pairDestination.delta());
         assertFalse(MoveDestinationPolicy
                 .objectiveFirstOrderDrainPairDestination(
                     false, "First Order Stormtrooper",

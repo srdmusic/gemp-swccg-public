@@ -66,7 +66,7 @@ public class BhbmForceDripUrgencyFactsReaderTest {
         assertTrue(facts.preservesStableBackState());
         assertEquals(1, facts.duelTrioPieceCountBefore());
         assertEquals(3, facts.duelTrioPieceCountAfter());
-        assertEquals(400.0f, only(
+        assertEquals(300.0f, only(
                 CaptureObjectivePolicy
                     .scoreBhbmForceDripUrgency(facts))
                     .delta(), 0.0f);
@@ -182,7 +182,7 @@ public class BhbmForceDripUrgencyFactsReaderTest {
                     BhbmForceDripUrgencyFactsReader
                         .CandidateMechanism.LANDSPEED);
         assertTrue(limited.forceDripActive());
-        assertEquals(400.0f, only(
+        assertEquals(300.0f, only(
                 CaptureObjectivePolicy
                     .scoreBhbmForceDripUrgency(limited))
                     .delta(), 0.0f);

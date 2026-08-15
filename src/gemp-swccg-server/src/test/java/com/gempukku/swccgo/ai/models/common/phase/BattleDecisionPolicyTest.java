@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -331,7 +332,7 @@ public class BattleDecisionPolicyTest {
     }
 
     @Test
-    public void setYourCourseBattleCannotSpendTheOnlyHyperspeedForce() {
+    public void setYourCourseBattleDiscouragesSpendingTheOnlyHyperspeedForce() {
         GameState gameState = mock(GameState.class);
         SwccgGame game = mock(SwccgGame.class);
         ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
@@ -376,7 +377,12 @@ public class BattleDecisionPolicyTest {
                     .OBJECTIVE_MOVE_FORCE_RESERVE_RULE_ID);
 
         assertTrue(reserveVeto >= 0);
-        assertTrue(result.contributions().get(reserveVeto).hardVeto());
+        BattleDecisionPolicy.Contribution contribution =
+                result.contributions().get(reserveVeto);
+        assertFalse(contribution.hardVeto());
+        assertEquals(-300.0f, contribution.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                contribution.domainId());
     }
 
     @Test

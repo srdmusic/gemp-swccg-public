@@ -295,31 +295,43 @@ public class CaptureMovementMechanismFactsReaderTest {
         assertEquals(1, randoTrace.getOperations().stream()
                 .filter(operation ->
                     "exact".equals(operation.getActionId())
+                        && operation.getDomainId()
+                            == com.gempukku.swccgo.ai.models.common.trace
+                                .TraceDomainId.OBJECTIVE_INTENT
                         && operation.getDeltaBits() != null
                         && Float.intBitsToFloat(
                             operation.getDeltaBits())
-                            == 20000.0f)
+                            == 300.0f)
                 .count());
         assertEquals(1, chosenTrace.getOperations().stream()
                 .filter(operation ->
                     "exact".equals(operation.getActionId())
+                        && operation.getDomainId()
+                            == com.gempukku.swccgo.ai.models.common.trace
+                                .TraceDomainId.OBJECTIVE_INTENT
                         && operation.getDeltaBits() != null
                         && Float.intBitsToFloat(
                             operation.getDeltaBits())
-                            == 20000.0f)
+                            == 300.0f)
                 .count());
         assertTrue(randoTrace.getOperations().stream()
                 .noneMatch(operation ->
-                    operation.getDeltaBits() != null
+                    operation.getDomainId()
+                            == com.gempukku.swccgo.ai.models.common.trace
+                                .TraceDomainId.OBJECTIVE_INTENT
+                        && operation.getDeltaBits() != null
                         && Float.intBitsToFloat(
                             operation.getDeltaBits())
-                            == 40000.0f));
+                            > 300.0f));
         assertTrue(chosenTrace.getOperations().stream()
                 .noneMatch(operation ->
-                    operation.getDeltaBits() != null
+                    operation.getDomainId()
+                            == com.gempukku.swccgo.ai.models.common.trace
+                                .TraceDomainId.OBJECTIVE_INTENT
+                        && operation.getDeltaBits() != null
                         && Float.intBitsToFloat(
                             operation.getDeltaBits())
-                            == 40000.0f));
+                            > 300.0f));
         assertEquals(1, randoExact.getReasoning().stream()
                 .filter(reason ->
                     reason.contains("BHBM CAPTURE ROUTE"))
@@ -328,8 +340,8 @@ public class CaptureMovementMechanismFactsReaderTest {
                 .filter(reason ->
                     reason.contains("BHBM CAPTURE ROUTE"))
                 .count());
-        assertTrue(randoExact.getScore() < 40000.0f);
-        assertTrue(chosenExact.getScore() < 40000.0f);
+        assertEquals("Non-objective tactics may change the total score",
+                randoExact.getScore(), chosenExact.getScore(), 0.0f);
 
         var randoWinner =
                 new com.gempukku.swccgo.ai.models.rando
@@ -1103,8 +1115,8 @@ public class CaptureMovementMechanismFactsReaderTest {
                     .evaluators.CombinedEvaluator()
                     .evaluateDecision(chosenContext);
 
-        assertEquals(20000.0f, randoCastle.getScore(), 0.0f);
-        assertEquals(20000.0f, chosenCastle.getScore(), 0.0f);
+        assertEquals(300.0f, randoCastle.getScore(), 0.0f);
+        assertEquals(300.0f, chosenCastle.getScore(), 0.0f);
         assertEquals(1, randoCastle.getReasoning().stream()
                 .filter(reason ->
                     reason.contains("BHBM CAPTURE ROUTE"))
@@ -1113,8 +1125,6 @@ public class CaptureMovementMechanismFactsReaderTest {
                 .filter(reason ->
                     reason.contains("BHBM CAPTURE ROUTE"))
                 .count());
-        assertTrue(randoCastle.getScore() < 40000.0f);
-        assertTrue(chosenCastle.getScore() < 40000.0f);
         assertEquals("castle", randoWinner.getActionId());
         assertEquals("castle", chosenWinner.getActionId());
         assertTrue(randoWinner.getScore() > 8.0f);
@@ -1124,7 +1134,7 @@ public class CaptureMovementMechanismFactsReaderTest {
     }
 
     @Test
-    public void castleApproachRouteWinsWithoutPretendingItIsLandspeed() {
+    public void castleApproachRouteCarriesBoundedPreferenceWithoutPretendingItIsLandspeed() {
         Fixture fixture = new Fixture(false);
         PhysicalCard castle = fixture.location(
                 "209_50", 112, DARK);
@@ -1240,14 +1250,26 @@ public class CaptureMovementMechanismFactsReaderTest {
                 "Choose card to move from",
                 "castle-approach-origin-chosen",
                 List.of(captureSite, castle));
-        assertEquals(
-                String.valueOf(castle.getCardId()),
-                rando.evaluateDecision(randoOrigin)
-                    .getActionId());
-        assertEquals(
-                String.valueOf(castle.getCardId()),
-                chosen.evaluateDecision(chosenOrigin)
-                    .getActionId());
+        var randoOriginPreference =
+                new com.gempukku.swccgo.ai.models.rando
+                    .evaluators.CaptureMovementEvaluator()
+                    .evaluate(randoOrigin).stream()
+                    .filter(action -> String.valueOf(castle.getCardId())
+                        .equals(action.getActionId()))
+                    .findFirst().orElseThrow();
+        var chosenOriginPreference =
+                new com.gempukku.swccgo.ai.models.chosenone
+                    .evaluators.CaptureMovementEvaluator()
+                    .evaluate(chosenOrigin).stream()
+                    .filter(action -> String.valueOf(castle.getCardId())
+                        .equals(action.getActionId()))
+                    .findFirst().orElseThrow();
+        assertEquals(300.0f,
+                randoOriginPreference.getScore(), 0.0f);
+        assertEquals(randoOriginPreference.getScore(),
+                chosenOriginPreference.getScore(), 0.0f);
+        assertTrue(randoOriginPreference.getReasoningString()
+                .contains("ACTOR_ROUTE_DESTINATION"));
 
         var randoDestination = randoSelection(
                 fixture, randoAnalyzer,
@@ -1259,22 +1281,46 @@ public class CaptureMovementMechanismFactsReaderTest {
                 "Choose card to move to",
                 "castle-approach-destination-chosen",
                 List.of(captureSite, halfway));
+        randoDestination.setExtra(
+                CaptureMovementMechanismFactsReader
+                    .SELECTED_ORIGIN_CARD_ID_EXTRA,
+                castle.getCardId());
+        chosenDestination.setExtra(
+                CaptureMovementMechanismFactsReader
+                    .SELECTED_ORIGIN_CARD_ID_EXTRA,
+                castle.getCardId());
+        var randoHalfwayPreference =
+                new com.gempukku.swccgo.ai.models.rando
+                    .evaluators.CaptureMovementEvaluator()
+                    .evaluate(randoDestination).stream()
+                    .filter(action -> String.valueOf(halfway.getCardId())
+                        .equals(action.getActionId()))
+                    .findFirst().orElseThrow();
+        var chosenHalfwayPreference =
+                new com.gempukku.swccgo.ai.models.chosenone
+                    .evaluators.CaptureMovementEvaluator()
+                    .evaluate(chosenDestination).stream()
+                    .filter(action -> String.valueOf(halfway.getCardId())
+                        .equals(action.getActionId()))
+                    .findFirst().orElseThrow();
+        assertEquals(300.0f,
+                randoHalfwayPreference.getScore(), 0.0f);
+        assertEquals(randoHalfwayPreference.getScore(),
+                chosenHalfwayPreference.getScore(), 0.0f);
+        assertTrue(randoHalfwayPreference.getReasoningString()
+                .contains("ACTOR_ROUTE_DESTINATION"));
+        assertTrue(chosenHalfwayPreference.getReasoningString()
+                .contains("ACTOR_ROUTE_DESTINATION"));
         var randoDestinationWinner =
                 rando.evaluateDecision(randoDestination);
         var chosenDestinationWinner =
                 chosen.evaluateDecision(chosenDestination);
         assertEquals(
-                String.valueOf(halfway.getCardId()),
+                String.valueOf(captureSite.getCardId()),
                 randoDestinationWinner.getActionId());
         assertEquals(
-                String.valueOf(halfway.getCardId()),
+                String.valueOf(captureSite.getCardId()),
                 chosenDestinationWinner.getActionId());
-        assertTrue(randoDestinationWinner
-                .getReasoningString()
-                .contains("ACTOR_ROUTE_DESTINATION"));
-        assertTrue(chosenDestinationWinner
-                .getReasoningString()
-                .contains("ACTOR_ROUTE_DESTINATION"));
 
         String moverPrompt =
                 "Choose card to move to "
@@ -1582,14 +1628,48 @@ public class CaptureMovementMechanismFactsReaderTest {
 
         assertEquals(2, randoActions.size());
         assertEquals(2, chosenActions.size());
-        assertTrue(randoActions.get(0).isHardVetoed());
-        assertFalse(randoActions.get(1).isHardVetoed());
+        var randoStable = randoActions.stream()
+                .filter(action -> String.valueOf(stableVader.getCardId())
+                    .equals(action.getActionId()))
+                .findFirst().orElseThrow();
+        var chosenStable = chosenActions.stream()
+                .filter(action -> String.valueOf(stableVader.getCardId())
+                    .equals(action.getActionId()))
+                .findFirst().orElseThrow();
+        var randoSafe = randoActions.stream()
+                .filter(action -> String.valueOf(safeVader.getCardId())
+                    .equals(action.getActionId()))
+                .findFirst().orElseThrow();
+        var chosenSafe = chosenActions.stream()
+                .filter(action -> String.valueOf(safeVader.getCardId())
+                    .equals(action.getActionId()))
+                .findFirst().orElseThrow();
+        assertFalse(randoStable.isHardVetoed());
+        assertFalse(randoSafe.isHardVetoed());
+        assertEquals(-300.0f,
+                randoStable.getScore(), 0.0f);
+        assertEquals(randoStable.getScore(),
+                chosenStable.getScore(), 0.0f);
+        assertEquals(randoSafe.getScore(),
+                chosenSafe.getScore(), 0.0f);
+        assertTrue(randoStable.getReasoningString()
+                .contains("BHBM HOLD"));
+        assertFalse(randoSafe.getReasoningString()
+                .contains("BHBM HOLD"));
+        var stableBackPreference = CaptureObjectivePolicy
+                .scoreStableBackHold(
+                    new CaptureObjectivePolicy.StableBackFacts(
+                        String.valueOf(stableVader.getCardId()),
+                        CaptureObjectivePolicy.ObjectiveKind.BHBM,
+                        true, true, true));
+        assertEquals(1, stableBackPreference.operations().size());
+        assertEquals(-300.0f,
+                stableBackPreference.operations().getFirst().delta(),
+                0.0f);
         assertEquals(
-                randoActions.get(0).isHardVetoed(),
-                chosenActions.get(0).isHardVetoed());
-        assertEquals(
-                randoActions.get(1).isHardVetoed(),
-                chosenActions.get(1).isHardVetoed());
+                com.gempukku.swccgo.ai.models.common.trace.TraceDomainId
+                    .OBJECTIVE_INTENT,
+                stableBackPreference.operations().getFirst().domainId());
     }
 
     @Test
@@ -1726,13 +1806,15 @@ public class CaptureMovementMechanismFactsReaderTest {
 
         assertEquals(1, randoActions.size());
         assertEquals(1, chosenActions.size());
-        assertTrue(randoActions.get(0).isHardVetoed());
-        assertTrue(chosenActions.get(0).isHardVetoed());
-        assertTrue(randoActions.get(0).getVetoReason()
+        assertFalse(randoActions.get(0).isHardVetoed());
+        assertFalse(chosenActions.get(0).isHardVetoed());
+        assertEquals(-300.0f,
+                randoActions.get(0).getScore(), 0.0f);
+        assertTrue(randoActions.get(0).getReasoningString()
                 .contains("ROUTE_HOLD"));
         assertEquals(
-                randoActions.get(0).getVetoReason(),
-                chosenActions.get(0).getVetoReason());
+                randoActions.get(0).getReasoning(),
+                chosenActions.get(0).getReasoning());
     }
 
     @Test
@@ -2420,9 +2502,9 @@ public class CaptureMovementMechanismFactsReaderTest {
                     .filter(action ->
                         "transport".equals(action.getActionId()))
                     .findFirst().orElseThrow();
-        assertEquals(600.0f,
+        assertEquals(300.0f,
                 randoTransport.getScore(), 0.0f);
-        assertEquals(600.0f,
+        assertEquals(300.0f,
                 chosenTransport.getScore(), 0.0f);
         assertFalse(randoTransport.getReasoningString()
                 .contains("CAPTURE ROUTE"));

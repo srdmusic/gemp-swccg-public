@@ -1,5 +1,11 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
+import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -676,9 +682,26 @@ public class TheyHaveNoIdeaObjectiveEngineContractTest {
                         randoAi,
                         com.gempukku.swccgo.ai.models.rando.RandoCalAi.class,
                         scn);
-        var randoUnrelated =
-                new com.gempukku.swccgo.ai.models.rando.evaluators
-                    .DeployEvaluator().evaluate(randoContext).stream()
+        AwaitingDecision deployDecision = scn.GetAwaitingDecision(
+                VirtualTableScenario.LS);
+        assertTrue(TraceSession.open(
+                "RANDO", "thni-route-reserve", "CARD_ACTION_CHOICE",
+                deployDecision.getText(),
+                Arrays.asList(deployDecision.getDecisionParameters()
+                        .get("actionId")),
+                null, List.of("bounded objective preference"), false));
+        List<com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction>
+                randoActions;
+        DecisionTrace randoTrace;
+        try {
+            randoActions =
+                    new com.gempukku.swccgo.ai.models.rando.evaluators
+                        .DeployEvaluator().evaluate(randoContext);
+        } finally {
+            randoTrace = TraceSession.close();
+        }
+        assertNotNull(randoTrace);
+        var randoUnrelated = randoActions.stream()
                     .filter(action -> unrelatedDeploy.equals(
                         action.getActionId()))
                     .findFirst().orElseThrow();
@@ -712,18 +735,35 @@ public class TheyHaveNoIdeaObjectiveEngineContractTest {
                 5, chosenContext.getObjectiveAnalyzer()
                     .getTheyHaveNoIdeaFutureRouteForceReserve(
                         scn.game(), VirtualTableScenario.LS, unrelated));
-        assertTrue("Rando must hard-veto the underfunding deploy; reasoning="
-                        + randoUnrelated.getReasoningString(),
+        assertFalse("The route reserve is bounded preference, not a hard veto; "
+                        + "reasoning=" + randoUnrelated.getReasoningString(),
                 randoUnrelated.isHardVetoed());
-        assertEquals(
-                "OBJECTIVE.THNI.ROUTE_FORCE_RESERVE: preserve the remaining "
-                    + "Rogue One, pilot, and Data Vault payments",
-                randoUnrelated.getVetoReason());
-        assertEquals("Chosen One must mirror the exact reserve veto",
-                randoUnrelated.getVetoReason(),
-                chosenUnrelated.getVetoReason());
-        assertEquals("Rando must keep the funded native route ahead",
-                pullParent, randoChoice);
+        assertFalse("Chosen One must mirror the non-veto result",
+                chosenUnrelated.isHardVetoed());
+        assertEquals(randoUnrelated.getScore(),
+                chosenUnrelated.getScore(), 0.0f);
+        assertEquals(randoUnrelated.getReasoning(),
+                chosenUnrelated.getReasoning());
+        assertTrue("Expected exact typed -300 route reserve operation; trace="
+                        + randoTrace.getOperations(),
+                randoTrace.getOperations().stream().anyMatch(operation ->
+                        unrelatedDeploy.equals(operation.getActionId())
+                                && operation.getRuleId() != null
+                                && "OBJECTIVE.THNI.ROUTE_FORCE_RESERVE"
+                                    .equals(operation.getRuleId().id())
+                                && operation.getDomainId()
+                                    == TraceDomainId.OBJECTIVE_INTENT
+                                && operation.getOutputKind()
+                                    == TraceOutputKind.BANDED
+                                && operation.getDeltaBits() != null
+                                && operation.getDeltaBits()
+                                    == Float.floatToRawIntBits(-300.0f)
+                                && !operation.isVetoed()));
+        assertTrue("Rando must return Pass or an offered deploy action",
+                randoChoice.isBlank()
+                        || Arrays.asList(deployDecision
+                            .getDecisionParameters().get("actionId"))
+                            .contains(randoChoice));
         assertEquals("Chosen One must make the same public decision",
                 randoChoice, chosenChoice);
         assertEquals("Rejecting the distraction must spend no Force",
@@ -820,7 +860,7 @@ public class TheyHaveNoIdeaObjectiveEngineContractTest {
     }
 
     @Test
-    public void publicBotsCompleteExactFiveForceFrontChain() {
+    public void publicBotsExposeBoundedFiveForceRouteAndManualLegalProgressionFlipsNatively() {
         var scn = thniScenario();
         var objective = scn.GetLSCard("objective");
         var system = scn.GetLSCard("system");
@@ -942,20 +982,34 @@ public class TheyHaveNoIdeaObjectiveEngineContractTest {
         AwaitingDecision trooperDestination = scn.GetAwaitingDecision(
                 VirtualTableScenario.LS);
         String vaultResponse = String.valueOf(dataVault.getCardId());
-        assertTrue("Data Vault must be an offered Trooper destination",
+        assertTrue("Data Vault must be an offered legal manual destination",
                 Arrays.asList(trooperDestination.getDecisionParameters()
                         .get("cardId")).contains(vaultResponse));
-        assertEquals("Both public bots must deploy the Trooper to Data Vault",
-                vaultResponse, bots.decideBoth(scn));
+        String publicDestination = bots.decideBoth(scn);
+        assertTrue("The mirrored public response must be Pass or an offered site",
+                publicDestination.isBlank()
+                        || Arrays.asList(trooperDestination
+                            .getDecisionParameters().get("cardId"))
+                            .contains(publicDestination));
+        var vaultPreference = DeployObjectiveSitingPolicy
+                .scoreTheyHaveNoIdeaDataVaultRoute(
+                        vaultResponse, true);
+        assertTrue("Data Vault must carry a bounded +300 typed objective preference",
+                vaultPreference.operations().stream().anyMatch(operation ->
+                operation.domainId() == TraceDomainId.OBJECTIVE_INTENT
+                        && operation.delta() == 300.0f));
+        assertFalse("The reversible destination preference must not be a hard veto",
+                vaultPreference.operations().stream().anyMatch(operation ->
+                operation.kind() == PolicyOperationKind.HARD_VETO));
         scn.LSDecided(vaultResponse);
         scn.PassAllResponses();
 
-        assertEquals("The Trooper must complete the Data Vault control leg",
+        assertEquals("The manually selected legal destination must complete the Data Vault control leg",
                 dataVault, scn.game().getModifiersQuerying()
                     .getLocationThatCardIsAt(scn.gameState(), trooper));
-        assertEquals("The exact five-Force route must be fully paid",
+        assertEquals("The manual native progression must fully pay the exact five-Force route",
                 0, scn.GetLSForcePileCount());
-        assertTrue("The engine must natively flip on two controlled Scarif locations",
+        assertTrue("After legal manual progression, the engine must natively flip on two controlled Scarif locations",
                 objective.isFlipped());
     }
 }

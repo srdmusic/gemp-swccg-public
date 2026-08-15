@@ -46,7 +46,7 @@ public class MoveObjectiveConsolidationSourceParityTest {
     }
 
     @Test
-    public void adaptersRetainObjectiveScoreLogAndLadderOwnership()
+    public void adaptersSeparateTacticalLadderFromBoundedObjectiveOwnership()
             throws IOException {
         String move = evaluatorSource("rando");
 
@@ -67,7 +67,9 @@ public class MoveObjectiveConsolidationSourceParityTest {
         assertTrue(move.contains(
                 "ladderClaimR2(\n                                \"V22.5 PRE-FLIP CONSOLIDATE\""));
         assertTrue(move.contains(
-                "\"V22.2 POST-FLIP REINFORCE\""));
+                "\"MOVE.OBJECTIVE.POST_FLIP_REINFORCE\""));
+        assertFalse(move.contains(
+                "ladderClaimR2(\"V22.2 POST-FLIP REINFORCE\""));
         assertTrue(move.contains("Could not sum opponent power:"));
         assertTrue(move.contains(
                 "Could not analyze protection locations:"));
@@ -133,7 +135,8 @@ public class MoveObjectiveConsolidationSourceParityTest {
             throws IOException {
         String move = evaluatorSource("rando");
 
-        assertTrue(move.contains("// V60 FIX:"));
+        assertTrue(move.contains(
+                "// V60: Corridor landspeed receives a bounded -300 objective preference."));
         assertTrue(move.contains("MovePredicates.canWinAt("));
         assertTrue(move.contains("ladderFinalize(action)"));
         assertFalse(move.contains("MovePhysicalCardResolver"));

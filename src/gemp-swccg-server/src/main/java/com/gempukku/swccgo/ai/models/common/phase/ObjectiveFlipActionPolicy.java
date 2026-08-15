@@ -59,7 +59,7 @@ public final class ObjectiveFlipActionPolicy {
                         TraceRuleId.of(MWYHL_FLIP_RULE_ID),
                         TraceDomainId.OBJECTIVE_INTENT,
                         TraceOutputKind.BANDED,
-                        600.0f,
+                        300.0f,
                         "OBJECTIVE.MWYHL.FLIP: use the exact engine-offered front objective payoff")));
     }
 

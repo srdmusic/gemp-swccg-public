@@ -173,8 +173,8 @@ public final class ShieldPolicy {
                     TraceOutputKind.ORDERING, -3000.0f,
                     "V112 3RD SLOT HOLD: reserve the third shield for Battle Order");
         } else if (reserveForBattleOrder) {
-            add(operations, actionId, "SHIELDS-EOP-BATTLE-ORDER-RESERVE",
-                    TraceOutputKind.ORDERING, -3000.0f,
+            addObjective(operations, actionId, "SHIELDS-EOP-BATTLE-ORDER-RESERVE",
+                    TraceOutputKind.ORDERING, -300.0f,
                     "EOP SHIELD HOLD: preserve slot four until Endor system occupation makes Battle Order live");
         }
         if (shieldsOnTable >= 3 && !fourthSlot.pursue()) {
@@ -428,6 +428,17 @@ public final class ShieldPolicy {
                             float delta,
                             String reason) {
         operations.add(operation(actionId, ruleId, outputKind, delta, reason));
+    }
+
+    private static void addObjective(List<PolicyOperation> operations,
+                                     String actionId,
+                                     String ruleId,
+                                     TraceOutputKind outputKind,
+                                     float delta,
+                                     String reason) {
+        operations.add(PolicyOperation.add(
+                actionId, TraceRuleId.of(ruleId),
+                TraceDomainId.OBJECTIVE_INTENT, outputKind, delta, reason));
     }
 
     private static PolicyOperation operation(String actionId,

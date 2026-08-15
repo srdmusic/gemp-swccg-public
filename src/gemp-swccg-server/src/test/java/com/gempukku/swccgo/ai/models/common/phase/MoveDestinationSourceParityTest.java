@@ -241,7 +241,9 @@ public class MoveDestinationSourceParityTest {
                 "public static Contribution objectiveActorLocationStart("));
         assertTrue(policy.contains(
                 "public static Contribution objectiveActorLocationDestination("));
-        assertTrue(policy.contains("OBJECTIVE_ROUTE_EXEMPT"));
+        assertTrue(policy.contains("TERMINAL_ESCAPE_EXEMPT"));
+        assertFalse(policy.contains("OBJECTIVE_ROUTE_EXEMPT"));
+        assertFalse(policy.contains("HIDDEN_PATH_EXEMPT"));
     }
 
     @Test
@@ -434,7 +436,8 @@ public class MoveDestinationSourceParityTest {
             throws IOException {
         String move = evaluatorSource("rando");
 
-        assertTrue(move.contains("// V60 FIX:"));
+        assertTrue(move.contains(
+                "// V60: Corridor landspeed receives a bounded -300 objective preference."));
         assertTrue(move.contains("MovePredicates.canWinAt("));
         assertTrue(move.contains("oppWeaponBonusAt("));
         assertTrue(move.contains("ladderFinalize(action)"));

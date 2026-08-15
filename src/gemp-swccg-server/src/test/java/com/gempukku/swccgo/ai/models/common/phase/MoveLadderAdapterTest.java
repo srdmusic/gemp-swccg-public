@@ -65,7 +65,6 @@ public class MoveLadderAdapterTest {
         setField(evaluator, "ladderVetoHardReason", reason);
         setField(evaluator, "ladderCanWinVeto", false);
         setField(evaluator, "ladderBattleSeekingClaim", false);
-        setField(evaluator, "ladderMandatoryTransit", false);
         setField(evaluator, "ladderWrongDirVeto", false);
         setField(evaluator, "ladderRankMoveRan", true);
     }

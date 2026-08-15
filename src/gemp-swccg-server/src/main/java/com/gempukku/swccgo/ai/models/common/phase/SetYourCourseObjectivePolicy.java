@@ -43,8 +43,8 @@ public final class SetYourCourseObjectivePolicy {
             return new Evaluation(true, true, false, delta, reason);
         }
 
-        private static Evaluation veto(String reason) {
-            return new Evaluation(true, false, true, 0.0f, reason);
+        private static Evaluation preferencePenalty(String reason) {
+            return new Evaluation(true, false, false, -300.0f, reason);
         }
     }
 
@@ -99,7 +99,7 @@ public final class SetYourCourseObjectivePolicy {
                 || !exactCompatibleSuperlaser) {
             return Evaluation.none();
         }
-        return Evaluation.mandatory(12000.0f,
+        return Evaluation.mandatory(300.0f,
                 "OBJECTIVE.SET_YOUR_COURSE.ARM_DEATH_STAR: attach a CPI-compatible Superlaser before continuing the Alderaan route");
     }
 
@@ -109,7 +109,7 @@ public final class SetYourCourseObjectivePolicy {
         if (!exactObjectiveAction || !deathStarSite) {
             return Evaluation.none();
         }
-        return Evaluation.mandatory(centralCore ? 12000.0f : 10000.0f,
+        return Evaluation.mandatory(300.0f,
                 "OBJECTIVE.SET_YOUR_COURSE.PACKAGE_PULL: add a Death Star site to improve the classic CPI total");
     }
 
@@ -117,7 +117,7 @@ public final class SetYourCourseObjectivePolicy {
             boolean classicRouteOpen, boolean exactAlderaan) {
         if (!classicRouteOpen) return Evaluation.none();
         if (exactAlderaan) {
-            return Evaluation.mandatory(12000.0f,
+            return Evaluation.mandatory(300.0f,
                     "OBJECTIVE.SET_YOUR_COURSE.SETUP_ALDERAAN: choose Alderaan so classic CPI can blow away the native flip target");
         }
         return Evaluation.none();
@@ -127,17 +127,17 @@ public final class SetYourCourseObjectivePolicy {
             Stage stage, boolean exactClassicDeathStar) {
         if (!exactClassicDeathStar) return Evaluation.none();
         if (stage == Stage.WAITING_FOR_SUPERLASER) {
-            return Evaluation.veto(
+            return Evaluation.preferencePenalty(
                     "OBJECTIVE.SET_YOUR_COURSE.LASER_BEFORE_MOVE: arm the Death Star before continuing toward Alderaan");
         }
         if (stage == Stage.ORBITING_ALDERAAN) {
-            return Evaluation.veto(
+            return Evaluation.preferencePenalty(
                     "OBJECTIVE.SET_YOUR_COURSE.HOLD_ALDERAAN_ORBIT: remain in orbit so classic CPI stays executable");
         }
         if (stage == Stage.READY_AT_ZERO
                 || stage == Stage.READY_AT_ONE
                 || stage == Stage.RECOVER_AT_TWO_DEEP_SPACE) {
-            return Evaluation.mandatory(0.0f,
+            return Evaluation.mandatory(300.0f,
                     "OBJECTIVE.SET_YOUR_COURSE.MOVE_TO_ALDERAAN: advance the armed Death Star toward Alderaan");
         }
         return Evaluation.none();
@@ -152,11 +152,11 @@ public final class SetYourCourseObjectivePolicy {
         };
         if (expected == null) return Evaluation.none();
         if (parsec.equals(expected)) {
-            return Evaluation.mandatory(12000.0f,
+            return Evaluation.mandatory(300.0f,
                     "OBJECTIVE.SET_YOUR_COURSE.PARSEC_TO_ALDERAAN: choose parsec " + expected);
         }
-        return Evaluation.veto(
-                "OBJECTIVE.SET_YOUR_COURSE.PARSEC_WRONG_WAY: the armed Death Star must follow 0 to 1 to 2");
+        return Evaluation.preferencePenalty(
+                "OBJECTIVE.SET_YOUR_COURSE.PARSEC_WRONG_WAY: prefer the armed Death Star's 0 -> 1 -> 2 route (-300 for another route)");
     }
 
     public static Evaluation scoreDestinationChoice(
@@ -175,10 +175,10 @@ public final class SetYourCourseObjectivePolicy {
         }
         String lower = actionText.toLowerCase(Locale.ROOT);
         if (lower.contains("orbit")) {
-            return Evaluation.mandatory(12000.0f,
+            return Evaluation.mandatory(300.0f,
                     "OBJECTIVE.SET_YOUR_COURSE.ORBIT_ALDERAAN: enter orbit instead of remaining in deep space");
         }
-        return Evaluation.veto(
+        return Evaluation.preferencePenalty(
                 "OBJECTIVE.SET_YOUR_COURSE.DEEP_SPACE_HOLD_BLOCK: Alderaan orbit is the CPI gate");
     }
 
@@ -189,9 +189,9 @@ public final class SetYourCourseObjectivePolicy {
             return Evaluation.none();
         }
         return exactAlderaan
-                ? Evaluation.mandatory(12000.0f,
-                    "OBJECTIVE.SET_YOUR_COURSE.CHOOSE_ALDERAAN: classic CPI must blow away Alderaan")
-                : Evaluation.veto(
+                ? Evaluation.mandatory(300.0f,
+                    "OBJECTIVE.SET_YOUR_COURSE.CHOOSE_ALDERAAN: prefer Alderaan for classic CPI (+300 objective preference)")
+                : Evaluation.preferencePenalty(
                     "OBJECTIVE.SET_YOUR_COURSE.NON_ALDERAAN_ORBIT_BLOCK: choose Alderaan for the native flip");
     }
 
@@ -204,7 +204,7 @@ public final class SetYourCourseObjectivePolicy {
                     .contains("attempt to 'blow away' alderaan")) {
             return Evaluation.none();
         }
-        return Evaluation.mandatory(12000.0f,
+        return Evaluation.mandatory(300.0f,
                 "OBJECTIVE.SET_YOUR_COURSE.FIRE_CPI: execute the native Alderaan blow-away and flip trigger");
     }
 
@@ -217,7 +217,7 @@ public final class SetYourCourseObjectivePolicy {
         }
         int exactPayment = (int) Math.ceil(actionCost);
         if (forceAvailable - exactPayment < routeForceReserve) {
-            return Evaluation.veto(
+            return Evaluation.preferencePenalty(
                     "OBJECTIVE.SET_YOUR_COURSE.CONTROL_FORCE_RESERVE: preserve the exact Force needed for the next Death Star hyperspeed move");
         }
         return Evaluation.none();

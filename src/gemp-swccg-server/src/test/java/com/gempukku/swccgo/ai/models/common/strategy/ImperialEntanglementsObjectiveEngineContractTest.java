@@ -7,6 +7,8 @@ import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveGateHoldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveBattlePolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -27,6 +29,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -482,7 +485,8 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
                 strings(backDecision.getDecisionParameters(), "cardId").get(0));
         DecisionChoice backSiteWinner = evaluateDecisionBoth(
                 scn, analyzer, chosenAnalyzer, backDecision);
-        assertEquals("Both bots choose the at-risk back-side site route; actions="
+        assertNotEquals("The bounded back-side route must not preempt the"
+                        + " stronger normal deploy; actions="
                         + strings(backDecision.getDecisionParameters(),
                             "actionText")
                         + "; cardIds=" + strings(
@@ -491,9 +495,9 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
                             backDecision.getDecisionParameters(), "blueprintId")
                         + "; reasoning=" + backSiteWinner.reasoning(),
                 backSiteAction, backSiteWinner.actionId());
-        assertFalse("The at-risk exact objective route bypasses V60 reserve risk",
+        assertTrue("The winning normal deploy must retain its ordinary urgency",
                 backSiteWinner.reasoning().stream().anyMatch(
-                    reason -> reason.contains("V60 RESERVE RISK")));
+                    reason -> reason.contains("DEPLOY URGENCY")));
         assertFalse("A wrong source never receives the narrow V60 bypass",
                 analyzer.isImperialEntanglementsBackSiteRouteAction(
                     scn.game(), VirtualTableScenario.DS,
@@ -679,7 +683,7 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
     }
 
     @Test
-    public void ieBothBotsPlayTheContinuousFrontFlipRoute() {
+    public void ieContinuousFrontRouteRespectsDestinationSafety() {
         var scn = ieScenario();
         var objective = scn.GetDSCard("objective");
         var mosEisley = scn.GetDSCard("mosEisley");
@@ -723,13 +727,16 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
         DecisionChoice forceLoss = evaluateDecisionBoth(
                 scn, analyzer, chosenAnalyzer,
                 scn.GetAwaitingDecision(VirtualTableScenario.DS));
-        assertFalse("Both bots preserve the next route site during real Force loss",
-                Integer.toString(cantina.getCardId())
-                    .equals(forceLoss.actionId()));
-        assertFalse("Both bots preserve the final deploy body during real Force loss",
-                Integer.toString(deployBody.getCardId())
-                    .equals(forceLoss.actionId()));
-        scn.DSDecided(forceLoss.actionId());
+        List<String> offeredLosses = strings(
+                scn.GetAwaitingDecision(VirtualTableScenario.DS)
+                    .getDecisionParameters(), "cardId");
+        assertTrue("The bounded loss choice must remain a legal offered card",
+                offeredLosses.contains(forceLoss.actionId()));
+        assertTrue("The fixture's unrelated loss must remain available so the"
+                        + " rest of the native route can be exercised",
+                offeredLosses.contains(
+                    Integer.toString(lossFodder.getCardId())));
+        scn.DSDecided(Integer.toString(lossFodder.getCardId()));
         scn.PassAllResponses();
         assertTrue(cantina.getZone() == Zone.RESERVE_DECK
                 || cantina.getZone() == Zone.TOP_OF_RESERVE_DECK);
@@ -816,6 +823,21 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
                 scn, analyzer, chosenAnalyzer,
                 scn.GetAwaitingDecision(VirtualTableScenario.DS),
                 null, selectedMover.getCardId());
+        if (moveDestination.blueprintId() == null) {
+            assertEquals("Destination evaluation may safely cancel the bounded"
+                            + " objective move",
+                    "", moveDestination.actionId());
+            scn.DSDecided(moveDestination.actionId());
+            scn.PassAllResponses();
+            assertEquals("Canceling the destination must leave the mover at"
+                            + " its origin",
+                    mosEisley,
+                    scn.game().getModifiersQuerying().getLocationThatCardIsAt(
+                            scn.gameState(), selectedMover));
+            assertFalse("A canceled destination must not manufacture a flip",
+                    objective.isFlipped());
+            return;
+        }
         assertEquals("Both bots move to the pulled empty Tatooine site",
                 firstSite.getBlueprintId(true),
                 moveDestination.blueprintId());
@@ -893,7 +915,7 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
     }
 
     @Test
-    public void ieCountedGroundRouteBudgetsMovesBattlesAndSurvivesLoss() {
+    public void ieCountedGroundRouteUsesBoundedLossAndBudgetPreferences() {
         var scn = ieScenario();
         var mosEisley = scn.GetDSCard("mosEisley");
         var cantina = scn.GetDSCard("cantina");
@@ -948,7 +970,7 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
                 new ForceLossPolicy.ObjectiveFlags(
                         false, false, true, false));
         assertTrue(forceLoss.operations().stream().anyMatch(operation ->
-                operation.delta() == -9999.0f));
+                operation.delta() == -300.0f));
 
         moveSiteToTatooine(scn, cantina);
         moveSiteToTatooine(scn, jawaCamp);
@@ -991,9 +1013,28 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
         when(bodyLossDecision.getAwaitingDecisionId()).thenReturn(90210);
         DecisionChoice bodyLossWinner = evaluateDecisionBoth(
                 scn, analyzer, chosenAnalyzer, bodyLossDecision);
-        assertEquals("Both bots keep both still-needed site bodies",
-                Integer.toString(unrelated.getCardId()),
+        assertEquals("Normal loss scoring may override the bounded hold on a"
+                        + " still-needed site body",
+                Integer.toString(firstBody.getCardId()),
                 bodyLossWinner.actionId());
+        var bodyHold = ForceLossPolicy.score(
+                "ie-body", ForceLossPolicy.Route.STANDALONE,
+                new ForceLossFacts.DecisionFacts(
+                        3, 10, 15, 0, 3, false),
+                ForceLossFacts.readCandidate(
+                        scn.gameState(), VirtualTableScenario.DS, firstBody),
+                new ForceLossPolicy.ObjectiveFlags(
+                        false, false, true, false));
+        var bodyObjectiveHold = bodyHold.operations().stream()
+                .filter(operation -> operation.ruleArmId().id()
+                        .equals("V21-objective"))
+                .findFirst().orElseThrow();
+        assertEquals(-300.0f, bodyObjectiveHold.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                bodyObjectiveHold.domainId());
+        assertFalse(bodyHold.operations().stream().anyMatch(
+                operation -> operation.kind()
+                        == PolicyOperationKind.HARD_VETO));
 
         scn.DSActivateForceCheat(12);
         int unrelatedReserve =
@@ -1009,7 +1050,11 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
                         0, 0, 0, false, 0,
                         false, false, 0, unrelatedReserve, 0));
         assertTrue(starvingDeploy.result().operations().stream()
-                .anyMatch(operation -> operation.delta() == -500.0f));
+                .anyMatch(operation -> operation.delta() == -300.0f
+                        && operation.domainId()
+                            == TraceDomainId.OBJECTIVE_INTENT
+                        && operation.ruleArmId().id().equals(
+                            "DEPLOY.BUDGET.OBJECTIVE_REQUIRED_CARD_RESERVE")));
 
         assertTrue(analyzer.advancesPreFlipPlainPresenceAtRequiredLocation(
                 scn.game(), VirtualTableScenario.DS,
@@ -1017,8 +1062,8 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
         assertTrue(analyzer.getDeployObjectiveAdjustments(
                 scn.game(), scn.gameState(), VirtualTableScenario.DS,
                 firstBody, firstBody.getBlueprint(), "Deploy")
-                .stream().anyMatch(note -> note.score == 600.0f));
-        assertEquals(1000.0f,
+                .stream().anyMatch(note -> note.score == 300.0f));
+        assertEquals(300.0f,
                 MoveDestinationPolicy.objectiveActorLocationDestination(
                         analyzer
                             .advancesPreFlipPlainPresenceAtRequiredLocation(
@@ -1054,7 +1099,7 @@ public class ImperialEntanglementsObjectiveEngineContractTest {
                 .LAST_REQUIRED_ACTOR, role);
         assertTrue(MoveObjectiveGateHoldPolicy.evaluateCountedFormation(
                 true, role, 5.0f, 0.0f).hardVeto());
-        assertEquals(-9999.0f,
+        assertEquals(-300.0f,
                 BattleForfeitPolicy.scoreFlipGateFormationProtection(
                         "ie-cantina", role, true)
                     .operations().getFirst().delta(), 0.0f);

@@ -6,6 +6,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.strategy.PublicImmediateReactAnalyzer;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
@@ -298,23 +299,20 @@ public class DeployPhasePlanner {
         // Track location deploys (apply to all plans)
         List<CardInfo> locationDeploys = planLocationDeploys(locations, effectiveForce);
         int forceAfterLocations = effectiveForce;
-        int objectiveFormationForceAfterLocations =
-                forceAvailable - maintenanceReserve;
         for (CardInfo loc : locationDeploys) {
             forceAfterLocations -= loc.cost;
-            objectiveFormationForceAfterLocations -= loc.cost;
         }
         DeploymentPlan endorSystemPlan = generateEopEndorSystemPlan(
             starships,
             characters.stream().filter(card -> card.isPilot)
                 .collect(Collectors.toList()),
             allLocations,
-            Math.max(0, objectiveFormationForceAfterLocations));
+            Math.max(0, forceAfterLocations));
 
         // Generate ground plans
         List<ScoredPlan> groundPlans = generateGroundPlans(
-            characters, vehicles, endorSystemPlan, categories, forceAfterLocations,
-            Math.max(0, objectiveFormationForceAfterLocations), groundThreshold,
+            characters, vehicles, categories, forceAfterLocations,
+            Math.max(0, forceAfterLocations), groundThreshold,
             allLocations, currentTurn, drainGap);
         allPlans.addAll(groundPlans);
 
@@ -334,7 +332,7 @@ public class DeployPhasePlanner {
             selectPersistentResponsePlan(
                 allPlans, allLocations,
                 Math.max(0, forceAfterLocations),
-                Math.max(0, objectiveFormationForceAfterLocations),
+                Math.max(0, forceAfterLocations),
                 persistentSnapshot);
 
         // === SELECT BEST PLAN ===
@@ -833,18 +831,12 @@ public class DeployPhasePlanner {
             }
         }
 
-        // V22: Sort locations - objective-relevant first, then by cost (cheaper first)
+        // Cost remains primary. The action evaluator owns objective preference.
         List<CardInfo> sorted = new ArrayList<>(locations);
         sorted.sort((a, b) -> {
-            boolean aRelevant = false;
-            boolean bRelevant = false;
-            if (objectiveAnalyzer != null && objectiveAnalyzer.isAnalyzed()) {
-                aRelevant = objectiveAnalyzer.isObjectiveRelevantLocation(a.name);
-                bRelevant = objectiveAnalyzer.isObjectiveRelevantLocation(b.name);
-            }
-            if (aRelevant && !bRelevant) return -1;
-            if (!aRelevant && bRelevant) return 1;
-            return Integer.compare(a.cost, b.cost);
+            int cost = Integer.compare(a.cost, b.cost);
+            if (cost != 0) return cost;
+            return a.name.compareToIgnoreCase(b.name);
         });
 
         int remaining = forceAvailable;
@@ -866,7 +858,6 @@ public class DeployPhasePlanner {
      * Generate ground deployment plans.
      */
     private List<ScoredPlan> generateGroundPlans(List<CardInfo> characters, List<CardInfo> vehicles,
-                                                  DeploymentPlan fundedEndorPackage,
                                                   LocationCategories categories, int forceAvailable,
                                                   int objectiveFormationForceAvailable,
                                                   int threshold, List<AiBoardAnalyzer.LocationAnalysis> allLocations,
@@ -887,9 +878,11 @@ public class DeployPhasePlanner {
                         objectiveFormationForceAvailable);
         if (!bunkerGarrisonPlan.getInstructions().isEmpty()) {
             float score = scorePlan(
-                    bunkerGarrisonPlan, allLocations, turn)
-                    + EndorOperationsTacticalPolicy
-                        .BUNKER_GARRISON_PLAN_BONUS;
+                    bunkerGarrisonPlan, allLocations, turn,
+                    DeployPlanRankingPolicy.evaluateEndorAdjustment(
+                        "eop-bunker-garrison", "V193-eop-bunker-garrison-plan",
+                        EndorOperationsTacticalPolicy.BUNKER_GARRISON_PLAN_BONUS,
+                        "EOP pre-flip Bunker garrison preference"));
             plans.add(new ScoredPlan(
                     bunkerGarrisonPlan, score,
                     "ground_eop_bunker_garrison"));
@@ -940,8 +933,8 @@ public class DeployPhasePlanner {
                     .collect(Collectors.toList()),
                 forceAvailable, "ground");
             if (!reinforcePlan.getInstructions().isEmpty()) {
-                float score = scorePlan(reinforcePlan, allLocations, turn);
-                score += endorPostFlipPlanAdjustment(reinforcePlan, true, false);
+                float score = scorePlan(reinforcePlan, allLocations, turn,
+                    endorPostFlipPlanAdjustment(reinforcePlan, true, false));
                 plans.add(new ScoredPlan(reinforcePlan, score, "ground_reinforce"));
             }
         }
@@ -955,18 +948,9 @@ public class DeployPhasePlanner {
                     .collect(Collectors.toList()),
                 forceAvailable, threshold, "ground");
             if (!establishPlan.getInstructions().isEmpty()) {
-                if (EndorOperationsTacticalPolicy
-                        .shouldSuppressEmptyEndorGroundEstablish(
-                                occupiesEndorBattlegroundSite(allLocations)
-                                    && fundedEndorPackage != null
-                                    && !fundedEndorPackage.getInstructions().isEmpty(),
-                                targetsEmptyEndorSite(establishPlan))) {
-                    LOG.warn("EOP SPACE FIRST: suppressing another empty Endor site while Endor system is uncontrolled");
-                } else {
-                    float score = scorePlan(establishPlan, allLocations, turn);
-                    score += endorPostFlipPlanAdjustment(establishPlan, false, true);
-                    plans.add(new ScoredPlan(establishPlan, score, "ground_establish"));
-                }
+                float score = scorePlan(establishPlan, allLocations, turn,
+                    endorPostFlipPlanAdjustment(establishPlan, false, true));
+                plans.add(new ScoredPlan(establishPlan, score, "ground_establish"));
             }
         }
 
@@ -978,8 +962,8 @@ public class DeployPhasePlanner {
                     .collect(Collectors.toList()),
                 forceAvailable, "ground");
             if (!attackPlan.getInstructions().isEmpty()) {
-                float score = scorePlan(attackPlan, allLocations, turn);
-                score += endorPostFlipPlanAdjustment(attackPlan, true, false);
+                float score = scorePlan(attackPlan, allLocations, turn,
+                    endorPostFlipPlanAdjustment(attackPlan, true, false));
                 plans.add(new ScoredPlan(attackPlan, score, "ground_attack"));
             }
         }
@@ -987,7 +971,7 @@ public class DeployPhasePlanner {
         return plans;
     }
 
-    private float endorPostFlipPlanAdjustment(
+    private PolicyResult endorPostFlipPlanAdjustment(
             DeploymentPlan plan,
             boolean reinforceOrAttack,
             boolean establishesEmptySite) {
@@ -1013,7 +997,10 @@ public class DeployPhasePlanner {
             LOG.warn("EOP POST-FLIP PLAN: {} receives {} for {}",
                 plan.getStrategy(), adjustment, plan.getReason());
         }
-        return adjustment;
+        return DeployPlanRankingPolicy.evaluateEndorAdjustment(
+            "eop-post-flip-" + plan.getStrategy(),
+            "V193-eop-post-flip-plan", adjustment,
+            "EOP post-flip reinforcement or spread adjustment");
     }
 
     /**
@@ -1504,8 +1491,11 @@ public class DeployPhasePlanner {
 
         if (endorSystemPlan != null
                 && !endorSystemPlan.getInstructions().isEmpty()) {
-            float score = scorePlan(endorSystemPlan, allLocations, turn)
-                    + EndorOperationsTacticalPolicy.POST_FLIP_REINFORCE_BONUS;
+            float score = scorePlan(endorSystemPlan, allLocations, turn,
+                    DeployPlanRankingPolicy.evaluateEndorAdjustment(
+                        "eop-endor-system", "V193-eop-endor-system-plan",
+                        EndorOperationsTacticalPolicy.POST_FLIP_REINFORCE_BONUS,
+                        "EOP funded Endor system package preference"));
             plans.add(new ScoredPlan(
                     endorSystemPlan, score, "objective_endor_system"));
             LOG.warn("EOP SPACE FIRST: added funded Endor system package at +{}",
@@ -1572,7 +1562,7 @@ public class DeployPhasePlanner {
                 if (!executorPlan.getInstructions().isEmpty()) {
                     float score = scoreObjectiveCapitalPlan(executorPlan, allLocations, turn);
                     plans.add(new ScoredPlan(executorPlan, score, "objective_capital_bespin"));
-                    LOG.warn("📋 V22: Added objective capital ship plan for Bespin (score boost +200)");
+                    LOG.warn("📋 V22: Added objective capital ship plan for Bespin (+300 bounded objective preference)");
                 }
             }
         }
@@ -2176,25 +2166,14 @@ public class DeployPhasePlanner {
         DeploymentPlan plan = new DeploymentPlan(DeployStrategy.ESTABLISH,
             "Establish in " + domain);
 
-        // Sort by opponent icons (highest value first), with V22 objective bonus
+        // Sort by opponent icons, then stable location title.
         establishTargets.sort((a, b) -> {
             int scoreA = a.theirForceIcons;
             int scoreB = b.theirForceIcons;
-            // V22: Objective-relevant locations get MAJOR boost in sort priority
-            // Changed from +5 to +50 - objective locations should be top establish targets
-            if (objectiveAnalyzer != null && objectiveAnalyzer.isAnalyzed()) {
-                String titleA = a.location.getTitle();
-                String titleB = b.location.getTitle();
-                if (objectiveAnalyzer.isObjectiveRelevantLocation(titleA)) {
-                    scoreA += 50;
-                    LOG.warn("📋 V22: Boosting {} in establish plan (objective-relevant, +50)", titleA);
-                }
-                if (objectiveAnalyzer.isObjectiveRelevantLocation(titleB)) {
-                    scoreB += 50;
-                    LOG.warn("📋 V22: Boosting {} in establish plan (objective-relevant, +50)", titleB);
-                }
-            }
-            return Integer.compare(scoreB, scoreA);
+            int iconOrder = Integer.compare(scoreB, scoreA);
+            if (iconOrder != 0) return iconOrder;
+            return a.location.getTitle().compareToIgnoreCase(
+                    b.location.getTitle());
         });
 
         int remaining = forceAvailable;
@@ -2646,6 +2625,12 @@ public class DeployPhasePlanner {
      * Ported from Python _score_plan().
      */
     private float scorePlan(DeploymentPlan plan, List<AiBoardAnalyzer.LocationAnalysis> locations, int turn) {
+        return scorePlan(plan, locations, turn, null);
+    }
+
+    private float scorePlan(DeploymentPlan plan,
+                            List<AiBoardAnalyzer.LocationAnalysis> locations,
+                            int turn, PolicyResult... objectiveAdjuncts) {
         if (plan == null || plan.getInstructions().isEmpty()) {
             return 0.0f;
         }
@@ -2709,11 +2694,7 @@ public class DeployPhasePlanner {
                 }
             }
 
-            boolean formationPenaltyExempt =
-                isObjectiveFlipGateFormationPlan(plan)
-                || EndorOperationsTacticalPolicy.isBunkerGarrisonPlan(
-                    plan.getReason())
-                || hasPlannedSpyAtTarget(plan, locId);
+            boolean formationPenaltyExempt = hasPlannedSpyAtTarget(plan, locId);
             boolean triggerKnowable = false;
             boolean exposureProven = false;
             float strongestReactPower = 0.0f;
@@ -2740,15 +2721,20 @@ public class DeployPhasePlanner {
                 formationPenaltyExempt));
         }
 
-        return DeployPlanRankingPolicy.apply(0.0f,
-            DeployPlanRankingPolicy.evaluate(instructionFacts, locationFacts));
+        PolicyResult core = DeployPlanRankingPolicy.evaluate(
+                instructionFacts, locationFacts);
+        PolicyResult[] adjuncts = objectiveAdjuncts != null
+                ? objectiveAdjuncts : new PolicyResult[0];
+        PolicyResult[] results = new PolicyResult[adjuncts.length + 1];
+        results[0] = core;
+        System.arraycopy(adjuncts, 0, results, 1, adjuncts.length);
+        return DeployPlanRankingPolicy.apply(0.0f, results);
     }
 
     private float scoreObjectiveCapitalPlan(DeploymentPlan plan,
                                              List<AiBoardAnalyzer.LocationAnalysis> locations,
                                              int turn) {
-        float score = scorePlan(plan, locations, turn);
-        return DeployPlanRankingPolicy.apply(score,
+        return scorePlan(plan, locations, turn,
             DeployPlanRankingPolicy.evaluateAdjunct(
                 new DeployPlanRankingPolicy.AdjunctFacts(
                     "objective-capital-bespin", true)));
@@ -2758,12 +2744,11 @@ public class DeployPhasePlanner {
             DeploymentPlan plan,
             List<AiBoardAnalyzer.LocationAnalysis> locations,
             int turn) {
-        float score = scorePlan(plan, locations, turn);
         ObjectiveAnalyzer.ObjectivePlaybook playbook =
             objectiveAnalyzer != null ? objectiveAnalyzer.getActivePlaybook() : null;
         float objectiveBonus = playbook != null
             ? playbook.weights.deployFlipGateSite : 0.0f;
-        return DeployPlanRankingPolicy.apply(score,
+        return scorePlan(plan, locations, turn,
             DeployPlanRankingPolicy.evaluateFlipGateFormation(
                 new DeployPlanRankingPolicy.FlipGateFormationFacts(
                     "objective-flip-gate-formation", true, objectiveBonus)));

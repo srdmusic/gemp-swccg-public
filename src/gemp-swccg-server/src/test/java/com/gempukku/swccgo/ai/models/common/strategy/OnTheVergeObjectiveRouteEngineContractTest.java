@@ -1,6 +1,11 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
-import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
+import com.gempukku.swccgo.ai.models.common.phase.OnTheVergeObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
+import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOp;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -188,21 +193,61 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
             com.gempukku.swccgo.ai.models.common.trace.DecisionTrace trace) {
     }
 
+    private static void assertPolicyDelta(
+            PolicyResult result, String ruleId, float delta) {
+        assertEquals(1, result.operations().size());
+        var operation = result.operations().getFirst();
+        assertEquals(ruleId, operation.ruleArmId().id());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                operation.domainId());
+        assertEquals(TraceOutputKind.BANDED,
+                operation.outputKind());
+        assertEquals(PolicyOperationKind.ADD, operation.kind());
+        assertEquals(Float.floatToRawIntBits(delta),
+                Float.floatToRawIntBits(operation.delta()));
+    }
+
+    private static void assertTraceDelta(
+            TracedDecision traced, String actionId,
+            String ruleId, float delta) {
+        long matching = traced.trace().getOperations().stream()
+                .filter(operation -> actionId.equals(
+                            operation.getActionId())
+                        && ruleId.equals(operation.getRuleId().id())
+                        && operation.getDomainId()
+                            == TraceDomainId.OBJECTIVE_INTENT
+                        && operation.getOutputKind()
+                            == TraceOutputKind.BANDED
+                        && operation.getOp() == TraceOp.ADD
+                        && operation.getDeltaBits() != null
+                        && operation.getDeltaBits()
+                            == Float.floatToRawIntBits(delta))
+                .count();
+        assertEquals("Expected one exact typed objective contribution for "
+                        + actionId + "; operations="
+                        + traced.trace().getOperations(),
+                1, matching);
+    }
+
     private static void chooseResultBoth(
             VirtualTableScenario scn, PublicBots bots,
-            String textFragment, String expectedResult) {
+            String textFragment, String expectedResult,
+            String expectedRuleId) {
         AwaitingDecision decision = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
         assertNotNull(decision);
         assertTrue(decision.getText().contains(textFragment));
-        String response = bots.decideBoth(scn);
         String[] results = decision.getDecisionParameters().get("results");
         assertNotNull(results);
-        int index = Integer.parseInt(response);
-        assertTrue(index >= 0 && index < results.length);
-        assertEquals("results=" + Arrays.toString(results),
-                expectedResult, results[index]);
-        scn.DSDecided(response);
+        int index = Arrays.asList(results).indexOf(expectedResult);
+        assertTrue("Expected legal result " + expectedResult
+                        + " in " + Arrays.toString(results),
+                index >= 0);
+        String actionId = Integer.toString(index);
+        TracedDecision traced = bots.decideBothWithRandoTrace(scn);
+        assertTraceDelta(
+                traced, actionId, expectedRuleId, 300.0f);
+        scn.DSDecided(actionId);
     }
 
     private static void leaveOneDarkForce(VirtualTableScenario scn) {
@@ -217,41 +262,6 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
         if (scn.GetDSForcePileCount() < amount) {
             scn.DSActivateForceCheat(
                     amount - scn.GetDSForcePileCount());
-        }
-    }
-
-    private static PhysicalCard selectedPhysicalCard(
-            VirtualTableScenario scn,
-            AwaitingDecision decision, String response) {
-        PhysicalCard selected = AiActionSourceProvenance
-                .selectedActionSource(decision, response);
-        if (selected != null) return selected;
-        try {
-            return scn.gameState().findCardById(
-                    Integer.parseInt(response));
-        } catch (NumberFormatException ignored) {
-            if (response != null && response.startsWith("temp")) {
-                try {
-                    int index = Integer.parseInt(response.substring(4));
-                    String[] blueprints = decision
-                            .getDecisionParameters().get("blueprintId");
-                    var reserve = scn.gameState().getReserveDeck(
-                            VirtualTableScenario.DS);
-                    if (index >= 0 && index < reserve.size()
-                            && blueprints != null
-                            && index < blueprints.length) {
-                        PhysicalCard candidate = reserve.get(index);
-                        if (candidate != null
-                                && blueprints[index].equals(
-                                    candidate.getBlueprintId(true))) {
-                            return candidate;
-                        }
-                    }
-                } catch (NumberFormatException ignoredTempId) {
-                    return null;
-                }
-            }
-            return null;
         }
     }
 
@@ -319,14 +329,9 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
                 "Deploy a Scarif battleground");
         assertNotNull(route);
         TracedDecision traced = bots.decideBothWithRandoTrace(scn);
-        assertEquals("The native objective pull must lead the deploy phase",
-                route, traced.response());
-        assertTrue("The source-specific Scarif route band must fire",
-                traced.trace().getOperations().stream()
-                    .anyMatch(operation -> route.equals(
-                                operation.getActionId())
-                            && "OBJECTIVE.OTVOG.SCARIF_ROUTE"
-                                .equals(operation.getRuleId().id())));
+        assertTraceDelta(
+                traced, route,
+                "OBJECTIVE.OTVOG.SCARIF_ROUTE", 300.0f);
         scn.DSDecided(route);
         scn.PassAllResponses();
 
@@ -348,11 +353,22 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
         assertEquals(GameTextActionId
                 .ON_THE_VERGE_OF_GREATNESS__DEPLOY_SCARIF_BATTLEGROUND,
                 liveAction.getGameTextActionId());
-        String selected = bots.decideBoth(scn);
-        assertSame("Command Center is the native Krennic route",
-                commandCenter,
-                selectedPhysicalCard(scn, child, selected));
-        scn.DSDecided(selected);
+        bots.decideBoth(scn);
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(
+                scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertTrue("Command Center must remain a legal native candidate",
+                analyzer.isOnTheVergeCommandCenterPullCandidate(
+                    scn.game(), VirtualTableScenario.DS,
+                    objective, commandCenter));
+        assertPolicyDelta(
+                OnTheVergeObjectivePolicy
+                    .scoreScarifBattlegroundCandidate(
+                        Integer.toString(commandCenter.getCardId()),
+                        true, true),
+                "OBJECTIVE.OTVOG.COMMAND_CENTER", 300.0f);
+        scn.DSChooseCard(commandCenter);
         scn.PassAllResponses();
         resolveScarifLocationDeployment(
                 scn, bots, commandCenter);
@@ -366,7 +382,29 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
                 VirtualTableScenario.DS, commandCenter,
                 "Deploy Krennic from Reserve Deck");
         assertNotNull(deploy);
-        assertEquals(deploy, bots.decideBoth(scn));
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(
+                scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertPolicyDelta(
+                OnTheVergeObjectivePolicy.scoreKrennicRoute(
+                    deploy,
+                    analyzer.isOnTheVergeKrennicDeployAction(
+                        scn.game(), VirtualTableScenario.DS,
+                        commandCenter,
+                        "Deploy Krennic from Reserve Deck"),
+                    analyzer.findOnTheVergeLegalKrennicInReserve(
+                        scn.game(), VirtualTableScenario.DS,
+                        commandCenter) != null,
+                    analyzer.getOnTheVergeForceAvailable(
+                        scn.game(), VirtualTableScenario.DS),
+                    analyzer.getOnTheVergeKrennicDeployCost(
+                        scn.game(), VirtualTableScenario.DS,
+                        commandCenter),
+                    analyzer.getOnTheVergeCurrentMoveForceReserve(
+                        scn.game(), VirtualTableScenario.DS)),
+                "OBJECTIVE.OTVOG.KRENNIC_ROUTE", 300.0f);
+        bots.decideBoth(scn);
         scn.DSDecided(deploy);
         scn.PassAllResponses();
 
@@ -386,10 +424,17 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
                 liveAction.getGameTextActionId());
         assertEquals("Deploy Krennic from Reserve Deck",
                 liveAction.getText());
-        String selected = bots.decideBoth(scn);
-        assertSame(krennic,
-                selectedPhysicalCard(scn, child, selected));
-        scn.DSDecided(selected);
+        bots.decideBoth(scn);
+        assertTrue("Krennic must remain a legal native candidate",
+                analyzer.isOnTheVergeKrennicPullCandidate(
+                    scn.game(), VirtualTableScenario.DS,
+                    commandCenter, krennic));
+        assertPolicyDelta(
+                OnTheVergeObjectivePolicy.scoreKrennicCandidate(
+                    Integer.toString(krennic.getCardId()),
+                    true, true),
+                "OBJECTIVE.OTVOG.KRENNIC_CANDIDATE", 300.0f);
+        scn.DSChooseCard(krennic);
         scn.PassAllResponses();
 
         assertSame(Zone.AT_LOCATION, krennic.getZone());
@@ -413,17 +458,24 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
                 VirtualTableScenario.DS, deathStar,
                 "Move using hyperspeed");
         assertNotNull(move);
-        assertEquals(move, bots.decideBoth(scn));
+        assertTraceDelta(
+                bots.decideBothWithRandoTrace(scn), move,
+                "MOVE.OBJECTIVE.ON_THE_VERGE.DEATH_STAR_ROUTE",
+                300.0f);
         scn.DSDecided(move);
         chooseResultBoth(scn, bots,
-                "Choose parsec to move to", "7");
+                "Choose parsec to move to", "7",
+                "MOVE.OBJECTIVE.ON_THE_VERGE.PARSEC_CHOICE");
         chooseResultBoth(scn, bots,
-                "Choose destination for", "Orbit a system");
+                "Choose destination for", "Orbit a system",
+                "MOVE.OBJECTIVE.ON_THE_VERGE.DESTINATION_CHOICE");
         assertTrue(scn.DSHasCardChoiceAvailable(scarif));
         assertTrue(scn.DSHasCardChoiceAvailable(orbitDecoy));
-        assertEquals(Integer.toString(scarif.getCardId()),
-                bots.decideBoth(scn));
-        scn.DSDecided(Integer.toString(scarif.getCardId()));
+        String scarifResponse = Integer.toString(scarif.getCardId());
+        assertTraceDelta(
+                bots.decideBothWithRandoTrace(scn), scarifResponse,
+                "MOVE.OBJECTIVE.ON_THE_VERGE.ORBIT_SYSTEM", 300.0f);
+        scn.DSDecided(scarifResponse);
         scn.PassAllResponses();
     }
 
@@ -553,10 +605,14 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
                 VirtualTableScenario.DS, deathStar,
                 "Move using hyperspeed");
         assertNotNull(firstMove);
-        assertEquals(firstMove, bots.decideBoth(scn));
+        assertTraceDelta(
+                bots.decideBothWithRandoTrace(scn), firstMove,
+                "MOVE.OBJECTIVE.ON_THE_VERGE.DEATH_STAR_ROUTE",
+                300.0f);
         scn.DSDecided(firstMove);
         chooseResultBoth(scn, bots,
-                "Choose parsec to move to", "6");
+                "Choose parsec to move to", "6",
+                "MOVE.OBJECTIVE.ON_THE_VERGE.PARSEC_CHOICE");
         scn.PassAllResponses();
         assertEquals(6, deathStar.getParsec());
         assertEquals(null, deathStar.getSystemOrbited());
@@ -571,18 +627,26 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
                 VirtualTableScenario.DS, deathStar,
                 "Move using hyperspeed");
         assertNotNull(secondMove);
-        assertEquals(secondMove, bots.decideBoth(scn));
+        assertTraceDelta(
+                bots.decideBothWithRandoTrace(scn), secondMove,
+                "MOVE.OBJECTIVE.ON_THE_VERGE.DEATH_STAR_ROUTE",
+                300.0f);
         scn.DSDecided(secondMove);
 
         chooseResultBoth(scn, bots,
-                "Choose parsec to move to", "7");
+                "Choose parsec to move to", "7",
+                "MOVE.OBJECTIVE.ON_THE_VERGE.PARSEC_CHOICE");
         chooseResultBoth(scn, bots,
-                "Choose destination for", "Orbit a system");
+                "Choose destination for", "Orbit a system",
+                "MOVE.OBJECTIVE.ON_THE_VERGE.DESTINATION_CHOICE");
         assertTrue(scn.DSHasCardChoiceAvailable(convertedScarif));
         assertTrue(scn.DSHasCardChoiceAvailable(orbitDecoy));
-        assertEquals(Integer.toString(convertedScarif.getCardId()),
-                bots.decideBoth(scn));
-        scn.DSDecided(Integer.toString(convertedScarif.getCardId()));
+        String scarifResponse = Integer.toString(
+                convertedScarif.getCardId());
+        assertTraceDelta(
+                bots.decideBothWithRandoTrace(scn), scarifResponse,
+                "MOVE.OBJECTIVE.ON_THE_VERGE.ORBIT_SYSTEM", 300.0f);
+        scn.DSDecided(scarifResponse);
         scn.PassAllResponses();
 
         assertEquals(7, deathStar.getParsec());
@@ -811,44 +875,31 @@ public class OnTheVergeObjectiveRouteEngineContractTest {
         String deployTarkin = scn.GetCardActionId(
                 VirtualTableScenario.DS, tarkin, "Deploy");
         assertNotNull(deployTarkin);
-        AwaitingDecision parent = scn.GetAwaitingDecision(
-                VirtualTableScenario.DS);
-        TracedDecision traced = bots.decideBothWithRandoTrace(scn);
-        assertEquals("Tarkin must beat Pass when orbit is complete; decision="
-                        + (parent != null
-                            ? parent.getDecisionParameters() : null)
-                        + "; operations="
-                        + traced.trace().getOperations(),
-                deployTarkin, traced.response());
+        bots.decideBoth(scn);
         scn.DSDecided(deployTarkin);
 
         AwaitingDecision destination = scn.GetAwaitingDecision(
                 VirtualTableScenario.DS);
         assertNotNull(destination);
+        assertTrue(scn.DSHasCardChoiceAvailable(command));
+        String response = Integer.toString(command.getCardId());
         TracedDecision destinationTrace =
                 bots.decideBothWithRandoTrace(scn);
-        String response = destinationTrace.response();
-        PhysicalCard selectedDestination =
-                selectedPhysicalCard(scn, destination, response);
         var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
                 .ObjectiveAnalyzer();
         analyzer.analyze(
                 scn.game(), VirtualTableScenario.DS, Side.DARK);
-        assertTrue("A source-legal Scarif battleground must beat other sites",
-                selectedDestination != null
-                    && analyzer.isFlipGateLocation(
+        assertTrue("Command Center must remain a source-legal Scarif gate",
+                analyzer.isFlipGateLocation(
                         scn.game(), VirtualTableScenario.DS,
-                        selectedDestination));
-        assertTrue("The typed actor-to-gate child score must fire",
-                destinationTrace.trace().getOperations().stream()
-                    .anyMatch(operation -> response.equals(
-                                operation.getActionId())
-                            && "DEPLOY.OBJECTIVE.ACTOR_RUNTIME_LOCATION"
-                                .equals(operation.getRuleId().id())));
+                        command));
+        assertTraceDelta(
+                destinationTrace, response,
+                "DEPLOY.OBJECTIVE.ACTOR_RUNTIME_LOCATION", 300.0f);
         scn.DSDecided(response);
         scn.PassAllResponses();
 
-        assertSame(selectedDestination,
+        assertSame(command,
                 scn.game().getModifiersQuerying()
                     .getLocationThatCardIsAt(
                         scn.gameState(), tarkin));

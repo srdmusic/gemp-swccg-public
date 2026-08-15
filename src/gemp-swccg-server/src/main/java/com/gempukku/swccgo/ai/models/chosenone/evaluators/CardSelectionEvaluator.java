@@ -191,7 +191,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             EvaluatedAction action,
             List<SetupPolicy.Contribution> contributions) {
         for (SetupPolicy.Contribution contribution : contributions) {
-            action.addReasoning(contribution.reason(), contribution.delta());
+            if (contribution.objectivePreference()) {
+                action.addReasoning(
+                        contribution.reason(), contribution.delta(),
+                        TraceRuleId.of("SETUP.OBJECTIVE."
+                                + contribution.branch().name()),
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.ORDERING);
+            } else {
+                action.addReasoning(
+                        contribution.reason(), contribution.delta());
+            }
             logger.warn("SETUP {}: {} ({})",
                     contribution.branch(), contribution.reason(), contribution.delta());
         }
@@ -827,7 +837,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     amsdState)));
 
         if (huntDownLightsaber) {
-            logger.warn("V25 HUNT DOWN UNKNOWN-GAIN: {} is a lightsaber — PRIORITY (+200)", cardTitle);
+            logger.warn("V25 HUNT DOWN UNKNOWN-GAIN: {} is a lightsaber (+300 bounded objective preference)", cardTitle);
         }
         if (activeObjectiveFlipGate) {
             logger.warn("OBJECTIVE GATE PULL: {} is the exact open flip site (+300)", cardTitle);
@@ -921,9 +931,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     .isIWantThatMapSelfLosingDeployCandidate(
                         context.getGame(), context.getPlayerId(),
                         candidate)) {
-            action.hardVeto(
-                "OBJECTIVE.I_WANT_THAT_MAP.SELF_LOSS: do not choose a Reserve Deck candidate that the objective package immediately loses");
-            return;
+            addObjectiveContribution(
+                action,
+                "I Want That Map: prefer not to choose a Reserve Deck candidate that the objective package immediately makes lost",
+                -300.0f,
+                "OBJECTIVE.I_WANT_THAT_MAP.SELF_LOSS");
         }
         PhysicalCard nativeLocationSource =
                 readExactCountedLocationPullSource(context);
@@ -1011,8 +1023,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     SetYourCourseObjectivePolicy.scoreDeathStarSitePull(
                         true, sycPriority > 0, sycPriority == 2);
             if (sycPull.applies()) {
-                action.addReasoning(
-                    sycPull.reason(), sycPull.delta());
+                addObjectiveContribution(
+                    action, sycPull.reason(), sycPull.delta(),
+                    "PULL.OBJECTIVE.SET_YOUR_COURSE.DEATH_STAR_SITE");
             }
         }
         if (theyHaveNoIdeaCandidate != null) {
@@ -2114,7 +2127,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     cardId, ActionType.SELECT_CARD, 0.0f,
                     "Set Your Course setup location " + blueprintId);
             if (choice.applies()) {
-                action.addReasoning(choice.reason(), choice.delta());
+                addObjectiveContribution(
+                    action, choice.reason(), choice.delta(),
+                    "SETUP.OBJECTIVE.SET_YOUR_COURSE.ALDERAAN");
             }
             actions.add(action);
         }
@@ -2176,9 +2191,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     candidate != null && candidate.getTitle() != null
                         ? "Orbit " + candidate.getTitle()
                         : "Orbit selected system");
-            action.addReasoning(
+            addObjectiveContribution(
+                    action,
                     choice.contribution().reason(),
-                    choice.contribution().delta());
+                    choice.contribution().delta(),
+                    "MOVE.OBJECTIVE.ON_THE_VERGE.ORBIT_SYSTEM");
             actions.add(action);
         }
         return actions;
@@ -2211,10 +2228,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     candidate != null && candidate.getTitle() != null
                         ? "Orbit " + candidate.getTitle()
                         : "Orbit selected system");
-            if (choice.hardVeto()) {
-                action.hardVeto(choice.reason());
-            } else if (choice.applies()) {
-                action.addReasoning(choice.reason(), choice.delta());
+            if (choice.applies()) {
+                addObjectiveContribution(
+                    action, choice.reason(), choice.delta(),
+                    "MOVE.OBJECTIVE.SET_YOUR_COURSE.ORBIT_SYSTEM");
             }
             actions.add(action);
         }
@@ -2600,7 +2617,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         new PullSelectionCandidateFacts.IwtmLocation(
                             cardId, v186BpSystem || v186TtSystem)));
                 if (v186BpSystem || v186TtSystem) {
-                    logger.warn("V186 STARKILLER SYSTEM: cardId={} bp={} title={} (+400)", cardId, v186Bp, v186Tt);
+                    logger.warn("V186 STARKILLER SYSTEM: cardId={} bp={} title={} (+300 objective preference)", cardId, v186Bp, v186Tt);
                 }
             }
 
@@ -2685,8 +2702,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         game, playerId,
                                         objectiveProgressDeployingCard,
                                         location)) {
-                                action.hardVeto(
-                                    "OBJECTIVE.OLD_ALLIES.GROUND_ROUTE: keep this body on a Jakku battleground instead of loading it aboard a ship");
+                                addObjectiveContribution(action,
+                                    "OBJECTIVE.OLD_ALLIES.GROUND_ROUTE: prefer the Jakku ground leg over boarding this ship",
+                                    -300.0f,
+                                    "DEPLOY.OBJECTIVE.OLD_ALLIES.GROUND_ROUTE_HOLD");
                             }
                             com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment
                                 objectiveProgress = objectiveProgressAnalyzer.assessDeployChild(
@@ -3718,7 +3737,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     new DeployWeaponPolicy.LightsaberDestinationFacts(
                                                         action.getActionId(), false, huntDownV)));
                                             if (huntDownV) {
-                                                logger.warn("V25 HUNT DOWN: Lightsaber '{}' deploying — PRIORITY (+150)", lsDeployBp.getTitle());
+                                                logger.warn("V25 HUNT DOWN: Lightsaber '{}' deploying (+300 bounded objective preference)", lsDeployBp.getTitle());
                                             }
                                         }
                                     }
@@ -4223,9 +4242,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             DeployObjectiveSitingPolicy.evaluate(v88SitingFacts));
                                         PolicyOperationAdapter.apply(action, v88SitingLedger);
                                         if (v88SenateDestination) {
-                                            logger.warn("V88 MY LORD: senator location bonus +1500 for {}", title);
+                                            logger.warn("V88 MY LORD: senator location matched bounded objective preference for {}", title);
                                         } else {
-                                            logger.warn("V88 MY LORD: senator BLOCK -2000 for non-Senate target {}", title);
+                                            logger.warn("V88 MY LORD: senator receives -300 objective preference for non-Senate target {}", title);
                                         }
                                     }
                                 } catch (Exception e) {
@@ -4316,7 +4335,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                             location, playerId, false, false);
                                                     v88GenDoomed = (v88GenOppPwr - v88GenOurPwr) >= 6f;
                                                     if (v88GenDoomed) {
-                                                        logger.warn("V88 TEXT-NAMED SITE SKIP: '{}' wanted '{}' but site is hopelessly outgunned (opp {} us {} gap {}) — no +500",
+                                                        logger.warn("V88 TEXT-NAMED SITE SKIP: '{}' wanted '{}' but site is hopelessly outgunned (opp {} us {} gap {}), no objective preference",
                                                             v88GenBp.getTitle(), v88GenBareSite,
                                                             (int) v88GenOppPwr, (int) v88GenOurPwr,
                                                             (int) (v88GenOppPwr - v88GenOurPwr));
@@ -4336,7 +4355,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 DeployObjectiveSitingPolicy.evaluate(v88TextFacts));
                                             PolicyOperationAdapter.apply(action, v88TextLedger);
                                             if (!v88GenDoomed) {
-                                                logger.warn("V88 TEXT-NAMED SITE: '{}' text mentions '{}' → +500",
+                                                logger.warn("V88 TEXT-NAMED SITE: '{}' text mentions '{}', matched bounded objective preference",
                                                     v88GenBp.getTitle(), v88GenBareSite);
                                             }
                                         }
@@ -4347,14 +4366,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        // === V99 (Steve, 2026-05-20): NON-SENATOR AT GALACTIC SENATE BLOCK ===
+                        // === V99 (Steve, 2026-05-20): NON-SENATOR AT GALACTIC SENATE PREFERENCE ===
                         // CardSelection-side variant. The DeployEvaluator V99 fires only when
                         // actionText already contains "Galactic Senate" — but in practice the
                         // deploy action is generic ("Deploy") and the location is chosen here
                         // in CardSelectionEvaluator. So V99 must live where V88 lives.
-                        // Block non-senators from picking Galactic Senate as their destination
-                        // unless opponent power at Senate already exceeds friendly senator power
-                        // (defensive reinforcement is allowed).
+                        // Discourage non-senators from picking Galactic Senate as their destination
+                        // unless opponent power there already exceeds friendly senator power and
+                        // defensive reinforcement is needed.
                         // NOTE (2026-07-07 consolidation): DELIBERATELY not isMyLord()-gated — this
                         // keys on the destination CANDIDATE being Galactic Senate, not the objective
                         // identity. Gating it would change behavior. Leave as a typed/title dest check.
@@ -4449,8 +4468,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             DeployObjectiveSitingPolicy.evaluate(v99SitingFacts));
                                         PolicyOperationAdapter.apply(action, v99SitingLedger);
                                         if (v99OpponentPower <= v99FriendlySenatorPower) {
-                                            logger.warn("V99 SENATE GUARD: BLOCK non-senator → Senate "
-                                                + "(opp={} my-senators={}) -1500",
+                                            logger.warn("V99 SENATE GUARD: discourage non-senator → Senate "
+                                                + "(opp={} my-senators={}) -300 bounded objective preference",
                                                 (int)v99OpponentPower, (int)v99FriendlySenatorPower);
                                         } else {
                                             logger.info("V99 SENATE GUARD: ALLOW non-senator → Senate "
@@ -4581,7 +4600,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         boolean v212V193CsEligible = false;
                                         boolean v212V193ActorGateCandidate = false;
                                         boolean v212V193FormationSupported = true;
-                                        float v212V193CsWeight = 400.0f;
+                                        float v212V193CsWeight = 300.0f;
                                         String v212V193CsGateCard = "";
 
                                         // FORMATION SAFETY (2026-07-11c): L3/L4 deploy vetoes — un-outvotable.
@@ -4614,6 +4633,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 }
                                                 com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer fsObj =
                                                     context.getObjectiveAnalyzer();
+                                                boolean fsTerminalHardLossDefense = fsObj != null
+                                                    && fsObj.advancesObjectiveHardLossDefenseAt(
+                                                        context.getGame(), context.getPlayerId(),
+                                                        v136DeployingCard, location);
                                                 boolean fsSenateProgress = fsObj != null
                                                     && fsObj.isSenateObjectiveSenatorDeployment(
                                                         context.getGame(), context.getPlayerId(),
@@ -4678,11 +4701,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     v212FormationReason = fsVerdict.reason();
                                                     logger.warn("FORMATION SAFETY (deploy-site): {}", fsVerdict.reason());
                                                 } else if (fsVerdict.constraint() == com.gempukku.swccgo.ai.models.common.strategy.FormationSafety.DeployConstraint.DEFER_UNSUPPORTED_SOLO) {
-                                                    if (fsSenateProgress || fsRalltiirProgress) {
-                                                        action.addReasoning(fsRalltiirProgress
-                                                            ? "RALLTIIR OBJECTIVE FORMATION: allow the Imperial to establish a missing control site"
-                                                            : "SENATE OBJECTIVE FORMATION: allow senator to advance the Galactic Senate count");
-                                                        logger.warn("OBJECTIVE FORMATION: releasing unsupported-solo defer at {}", location.getTitle());
+                                                    if (fsTerminalHardLossDefense) {
+                                                        v212FormationState = DeploySitingPolicy.FormationState.ALLOW;
+                                                        v212FormationReason = "Exact terminal objective defense may proceed without a companion";
                                                     } else {
                                                         v212FormationState = DeploySitingPolicy.FormationState.DEFER_UNSUPPORTED_SOLO;
                                                         v212FormationReason = fsVerdict.reason();
@@ -4745,6 +4766,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         boolean v136ObjRelevant = v136Obj != null && v136Obj.isAnalyzed()
                                             && title != null
                                             && v136Obj.isObjectiveRelevantLocation(location, context.getGame(), context.getPlayerId());
+                                        if (v136ObjRelevant) {
+                                            action.addReasoning(
+                                                "V136 objective-relevant deploy site",
+                                                200.0f,
+                                                TraceRuleId.of("V136-objective-relevant-site"),
+                                                TraceDomainId.OBJECTIVE_INTENT,
+                                                TraceOutputKind.BANDED);
+                                        }
+                                        float v136EopBunker = com.gempukku.swccgo.ai.models.common.strategy
+                                            .CharacterDeploySiteEvaluator
+                                            .evaluateEndorOperationsBunkerAdjustment(
+                                                context.getGame(), gameState,
+                                                context.getGame().getModifiersQuerying(),
+                                                v136DeployingCard, location,
+                                                context.getPlayerId());
+                                        if (v136EopBunker != 0.0f) {
+                                            action.addReasoning(
+                                                "EOP Bunker garrison deploy preference",
+                                                v136EopBunker,
+                                                TraceRuleId.of("V193-eop-bunker-garrison-deploy"),
+                                                TraceDomainId.OBJECTIVE_INTENT,
+                                                TraceOutputKind.BANDED);
+                                        }
                                         float v136Score = com.gempukku.swccgo.ai.models.common.strategy
                                             .CharacterDeploySiteEvaluator.evaluateSite(
                                                 context.getGame(), v136DeployingCard, location,
@@ -4844,18 +4888,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     // phase plan also funds a Throne Room buddy, or one is present.
                                                     if ((!v193csControls || v193csActorGateCandidate)
                                                             && v193csCanAdvanceGate) {
-                                                        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer.ObjectivePlaybook
-                                                            v193csPlaybook = v136Obj.getActivePlaybook();
-                                                        float v193csWeight = (v193csPlaybook != null)
-                                                            ? v193csPlaybook.weights.deployFlipGateSite : 400.0f;
-                                                        // CS penalty offset: total steer ~= 2000 to DOMINATE the anti-hold
-                                                        // stack (V67ah -350 + V113 -300 + V24.15 -80 + Ozzel V29 GROUND
-                                                        // -200 + CONCENTRATE -100) AND a REINFORCED hot drain competitor.
-                                                        // +730 lost Ozzel->Bunker by 10 (1240 vs 1250) in replay
-                                                        // vugpape5lw1bc7rq t2; +1600 (total ~2000) wins by ~550.
-                                                        float v193csBonus = v193csWeight + 1600.0f;
+                                                        float v193csBonus = 300.0f;
                                                         v212V193CsEligible = true;
-                                                        v212V193CsWeight = v193csWeight;
+                                                        v212V193CsWeight = v193csBonus;
                                                         v212V193CsGateCard = v193csGateCard;
                                                         logger.warn("V193 (CS) FLIP-GATE CONTROL [{}]: {} → {} +{} (seize flip-gate, card={})",
                                                             context.getPlayerId(), v136DeployingCard.getTitle(), title, v193csBonus, v193csGateCard);
@@ -4930,7 +4965,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     title));
                                         if (v212ActorRouteStaging) {
                                             logger.warn(
-                                                "OBJECTIVE ACTOR STAGING: {} to {} +1000",
+                                                "OBJECTIVE ACTOR STAGING: {} to {} matched bounded objective preference",
                                                 v136DeployingCard.getTitle(),
                                                 title);
                                         }
@@ -4944,10 +4979,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // V122 retired into V136 §A; V133 was dropped before V136.
                         // Their legacy bodies and rationale remain in git history.
 
-                        // === V24.10: EXECUTOR MUST DEPLOY TO BESPIN ===
-                        // When deploying Executor/Flagship, Bespin system is the ONLY correct target
-                        // for TDIGWATT. Deploying to any other system is catastrophic — the entire
-                        // deck engine depends on Executor occupying Bespin for Dark Deal + CC Occupation.
+                        // === V24.10: PREFER EXECUTOR DEPLOY TO BESPIN ===
+                        // Prefer Bespin for Executor/Flagship in TDIGWATT. Another system receives a
+                        // bounded -300 objective preference because the engine wants Bespin occupied.
                         if (isStarship && isSpaceSystem && deployingCardName != null) {
                             String deployingNameLower = deployingCardName.toLowerCase(java.util.Locale.ROOT);
                             if (deployingNameLower.contains("executor") || deployingNameLower.contains("flagship")) {
@@ -4957,23 +4991,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         DeployPilotShipPolicy.evaluateExecutorDestination(
                                             new DeployPilotShipPolicy.ExecutorDestinationFacts(
                                                 action.getActionId(), true, title)));
-                                    logger.warn("V24.10 EXECUTOR LOCATION: Bespin system selected — MASSIVE bonus (+500)!");
+                                    logger.warn("V24.10 EXECUTOR LOCATION: Bespin system selected, +300 objective preference");
                                 } else {
                                     // Any non-Bespin system is WRONG for Executor
                                     applyDeployPilotPolicy(action,
                                         DeployPilotShipPolicy.evaluateExecutorDestination(
                                             new DeployPilotShipPolicy.ExecutorDestinationFacts(
                                                 action.getActionId(), false, title)));
-                                    logger.warn("V24.10 EXECUTOR LOCATION: {} is NOT Bespin — HARD BLOCK! Executor must deploy to Bespin!", title);
+                                    logger.warn("V24.10 EXECUTOR LOCATION: {} is not Bespin, -300 objective preference for Bespin", title);
                                 }
                             }
                         }
 
                         // === V22.7: OBJECTIVE-CRITICAL LOCATION CONTESTATION ===
-                        // If the opponent occupies a location our objective NEEDS us to control,
-                        // we MUST contest it — even if we're currently losing there.
-                        // The objective bonus alone may not override the contest penalty,
-                        // so add an explicit "MUST CONTEST" bonus for ships at critical systems.
+                        // If the opponent occupies a location our objective needs us to control,
+                        // apply a bounded +300 preference for ships to contest that critical system.
                         if (locObjAnalyzer != null && locObjAnalyzer.isAnalyzed() && title != null
                             && locObjAnalyzer.isObjectiveRelevantLocation(title)
                             && isSpaceSystem && isStarship && game != null) {
@@ -4990,7 +5022,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 applyDeploySitingPolicy(action, v279MustContest.result());
                                 if (v279MustContest.outcome()
                                         == DeployObjectiveSitingPolicy.MustContestOutcome.MUST_CONTEST) {
-                                    logger.warn("V22.7 MUST CONTEST: {} — opponent has {} power, we have {} — MUST deploy ship here!",
+                                    logger.warn("V22.7 CONTEST PREFERENCE: {} opponent power={}, our power={}, +300 bounded objective preference",
                                         title, (int)theirP, (int)ourP);
                                 }
                             } catch (Exception e) {
@@ -5243,8 +5275,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 applyDeploySitingPolicy(action, v279HuntDown.result());
                                 if (v279HuntDown.outcome()
                                         == DeployObjectiveSitingPolicy.HuntDownOutcome.VADER) {
-                                    logger.warn("V25 HUNT DOWN: Vader deploy to {} — MASSIVE PRIORITY (+{})",
-                                        title, v279HuntDownBattleground ? 400 : 300);
+                                    logger.warn("V25 HUNT DOWN: Vader deploy to {}, +300 objective preference", title);
                                 } else if (v279HuntDown.outcome()
                                         == DeployObjectiveSitingPolicy.HuntDownOutcome.INQUISITOR) {
                                         logger.warn("V25 HUNT DOWN: {} is Inquisitor — mild penalty while Vader not on table",
@@ -5326,7 +5357,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 applyDeploySitingPolicy(action, v279CcSpread.result());
                                 if (v279CcSpread.outcome()
                                         == DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.LANDO_SUPPORT) {
-                                    logger.warn("V24.13 LANDO ALONE: {} — Lando needs backup! (+250)", title);
+                                    logger.warn("V24.13 LANDO ALONE: {} prefer reinforcing Lando (+300 bounded objective preference)", title);
                                 } else if (v279CcSpread.outcome()
                                         == DeployObjectiveSitingPolicy.CloudCitySpreadOutcome.REINFORCE) {
                                     float deficit = ABILITY_SECURE_THRESHOLD - ourAbilityHere;
@@ -6133,10 +6164,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     v279NeedsBespin, v279OpponentPlanet));
                                         applyDeploySitingPolicy(action, v279Tdgwatt.result());
                                         if (v279Tdgwatt.tdgwattBlocked()) {
-                                            logger.warn("V29 TDIGWATT: Blocking character deploy to non-objective location {} (-500)", title);
+                                            logger.warn("V29 TDIGWATT: Discouraging character deploy to non-objective location {} (-300 bounded objective preference)", title);
                                         }
                                         if (v279Tdgwatt.opponentPlanet()) {
-                                            logger.warn("V29 OPPONENT PLANET: {} is opponent's territory — extra -300", title);
+                                            logger.warn("V29 OPPONENT PLANET: {} remains within the same -300 signed objective ceiling", title);
                                         }
                                         // Non-objective location: penalize, scale by urgency
                                         boolean objLocationNeedsHelp = false;
@@ -6834,9 +6865,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 new BattleForfeitFacts.ObjectiveFlags(requiredForFlip, pullable))));
                         PolicyOperationAdapter.apply(action, standaloneForfeitLedger);
                         if (requiredForFlip) {
-                            logger.warn("V21 HARD BAN: {} is REQUIRED for flip - never forfeit!", fTitle);
+                            logger.warn("V21 OBJECTIVE PREFERENCE: {} is required for flip, prefer another forfeit (-300)", fTitle);
                         } else if (pullable) {
-                            logger.warn("V21 HARD BAN: {} is objective pullable - never forfeit!", fTitle);
+                            logger.warn("V21 OBJECTIVE PREFERENCE: {} is objective-pullable, prefer another forfeit (-300)", fTitle);
                         }
                     }
                 } catch (NumberFormatException e) {
@@ -7701,6 +7732,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         return oppTotal - ourTotal;
     }
 
+    private void addObjectiveContribution(
+            EvaluatedAction action, String reason, float delta, String ruleId) {
+        action.addReasoning(reason, delta, TraceRuleId.of(ruleId),
+            TraceDomainId.OBJECTIVE_INTENT, TraceOutputKind.BANDED);
+    }
+
     private boolean isHuntDownVaderRecallTargetDecision(
             DecisionContext context) {
         if (context == null || context.getDecisionText() == null
@@ -7782,16 +7819,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             if (assessment != null && assessment.applies()) {
                 if (!assessment.safeTarget()
                         && hasSafeOfferedTarget) {
-                    action.hardVeto(
-                        "OBJECTIVE.HUNT_DOWN.RECALL_TARGET_HOLD: preserve the required Vader");
+                    addObjectiveContribution(action,
+                        "OBJECTIVE.HUNT_DOWN.RECALL_TARGET_HOLD: preserve the required Vader",
+                        -300.0f,
+                        "SELECT.OBJECTIVE.HUNT_DOWN.RECALL_TARGET_HOLD");
                 } else if (assessment.preservesRequiredVader()) {
-                    action.addReasoning(
+                    addObjectiveContribution(action,
                         "OBJECTIVE.HUNT_DOWN.RECALL_TARGET_SAFE: another required Vader remains",
-                        1000.0f);
+                        300.0f, "SELECT.OBJECTIVE.HUNT_DOWN.RECALL_SAFE");
                 } else if (assessment.remoteBlockerChase()) {
-                    action.addReasoning(
+                    addObjectiveContribution(action,
                         "OBJECTIVE.HUNT_DOWN.RECALL_TARGET_CHASE: redeploy this Vader toward the remote blocker",
-                        600.0f);
+                        300.0f, "SELECT.OBJECTIVE.HUNT_DOWN.RECALL_CHASE");
                 }
             }
             actions.add(action);
@@ -7993,19 +8032,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     cardId, ActionType.MOVE, 0.0f,
                     "Choose Hidden Path Jedi to relocate");
             if (gain == Integer.MIN_VALUE) {
-                action.hardVeto(
-                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_HOLD: no legal destination preserves two Jedi sites");
+                if (analyzer.hasFormationSafeHiddenPathRelocation(
+                        context.getGame(), context.getPlayerId(),
+                        candidate)) {
+                    addObjectiveContribution(action,
+                        "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_HOLD: no formation-safe destination advances the two-site objective hold",
+                        -300.0f,
+                        "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_HOLD");
+                } else {
+                    action.hardVeto(
+                        "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_SAFETY: no legal formation-safe destination is available");
+                }
             } else if (gain > 0) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_PAYOFF: this Jedi can add a battleground hold",
-                    5000.0f);
+                    300.0f, "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER");
             } else if (hasImprovingMover) {
-                action.hardVeto(
-                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_PAYOFF: use the Jedi that advances the battleground pair");
+                addObjectiveContribution(action,
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_PAYOFF: prefer the Jedi that advances the battleground pair",
+                    -300.0f,
+                    "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_ALTERNATIVE");
             } else {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_SAFE: preserve the two-site hold",
-                    gain == 0 ? 200.0f : -1000.0f);
+                    gain == 0 ? 200.0f : -1000.0f,
+                    "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_MOVER_SAFE");
             }
             actions.add(action);
         }
@@ -8047,22 +8098,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     context.getGame(), context.getPlayerId(),
                     mover, destination);
             EvaluatedAction action = actions.get(i);
-            if (!assessment.legal()
-                    || !assessment.preservesHold()) {
+            if (!assessment.legal()) {
                 action.hardVeto(
-                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_HOLD: moving here would break the two-site hold");
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_HOLD: this destination is not legal for the route");
+            } else if (!assessment.preservesHold()) {
+                addObjectiveContribution(action,
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_HOLD: moving here would break the two-site hold",
+                    -300.0f,
+                    "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_HOLD");
             } else if (assessment.battlegroundGain() > 0) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_PAYOFF: preserve the objective and add a Jedi battleground",
-                    5000.0f);
+                    300.0f, "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION");
             } else if (hasImprovingDestination) {
-                action.hardVeto(
-                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_PAYOFF: preserve the offered battleground advance");
+                addObjectiveContribution(action,
+                    "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_PAYOFF: prefer the offered battleground advance",
+                    -300.0f,
+                    "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_ALTERNATIVE");
             } else {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_SAFE: preserve the two-site hold",
                     assessment.battlegroundGain() == 0
-                        ? 200.0f : -1000.0f);
+                        ? 200.0f : -1000.0f,
+                    "SELECT.OBJECTIVE.HIDDEN_PATH.RELOCATE_DESTINATION_SAFE");
             }
         }
         return actions;
@@ -8139,9 +8197,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 if (candidate != null
                         && "226_23".equals(
                             candidate.getBlueprintId(true))) {
-                    action.addReasoning(
+                    addObjectiveContribution(action,
                         "OBJECTIVE.HIDDEN_PATH.CORRIDOR_ORIGIN: use the physical Underground Corridor",
-                        20000.0f);
+                        300.0f, "SELECT.OBJECTIVE.HIDDEN_PATH.CORRIDOR_ORIGIN");
                 }
             } else if (chooseDestination) {
                 boolean flipSite = analyzer.isHiddenPathFlipSite(
@@ -8158,12 +8216,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     action.hardVeto(
                         "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SAFETY: no eligible Survivor can use this route without breaking formation safety");
                 } else if (flipSite && !occupied) {
-                    action.addReasoning(
+                    addObjectiveContribution(action,
                         "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SPLIT: add a distinct non-Mapuzo Jedi site",
-                        20000.0f);
+                        300.0f, "SELECT.OBJECTIVE.HIDDEN_PATH.CORRIDOR_SPLIT");
                 } else if (hasEmptyFlipDestination) {
-                    action.hardVeto(
-                        "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SPLIT: preserve the offered distinct-site advance");
+                    addObjectiveContribution(action,
+                        "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SPLIT: prefer the offered distinct-site advance",
+                        -300.0f,
+                        "SELECT.OBJECTIVE.HIDDEN_PATH.CORRIDOR_ALTERNATIVE");
                 }
             } else if (analyzer.isHiddenPathCorridorTransitCandidate(
                     context.getGame(), context.getPlayerId(), candidate)) {
@@ -8177,9 +8237,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     action.hardVeto(
                         "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SAFETY: this Survivor is unsafe for the selected destination");
                 } else {
-                    action.addReasoning(
+                    addObjectiveContribution(action,
                         "OBJECTIVE.HIDDEN_PATH.CORRIDOR_SURVIVOR: complete the selected paid exit",
-                        20000.0f);
+                        300.0f, "SELECT.OBJECTIVE.HIDDEN_PATH.CORRIDOR_SURVIVOR");
                 }
             }
             actions.add(action);
@@ -8322,12 +8382,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             } else if (choice
                     == CaptureVirtualHutChoicePolicy
                         .Choice.HARD_VETO) {
-                action.hardVeto(
-                    "TIGIH VIRTUAL HUT: choose the exact Hut, capture-capable Landing Platform, and objective Luke",
-                    TraceRuleId.of(
-                        "MOVE.OBJECTIVE.TIGIH.VIRTUAL_HUT_CHILD_HOLD"),
-                    TraceDomainId.MOVE,
-                    TraceOutputKind.VETO);
+                addObjectiveContribution(action,
+                    "TIGIH VIRTUAL HUT: prefer the exact Hut, capture-capable Landing Platform, and objective Luke",
+                    -300.0f,
+                    "MOVE.OBJECTIVE.TIGIH.VIRTUAL_HUT_CHILD_HOLD");
             }
             actions.add(action);
         }
@@ -8405,6 +8463,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
         List<Boolean> admissible = new ArrayList<>();
         List<Boolean> preferred = new ArrayList<>();
+        List<Boolean> formationSafe = new ArrayList<>();
         boolean hasAdmissibleOffered = false;
         for (int i = 0; i < context.getCardIds().size(); i++) {
             String cardId = context.getCardIds().get(i);
@@ -8416,6 +8475,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             }
             boolean candidateAdmissible = false;
             boolean candidatePreferred = false;
+            boolean candidateFormationSafe = false;
             for (var route : routes) {
                 boolean bound = chooseOrigin
                         ? samePhysicalCard(
@@ -8430,11 +8490,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 && samePhysicalCard(
                                     route.mover(), candidate);
                 if (!bound) continue;
+                candidateFormationSafe |= route.formationSafe();
                 candidateAdmissible |= route.admissible();
                 candidatePreferred |= route.objectiveSafe();
             }
             admissible.add(candidateAdmissible);
             preferred.add(candidatePreferred);
+            formationSafe.add(candidateFormationSafe);
             hasAdmissibleOffered |= isCardSelectable(context, i)
                     && candidateAdmissible;
         }
@@ -8446,9 +8508,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     cardId, ActionType.MOVE, 0.0f,
                     "Choose Vader's Castle move");
             if (preferred.get(i)) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.HUNT_DOWN.CASTLE_ROUTE: safe route advances the battleground Vader leg",
-                    1000.0f);
+                    300.0f, "SELECT.OBJECTIVE.HUNT_DOWN.CASTLE_ROUTE");
+            } else if (!admissible.get(i)
+                    && formationSafe.get(i)) {
+                addObjectiveContribution(action,
+                    "OBJECTIVE.HUNT_DOWN.CASTLE_ROUTE_HOLD: returning this actor relaxes the objective hold",
+                    -300.0f,
+                    "SELECT.OBJECTIVE.HUNT_DOWN.CASTLE_ROUTE_HOLD");
             } else if (!admissible.get(i)
                     && (hasAdmissibleOffered
                         || !routes.isEmpty())) {
@@ -8547,9 +8615,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             if (context.getObjectiveAnalyzer()
                     .isSafeAgentsOfBlackSunBountyMover(
                         context.getGame(), context.getPlayerId(), mover)) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.AOBS.BOUNTY_MOVE.MOVER: choose a bounty hunter with a formation-safe paid route",
-                    600.0f);
+                    300.0f, "SELECT.OBJECTIVE.AOBS.BOUNTY_MOVER");
             } else {
                 action.hardVeto(
                     "OBJECTIVE.AOBS.BOUNTY_MOVE.MOVER_HOLD: choose a bounty hunter with a formation-safe paid route");
@@ -8597,9 +8665,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     .isSafeAgentsOfBlackSunBountyDestination(
                         context.getGame(), context.getPlayerId(),
                         mover, destination)) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "OBJECTIVE.AOBS.BOUNTY_MOVE.DESTINATION: finish the formation-safe move to a bounty",
-                    600.0f);
+                    300.0f, "SELECT.OBJECTIVE.AOBS.BOUNTY_DESTINATION");
             } else {
                 action.hardVeto(
                     "OBJECTIVE.AOBS.BOUNTY_MOVE.DESTINATION_HOLD: preserve the safer bounty route");
@@ -8661,6 +8729,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             } catch (Exception ignored) {
             }
             boolean admissible = false;
+            boolean boundRoute = false;
+            boolean formationSafeRoute = false;
+            boolean objectiveHeld = false;
             boolean actorAdvance = false;
             boolean blockerChase = false;
             for (var route : routes) {
@@ -8673,9 +8744,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 finalDestination)
                             && samePhysicalCard(
                                 route.mover(), candidate);
-                if (!bound || !route.admissible()) {
+                if (!bound) {
                     continue;
                 }
+                boundRoute = true;
+                formationSafeRoute |= route.safetyVeto() == null;
+                objectiveHeld |= route.safetyVeto() == null
+                        && route.objectiveHold();
+                if (!route.admissible()) continue;
                 admissible = true;
                 actorAdvance |=
                         route.objectiveAdvance();
@@ -8708,17 +8784,29 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 blockerChase, actorTitle,
                                 destinationTitle);
             if (objectiveMove.applies()) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                         objectiveMove.reason(),
-                        objectiveMove.delta());
+                        objectiveMove.delta(),
+                        "MOVE.OBJECTIVE.DOCKING_TRANSIT");
             } else if (admissible) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "MOVE.OBJECTIVE.DOCKING_TRANSIT_SAFE_COMPLETION: finish the selected transit without breaking the flip formation",
-                    10.0f);
+                    10.0f,
+                    "MOVE.OBJECTIVE.DOCKING_TRANSIT_SAFE_COMPLETION");
+            } else if (boundRoute && formationSafeRoute
+                    && objectiveHeld) {
+                addObjectiveContribution(action,
+                    "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_TRANSIT_HOLD: this legal transit relaxes the objective actor hold",
+                    -300.0f,
+                    "MOVE.OBJECTIVE.RUNTIME_ACTOR_TRANSIT_HOLD");
             } else if (!admissible
                     && !routes.isEmpty()) {
                 action.hardVeto(
-                    "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_TRANSIT_HOLD: choose a safe docking-bay transit route");
+                    "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_TRANSIT_HOLD: choose a safe docking-bay transit route",
+                    TraceRuleId.of(
+                        "MOVE.OBJECTIVE.RUNTIME_ACTOR_TRANSIT_HOLD"),
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.VETO);
             }
             actions.add(action);
         }
@@ -8974,8 +9062,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 && context.getObjectiveAnalyzer()
                                     .isIWantThatMapSelfBlockingResistanceAgentAt(
                                         game, playerId, fsMover, location)) {
-                            action.hardVeto(
-                                "OBJECTIVE.I_WANT_THAT_MAP.SELF_BLOCKER: do not move our declared Resistance Agent to a battleground site");
+                            addObjectiveContribution(action,
+                                "OBJECTIVE.I_WANT_THAT_MAP.SELF_BLOCKER: prefer not to move our declared Resistance Agent to a battleground site",
+                                -300.0f,
+                                "MOVE.OBJECTIVE.I_WANT_THAT_MAP.SELF_BLOCKER");
                         }
                         boolean objectiveTheyHaveNoIdeaLandingDestination =
                             fsMover != null
@@ -9017,7 +9107,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                         boolean bhbmFormationSafe = false;
                         // FORMATION SAFETY (2026-07-11c): L4 solo-charge + L1 abandon-solo vetoes —
-                        // un-outvotable (Codex audit: V32 -300 + V22.2 -120 lost to R2 +6000 here).
+                        // un-outvotable (Codex audit: V32 -300 + V22.2 -120 lost to the old R2 +6000 here).
                         if (fsMover != null && fsOrigin != null
                                 && game != null) {
                             String fsV = com.gempukku.swccgo.ai.models.common.strategy.FormationSafety
@@ -9360,7 +9450,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             survivalHold.reason(),
                                             TraceRuleId.of(
                                                 "MOVE.OBJECTIVE.POST_FLIP_SURVIVAL_HOLD"),
-                                            TraceDomainId.MOVE,
+                                            TraceDomainId.OBJECTIVE_INTENT,
                                             TraceOutputKind.VETO);
                                     }
                                 }
@@ -9419,16 +9509,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 anchorDestUnsafe,
                                                 safeOtherAnchorSites);
                                     if (concentrationHold.hardVeto()) {
-                                        action.hardVeto(
+                                        addObjectiveContribution(action,
                                             concentrationHold.reason(),
-                                            TraceRuleId.of(
-                                                "MOVE.OBJECTIVE.POST_FLIP_ANCHOR_CONCENTRATION"),
-                                            TraceDomainId.MOVE,
-                                            TraceOutputKind.VETO);
+                                            -300.0f,
+                                            "MOVE.OBJECTIVE.POST_FLIP_ANCHOR_CONCENTRATION");
                                     } else if (safeOtherAnchorSites > 0) {
-                                        action.addReasoning(
+                                        addObjectiveContribution(action,
                                             "MOVE.OBJECTIVE.ANCHOR_SPREAD: prefer a separate stay-flipped anchor site -250",
-                                            -250.0f);
+                                            -250.0f,
+                                            "MOVE.OBJECTIVE.ANCHOR_SPREAD");
                                     }
                                 }
                                 boolean countedFormationActive =
@@ -9492,13 +9581,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 preservesCount);
                                     if (countedDestinationHold
                                             .hardVeto()) {
-                                        action.hardVeto(
-                                            countedDestinationHold
-                                                .reason(),
-                                            TraceRuleId.of(
-                                                "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD"),
-                                            TraceDomainId.MOVE,
-                                            TraceOutputKind.VETO);
+                                        addObjectiveContribution(action,
+                                            countedDestinationHold.reason(),
+                                            -300.0f,
+                                            "MOVE.OBJECTIVE.COUNTED_FORMATION_HOLD");
                                     }
                                 }
                                 if (moverFormationRole
@@ -9539,8 +9625,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 opponentPower,
                                                 safeRelocation);
                                     if (retentionHold.hardVeto()) {
-                                        action.hardVeto(
-                                            retentionHold.reason());
+                                        addObjectiveContribution(action,
+                                            retentionHold.reason(),
+                                            -300.0f,
+                                            "MOVE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD");
                                     }
                                 }
                                 if (routeAnalyzer != null
@@ -9580,8 +9668,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         : 0.0f;
                                     if (opponentPower
                                             <= friendlyPower + 6.0f) {
-                                        action.hardVeto(
-                                            "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_DESTINATION_HOLD: Vader must remain at a battleground site");
+                                        addObjectiveContribution(action,
+                                            "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_DESTINATION_HOLD: prefer Vader to remain at a battleground site",
+                                            -300.0f,
+                                            "MOVE.OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_DESTINATION_HOLD");
                                     }
                                 }
                                 MoveDestinationPolicy.Contribution
@@ -9596,28 +9686,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         objectiveRoute.delta(),
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.BANDED);
                                     logger.warn(
-                                        "OBJECTIVE ACTOR ROUTE DEST: {} to {} +1000",
+                                        "OBJECTIVE ACTOR ROUTE DEST: {} to {} matched bounded objective preference",
                                         fsMover.getTitle(), title);
                                 }
                                 if (objectiveOldAlliesFalconDestination) {
                                     action.addReasoning(
                                         "OBJECTIVE OLD ALLIES FALCON ROUTE: take off to Jakku system and complete the space leg",
-                                        1200.0f,
+                                        300.0f,
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.OLD_ALLIES.FALCON_DESTINATION"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.ORDERING);
                                 }
                                 if (objectiveTheyHaveNoIdeaLandingDestination) {
                                     action.addReasoning(
                                         "OBJECTIVE THNI ROGUE ONE LANDING: choose Landing Pad Nine so Rogue One supplies the back-side exception",
-                                        1600.0f,
+                                        300.0f,
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.THNI.ROGUE_ONE_LANDING_DESTINATION"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.ORDERING);
                                 }
                                 MoveDestinationPolicy.Contribution
@@ -9635,10 +9725,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             .delta(),
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_DESTINATION"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.ORDERING);
                                     logger.warn(
-                                        "OBJECTIVE REQUIRED-CARD ENABLER DEST: {} to {} +1000",
+                                        "OBJECTIVE REQUIRED-CARD ENABLER DEST: {} to {} matched bounded objective preference",
                                         fsMover.getTitle(), title);
                                 }
                                 MoveDestinationPolicy.Contribution
@@ -9648,12 +9738,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 objectiveActorLocationDestination,
                                                 fsMover.getTitle(), title);
                                 if (objectiveActorLocation.applies()) {
-                                    action.addReasoning(
+                                    addObjectiveContribution(action,
                                         objectiveActorLocation.reason(),
-                                        objectiveActorLocation.delta());
+                                        objectiveActorLocation.delta(),
+                                        "MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION");
                                     logger.warn(
-                                        "OBJECTIVE ACTOR LOCATION DEST: {} to {} +1000",
-                                        fsMover.getTitle(), title);
+                                        "OBJECTIVE ACTOR LOCATION DEST: {} to {} +{}",
+                                        fsMover.getTitle(), title,
+                                        (int) objectiveActorLocation.delta());
                                 }
                                 MoveDestinationPolicy.Contribution
                                     nabooDuelFrontRoute =
@@ -9667,7 +9759,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         nabooDuelFrontRoute.delta(),
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.NABOO_DUEL_FRONT_ROUTE_DESTINATION"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.BANDED);
                                 }
                                 MoveDestinationPolicy.Contribution
@@ -9683,7 +9775,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         nabooDuelFrontRouteRetention.delta(),
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.NABOO_DUEL_FRONT_ROUTE_HOLD"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.ORDERING);
                                 }
                                 MoveDestinationPolicy.Contribution
@@ -9706,7 +9798,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     .PRIMARY
                                                 ? "MOVE.OBJECTIVE.POST_FLIP_PRIMARY_PAYOFF"
                                                 : "MOVE.OBJECTIVE.POST_FLIP_SECONDARY_PAYOFF"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.BANDED);
                                     logger.warn(
                                         "OBJECTIVE POST-FLIP PAYOFF DEST: {} to {} +{}",
@@ -9726,7 +9818,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         postFlipPayoffRetention.delta(),
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.POST_FLIP_PAYOFF_HOLD"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.ORDERING);
                                     logger.warn(
                                         "OBJECTIVE POST-FLIP PAYOFF HOLD: {} to {} {}",
@@ -9740,12 +9832,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 objectiveBlockerChaseDestination,
                                                 fsMover.getTitle(), title);
                                 if (objectiveBlockerChase.applies()) {
-                                    action.addReasoning(
+                                    addObjectiveContribution(action,
                                         objectiveBlockerChase.reason(),
-                                        objectiveBlockerChase.delta());
+                                        objectiveBlockerChase.delta(),
+                                        "MOVE.OBJECTIVE.BLOCKER_CHASE_DESTINATION");
                                     logger.warn(
-                                        "OBJECTIVE BLOCKER CHASE DEST: {} to {} +1000",
-                                        fsMover.getTitle(), title);
+                                        "OBJECTIVE BLOCKER CHASE DEST: {} to {} +{}",
+                                        fsMover.getTitle(), title,
+                                        (int) objectiveBlockerChase.delta());
                                 }
                             } catch (Exception e) {
                                 logger.debug(
@@ -9792,7 +9886,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         terminalEscape.delta(),
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.TERMINAL_ACTOR_ESCAPE_DESTINATION"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.BANDED);
                                 }
                                 MoveDestinationPolicy.Contribution
@@ -9807,7 +9901,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         firstOrderDrainPair.delta(),
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.BANDED);
                                 }
                                 MoveDestinationPolicy.Contribution
@@ -9822,7 +9916,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         firstOrderDrainPairHold.delta(),
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.FIRST_ORDER_DRAIN_PAIR_HOLD"),
-                                        TraceDomainId.MOVE,
+                                        TraceDomainId.OBJECTIVE_INTENT,
                                         TraceOutputKind.ORDERING);
                                 }
                             } catch (Exception e) {
@@ -9996,9 +10090,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 MoveDrainRoutingPolicy.destinationDrain(
                                     title, v67eExpectedDrain,
                                     v67kIsTransitStagingSite);
-                            action.addReasoning(
-                                v67DestinationDrain.contribution().reason(),
-                                v67DestinationDrain.contribution().delta());
+                            if (v67DestinationDrain.branch()
+                                    == MoveDrainRoutingPolicy.DestinationDrainBranch.TRANSIT_STAGING) {
+                                addObjectiveContribution(action,
+                                        v67DestinationDrain.contribution().reason(),
+                                        v67DestinationDrain.contribution().delta(),
+                                        "V67n-transit-staging");
+                            } else {
+                                action.addReasoning(
+                                    v67DestinationDrain.contribution().reason(),
+                                    v67DestinationDrain.contribution().delta());
+                            }
                             switch (v67DestinationDrain.branch()) {
                                 case DRAIN_POTENTIAL:
                                     logger.info("V67e DRAIN POTENTIAL: {} drain={} → +{} (tiebreaker: prefer max drain)",
@@ -10006,7 +10108,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         (int) v67DestinationDrain.contribution().delta());
                                     break;
                                 case TRANSIT_STAGING:
-                                    logger.warn("V67n TRANSIT STAGING DEST: {} → +1500 (dominates other Mapuzo destinations)", title);
+                                    logger.info("V67n TRANSIT STAGING DEST: {} -> +300 objective preference", title);
                                     break;
                                 case ZERO_DRAIN:
                                     logger.warn("V67g ZERO DRAIN: {} no drain — strong penalty (-200)", title);
@@ -10158,9 +10260,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     bespinPresenceObjective, isObjLoc,
                                     theirPower, ourPower);
                             if (cloudCityDestination.applies()) {
-                                action.addReasoning(
+                                addObjectiveContribution(action,
                                     cloudCityDestination.reason(),
-                                    cloudCityDestination.delta());
+                                    cloudCityDestination.delta(),
+                                    "MOVE.OBJECTIVE.CLOUD_CITY_DESTINATION");
                                 if (ourPower == 0.0f) {
                                     logger.info("V24.9: Move dest {} is unoccupied CC — big bonus (+200)", title);
                                 }
@@ -10179,9 +10282,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     v64HiddenPath && game != null && gameState != null,
                                     title, theirPower, ourPower);
                             if (v64Decision.contribution().applies()) {
-                                action.addReasoning(
-                                    v64Decision.contribution().reason(),
-                                    v64Decision.contribution().delta());
+                                if (v64Decision.contribution().delta() > 0.0f) {
+                                    addObjectiveContribution(action,
+                                        v64Decision.contribution().reason(),
+                                        v64Decision.contribution().delta(),
+                                        "MOVE.OBJECTIVE.HIDDEN_PATH_SAFE_DESTINATION");
+                                } else {
+                                    action.addReasoning(
+                                        v64Decision.contribution().reason(),
+                                        v64Decision.contribution().delta());
+                                }
                                 if (v64Decision.disposition()
                                         == MoveDestinationPolicy.PowerAwareDisposition.SUICIDE) {
                                     logger.warn("V64 SUICIDE MOVE: {} enemy={} our projected={} — HARD BLOCKED ({})",
@@ -10244,9 +10354,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     location),
                                                 ourJediHere, title);
                                         if (hiddenPathSplit.applies()) {
-                                            action.addReasoning(
+                                            addObjectiveContribution(action,
                                                 hiddenPathSplit.reason(),
-                                                hiddenPathSplit.delta());
+                                                hiddenPathSplit.delta(),
+                                                "MOVE.OBJECTIVE.HIDDEN_PATH_SPLIT");
                                             if (ourJediHere >= 1) {
                                                 logger.warn("V62 SPLIT SITE: {} has {} friendly Jedi, penalize duplicate dest (-500)",
                                                     title, ourJediHere);
@@ -10366,10 +10477,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 MoveLandoStayPolicy.destinationStay(
                                     true, bespinPresenceObjective);
                             if (landoStay.applies()) {
-                                // V47: Block most Lando moves — he stays where he is
-                                action.addReasoning(
-                                    landoStay.reason(), landoStay.delta());
-                                logger.warn("V47 LANDO STAY: Blocking Lando move to {} — stay at current location!", title);
+                                addObjectiveContribution(action,
+                                    landoStay.reason(), landoStay.delta(),
+                                    "MOVE.OBJECTIVE.TDIGWATT_LANDO_STAY");
+                                logger.info("V47 LANDO STAY: prefer Lando staying at his current location over moving to {}", title);
                             }
                         }
 
@@ -10565,45 +10676,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         }
                                     }
                                     if (opponentsElsewhere) {
-                                        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v67zObj =
-                                            context.getObjectiveAnalyzer();
-                                        boolean v67zOnHiddenPath = v67zObj != null && v67zObj.isAnalyzed()
-                                            && v67zObj.getObjectiveTitle() != null
-                                            && v67zObj.getObjectiveTitle().toLowerCase(java.util.Locale.ROOT).contains("hidden path")
-                                            && !v67zObj.isFlipped();
-                                        boolean v67zNonMapuzoBG = false;
-                                        if (v67zOnHiddenPath && title != null
-                                                && !title.toLowerCase(java.util.Locale.ROOT).contains("mapuzo")) {
-                                            try {
-                                                v67zNonMapuzoBG = game.getModifiersQuerying()
-                                                    .isBattleground(gameState, location, null);
-                                            } catch (Exception e) { /* ignore */ }
-                                        }
-                                        boolean v67zTransitHub = v67zOnHiddenPath && title != null
-                                                && title.toLowerCase(java.util.Locale.ROOT).contains("underground corridor");
-
                                         MoveDestinationPolicy.WrongDirectionEvaluation v41Direction =
                                             MoveDestinationPolicy.wrongDirection(
                                                 opponentsElsewhere, title, worstDrainLoc,
-                                                v67zNonMapuzoBG || v67zTransitHub,
                                                 MoveDestinationPolicy.retreatExemptsWrongDirection(v169Retreat),
                                                 v156JoinMode && v156DestFriendlyChars > 0,
-                                                objectiveActorRouteDestination
-                                                    || objectiveActorLocationDestination
-                                                    || objectiveFirstOrderDrainPairDestination
-                                                    || objectiveTerminalEscapeDestination
-                                                    || objectiveNabooDuelFrontRouteDestination
-                                                    || exactTdigwattLandoDestination
-                                                    || objectivePostFlipPayoffDestination
-                                                        != com.gempukku.swccgo.ai.models
-                                                            .common.strategy
-                                                            .ObjectiveAnalyzer
-                                                            .ObjectivePostFlipPayoffRole.NONE);
+                                                objectiveTerminalEscapeDestination);
                                         if (v41Direction.disposition()
-                                                == MoveDestinationPolicy.WrongDirectionDisposition.HIDDEN_PATH_EXEMPT) {
-                                            logger.info("V67z HIDDEN PATH {} EXEMPT: {} on Hidden Path — V41 WRONG DIRECTION skipped",
-                                                v67zTransitHub ? "TRANSIT-HUB" : "SPLIT", title);
-                                        } else if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.RETREAT_EXEMPT) {
                                             logger.warn("V169 RETREAT EXEMPT: {} — V41 wrong-direction skipped (mover fleeing {})",
                                                 title, v169Retreat.originTitle());
@@ -10612,8 +10691,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             logger.warn("V156 JOIN-GROUP EXEMPT: {} has {} friendly character(s) — V41 wrong-direction skipped (weak solo joining from {})",
                                                 title, v156DestFriendlyChars, v156FromTitle);
                                         } else if (v41Direction.disposition()
-                                                == MoveDestinationPolicy.WrongDirectionDisposition.OBJECTIVE_ROUTE_EXEMPT) {
-                                            logger.warn("OBJECTIVE ACTOR ROUTE EXEMPT: {} advances the exact flip gate — V41 wrong-direction skipped",
+                                                == MoveDestinationPolicy.WrongDirectionDisposition.TERMINAL_ESCAPE_EXEMPT) {
+                                            logger.warn("OBJECTIVE TERMINAL ESCAPE: {} avoids source-proven objective loss; V41 wrong-direction skipped",
                                                 title);
                                         } else if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.VETO) {
@@ -10761,15 +10840,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             applyCaptureMoveDestination(
                     context, action, embarker, target);
             if (objectiveTarget) {
-                action.addReasoning(
+                addObjectiveContribution(action,
                     "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_TARGET: board "
                         + target.getTitle()
                         + " to create the required deploy actor",
-                    1000.0f,
-                    TraceRuleId.of(
-                        "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_TARGET"),
-                    TraceDomainId.MOVE,
-                    TraceOutputKind.ORDERING);
+                    300.0f,
+                    "MOVE.OBJECTIVE.REQUIRED_CARD_ENABLER_EMBARK_TARGET");
             }
             actions.add(action);
         }
@@ -11186,13 +11262,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     context.getGame(),
                                     context.getPlayerId(), locBp);
                         if (matchingOperatives > 0) {
-                            float packageScore = matchingOperatives * 500.0f;
-                            action.addReasoning(
+                            float packageScore = 300.0f;
+                            addObjectiveContribution(action,
                                 "OPERATIVE OBJECTIVE SETUP: "
                                     + matchingOperatives
                                     + " matching operatives support "
                                     + locTitle,
-                                packageScore);
+                                packageScore,
+                                "SETUP.OBJECTIVE.OPERATIVE_PACKAGE");
                             logger.warn("OPERATIVE OBJECTIVE SETUP: {} has {} matching operative(s), +{}",
                                 locTitle, matchingOperatives,
                                 (int) packageScore);
@@ -11207,9 +11284,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         context.getGame(),
                                         context.getPlayerId(),
                                         blueprintIds.get(idx))) {
-                            action.addReasoning(
+                            addObjectiveContribution(action,
                                 "OBJECTIVE.COUNTED_OPERATIVE.SETUP_SITE_ROUTE",
-                                2000.0f);
+                                300.0f,
+                                "SETUP.OBJECTIVE.COUNTED_OPERATIVE_SITE_ROUTE");
                         }
                     }
 
@@ -11798,13 +11876,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             safeNoMoneyGambitAlternative));
             PolicyOperationAdapter.apply(
                     action, noMoneyGambitLedger);
-            if (exactNoMoneyGambitSelection
-                    && !safeNoMoneyGambitCandidate
-                    && safeNoMoneyGambitAlternative) {
-                actions.add(action);
-                continue;
-            }
-
             PullDeployCandidatePolicy.Evaluation pullCandidate =
                     PullDeployCandidatePolicy.evaluate(
                             PullPolicyAdapter.readDeployCandidate(
@@ -12308,16 +12379,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             if (castleVaderSelection) {
                 var assessment = castleAssessments.get(i);
                 if (assessment.preservesMoveCost()) {
-                    action.addReasoning(
+                    addObjectiveContribution(action,
                         "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE: this Vader preserves the exact outbound move cost",
-                        1000.0f);
+                        300.0f, "SELECT.OBJECTIVE.VADERS_CASTLE_CANDIDATE");
                 } else if (hasCastleMoveCandidate) {
-                    action.hardVeto(
-                        "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE_HOLD: choose the Vader that preserves the outbound move");
+                    addObjectiveContribution(action,
+                        "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE_HOLD: prefer the Vader that preserves the outbound move",
+                        -300.0f,
+                        "SELECT.OBJECTIVE.VADERS_CASTLE_CANDIDATE_HOLD");
                 } else if (assessment.legalDeploy()) {
-                    action.addReasoning(
+                    addObjectiveContribution(action,
                         "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE_DEPLOY_ONLY: legal Vader, but no offered candidate preserves the move",
-                        250.0f);
+                        250.0f, "SELECT.OBJECTIVE.VADERS_CASTLE_DEPLOY_ONLY");
                 } else {
                     action.hardVeto(
                         "DEPLOY.OBJECTIVE.VADERS_CASTLE_CANDIDATE_ILLEGAL: offered blueprint no longer has a legal Castle deploy");
@@ -12377,13 +12450,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             context.getGame(), context.getPlayerId(),
                             pullBlueprint);
                 if (matchingOperatives > 0) {
-                    float packageScore = matchingOperatives * 500.0f;
-                    action.addReasoning(
+                    float packageScore = 300.0f;
+                    addObjectiveContribution(action,
                         "OPERATIVE OBJECTIVE SETUP: "
                             + matchingOperatives
                             + " matching operatives support "
                             + cardTitle,
-                        packageScore);
+                        packageScore,
+                        "SETUP.OBJECTIVE.OPERATIVE_RESERVE_PACKAGE");
                 }
             }
 
@@ -12855,7 +12929,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         destination.getTitle(), correctDestination)));
             if (!correctDestination) {
                 logger.warn(
-                    "V121 INVASION CS: blocking Neimoidian pilot → {} (not aboard {}) -1500",
+                    "V121 INVASION CS: discouraging Neimoidian pilot → {} (not aboard {}) -300 objective preference",
                     destination.getTitle(), capitalTitle);
             }
         } catch (Exception e) {

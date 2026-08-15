@@ -86,7 +86,8 @@ public class DeployWeaponPolicyTest {
         assertOne(DeployWeaponPolicy.evaluateLightsaberDestination(
                         new DeployWeaponPolicy.LightsaberDestinationFacts(
                                 "a", false, true)).operations(),
-                "V25-hunt-down-lightsaber", 150.0f,
+                "V25-hunt-down-lightsaber",
+                TraceDomainId.OBJECTIVE_INTENT, 300.0f,
                 TraceOutputKind.BANDED);
         assertTrue(DeployWeaponPolicy.evaluateLightsaberDestination(
                 new DeployWeaponPolicy.LightsaberDestinationFacts(
@@ -98,7 +99,8 @@ public class DeployWeaponPolicyTest {
         assertOne(DeployWeaponPolicy.evaluateObjectiveGateTarget(
                         new DeployWeaponPolicy.ObjectiveGateTargetFacts(
                                 "a", true, true, true)).operations(),
-                "V297-objective-gate-weapon", 250.0f,
+                "V297-objective-gate-weapon",
+                TraceDomainId.OBJECTIVE_INTENT, 300.0f,
                 TraceOutputKind.BANDED);
         assertTrue(DeployWeaponPolicy.evaluateObjectiveGateTarget(
                 new DeployWeaponPolicy.ObjectiveGateTargetFacts(
@@ -188,10 +190,17 @@ public class DeployWeaponPolicyTest {
     private static void assertOne(List<PolicyOperation> operations,
                                   String rule, float delta,
                                   TraceOutputKind outputKind) {
+        assertOne(operations, rule, TraceDomainId.DEPLOY_ATTACH,
+                delta, outputKind);
+    }
+
+    private static void assertOne(List<PolicyOperation> operations,
+                                  String rule, TraceDomainId domain,
+                                  float delta, TraceOutputKind outputKind) {
         assertEquals(1, operations.size());
         assertEquals(rule, operations.get(0).ruleArmId().id());
         assertEquals(delta, operations.get(0).delta(), 0.0f);
         assertEquals(outputKind, operations.get(0).outputKind());
-        assertEquals(TraceDomainId.DEPLOY_ATTACH, operations.get(0).domainId());
+        assertEquals(domain, operations.get(0).domainId());
     }
 }

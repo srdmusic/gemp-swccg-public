@@ -37,8 +37,8 @@ public final class DeployPilotShipPolicy {
                     String.format("V30 MATCHING COMBO: %s + %s both in hand - deploy together NOW!",
                             facts.pilotTitle(), facts.matchingShipTitle()));
             if (!facts.objectiveLocation().isBlank()) {
-                addSiting(operations, facts.actionId(), "V30-pilot-objective",
-                        TraceOutputKind.BANDED, 1000.0f,
+                addObjective(operations, facts.actionId(), "V30-pilot-objective",
+                        TraceOutputKind.BANDED, 300.0f,
                         String.format("V30 OBJECTIVE SYSTEM: Deploy to %s - matches objective location!",
                                 facts.objectiveLocation()));
             }
@@ -65,8 +65,8 @@ public final class DeployPilotShipPolicy {
                     String.format("V30 MATCHING COMBO: %s + pilot %s both in hand - deploy together NOW!",
                             facts.shipTitle(), facts.matchingPilotTitle()));
             if (!facts.objectiveLocation().isBlank()) {
-                addSiting(operations, facts.actionId(), "V30-ship-objective",
-                        TraceOutputKind.BANDED, 1000.0f,
+                addObjective(operations, facts.actionId(), "V30-ship-objective",
+                        TraceOutputKind.BANDED, 300.0f,
                         String.format("V30 OBJECTIVE SYSTEM: Deploy to %s - matches objective!",
                                 facts.objectiveLocation()));
             }
@@ -153,12 +153,12 @@ public final class DeployPilotShipPolicy {
         List<PolicyOperation> operations = new ArrayList<>(1);
         if (facts.invasionNeimoidianPilot() && !facts.capitalShipTitle().isBlank()) {
             if (facts.correctCapitalDestination()) {
-                addAttach(operations, facts.actionId(), "V121",
+                addObjective(operations, facts.actionId(), "V121",
                         TraceOutputKind.BANDED, 300.0f,
                         "V121 INVASION (CS): aboard capital ship - correct placement");
             } else {
-                addAttach(operations, facts.actionId(), "V121",
-                        TraceOutputKind.VETO, -1500.0f,
+                addObjective(operations, facts.actionId(), "V121",
+                        TraceOutputKind.BANDED, -300.0f,
                         "V121 INVASION (CS): Neimoidian pilot must deploy aboard '"
                                 + facts.capitalShipTitle() + "', not '"
                                 + facts.destinationTitle() + "'");
@@ -207,28 +207,28 @@ public final class DeployPilotShipPolicy {
 
             if (facts.executorOrFlagship() && facts.objectiveNeedsBespin()) {
                 if (!facts.bespinOnTable()) {
-                    addSiting(operations, facts.actionId(), "V24.10",
-                            TraceOutputKind.VETO, -9999.0f,
-                            "V24.10 EXECUTOR BLOCKED: Bespin system NOT on table - deploy Bespin FIRST!");
+                    addObjective(operations, facts.actionId(), "V24.10",
+                            TraceOutputKind.BANDED, -300.0f,
+                            "V24.10 EXECUTOR PREFERENCE: Bespin absent, prefer deploying Bespin first (-300)");
                 } else {
                     String rule = facts.turnNumber() <= 2 ? "V24.9" : "V24.6";
                     String reason = facts.turnNumber() <= 2
-                            ? "V24.9 EXECUTOR CRITICAL: Bespin on table - MUST deploy NOW!"
+                            ? "V24.9 EXECUTOR: Bespin available, prefer deploying now (+300)"
                             : "V24.6 EXECUTOR: Key ship for TDIGWATT - deploy to Bespin!";
-                    addSiting(operations, facts.actionId(), rule,
-                            TraceOutputKind.BANDED, 800.0f, reason);
+                    addObjective(operations, facts.actionId(), rule,
+                            TraceOutputKind.BANDED, 300.0f, reason);
                 }
             }
 
             if (facts.objectiveNeedsBespin() && !facts.bespinPresence()) {
                 if (facts.opponentAtBespin()) {
-                    addSiting(operations, facts.actionId(), "V23",
+                    addObjective(operations, facts.actionId(), "V23",
                             TraceOutputKind.BANDED, 300.0f,
-                            "V23 BESPIN CONTEST: Opponent controls Bespin - deploy ship to contest IMMEDIATELY!");
+                            "V23 BESPIN CONTEST: Opponent controls Bespin, prefer deploying a ship to contest (+300)");
                 } else {
-                    addSiting(operations, facts.actionId(), "V23",
+                    addObjective(operations, facts.actionId(), "V23",
                             TraceOutputKind.BANDED, 250.0f,
-                            "V23 BESPIN CRITICAL: Deploy ship to enable Dark Deal + CC Occupation!");
+                            "V23 BESPIN PREFERENCE: prefer establishing Bespin presence (+300)");
                 }
             }
         }
@@ -272,14 +272,14 @@ public final class DeployPilotShipPolicy {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
         if (facts.bespinSystem()) {
-            addSiting(operations, facts.actionId(), "V24.10-executor-bespin",
-                    TraceOutputKind.BANDED, 500.0f,
+            addObjective(operations, facts.actionId(), "V24.10-executor-bespin",
+                    TraceOutputKind.BANDED, 300.0f,
                     "V24.10 EXECUTOR TO BESPIN: This is THE correct system — entire TDIGWATT engine depends on it!");
         } else {
-            addSiting(operations, facts.actionId(), "V24.10-executor-wrong-system",
-                    TraceOutputKind.VETO, -9999.0f,
-                    "V24.10 EXECUTOR WRONG SYSTEM: Executor MUST go to Bespin, not "
-                            + facts.destinationTitle() + "!");
+            addObjective(operations, facts.actionId(), "V24.10-executor-wrong-system",
+                    TraceOutputKind.BANDED, -300.0f,
+                    "V24.10 EXECUTOR WRONG SYSTEM: prefer Bespin over "
+                            + facts.destinationTitle() + " (-300 objective preference)");
         }
         return new PolicyResult("DEPLOY_EXECUTOR_DESTINATION_POLICY", operations);
     }
@@ -372,9 +372,9 @@ public final class DeployPilotShipPolicy {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(3);
         if (facts.reservedEopBunkerGarrison()) {
-            addAttach(operations, facts.actionId(),
+            addObjective(operations, facts.actionId(),
                     "DEPLOY.EOP.BUNKER_GARRISON_RESERVE",
-                    TraceOutputKind.VETO, -9999.0f,
+                    TraceOutputKind.BANDED, -300.0f,
                     "EOP BUNKER GARRISON: reserved cheap admiral may not be consumed as a ship pilot");
             return new PolicyResult(
                     "DEPLOY_SIMULTANEOUS_PILOT_CHOICE_POLICY",
@@ -626,6 +626,14 @@ public final class DeployPilotShipPolicy {
                                   TraceOutputKind outputKind, float delta,
                                   String reason) {
         add(operations, actionId, ruleId, TraceDomainId.DEPLOY_SITING,
+                outputKind, delta, reason);
+    }
+
+    private static void addObjective(
+            List<PolicyOperation> operations, String actionId,
+            String ruleId, TraceOutputKind outputKind, float delta,
+            String reason) {
+        add(operations, actionId, ruleId, TraceDomainId.OBJECTIVE_INTENT,
                 outputKind, delta, reason);
     }
 

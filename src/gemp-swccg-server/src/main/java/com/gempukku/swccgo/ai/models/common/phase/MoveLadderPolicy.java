@@ -15,7 +15,7 @@ public final class MoveLadderPolicy {
 
     private static final float RANK_R4_SCORE = 20000.0f;
     private static final float RANK_R3_SCORE = 12000.0f;
-    private static final float RANK_R2_SCORE = 6000.0f;
+    private static final float RANK_R2_SCORE = 1000.0f;
     private static final float LADDER_VETO = -100000.0f;
     private static final float FINE_CLAMP = 2800.0f;
     private static final float R2_CLAIM_MIN_FINE = 200.0f;

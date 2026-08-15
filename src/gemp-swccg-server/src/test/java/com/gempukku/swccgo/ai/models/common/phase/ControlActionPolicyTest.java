@@ -55,7 +55,7 @@ public class ControlActionPolicyTest {
     public void exactIsbAgentRetrievalDominatesTheGenericPileBoundary() {
         assertOperation(ControlActionPolicy.retrieve("A", 1, true),
                 "OBJECTIVE.ISB.RETRIEVE_AGENT",
-                TraceOutputKind.BANDED, 2000.0f,
+                TraceOutputKind.BANDED, 300.0f,
                 "ISB OBJECTIVE: Free native agent retrieval before drawing");
     }
 
@@ -83,7 +83,10 @@ public class ControlActionPolicyTest {
         PolicyOperation operation = result.operations().get(0);
         assertEquals("A", operation.actionId());
         assertEquals(ruleId, operation.ruleArmId().id());
-        assertEquals(TraceDomainId.DRAIN_CONTROL, operation.domainId());
+        assertEquals(ruleId.startsWith("OBJECTIVE.")
+                        ? TraceDomainId.OBJECTIVE_INTENT
+                        : TraceDomainId.DRAIN_CONTROL,
+                operation.domainId());
         assertEquals(outputKind, operation.outputKind());
         assertEquals(PolicyOperationKind.ADD, operation.kind());
         assertEquals(Float.floatToRawIntBits(delta),

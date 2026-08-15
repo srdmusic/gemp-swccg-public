@@ -59,8 +59,8 @@ public final class ControlActionPolicy {
         // 2026-08-07 (m01675): Endor back-side free biker-scout retrieval joins the ISB
         // carve-out — same BANDED magnitude, reused not rebalanced.
         if (exactEndorBikerRetrieval) {
-            return one(actionId, "OBJECTIVE.ENDOR.RETRIEVE_BIKER",
-                    TraceOutputKind.BANDED, 2000.0f,
+            return objectiveOne(actionId, "OBJECTIVE.ENDOR.RETRIEVE_BIKER",
+                    TraceOutputKind.BANDED, 300.0f,
                     "ENDOR OBJECTIVE: Free biker scout retrieval feeds drain protection");
         }
         return retrieve(actionId, lostPileSize, exactIsbAgentRetrieval);
@@ -69,8 +69,8 @@ public final class ControlActionPolicy {
     public static PolicyResult retrieve(String actionId, int lostPileSize,
                                         boolean exactIsbAgentRetrieval) {
         if (exactIsbAgentRetrieval) {
-            return one(actionId, "OBJECTIVE.ISB.RETRIEVE_AGENT",
-                    TraceOutputKind.BANDED, 2000.0f,
+            return objectiveOne(actionId, "OBJECTIVE.ISB.RETRIEVE_AGENT",
+                    TraceOutputKind.BANDED, 300.0f,
                     "ISB OBJECTIVE: Free native agent retrieval before drawing");
         }
         return lostPileSize > 15
@@ -106,5 +106,14 @@ public final class ControlActionPolicy {
         return new PolicyResult("CONTROL_ACTION_POLICY", List.of(
                 PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
                         TraceDomainId.DRAIN_CONTROL, outputKind, delta, reason)));
+    }
+
+    private static PolicyResult objectiveOne(
+            String actionId, String ruleId, TraceOutputKind outputKind,
+            float delta, String reason) {
+        return new PolicyResult("CONTROL_ACTION_POLICY", List.of(
+                PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        outputKind, delta, reason)));
     }
 }

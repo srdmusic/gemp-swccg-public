@@ -118,7 +118,7 @@ public final class ForceLossPolicy {
                     "Location - avoid losing");
         }
         if (huntDownLightsaber) {
-            add(operations, actionId, "V25-unknown-loss",
+            addObjective(operations, actionId, "V25-unknown-loss",
                     TraceOutputKind.ORDERING, -300.0f,
                     "V25 HUNT DOWN: PROTECT LIGHTSABER from loss!");
         }
@@ -132,8 +132,8 @@ public final class ForceLossPolicy {
             return new PolicyResult(
                     "FORCE_LOSS_POLICY", List.of());
         }
-        return one(actionId, "HOTH.SHIELD.PACKAGE_RETAIN",
-                TraceOutputKind.VETO, -9999.0f,
+        return oneObjective(actionId, "HOTH.SHIELD.PACKAGE_RETAIN",
+                TraceOutputKind.BANDED, -300.0f,
                 "HOTH SHIELD PACKAGE: retain the selected host, pilot, and Cannon");
     }
 
@@ -164,15 +164,15 @@ public final class ForceLossPolicy {
                                       ObjectiveFlags objective) {
         String title = candidate.title();
         if (objective.myLordSenatorProtection() && candidate.senator()) {
-            add(operations, actionId, "V109", TraceOutputKind.ORDERING, -300.0f,
+            addObjective(operations, actionId, "V109", TraceOutputKind.ORDERING, -300.0f,
                     "V109 MY LORD: PROTECT senator '" + title
-                            + "' — never discard/lose senators in this deck -300");
+                            + "': prefer retaining this senator (-300 objective preference)");
         }
 
         if (objective.preferredPayoffActor()) {
-            add(operations, actionId,
+            addObjective(operations, actionId,
                     "OBJECTIVE.NABOO_DUEL.DUELIST_RETAIN",
-                    TraceOutputKind.BANDED, -700.0f,
+                    TraceOutputKind.BANDED, -300.0f,
                     "NABOO DUEL: retain exactly one typed Jedi or Dark Jedi for the objective's executable payoff");
         }
 
@@ -250,19 +250,19 @@ public final class ForceLossPolicy {
         }
 
         if (objective.requiredForFlip()) {
-            add(operations, actionId, "V21-objective", TraceOutputKind.VETO,
-                    -9999.0f,
+            addObjective(operations, actionId, "V21-objective", TraceOutputKind.BANDED,
+                    -300.0f,
                     candidate.fromHand()
-                            ? "OBJECTIVE CRITICAL IN HAND - NEVER LOSE!"
-                            : "OBJECTIVE CRITICAL - NEVER LOSE!");
+                            ? "OBJECTIVE CRITICAL IN HAND: prefer to retain"
+                            : "OBJECTIVE CRITICAL: prefer to retain");
         } else if (candidate.fromHand() && objective.pullable()) {
-            add(operations, actionId, "V21-objective", TraceOutputKind.VETO,
-                    -9999.0f, "OBJECTIVE PULLABLE IN HAND - NEVER LOSE!");
+            addObjective(operations, actionId, "V21-objective", TraceOutputKind.BANDED,
+                    -300.0f, "OBJECTIVE PULLABLE IN HAND: prefer to retain");
         }
         if (candidate.fromHand()
                 && objective.huntDown() && isLightsaber(title)) {
-            add(operations, actionId, "V25", TraceOutputKind.ORDERING,
-                    -500.0f, "V25 HUNT DOWN: PROTECT LIGHTSABER IN HAND!");
+            addObjective(operations, actionId, "V25", TraceOutputKind.ORDERING,
+                    -300.0f, "V25 HUNT DOWN: prefer to retain lightsaber in hand");
         }
     }
 
@@ -273,14 +273,14 @@ public final class ForceLossPolicy {
                                           ObjectiveFlags objective) {
         String title = candidate.title();
         if (objective.huntDown() && isLightsaber(title)) {
-            add(operations, actionId, "V25", TraceOutputKind.ORDERING,
-                    -400.0f, "V25 HUNT DOWN: PROTECT LIGHTSABER from loss!");
+            addObjective(operations, actionId, "V25", TraceOutputKind.ORDERING,
+                    -300.0f, "V25 HUNT DOWN: prefer to retain lightsaber");
         }
 
         if (objective.preferredPayoffActor()) {
-            add(operations, actionId,
+            addObjective(operations, actionId,
                     "OBJECTIVE.NABOO_DUEL.DUELIST_RETAIN",
-                    TraceOutputKind.BANDED, -700.0f,
+                    TraceOutputKind.BANDED, -300.0f,
                     "NABOO DUEL: retain exactly one typed Jedi or Dark Jedi for the objective's executable payoff");
         }
 
@@ -326,11 +326,11 @@ public final class ForceLossPolicy {
         }
 
         if (objective.requiredForFlip()) {
-            add(operations, actionId, "V21-objective", TraceOutputKind.VETO,
-                    -9999.0f, "OBJECTIVE CRITICAL - NEVER LOSE!");
+            addObjective(operations, actionId, "V21-objective", TraceOutputKind.BANDED,
+                    -300.0f, "OBJECTIVE CRITICAL: prefer to retain");
         } else if (objective.pullable()) {
-            add(operations, actionId, "V21-objective", TraceOutputKind.VETO,
-                    -9999.0f, "OBJECTIVE PULLABLE - NEVER LOSE!");
+            addObjective(operations, actionId, "V21-objective", TraceOutputKind.BANDED,
+                    -300.0f, "OBJECTIVE PULLABLE: prefer to retain");
         }
 
         if ((candidate.fromHand() || candidate.fromUsedPile())
@@ -390,6 +390,17 @@ public final class ForceLossPolicy {
                         delta, reason)));
     }
 
+    private static PolicyResult oneObjective(String actionId,
+                                             String ruleId,
+                                             TraceOutputKind outputKind,
+                                             float delta,
+                                             String reason) {
+        return new PolicyResult("FORCE_LOSS_POLICY", List.of(
+                PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                        TraceDomainId.OBJECTIVE_INTENT, outputKind,
+                        delta, reason)));
+    }
+
     private static void add(List<PolicyOperation> operations,
                             String actionId,
                             String ruleId,
@@ -398,5 +409,15 @@ public final class ForceLossPolicy {
                             String reason) {
         operations.add(PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
                 TraceDomainId.FORCE_LOSS_PAYMENT, outputKind, delta, reason));
+    }
+
+    private static void addObjective(List<PolicyOperation> operations,
+                                     String actionId,
+                                     String ruleId,
+                                     TraceOutputKind outputKind,
+                                     float delta,
+                                     String reason) {
+        operations.add(PolicyOperation.add(actionId, TraceRuleId.of(ruleId),
+                TraceDomainId.OBJECTIVE_INTENT, outputKind, delta, reason));
     }
 }

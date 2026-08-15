@@ -83,7 +83,7 @@ public class DeployObjectiveSitingResidualSourceParityTest {
         assertOrdered(objectiveTail,
                 ".evaluateTdgwattOffObjective(",
                 "applyDeploySitingPolicy(action, v279Tdgwatt.result())",
-                "V29 TDIGWATT: Blocking character deploy",
+                "V29 TDIGWATT: Discouraging character deploy",
                 "getLocationsInOrder()",
                 "if (checkLoc == null) continue;",
                 ".evaluateObjectiveTail(",

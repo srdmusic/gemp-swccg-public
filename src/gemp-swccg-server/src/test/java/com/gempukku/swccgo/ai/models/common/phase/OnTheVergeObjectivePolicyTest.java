@@ -20,9 +20,9 @@ public class OnTheVergeObjectivePolicyTest {
                 .scoreScarifBattlegroundCandidate(
                     "beach", true, false);
 
-        assertEquals(2000.0f,
+        assertEquals(300.0f,
                 parent.operations().getFirst().delta(), 0.0f);
-        assertEquals(1200.0f,
+        assertEquals(300.0f,
                 command.operations().getFirst().delta(), 0.0f);
         assertTrue(beach.operations().isEmpty());
         assertTrue(OnTheVergeObjectivePolicy
@@ -32,15 +32,17 @@ public class OnTheVergeObjectivePolicyTest {
     }
 
     @Test
-    public void exactThreeForceKrennicRoutePreservesMovement() {
-        var blocked = OnTheVergeObjectivePolicy
+    public void exactThreeForceKrennicRouteGetsBoundedMovementPenalty() {
+        var penalized = OnTheVergeObjectivePolicy
                 .scoreKrennicRoute(
                     "krennic", true, true,
                     3, 3, 1);
-        assertEquals(PolicyOperationKind.HARD_VETO,
-                blocked.operations().getFirst().kind());
+        assertEquals(PolicyOperationKind.ADD,
+                penalized.operations().getFirst().kind());
+        assertEquals(-300.0f,
+                penalized.operations().getFirst().delta(), 0.0f);
         assertEquals("OBJECTIVE.OTVOG.KRENNIC_MOVE_RESERVE",
-                blocked.operations().getFirst().ruleArmId().id());
+                penalized.operations().getFirst().ruleArmId().id());
     }
 
     @Test
@@ -50,7 +52,7 @@ public class OnTheVergeObjectivePolicyTest {
                     .scoreKrennicRoute(
                         "krennic-" + force,
                         true, true, force, 3, 1);
-            assertEquals(2000.0f,
+            assertEquals(300.0f,
                     allowed.operations().getFirst().delta(), 0.0f);
             assertEquals("OBJECTIVE.OTVOG.KRENNIC_ROUTE",
                     allowed.operations().getFirst().ruleArmId().id());
@@ -63,32 +65,26 @@ public class OnTheVergeObjectivePolicyTest {
                 .scoreKrennicRoute(
                     "krennic", true, true,
                     3, 3, 0);
-        assertEquals(2000.0f,
+        assertEquals(300.0f,
                 allowed.operations().getFirst().delta(), 0.0f);
     }
 
     @Test
-    public void missingCandidateAndUnknownBudgetFactsFailClosed() {
+    public void missingCandidateAndUnaffordableRemainVetoedWhileUnknownIsNeutral() {
         assertEquals(PolicyOperationKind.HARD_VETO,
                 OnTheVergeObjectivePolicy.scoreKrennicRoute(
                     "missing", true, false,
                     5, 3, 1)
                     .operations().getFirst().kind());
-        assertEquals(PolicyOperationKind.HARD_VETO,
-                OnTheVergeObjectivePolicy.scoreKrennicRoute(
-                    "unknown", true, true,
-                    5, null, 1)
-                    .operations().getFirst().kind());
-        assertEquals("OBJECTIVE.OTVOG.FORCE_UNKNOWN",
-                OnTheVergeObjectivePolicy.scoreKrennicRoute(
+        assertTrue(OnTheVergeObjectivePolicy.scoreKrennicRoute(
+                    "unknown-cost", true, true,
+                    5, null, 1).operations().isEmpty());
+        assertTrue(OnTheVergeObjectivePolicy.scoreKrennicRoute(
                     "unknown-force", true, true,
-                    null, 3, 1)
-                    .operations().getFirst().ruleArmId().id());
-        assertEquals("OBJECTIVE.OTVOG.MOVE_COST_UNKNOWN",
-                OnTheVergeObjectivePolicy.scoreKrennicRoute(
+                    null, 3, 1).operations().isEmpty());
+        assertTrue(OnTheVergeObjectivePolicy.scoreKrennicRoute(
                     "unknown-move", true, true,
-                    5, 3, null)
-                    .operations().getFirst().ruleArmId().id());
+                    5, 3, null).operations().isEmpty());
         assertEquals("OBJECTIVE.OTVOG.KRENNIC_UNAFFORDABLE",
                 OnTheVergeObjectivePolicy.scoreKrennicRoute(
                     "unaffordable", true, true,
@@ -98,22 +94,22 @@ public class OnTheVergeObjectivePolicyTest {
 
     @Test
     public void exactKrennicChildRetrievalAndVaderReactionOwnBands() {
-        assertEquals(1200.0f,
+        assertEquals(300.0f,
                 OnTheVergeObjectivePolicy
                     .scoreKrennicCandidate(
                         "candidate", true, true)
                     .operations().getFirst().delta(), 0.0f);
-        assertEquals(2000.0f,
+        assertEquals(300.0f,
                 OnTheVergeObjectivePolicy
                     .scoreBackRetrieval(
                         "retrieve", true, true)
                     .operations().getFirst().delta(), 0.0f);
-        assertEquals(2000.0f,
+        assertEquals(300.0f,
                 OnTheVergeObjectivePolicy
                     .scoreVaderBattleReaction(
                         "vader", true, true)
                     .operations().getFirst().delta(), 0.0f);
-        assertEquals(1200.0f,
+        assertEquals(300.0f,
                 OnTheVergeObjectivePolicy
                     .scoreVaderBattleReactionCandidate(
                         "vader-target", true, true)

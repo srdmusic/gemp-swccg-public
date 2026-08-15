@@ -16,7 +16,8 @@ public class TdigwattObjectiveScoringPolicyTest {
     private static final int CLASSIC_ID = 101;
     private static final int VIRTUAL_ID = 202;
     private static final float PASS_SCORE = 8.0f;
-    private static final float MAX_SAFE_CONTROL_DRAIN_TOTAL = 440.0f;
+    private static final float MAX_OBJECTIVE_INFLUENCE = 300.0f;
+    private static final float TACTICAL_OVERRIDE = 350.0f;
 
     @Test
     public void exactPullParentBeatsPassAndProvenExhaustionHardStops() {
@@ -42,10 +43,9 @@ public class TdigwattObjectiveScoringPolicyTest {
         assertAdd(
                 readyOperation,
                 "TDIGWATT.109_12.PULL.PARENT.READY",
-                TraceDomainId.PULL_SEARCH,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.ORDERING,
-                TdigwattObjectiveScoringPolicy
-                        .PULL_PARENT_BONUS);
+                MAX_OBJECTIVE_INFLUENCE);
         assertTrue(readyOperation.delta() > PASS_SCORE);
 
         var exhausted =
@@ -108,7 +108,7 @@ public class TdigwattObjectiveScoringPolicyTest {
         assertAdd(
                 only(classicLegal),
                 "TDIGWATT.109_12.PULL.CHILD.LEGAL",
-                TraceDomainId.DECK_PLAYBOOK,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 TdigwattObjectiveScoringPolicy.PULL_CHILD_BONUS);
 
@@ -132,7 +132,7 @@ public class TdigwattObjectiveScoringPolicyTest {
         assertAdd(
                 only(virtualLegal),
                 "TDIGWATT.226_12.PULL.CHILD.LEGAL",
-                TraceDomainId.DECK_PLAYBOOK,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 TdigwattObjectiveScoringPolicy.PULL_CHILD_BONUS);
 
@@ -155,7 +155,7 @@ public class TdigwattObjectiveScoringPolicyTest {
                                 true, true),
                         true, true)),
                 "TDIGWATT.226_12.PULL.CHILD.LEGAL",
-                TraceDomainId.DECK_PLAYBOOK,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 TdigwattObjectiveScoringPolicy.PULL_CHILD_BONUS);
     }
@@ -202,7 +202,7 @@ public class TdigwattObjectiveScoringPolicyTest {
     }
 
     @Test
-    public void deployBandsAreOrderedBoundedAndExact() {
+    public void deployPreferencesArePositiveBoundedAndExact() {
         var advance = TdigwattObjectiveScoringPolicy.scoreDeploy(
                 "classic-advance",
                 classicFront(false, true, false),
@@ -222,33 +222,32 @@ public class TdigwattObjectiveScoringPolicyTest {
         assertAdd(
                 only(advance),
                 "TDIGWATT.109_12.DEPLOY.ADVANCE_FRONT",
-                TraceDomainId.DEPLOY_SITING,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 TdigwattObjectiveScoringPolicy
                         .DEPLOY_ADVANCE_BONUS);
         assertAdd(
                 only(complete),
                 "TDIGWATT.109_12.DEPLOY.COMPLETE_FRONT",
-                TraceDomainId.DEPLOY_SITING,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 TdigwattObjectiveScoringPolicy
                         .DEPLOY_COMPLETE_BONUS);
         assertAdd(
                 only(protect),
                 "TDIGWATT.226_12.DEPLOY.PROTECT_STABLE_BACK",
-                TraceDomainId.DEPLOY_SITING,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 TdigwattObjectiveScoringPolicy
                         .DEPLOY_STABLE_BACK_BONUS);
 
-        assertTrue(only(complete).delta()
-                > only(protect).delta());
-        assertTrue(only(protect).delta()
-                > only(advance).delta());
         assertTrue(only(advance).delta() > PASS_SCORE);
+        assertTrue(only(advance).delta()
+                <= MAX_OBJECTIVE_INFLUENCE);
         assertTrue(only(complete).delta()
-                <= TdigwattObjectiveScoringPolicy
-                    .DEPLOY_COMPLETE_BONUS);
+                <= MAX_OBJECTIVE_INFLUENCE);
+        assertTrue(only(protect).delta()
+                <= MAX_OBJECTIVE_INFLUENCE);
 
         assertNeutral(TdigwattObjectiveScoringPolicy.scoreDeploy(
                 "no-progress",
@@ -274,7 +273,7 @@ public class TdigwattObjectiveScoringPolicyTest {
         assertAdd(
                 only(classicDarkDeal),
                 "TDIGWATT.109_12.DEPLOY.ENGINE.DARK_DEAL",
-                TraceDomainId.DEPLOY_SITING,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 TdigwattObjectiveScoringPolicy
                         .ENGINE_DEPLOY_BONUS);
@@ -299,7 +298,7 @@ public class TdigwattObjectiveScoringPolicyTest {
         assertAdd(
                 only(classicOccupation),
                 "TDIGWATT.109_12.DEPLOY.ENGINE.CLOUD_CITY_OCCUPATION",
-                TraceDomainId.DEPLOY_SITING,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 TdigwattObjectiveScoringPolicy
                         .ENGINE_DEPLOY_BONUS);
@@ -407,7 +406,7 @@ public class TdigwattObjectiveScoringPolicyTest {
                 only(TdigwattObjectiveScoringPolicy
                         .scoreVirtualLandoParent(valid)),
                 "TDIGWATT.226_12.LANDO.PARENT",
-                TraceDomainId.MOVE,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.ORDERING,
                 TdigwattObjectiveScoringPolicy.LANDO_PARENT_BONUS);
         assertAdd(
@@ -417,7 +416,7 @@ public class TdigwattObjectiveScoringPolicyTest {
                                     .LandoDestinationFacts(
                                         valid, true))),
                 "TDIGWATT.226_12.LANDO.DESTINATION",
-                TraceDomainId.MOVE,
+                TraceDomainId.OBJECTIVE_INTENT,
                 TraceOutputKind.BANDED,
                 TdigwattObjectiveScoringPolicy
                         .LANDO_DESTINATION_BONUS);
@@ -470,7 +469,7 @@ public class TdigwattObjectiveScoringPolicyTest {
     }
 
     @Test
-    public void exactVirtualLandoRouteDominatesOrdinaryControlDrainBand() {
+    public void exactVirtualLandoRouteIsModestAndTacticallyOverrideable() {
         var valid = new TdigwattObjectiveScoringPolicy
                 .LandoActionFacts(
                     "lando-parent",
@@ -488,13 +487,18 @@ public class TdigwattObjectiveScoringPolicyTest {
                     new TdigwattObjectiveScoringPolicy
                             .LandoDestinationFacts(valid, true));
 
+        assertEquals(
+                MAX_OBJECTIVE_INFLUENCE,
+                only(parent).delta(),
+                0.0f);
+        assertEquals(
+                MAX_OBJECTIVE_INFLUENCE,
+                only(destination).delta(),
+                0.0f);
         assertTrue(only(parent).delta()
-                > MAX_SAFE_CONTROL_DRAIN_TOTAL);
+                - TACTICAL_OVERRIDE < 0.0f);
         assertTrue(only(destination).delta()
-                > MAX_SAFE_CONTROL_DRAIN_TOTAL);
-        assertTrue(only(parent).delta()
-                <= TdigwattObjectiveScoringPolicy
-                    .DEPLOY_ADVANCE_BONUS);
+                - TACTICAL_OVERRIDE < 0.0f);
 
         assertNeutral(TdigwattObjectiveScoringPolicy
                 .scoreVirtualLandoParent(
@@ -511,13 +515,13 @@ public class TdigwattObjectiveScoringPolicyTest {
     }
 
     @Test
-    public void controlBudgetOnlyVetoesAnExactSpendCrossingTheReserve() {
+    public void controlBudgetAppliesBoundedPenaltyToExactSpendCrossingReserve() {
         var move = landoMove(
                 virtualIdentity(false),
                 VIRTUAL_ID,
                 true, true, true,
                 true, true, 2);
-        var blocked = TdigwattObjectiveScoringPolicy
+        var discouraged = TdigwattObjectiveScoringPolicy
                 .preserveVirtualLandoControlForce(
                     new TdigwattObjectiveScoringPolicy
                             .ControlSpendFacts(
@@ -530,11 +534,15 @@ public class TdigwattObjectiveScoringPolicyTest {
         assertEquals(
                 TdigwattObjectiveScoringPolicy.Outcome
                         .CONTROL_LANDO_FORCE_RESERVED,
-                blocked.outcome());
-        assertHardVeto(
-                only(blocked),
+                discouraged.outcome());
+        assertAdd(
+                only(discouraged),
                 "TDIGWATT.226_12.CONTROL.LANDO_FORCE_RESERVE",
-                TraceDomainId.FORCE_BUDGET);
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED,
+                -300.0f);
+        assertTrue(only(discouraged).delta()
+                + TACTICAL_OVERRIDE > 0.0f);
 
         assertNeutral(controlSpend(
                 move, true, false, 1, 3));
@@ -727,7 +735,7 @@ public class TdigwattObjectiveScoringPolicyTest {
     }
 
     @Test
-    public void retentionVetoNeedsPositiveMarginAndLegalAlternative() {
+    public void retentionPenaltyNeedsPositiveMarginAndLegalAlternative() {
         var classicBefore = classicFront(true, true, true);
         var classicAfter = classicBefore;
         var forceLoss =
@@ -772,10 +780,12 @@ public class TdigwattObjectiveScoringPolicyTest {
                 TdigwattObjectiveScoringPolicy.Outcome
                         .FORFEIT_RETAIN,
                 forfeit.outcome());
-        assertHardVeto(
+        assertAdd(
                 only(forfeit),
                 "TDIGWATT.226_12.FORFEIT.RETAIN",
-                TraceDomainId.BATTLE_FORFEIT);
+                TraceDomainId.OBJECTIVE_INTENT,
+                TraceOutputKind.BANDED,
+                -300.0f);
 
         assertNeutral(TdigwattObjectiveScoringPolicy
                 .scoreForfeit(

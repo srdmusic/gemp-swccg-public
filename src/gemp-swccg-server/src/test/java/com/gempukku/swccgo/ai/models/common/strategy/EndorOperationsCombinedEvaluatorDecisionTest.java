@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 import com.gempukku.swccgo.ai.models.common.phase.BhbmForceDripUrgencyFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.trace.DecisionTrace;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceSession;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
@@ -171,7 +172,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
             new SwccgCardBlueprintLibrary();
 
     @Test
-    public void admiralOzzelChoosesBunkerOverLandingPlatform() {
+    public void boundedBunkerPreferenceDoesNotOverrideProductivePlatform() {
         List<Outcome> winners = new ArrayList<>();
         for (Bot bot : Bot.values()) {
             Fixture fixture = fixture(bot);
@@ -191,8 +192,18 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                     Decision.deployCandidate(
                             ozzel, fixture.bunker(),
                             fixture.platform()));
-            assertEquals(String.valueOf(BUNKER_ID),
+            assertEquals(String.valueOf(PLATFORM_ID),
                     winner.outcome().actionId());
+            assertHasTypedRuleDelta(
+                    winner.trace(), String.valueOf(BUNKER_ID),
+                    "V22-objective-location",
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    300.0f);
+            assertHasTypedRuleDelta(
+                    winner.trace(), String.valueOf(PLATFORM_ID),
+                    "V22-objective-location",
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    300.0f);
             winners.add(winner.outcome());
         }
         assertParity(winners);
@@ -361,7 +372,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
     }
 
     @Test
-    public void printingAwareTutorPrefersReadyOminousRumorsRoute() {
+    public void printingAwareOminousRoutesShareOneObjectivePreference() {
         for (String readyBlueprint : List.of(
                 OMINOUS_DIRECT_BP, OMINOUS_LEGACY_BP)) {
             List<Outcome> blockedCandidates =
@@ -400,14 +411,14 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                 Outcome readyCandidate =
                         cardSelectionAdapter(
                                 bot, fixture, decision, "1");
-                assertEquals(350.0f,
+                assertEquals(0.0f,
                         readyCandidate.score()
                                 - blockedCandidate.score(),
                         0.0f);
 
                 TracedOutcome winner = tracedCombined(
                         bot, fixture, decision);
-                assertEquals("1",
+                assertEquals("0",
                         winner.outcome().actionId());
                 assertHasTypedRule(
                         winner.trace(), "0",
@@ -435,7 +446,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
     }
 
     @Test
-    public void printingAwareTutorPrefersReadyEstablishSecretBaseRoute() {
+    public void printingAwareSecretBaseRoutesShareOneObjectivePreference() {
         for (String readyBlueprint : List.of(
                 SECRET_BASE_V_BP,
                 SECRET_BASE_LEGACY_BP)) {
@@ -478,14 +489,14 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                 Outcome readyCandidate =
                         cardSelectionAdapter(
                                 bot, fixture, decision, "1");
-                assertEquals(350.0f,
+                assertEquals(0.0f,
                         readyCandidate.score()
                                 - blockedCandidate.score(),
                         0.0f);
 
                 TracedOutcome winner = tracedCombined(
                         bot, fixture, decision);
-                assertEquals("1",
+                assertEquals("0",
                         winner.outcome().actionId());
                 assertHasTypedRule(
                         winner.trace(), "0",
@@ -2490,7 +2501,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
     }
 
     @Test
-    public void dyerMayRelocateBetweenProtectionSitesButNotLeaveThem() {
+    public void dyerPrefersProtectionSiteWithoutForbiddingOtherMoves() {
         for (boolean flipped : List.of(false, true)) {
             List<Outcome> safeWinners =
                     new ArrayList<>();
@@ -2560,7 +2571,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                                 bot, fixture,
                                 destination,
                                 String.valueOf(CANTINA_ID));
-                assertTrue(leavesDefense.hardVeto());
+                assertFalse(leavesDefense.hardVeto());
                 assertContains(
                         leavesDefense,
                         REQUIRED_RETENTION_MOVE_RULE);
@@ -2825,11 +2836,13 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                                 DISPOSABLE_DROID_ID),
                         forfeitResult.outcome()
                                 .actionId());
-                assertHasTypedRule(
+                assertHasTypedRuleDelta(
                         forfeitResult.trace(),
                         String.valueOf(
                                 protectedCard.getCardId()),
-                        REQUIRED_FORMATION_FORFEIT_RULE);
+                        REQUIRED_FORMATION_FORFEIT_RULE,
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        -300.0f);
             }
 
             Decision disembark =
@@ -2932,11 +2945,13 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                             DISPOSABLE_DROID_ID),
                     forfeitResult.outcome()
                             .actionId());
-            assertHasTypedRule(
-                    forfeitResult.trace(),
-                    String.valueOf(
-                            NON_ACTOR_CARRIER_ID),
-                    REQUIRED_FORMATION_FORFEIT_RULE);
+                assertHasTypedRuleDelta(
+                        forfeitResult.trace(),
+                        String.valueOf(
+                                NON_ACTOR_CARRIER_ID),
+                        REQUIRED_FORMATION_FORFEIT_RULE,
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        -300.0f);
 
             Decision carrierMove =
                     Decision.topLevelMove(carrier);
@@ -2999,17 +3014,22 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                     bot, fixture, forfeit);
             assertEquals(String.valueOf(DISPOSABLE_DROID_ID),
                     forfeitResult.outcome().actionId());
-            assertHasTypedRule(
+            assertHasTypedRuleDelta(
                     forfeitResult.trace(),
                     String.valueOf(AT_ST_PILOT_ID),
-                    REQUIRED_FORMATION_FORFEIT_RULE);
+                    REQUIRED_FORMATION_FORFEIT_RULE,
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    -300.0f);
             forfeitWinners.add(forfeitResult.outcome());
 
             Decision disembark = Decision.disembark(
                     formation.pilot());
             Outcome disembarkCandidate = actionTextAdapter(
                     bot, fixture, disembark, "disembark");
-            assertTrue(disembarkCandidate.hardVeto());
+            assertFalse(disembarkCandidate.hardVeto());
+            assertContains(
+                    disembarkCandidate,
+                    COUNTED_FORMATION_HOLD_RULE);
             TracedOutcome disembarkResult = tracedCombined(
                     bot, fixture, disembark);
             assertEquals("pass",
@@ -3104,7 +3124,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
             assertTrue(sole.analyzer()
                     .isPreferredRequiredCardForceLossCandidate(
                             sole.game(), PLAYER, soleRequired));
-            assertForceLossPreferenceForBothRoutes(
+            assertBoundedForceLossPreferenceForBothRoutes(
                     bot, sole, soleRequired, soleDistractor);
 
             Fixture readyPrinting = fixture(bot);
@@ -3130,7 +3150,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
             assertTrue(readyPrinting.analyzer()
                     .isPreferredRequiredCardForceLossCandidate(
                             readyPrinting.game(), PLAYER, ready));
-            assertForceLossPreferenceForBothRoutes(
+            assertBoundedForceLossPreferenceForBothRoutes(
                     bot, readyPrinting, ready, blocked);
 
             Fixture cheaperPrinting = fixture(bot);
@@ -3156,7 +3176,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
             assertFalse(cheaperPrinting.analyzer()
                     .isPreferredRequiredCardForceLossCandidate(
                             cheaperPrinting.game(), PLAYER, expensive));
-            assertForceLossPreferenceForBothRoutes(
+            assertBoundedForceLossPreferenceForBothRoutes(
                     bot, cheaperPrinting, cheaper, expensive);
         }
     }
@@ -3213,7 +3233,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                         .isPreferredRequiredCardForceLossCandidate(
                                 fixture.game(), PLAYER,
                                 required));
-                assertForceLossPreferenceForBothRoutes(
+                assertBoundedForceLossPreferenceForBothRoutes(
                         bot, fixture,
                         required, disposableForce);
             }
@@ -3338,9 +3358,6 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                     battleResult.trace(),
                     String.valueOf(OMINOUS_ID),
                     FORCE_LOSS_OBJECTIVE_RULE);
-            assertEquals(String.valueOf(OMINOUS_ID),
-                    battleResult.outcome().actionId());
-
             Fixture activeCopy = fixture(bot);
             PhysicalCard tableCopy = card(
                     OMINOUS_DIRECT_BP, READY_REQUIRED_ID,
@@ -3409,7 +3426,8 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                             defender, threatened.bunker());
             TracedOutcome threatenedResult = tracedCombined(
                     bot, threatened, threatenedDeploy);
-            assertEquals(String.valueOf(BUNKER_ID),
+            assertEquals(threatenedResult.trace().getOperations().toString(),
+                    String.valueOf(BUNKER_ID),
                     threatenedResult.outcome().actionId());
             assertHasTypedRule(
                     threatenedResult.trace(),
@@ -3489,7 +3507,9 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                 Outcome move = moveAdapter(
                         bot, fixture, decision, "move-biker-scout");
                 assertContains(move, REQUIRED_ENABLER_HOLD_RULE);
-                assertTrue(move.score() <= -90000.0f);
+                assertFalse(move.hardVeto());
+                assertTrue(move.toString(),
+                        move.score() > -90000.0f);
                 moveCandidates.add(move);
 
                 Outcome winner = combined(bot, fixture, decision);
@@ -3523,8 +3543,9 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                     assertContains(
                             heldMove,
                             REQUIRED_RETENTION_MOVE_RULE);
-                    assertTrue(
-                            heldMove.score() <= -90000.0f);
+                    assertFalse(heldMove.hardVeto());
+                    assertTrue(heldMove.toString(),
+                            heldMove.score() > -90000.0f);
                     Outcome heldWinner =
                             combined(bot, held, decision);
                     assertEquals("pass",
@@ -3865,9 +3886,6 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                     assertContains(
                             protectedCandidate,
                             REQUIRED_RETENTION_FORFEIT_RULE);
-                    assertTrue(
-                            protectedCandidate.score()
-                                    <= -9000.0f);
                     Outcome disposableCandidate =
                             cardSelectionAdapter(
                                     bot, fixture,
@@ -3885,11 +3903,13 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                             String.valueOf(
                                     DISPOSABLE_DROID_ID),
                             winner.outcome().actionId());
-                    assertHasTypedRule(
+                    assertHasTypedRuleDelta(
                             winner.trace(),
                             String.valueOf(
                                     BIKER_SCOUT_ID),
-                            REQUIRED_RETENTION_FORFEIT_RULE);
+                            REQUIRED_RETENTION_FORFEIT_RULE,
+                            TraceDomainId.OBJECTIVE_INTENT,
+                            -300.0f);
                     protectedCandidates.add(
                             protectedCandidate);
                     winners.add(winner.outcome());
@@ -3918,7 +3938,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
     }
 
     @Test
-    public void reactorCoreDeployIsPreemptivelyVetoedOnlyForEndorObjective() {
+    public void reactorCoreDeployGetsBoundedPenaltyOnlyForEndorObjective() {
         for (boolean flipped : List.of(false, true)) {
             for (boolean rumorsActive : List.of(false, true)) {
                 List<Outcome> blockedCandidates =
@@ -3956,12 +3976,12 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                             .stream().anyMatch(reason ->
                                     reason.contains(
                                             "suspends an active card required by the objective")));
-                    assertTrue(blocked.hardVeto());
+                    assertFalse(blocked.hardVeto());
                     TracedOutcome winner =
                             tracedCombined(
                                     bot, fixture,
                                     decision);
-                    assertEquals("",
+                    assertEquals("deploy-reactor-core",
                             winner.outcome().actionId());
                     assertHasTypedRule(
                             winner.trace(),
@@ -4612,6 +4632,27 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                                         operation.getRuleId().id())));
     }
 
+    private static void assertHasTypedRuleDelta(
+            DecisionTrace trace, String actionId,
+            String ruleId, TraceDomainId domainId,
+            float delta) {
+        int deltaBits = Float.floatToRawIntBits(delta);
+        assertTrue(
+                "Expected typed rule '" + ruleId + "' for "
+                        + actionId + " in " + trace.getOperations(),
+                trace.getOperations().stream()
+                        .anyMatch(operation ->
+                                actionId.equals(
+                                        operation.getActionId())
+                                && ruleId.equals(
+                                        operation.getRuleId().id())
+                                && domainId
+                                        == operation.getDomainId()
+                                && operation.getDeltaBits() != null
+                                && deltaBits
+                                        == operation.getDeltaBits()));
+    }
+
     private static void assertLacksTypedRule(
             DecisionTrace trace, String actionId,
             String ruleId) {
@@ -4639,7 +4680,7 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
         assertEquals(rando.vetoReason(), chosen.vetoReason());
     }
 
-    private static void assertForceLossPreferenceForBothRoutes(
+    private static void assertBoundedForceLossPreferenceForBothRoutes(
             Bot bot, Fixture fixture,
             PhysicalCard protectedCard,
             PhysicalCard expendableCard) {
@@ -4649,13 +4690,12 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
                     protectedCard, expendableCard);
             TracedOutcome traced = tracedCombined(
                     bot, fixture, decision);
-            assertEquals(
-                    String.valueOf(expendableCard.getCardId()),
-                    traced.outcome().actionId());
-            assertHasTypedRule(
+            assertHasTypedRuleDelta(
                     traced.trace(),
                     String.valueOf(protectedCard.getCardId()),
-                    FORCE_LOSS_OBJECTIVE_RULE);
+                    FORCE_LOSS_OBJECTIVE_RULE,
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    -300.0f);
             assertLacksTypedRule(
                     traced.trace(),
                     String.valueOf(expendableCard.getCardId()),

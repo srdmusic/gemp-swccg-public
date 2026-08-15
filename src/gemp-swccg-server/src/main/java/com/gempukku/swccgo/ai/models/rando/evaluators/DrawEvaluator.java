@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DrawPhasePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DrawReserveAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.DrawReserveLegacyReader;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
@@ -105,6 +106,8 @@ public class DrawEvaluator extends ActionEvaluator {
     private DrawPhasePolicy.Facts facts(
             DecisionContext context, String actionText) {
         return new DrawPhasePolicy.Facts() {
+            private DrawReserveAssessment reserveAssessment;
+
             @Override public boolean hasBoardState() {
                 return context.getGameState() != null;
             }
@@ -184,8 +187,11 @@ public class DrawEvaluator extends ActionEvaluator {
                 return DrawEvaluator.this.piettNeedsDig(context);
             }
 
-            @Override public int forceToReserve() {
-                return calculateForceToReserve(context);
+            @Override public DrawReserveAssessment reserveAssessment() {
+                if (reserveAssessment == null) {
+                    reserveAssessment = calculateForceToReserve(context);
+                }
+                return reserveAssessment;
             }
         };
     }
@@ -213,15 +219,16 @@ public class DrawEvaluator extends ActionEvaluator {
         }
     }
 
-    private int calculateForceToReserve(DecisionContext context) {
+    private DrawReserveAssessment calculateForceToReserve(
+            DecisionContext context) {
         SwccgGame game = context.getGame();
         if (game == null) {
-            return 1;
+            return new DrawReserveAssessment(1);
         }
         GameState gameState = context.getGameState();
         String playerId = context.getPlayerId();
         int turnNumber = context.getTurnNumber();
-        return DrawReserveLegacyReader.calculate(gameState, playerId, turnNumber,
+        return DrawReserveLegacyReader.assess(gameState, playerId, turnNumber,
                 context::getForceReserveFacts,
                 () -> {
                     ObjectiveAnalyzer objective = context.getObjectiveAnalyzer();

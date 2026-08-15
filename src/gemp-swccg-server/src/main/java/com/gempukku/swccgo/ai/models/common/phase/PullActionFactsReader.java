@@ -1162,31 +1162,6 @@ public final class PullActionFactsReader {
             return FormationAssessment.none();
         }
 
-        boolean flipPlan = false;
-        ObjectiveView objective = context.objective();
-        if (objective != null
-                && objective.objectivePullFormationExempt(
-                    context.game(), context.playerId(),
-                    source, actionText)) {
-            return new FormationAssessment(
-                    PullActionFacts.FormationState.FLIP_EXEMPT,
-                    pulled.getTitle());
-        }
-        if (objective != null && objective.isAnalyzed() && !objective.isFlipped()
-                && objective.flipConditionText() != null) {
-            try {
-                flipPlan = oracle.personaNamedInText(
-                        pulled.getBlueprint().getPersonas(),
-                        objective.flipConditionText().toLowerCase(Locale.ROOT));
-            } catch (Exception ignored) {
-                // No persona means no exemption.
-            }
-        }
-        if (flipPlan) {
-            return new FormationAssessment(
-                    PullActionFacts.FormationState.FLIP_EXEMPT, pulled.getTitle());
-        }
-
         try {
             SwccgCardBlueprint blueprint = pulled.getBlueprint();
             float force = gameState.getForcePileSize(context.playerId());

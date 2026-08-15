@@ -34,7 +34,7 @@ public class ObjectiveAnalyzerInvasionGateTest {
 
             assertEquals("naboo: theed palace throne room",
                     analyzer.getFlipCriticalControlSite());
-            assertEquals(1600.0f,
+            assertEquals(300.0f,
                     analyzer.getActivePlaybook().weights.deployFlipGateSite, 0.0f);
             assertTrue(analyzer.hasFlipGateActorRequirement());
             assertTrue(analyzer.isActiveFlipGateLocationTitle(

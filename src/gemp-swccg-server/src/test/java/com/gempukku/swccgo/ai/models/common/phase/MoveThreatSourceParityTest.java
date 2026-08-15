@@ -134,7 +134,8 @@ public class MoveThreatSourceParityTest {
         assertTrue(move.contains(
                 "v169PowerFactsAvailable = true"));
         assertTrue(move.contains("// === V53b: HIDDEN PATH"));
-        assertTrue(move.contains("// V60 FIX:"));
+        assertTrue(move.contains(
+                "// V60: Corridor landspeed receives a bounded -300 objective preference."));
         assertTrue(move.contains("ladderFinalize(action)"));
         assertTrue(move.indexOf("ladderFinalize(action)")
                 < move.indexOf("actions.add(action)"));

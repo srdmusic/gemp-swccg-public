@@ -106,7 +106,7 @@ public class HuntDownActionSafetyDecisionTest {
     }
 
     @Test
-    public void classicRecallBlocksClearGateButCanChaseRemoteBlocker() {
+    public void classicRecallDiscouragesClearGateButCanChaseRemoteBlocker() {
         for (Bot bot : Bot.values()) {
             Fixture hold = fixture(bot);
             hold.classicHunt();
@@ -122,13 +122,13 @@ public class HuntDownActionSafetyDecisionTest {
                             new ObjectiveAnalyzer
                                     .ClassicHuntDownRecallAssessment(
                                             false, false));
-            assertHardVetoAndPass(
+            assertBoundedPreferenceAndPass(
                     hold,
                     new Decision(
                             Phase.MOVE,
                             "Take Vader into hand",
                             "30"),
-                    "V35 VADER RECALL BLOCKED");
+                    "V35 VADER RECALL DISFAVORED");
 
             Fixture chase = fixture(bot);
             chase.classicHunt();
@@ -157,7 +157,7 @@ public class HuntDownActionSafetyDecisionTest {
     }
 
     @Test
-    public void virtualRecallCannotRemoveTheLastPostFlipVader() {
+    public void virtualRecallDiscouragesRemovingTheLastPostFlipVader() {
         for (Bot bot : Bot.values()) {
             Fixture sole = fixture(bot);
             sole.virtualHunt();
@@ -169,7 +169,7 @@ public class HuntDownActionSafetyDecisionTest {
             when(sole.analyzer
                     .hasSafeVirtualHuntDownVaderRecallTarget(
                             sole.game, PLAYER)).thenReturn(false);
-            assertHardVetoAndPass(
+            assertBoundedPreferenceAndPass(
                     sole,
                     new Decision(
                             Phase.MOVE,
@@ -200,7 +200,7 @@ public class HuntDownActionSafetyDecisionTest {
     }
 
     @Test
-    public void castleReturnCannotUndoTheOnlyRuntimeActorRoute() {
+    public void castleReturnDiscouragesUndoingTheOnlyRuntimeActorRoute() {
         for (Bot bot : Bot.values()) {
             Fixture hold = fixture(bot);
             hold.virtualHunt();
@@ -213,7 +213,7 @@ public class HuntDownActionSafetyDecisionTest {
                     .mustHoldAllVaderCastleReturnMovers(
                             hold.game, PLAYER, castle))
                     .thenReturn(true);
-            assertHardVetoAndPass(
+            assertBoundedPreferenceAndPass(
                     hold,
                     new Decision(
                             Phase.MOVE,
@@ -249,6 +249,21 @@ public class HuntDownActionSafetyDecisionTest {
         assertTrue(candidate.reasoning().toString(),
                 candidate.hardVeto());
         assertContains(candidate, marker);
+        Outcome selected = fixture.selected(decision);
+        assertEquals("pass", selected.actionId());
+        assertFalse(selected.hardVeto());
+    }
+
+    private static void assertBoundedPreferenceAndPass(
+            Fixture fixture,
+            Decision decision,
+            String marker) {
+        Outcome candidate = fixture.candidate(decision);
+        assertFalse(candidate.reasoning().toString(),
+                candidate.hardVeto());
+        assertContains(candidate, marker);
+        assertTrue(candidate.reasoning().toString(),
+                candidate.score() < 0.0f);
         Outcome selected = fixture.selected(decision);
         assertEquals("pass", selected.actionId());
         assertFalse(selected.hardVeto());

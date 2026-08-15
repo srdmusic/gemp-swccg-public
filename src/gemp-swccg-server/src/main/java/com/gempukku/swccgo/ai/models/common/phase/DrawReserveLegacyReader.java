@@ -21,6 +21,17 @@ public final class DrawReserveLegacyReader {
                                 Supplier<ForceReserveService.Facts> reserveFacts,
                                 IntSupplier hiddenPathTransitReserve,
                                 Logger logger) {
+        return assess(gameState, playerId, turnNumber, reserveFacts,
+                hiddenPathTransitReserve, logger).forceToReserve();
+    }
+
+    public static DrawReserveAssessment assess(
+                                GameState gameState,
+                                String playerId,
+                                int turnNumber,
+                                Supplier<ForceReserveService.Facts> reserveFacts,
+                                IntSupplier hiddenPathTransitReserve,
+                                Logger logger) {
         try {
             int contestedCount = 0;
             Collection<PhysicalCard> locations = gameState.getLocationsInOrder();
@@ -76,10 +87,10 @@ public final class DrawReserveLegacyReader {
             logger.debug("V58 RESERVE: DTF={}, FirstStrike={}, IAO={}, contested={}, maint={}, turn={}, total={}",
                     opponentHasDTF, opponentHasFirstStrike, opponentHasIAO, contestedCount,
                     maintenanceCost, turnNumber, assessment.forceToReserve());
-            return assessment.forceToReserve();
+            return assessment;
         } catch (Exception e) {
             logger.trace("V58 RESERVE: error calculating, using default 1: {}", e.getMessage());
-            return 1;
+            return new DrawReserveAssessment(1);
         }
     }
 }

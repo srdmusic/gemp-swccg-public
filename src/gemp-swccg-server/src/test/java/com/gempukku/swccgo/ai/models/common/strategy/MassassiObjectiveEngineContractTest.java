@@ -2,12 +2,15 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.BattleForfeitPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployBudgetPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossFacts;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.MassassiObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveObjectiveGateHoldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveBattlePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullSelectionCandidatePolicy;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -802,10 +805,12 @@ public class MassassiObjectiveEngineContractTest {
         assertTrue(analyzer.usesObjectiveLocationPullSequence());
         assertTrue(analyzer.isPreferredMassassiWarRoomPullCandidate(
                 scn.game(), VirtualTableScenario.LS, warRoom));
-        assertEquals(350.0f,
-                PullSelectionCandidatePolicy.scoreMassassiWarRoom(
-                        "war-room", true).operations().getFirst().delta(),
-                0.0f);
+        var warRoomPreference = PullSelectionCandidatePolicy
+                .scoreMassassiWarRoom("war-room", true)
+                .operations().getFirst();
+        assertEquals(300.0f, warRoomPreference.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                warRoomPreference.domainId());
         assertFalse("The Yavin system is not one of the three flip sites",
                 analyzer.isObjectiveRelevantLocation("Yavin 4"));
         assertTrue(analyzer.isObjectiveRelevantLocation(
@@ -870,13 +875,20 @@ public class MassassiObjectiveEngineContractTest {
         DecisionChoice forceLoss = evaluateDecisionBoth(
                 scn, analyzer, chosenAnalyzer,
                 scn.GetAwaitingDecision(VirtualTableScenario.LS));
-        assertFalse("Both bots preserve the next route site during real Force loss",
-                Integer.toString(warRoom.getCardId())
-                    .equals(forceLoss.actionId()));
-        assertFalse("Both bots preserve the future deploy body during real Force loss",
-                Integer.toString(deployBody.getCardId())
-                    .equals(forceLoss.actionId()));
-        scn.LSDecided(forceLoss.actionId());
+        assertNotNull(forceLoss.actionId());
+        ForceLossChoice boundedLoss = evaluateForceLossChoiceBoth(
+                scn, analyzer, chosenAnalyzer,
+                List.of(warRoom, deployBody), lossFodder);
+        assertTrue("The next route site receives bounded retention reasoning",
+                boundedLoss.protectedReasoning()
+                    .get(Integer.toString(warRoom.getCardId())).stream()
+                    .anyMatch(reason -> reason.contains(
+                        "OBJECTIVE CRITICAL: prefer to retain (-300.0)")));
+        assertTrue("Disposable Force-loss candidate remains legally selectable",
+                strings(scn.GetAwaitingDecision(VirtualTableScenario.LS)
+                        .getDecisionParameters(), "cardId")
+                    .contains(Integer.toString(lossFodder.getCardId())));
+        scn.LSDecided(Integer.toString(lossFodder.getCardId()));
         scn.PassAllResponses();
         assertTrue(warRoom.getZone() == Zone.RESERVE_DECK
                 || warRoom.getZone() == Zone.TOP_OF_RESERVE_DECK);
@@ -903,11 +915,18 @@ public class MassassiObjectiveEngineContractTest {
         PackageChoice firstSite = evaluatePackageChoiceBoth(
                 scn, analyzer, chosenAnalyzer,
                 firstSiteDecision);
-        assertEquals("The War Room leads the real pull sequence",
-                warRoom.getBlueprintId(true),
+        assertNotNull("The bounded preference does not force the pull winner",
                 firstSite.blueprintId());
-        assertTrue(firstSite.reasoning().stream().anyMatch(
-                reason -> reason.contains("MASSASSI: pull the War Room")));
+        var warRoomPreference = PullSelectionCandidatePolicy
+                .scoreMassassiWarRoom(
+                        "massassi-war-room",
+                        analyzer.isPreferredMassassiWarRoomPullCandidate(
+                                scn.game(), VirtualTableScenario.LS,
+                                warRoom))
+                .operations().getFirst();
+        assertEquals(300.0f, warRoomPreference.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                warRoomPreference.domainId());
         scn.LSChooseCard(warRoom);
         scn.PassAllResponses();
         if (scn.LSDecisionAvailable("On which side")) {
@@ -947,24 +966,57 @@ public class MassassiObjectiveEngineContractTest {
                 moveDecision);
         List<String> moveActionIds = strings(
                 moveDecision.getDecisionParameters(), "actionId");
-        int selectedMoveIndex = moveActionIds.indexOf(move.actionId());
-        assertTrue("Both bots move one of the two route actors instead of passing",
-                selectedMoveIndex >= 0);
         List<String> movingCardIds = strings(
                 moveDecision.getDecisionParameters(), "cardId");
+        int selectedMoveIndex = -1;
+        for (int i = 0; i < movingCardIds.size(); i++) {
+            String moverId = movingCardIds.get(i);
+            if (moverId.equals(Integer.toString(mover.getCardId()))
+                    || moverId.equals(Integer.toString(anchor.getCardId()))) {
+                selectedMoveIndex = i;
+                break;
+            }
+        }
+        assertTrue("A legal route-actor move remains offered",
+                selectedMoveIndex >= 0
+                        && selectedMoveIndex < moveActionIds.size());
         PhysicalCard selectedMover = scn.gameState().findCardById(
                 Integer.parseInt(movingCardIds.get(selectedMoveIndex)));
         assertTrue(selectedMover == mover || selectedMover == anchor);
-        assertTrue(move.reasoning().stream().anyMatch(reason ->
-                reason.contains("MOVE.OBJECTIVE.ACTOR_LOCATION_START")));
-        scn.LSDecided(move.actionId());
-        PackageChoice moveDestination = evaluatePackageChoiceBoth(
+        assertNotNull("The bounded route preference does not force the winner",
+                move.actionId());
+        assertTrue(analyzer.advancesPreFlipPlainPresenceAtRequiredLocation(
+                scn.game(), VirtualTableScenario.LS,
+                selectedMover, warRoom));
+        var movePreference = MoveDestinationPolicy
+                .objectiveActorLocationStart(
+                        true, selectedMover.getTitle());
+        assertTrue(movePreference.applies());
+        assertEquals(300.0f, movePreference.delta(), 0.0f);
+        scn.LSDecided(moveActionIds.get(selectedMoveIndex));
+        AwaitingDecision moveDestinationDecision =
+                scn.GetAwaitingDecision(VirtualTableScenario.LS);
+        DecisionChoice moveDestination = evaluateDecisionBoth(
                 scn, analyzer, chosenAnalyzer,
-                scn.GetAwaitingDecision(VirtualTableScenario.LS),
+                moveDestinationDecision,
                 null, selectedMover.getCardId());
-        assertEquals("Both bots move to the pulled empty War Room",
-                warRoom.getBlueprintId(true),
-                moveDestination.blueprintId());
+        assertEquals("Normal destination penalties may override the bounded route preference",
+                "", moveDestination.actionId());
+        assertTrue(moveDestination.reasoning().stream().anyMatch(reason ->
+                reason.contains("Best action was -10124.0")));
+        assertTrue("War Room remains a legal destination",
+                strings(moveDestinationDecision.getDecisionParameters(),
+                        "cardId")
+                    .contains(Integer.toString(warRoom.getCardId())));
+        var destinationPreference = MoveDestinationPolicy
+                .objectiveActorLocationDestination(
+                        analyzer
+                            .advancesPreFlipPlainPresenceAtRequiredLocation(
+                                scn.game(), VirtualTableScenario.LS,
+                                selectedMover, warRoom),
+                        selectedMover.getTitle(), warRoom.getTitle());
+        assertTrue(destinationPreference.applies());
+        assertEquals(300.0f, destinationPreference.delta(), 0.0f);
         scn.LSChooseCard(warRoom);
         scn.PassAllResponses();
         assertEquals(warRoom,
@@ -1015,33 +1067,32 @@ public class MassassiObjectiveEngineContractTest {
                 scn.GetAwaitingDecision(VirtualTableScenario.LS);
         DecisionChoice secondPull = evaluateDecisionBoth(
                 scn, analyzer, chosenAnalyzer, secondPullDecision);
-        assertEquals("Both bots pull the final site before unrelated deploys; "
-                        + "actions=" + strings(
-                            secondPullDecision.getDecisionParameters(),
-                            "actionText")
-                        + "; cards=" + strings(
-                            secondPullDecision.getDecisionParameters(),
-                            "cardId")
-                        + "; reasoning=" + secondPull.reasoning(),
-                secondPullAction, secondPull.actionId());
-        assertFalse("The exact live route bypasses V60 reserve risk",
-                secondPull.reasoning().stream().anyMatch(
-                    reason -> reason.contains("V60 RESERVE RISK")));
+        assertNotNull("Both bots still choose the same ordinary deploy winner",
+                secondPull.actionId());
+        assertTrue("The bounded route action remains legally offered",
+                strings(secondPullDecision.getDecisionParameters(),
+                        "actionId").contains(secondPullAction));
+        assertFalse("The objective route no longer bypasses normal scoring",
+                secondPullAction.equals(secondPull.actionId()));
         scn.LSDecided(secondPullAction);
         PackageChoice secondSite = evaluatePackageChoiceBoth(
                 scn, analyzer, chosenAnalyzer,
                 scn.GetAwaitingDecision(VirtualTableScenario.LS));
-        PhysicalCardImpl finalSite = (PhysicalCardImpl) scn.gameState()
-                .getReserveDeck(VirtualTableScenario.LS).stream()
-                .filter(card -> secondSite.blueprintId().equals(
-                    card.getBlueprintId(true)))
-                .findFirst().orElseThrow();
-        assertTrue("Both bots choose a real remaining native Yavin site",
+        assertNotNull("Both bots agree on an ordinary candidate winner",
+                secondSite.blueprintId());
+        PhysicalCardImpl finalSite = protectedFinalSite;
+        assertTrue("The remaining native Yavin site stays legally offered",
+                scn.LSHasCardChoiceAvailable(finalSite));
+        assertTrue("The manual fixture route uses a real native Yavin site",
                 analyzer.isNativeObjectiveLocationRouteCandidate(
                     scn.game(), VirtualTableScenario.LS, finalSite));
-        assertTrue(secondSite.reasoning().stream().anyMatch(reason ->
-                reason.contains(
-                    "Pull a missing location required by the counted objective")));
+        var finalSitePreference = PullSelectionCandidatePolicy
+                .scoreCountedObjectiveProgress(
+                    "massassi-final-site", false, false, true)
+                .operations().getFirst();
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                finalSitePreference.domainId());
+        assertEquals(300.0f, finalSitePreference.delta(), 0.0f);
         scn.LSChooseCard(finalSite);
         scn.PassAllResponses();
         if (scn.LSDecisionAvailable("On which side")) {
@@ -1063,9 +1114,22 @@ public class MassassiObjectiveEngineContractTest {
                 scn, analyzer, chosenAnalyzer,
                 scn.GetAwaitingDecision(VirtualTableScenario.LS),
                 deployBody.getPermanentCardId(), null);
-        assertEquals("Both bots choose the remaining empty Yavin site",
-                finalSite.getBlueprintId(true),
+        assertNotNull("Both bots agree on an ordinary deploy destination winner",
                 deployDestination.blueprintId());
+        assertTrue("The final objective site remains a legal deploy destination",
+                scn.LSHasCardChoiceAvailable(finalSite));
+        boolean advancesFinalSite = analyzer
+                .advancesPreFlipPlainPresenceAtRequiredLocation(
+                    scn.game(), VirtualTableScenario.LS,
+                    deployBody, finalSite);
+        assertTrue(advancesFinalSite);
+        var deployPreference = DeployObjectiveSitingPolicy
+                .scoreCountedObjectiveProgress(
+                    Integer.toString(finalSite.getCardId()),
+                    advancesFinalSite).operations().getFirst();
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                deployPreference.domainId());
+        assertEquals(300.0f, deployPreference.delta(), 0.0f);
         scn.LSChooseCard(finalSite);
         scn.PassAllResponses();
 
@@ -1120,7 +1184,8 @@ public class MassassiObjectiveEngineContractTest {
                 new ForceLossPolicy.ObjectiveFlags(
                         false, false, true, false));
         assertTrue(forceLoss.operations().stream().anyMatch(operation ->
-                operation.delta() == -9999.0f));
+                operation.domainId() == TraceDomainId.OBJECTIVE_INTENT
+                        && operation.delta() == -300.0f));
 
         moveLocationToYavin(scn, jungle);
         moveLocationToYavin(scn, warRoom);
@@ -1137,12 +1202,12 @@ public class MassassiObjectiveEngineContractTest {
         ForceLossChoice bodyLoss = evaluateForceLossChoiceBoth(
                 scn, analyzer, chosenAnalyzer,
                 List.of(firstBody, secondBody), unrelated);
-        assertEquals("Both bots keep both still-needed site bodies",
-                Integer.toString(unrelated.getCardId()),
+        assertNotNull("A bounded preference does not force the winner",
                 bodyLoss.actionId());
         assertTrue(bodyLoss.protectedReasoning().values().stream()
                 .allMatch(reasons -> reasons.stream().anyMatch(
-                    reason -> reason.contains("OBJECTIVE CRITICAL"))));
+                    reason -> reason.contains(
+                        "OBJECTIVE CRITICAL IN HAND: prefer to retain (-300.0)"))));
 
         int unrelatedReserve =
                 analyzer.getCountedObjectivePresenceForceReserve(
@@ -1157,12 +1222,16 @@ public class MassassiObjectiveEngineContractTest {
                         0, 0, 0, false, 0,
                         false, false, 0, unrelatedReserve, 0));
         assertTrue(starvingDeploy.result().operations().stream()
-                .anyMatch(operation -> operation.delta() == -500.0f));
+                .anyMatch(operation -> operation.domainId()
+                            == TraceDomainId.OBJECTIVE_INTENT
+                        && operation.ruleArmId().id().equals(
+                            "DEPLOY.BUDGET.OBJECTIVE_REQUIRED_CARD_RESERVE")
+                        && operation.delta() == -300.0f));
 
         assertTrue(analyzer.advancesPreFlipPlainPresenceAtRequiredLocation(
                 scn.game(), VirtualTableScenario.LS,
                 firstBody, jungle));
-        assertEquals(1000.0f,
+        assertEquals(300.0f,
                 MoveDestinationPolicy.objectiveActorLocationDestination(
                         analyzer
                             .advancesPreFlipPlainPresenceAtRequiredLocation(
@@ -1178,7 +1247,7 @@ public class MassassiObjectiveEngineContractTest {
                 .LAST_REQUIRED_ACTOR, role);
         assertTrue(MoveObjectiveGateHoldPolicy.evaluateCountedFormation(
                 true, role, 5.0f, 0.0f).hardVeto());
-        assertEquals(-9999.0f,
+        assertEquals(-300.0f,
                 BattleForfeitPolicy.scoreFlipGateFormationProtection(
                         "mbo-jungle", role, true)
                     .operations().getFirst().delta(), 0.0f);
@@ -1208,7 +1277,7 @@ public class MassassiObjectiveEngineContractTest {
     }
 
     @Test
-    public void mboBackUploadsAndRetainsTheAttackRunPackageInOrder() {
+    public void mboBackBoundsPackageEvidenceAndManualLegalPayoffProgressionRetainsRoute() {
         var scn = mboScenario();
         var objective = scn.GetLSCard("objective");
         var yavin = scn.GetLSCard("system");
@@ -1284,9 +1353,18 @@ public class MassassiObjectiveEngineContractTest {
                 VirtualTableScenario.LS);
         PackageChoice choice = evaluatePackageChoiceBoth(
                 scn, analyzer, chosenAnalyzer, exactPackageDecision);
-        assertEquals("2_19", choice.blueprintId());
-        assertTrue(choice.reasoning().stream().anyMatch(reason ->
-                reason.contains("MASSASSI:")));
+        assertNotNull("The bounded preference does not force the winner",
+                choice.blueprintId());
+        var packagePreference = PullSelectionCandidatePolicy
+                .scoreMassassiAttackRunPackage(
+                        "massassi-frontier",
+                        analyzer.getMassassiAttackRunPackagePullPriority(
+                                scn.game(), VirtualTableScenario.LS,
+                                rebelTech))
+                .operations().getFirst();
+        assertEquals(300.0f, packagePreference.delta(), 0.0f);
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                packagePreference.domainId());
         scn.LSChooseCard(rebelTech);
         scn.PassAllResponses();
         scn.DSPass();
@@ -1464,8 +1542,11 @@ public class MassassiObjectiveEngineContractTest {
         DecisionChoice oneForceChoice = evaluateDecisionBoth(
                 scn, analyzer, chosenAnalyzer,
                 scn.GetAwaitingDecision(VirtualTableScenario.LS));
-        assertEquals("With only the weapon payment available, both bots pass",
-                "", oneForceChoice.actionId());
+        assertNotNull("The objective reserve is a preference, not a hard block",
+                oneForceChoice.actionId());
+        assertTrue(oneForceChoice.reasoning().stream().anyMatch(reason ->
+                reason.contains(
+                    "Preserve exact Force for the remaining Attack Run package and carrier movement (-300.0)")));
 
         scn.LSActivateForceCheat(1);
         assertEquals(2, scn.GetLSForcePileCount());
@@ -1509,12 +1590,18 @@ public class MassassiObjectiveEngineContractTest {
         DecisionChoice moveParent = evaluateDecisionBoth(
                 scn, analyzer, chosenAnalyzer,
                 scn.GetAwaitingDecision(VirtualTableScenario.LS));
-        assertEquals("Both bots start the exact Attack Run carrier move",
-                moveAction, moveParent.actionId());
-        assertTrue(moveParent.reasoning().stream().anyMatch(reason ->
-                reason.contains("MOVE.OBJECTIVE.POST_FLIP_PAYOFF_START")));
-        assertEquals("Both public bots preserve move-parent provenance",
-                moveAction, publicBots.decideBoth(scn));
+        assertNotNull("The bounded payoff preference does not force the winner",
+                moveParent.actionId());
+        assertEquals("Both public bots match the evaluated parent winner",
+                moveParent.actionId(), publicBots.decideBoth(scn));
+        assertEquals(ObjectiveAnalyzer.ObjectivePostFlipPayoffRole.PRIMARY,
+                analyzer.classifyPostFlipPayoffAt(
+                        scn.game(), VirtualTableScenario.LS,
+                        xwing, deathStar));
+        var payoffPreference = MoveDestinationPolicy
+                .objectivePostFlipPayoffStart(true, xwing.getTitle());
+        assertTrue(payoffPreference.applies());
+        assertEquals(300.0f, payoffPreference.delta(), 0.0f);
 
         scn.LSDecided(moveAction);
         assertTrue("Tatooine remains a real off-route hyperspeed option",
@@ -1524,21 +1611,32 @@ public class MassassiObjectiveEngineContractTest {
                 scn, analyzer, chosenAnalyzer,
                 scn.GetAwaitingDecision(VirtualTableScenario.LS),
                 null, xwing.getCardId());
-        assertEquals("Both bots move the armed carrier to Death Star",
+        assertEquals("Both mirrored evaluators rank Death Star as the bounded payoff destination",
                 deathStar.getBlueprintId(true),
                 moveDestination.blueprintId());
         assertTrue(moveDestination.reasoning().stream().anyMatch(reason ->
                 reason.contains("MOVE.OBJECTIVE.POST_FLIP_PRIMARY_PAYOFF")));
-        assertEquals("Both public bots choose Death Star as the move child",
-                Integer.toString(deathStar.getCardId()),
-                publicBots.decideBoth(scn));
+        String publicMoveDestination = publicBots.decideBoth(scn);
+        assertTrue("The public-bot winner remains a legal offered destination",
+                strings(scn.GetAwaitingDecision(VirtualTableScenario.LS)
+                        .getDecisionParameters(), "cardId")
+                    .contains(publicMoveDestination));
+        var deathStarPreference = MoveDestinationPolicy
+                .objectivePostFlipPayoffDestination(
+                        ObjectiveAnalyzer.ObjectivePostFlipPayoffRole.PRIMARY,
+                        xwing.getTitle(), deathStar.getTitle());
+        assertTrue("The manually chosen Death Star candidate must carry payoff evidence",
+                deathStarPreference.applies());
+        assertEquals("The payoff evidence must remain a bounded +300 preference",
+                300.0f, deathStarPreference.delta(), 0.0f);
         scn.LSChooseCard(deathStar);
         scn.PassAllResponses();
         scn.DSPass();
 
-        assertEquals("The reserved Force pays the real hyperspeed move",
+        assertEquals("The reserved Force pays the manual legal hyperspeed progression",
                 0, scn.GetLSForcePileCount());
-        assertEquals(deathStar,
+        assertEquals("The manually selected offered destination must resolve natively",
+                deathStar,
                 scn.game().getModifiersQuerying().getLocationThatCardIsAt(
                     scn.gameState(), xwing));
         assertEquals(ObjectiveAnalyzer.ObjectivePostFlipPayoffRole.PRIMARY,
@@ -1578,12 +1676,18 @@ public class MassassiObjectiveEngineContractTest {
         DecisionChoice attackRunWinner = evaluateDecisionBoth(
                 scn, analyzer, chosenAnalyzer,
                 scn.GetAwaitingDecision(VirtualTableScenario.LS));
-        assertEquals("Both bots begin the real Attack Run instead of passing; "
-                        + attackRunWinner.reasoning(),
-                attackRunAction, attackRunWinner.actionId());
-        assertTrue(attackRunWinner.reasoning().stream()
-                .anyMatch(reason -> reason.contains(
-                    "MASSASSI R3 PAYOFF")));
+        assertNotNull("The bounded payoff does not force the winner",
+                attackRunWinner.actionId());
+        assertEquals("Both public bots match the evaluated ordinary winner",
+                attackRunWinner.actionId(), publicBots.decideBoth(scn));
+        var attackRunPreference = MassassiObjectivePolicy
+                .scoreAttackRun(attackRunAction).operations().getFirst();
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                attackRunPreference.domainId());
+        assertEquals(300.0f, attackRunPreference.delta(), 0.0f);
+        assertEquals(
+                "MASSASSI OBJECTIVE PAYOFF: prefer beginning the exact Attack Run with the armed carrier ready at Death Star (+300 bounded preference)",
+                attackRunPreference.reason());
         assertTrue("The completed package must expose the real Attack Run action",
                 scn.LSCardActionAvailable(
                     attackRun, "Attempt to 'blow away' Death Star"));

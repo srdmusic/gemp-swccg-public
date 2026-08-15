@@ -249,7 +249,7 @@
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {
-        "deployFlipGateSite": 1600
+        "deployFlipGateSite": 300
       },
       "frontBp": "7_137",
       "backBp": "7_137_BACK",
@@ -1294,10 +1294,10 @@
       "keyCharacterFilter": "senator",
       "keySiteFilter": "Galactic_Senate",
       "weights": {
-        "rewardKeyCharAtKeySite": 1500,
-        "penalizeKeyCharOffKeySite": -2000,
-        "prioritizeKeyCharDeploy": 500,
-        "holdNonKeyCharNoSite": -2000,
+        "rewardKeyCharAtKeySite": 300,
+        "penalizeKeyCharOffKeySite": -300,
+        "prioritizeKeyCharDeploy": 300,
+        "holdNonKeyCharNoSite": -300,
         "deployFlipGateSite": 0
       },
       "frontBp": "12_88",
@@ -4690,7 +4690,7 @@
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {
-        "deployFlipGateSite": 1600
+        "deployFlipGateSite": 300
       },
       "frontBp": "7_298",
       "backBp": "7_298_BACK",
@@ -5156,7 +5156,7 @@
       "keyCharacterFilter": "biker_scout",
       "keySiteFilter": "Bunker",
       "weights": {
-        "deployFlipGateSite": 400
+        "deployFlipGateSite": 300
       },
       "flipLocationRules": [
         {
@@ -5832,10 +5832,10 @@
       "keyCharacterFilter": "senator",
       "keySiteFilter": "Galactic_Senate",
       "weights": {
-        "rewardKeyCharAtKeySite": 1500,
-        "penalizeKeyCharOffKeySite": -2000,
-        "prioritizeKeyCharDeploy": 500,
-        "holdNonKeyCharNoSite": -2000,
+        "rewardKeyCharAtKeySite": 300,
+        "penalizeKeyCharOffKeySite": -300,
+        "prioritizeKeyCharDeploy": 300,
+        "holdNonKeyCharNoSite": -300,
         "deployFlipGateSite": 0
       },
       "frontBp": "12_179",
@@ -6396,7 +6396,7 @@
       "keyCharacterFilter": null,
       "keySiteFilter": null,
       "weights": {
-        "deployFlipGateSite": 1600.0
+        "deployFlipGateSite": 300.0
       },
       "flipLocationRules": [
         {

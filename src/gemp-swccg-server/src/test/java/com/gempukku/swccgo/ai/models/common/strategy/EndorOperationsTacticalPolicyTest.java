@@ -9,7 +9,7 @@ import static org.junit.Assert.assertTrue;
 public class EndorOperationsTacticalPolicyTest {
     @Test
     public void postFlipReinforcementDominatesEmptySiteSpread() {
-        assertEquals(500.0f,
+        assertEquals(300.0f,
                 EndorOperationsTacticalPolicy.postFlipPlanAdjustment(
                         true, true, true, true, false),
                 0.0f);
@@ -31,7 +31,7 @@ public class EndorOperationsTacticalPolicyTest {
 
     @Test
     public void bunkerPullBootstrapsEndorShieldOnly() {
-        assertEquals(1500.0f,
+        assertEquals(300.0f,
                 EndorOperationsTacticalPolicy
                     .endorShieldBootstrapAdjustment(
                         "Endor: Bunker",
@@ -65,11 +65,9 @@ public class EndorOperationsTacticalPolicyTest {
     }
 
     @Test
-    public void postFlipPursuesEmptyEndorSystemBeforeAnotherEmptyGroundSite() {
+    public void postFlipPursuesAnOpenEndorSystem() {
         assertTrue(EndorOperationsTacticalPolicy.shouldPursueEndorSystem(
                 true, true, true, false, 0.0f));
-        assertTrue(EndorOperationsTacticalPolicy
-                .shouldSuppressEmptyEndorGroundEstablish(true, true));
         assertFalse(EndorOperationsTacticalPolicy.shouldPursueEndorSystem(
                 true, false, true, false, 0.0f));
         assertFalse(EndorOperationsTacticalPolicy.shouldPursueEndorSystem(
@@ -78,17 +76,15 @@ public class EndorOperationsTacticalPolicyTest {
                 true, true, true, true, 0.0f));
         assertFalse(EndorOperationsTacticalPolicy.shouldPursueEndorSystem(
                 true, true, true, false, 1.0f));
-        assertFalse(EndorOperationsTacticalPolicy
-                .shouldSuppressEmptyEndorGroundEstablish(true, false));
     }
 
     @Test
     public void cheapAdmiralGarrisonsBunkerInsteadOfMobileBoba() {
-        assertEquals(1200.0f,
+        assertEquals(300.0f,
                 EndorOperationsTacticalPolicy.bunkerGarrisonAdjustment(
                         true, false, true, true, 2, false),
                 0.0f);
-        assertEquals(-1200.0f,
+        assertEquals(-300.0f,
                 EndorOperationsTacticalPolicy.bunkerGarrisonAdjustment(
                         true, false, true, false, 4, true),
                 0.0f);

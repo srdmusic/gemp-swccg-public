@@ -51,7 +51,7 @@ public final class DrawPhasePolicy {
         DrawPhaseFactsReader.ExpensiveCards expensiveCards(int forcePile);
         DrawPhaseFactsReader.ForceStarved forceStarved();
         boolean piettNeedsDig();
-        int forceToReserve();
+        DrawReserveAssessment reserveAssessment();
     }
 
     public record HoldBack(boolean active, String reason) {
@@ -302,22 +302,57 @@ public final class DrawPhasePolicy {
                     handSize, phaseNote, effectiveSoftCap, baselineBonus);
         }
 
-        int forceToReserve = facts.forceToReserve();
-        int drawableSurplus = Math.max(0, forcePile - forceToReserve);
-        if (drawableSurplus > 0 && handSize < effectiveMaxHand && reserveDeck > 2) {
+        DrawReserveAssessment reserveAssessment =
+                Objects.requireNonNull(
+                        facts.reserveAssessment(),
+                        "reserveAssessment");
+        int forceToReserve = reserveAssessment.forceToReserve();
+        int generalReserve =
+                reserveAssessment.generalForceToReserve();
+        int vergeReserve =
+                reserveAssessment.vergeForceToReserve();
+        int drawableSurplus = Math.max(0, forcePile - generalReserve);
+        boolean reserveDrawEligible =
+                handSize < effectiveMaxHand && reserveDeck > 2;
+        if (drawableSurplus > 0 && reserveDrawEligible) {
             float surplusBonus = Math.min(400.0f, 80.0f * drawableSurplus);
             add(operations, actionId, "V58-draw-down", TraceDomainId.DRAW_COUNT,
                     TraceOutputKind.BANDED, surplusBonus,
                     String.format("V58 DRAW-DOWN: force pile %d > reserve %d — draw %d surplus into hand!",
-                            forcePile, forceToReserve, drawableSurplus));
+                            forcePile, generalReserve, drawableSurplus));
             logger.warn("V58 DRAW-DOWN: pile={}, reserve={}, surplus={} → +{}",
-                    forcePile, forceToReserve, drawableSurplus, (int) surplusBonus);
+                    forcePile, generalReserve, drawableSurplus, (int) surplusBonus);
         }
-        if (forcePile <= forceToReserve && turnNumber >= 4) {
+        if (forcePile <= generalReserve && turnNumber >= 4) {
             add(operations, actionId, "V58-hold-reserve", TraceDomainId.DRAW_COUNT,
                     TraceOutputKind.BANDED, BAD_DELTA * 1.5f,
                     "V58 HOLD RESERVE: force pile " + forcePile
-                            + " at/below reserve target " + forceToReserve + " — keep it");
+                            + " at/below reserve target " + generalReserve + "; keep it");
+        }
+        float generalReserveScore = reserveScore(
+                forcePile, generalReserve,
+                reserveDrawEligible, turnNumber);
+        float vergeReserveScore = reserveScore(
+                forcePile, generalReserve + vergeReserve,
+                reserveDrawEligible, turnNumber);
+        float vergeDelta = vergeReserveScore - generalReserveScore;
+        if (vergeDelta != 0.0f) {
+            add(operations, actionId, "V79-verge-draw-reserve",
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.BANDED, vergeDelta,
+                    "V79 OBJECTIVE RESERVE: preserve Force for the exact Death Star move route");
+        }
+        float hiddenPathReserveScore = reserveScore(
+                forcePile, forceToReserve,
+                reserveDrawEligible, turnNumber);
+        float hiddenPathDelta =
+                hiddenPathReserveScore - vergeReserveScore;
+        if (hiddenPathDelta != 0.0f) {
+            add(operations, actionId,
+                    "V67z-hidden-path-draw-reserve",
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.BANDED, hiddenPathDelta,
+                    "V67z OBJECTIVE RESERVE: preserve Force for the exact Hidden Path transit route");
         }
         if (reserveDeck <= LOW_RESERVE_THRESHOLD) {
             add(operations, actionId, "DRAW-low-reserve", TraceDomainId.DRAW_COUNT,
@@ -360,6 +395,17 @@ public final class DrawPhasePolicy {
                     "Last force - save it");
         }
         return result(operations);
+    }
+
+    private static float reserveScore(
+            int forcePile, int reserve,
+            boolean drawEligible, int turnNumber) {
+        int surplus = Math.max(0, forcePile - reserve);
+        if (surplus > 0 && drawEligible) {
+            return Math.min(400.0f, 80.0f * surplus);
+        }
+        return forcePile <= reserve && turnNumber >= 4
+                ? BAD_DELTA * 1.5f : 0.0f;
     }
 
     private static void add(List<PolicyOperation> operations, String actionId,

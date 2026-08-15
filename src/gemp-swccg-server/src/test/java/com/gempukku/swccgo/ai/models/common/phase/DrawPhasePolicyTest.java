@@ -2,6 +2,8 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
@@ -184,7 +186,7 @@ public class DrawPhasePolicyTest {
         facts.holdBack = new DrawPhasePolicy.HoldBack(true, "could not deploy available cards");
         facts.expensive = new DrawPhaseFactsReader.ExpensiveCards(4, 8, 0, true);
         facts.piett = true;
-        facts.forceReserve = 7;
+        facts.generalForceReserve = 7;
 
         List<PolicyOperation> operations = assess(facts, false).operations();
 
@@ -215,12 +217,79 @@ public class DrawPhasePolicyTest {
         facts.hand = 7;
         facts.turn = 5;
         facts.force = 12;
-        facts.forceReserve = 1;
+        facts.generalForceReserve = 1;
 
         List<PolicyOperation> operations = assess(facts, false).operations();
 
         assertIds(operations, "DRAW-baseline", "V58-draw-down", "DRAW-high-force");
         assertBits(400.0f, operations.get(1).delta());
+    }
+
+    @Test
+    public void vergeReserveIsTypedAtItsLateHoldBoundary() {
+        Facts facts = new Facts();
+        facts.hand = 7;
+        facts.turn = 5;
+        facts.force = 2;
+        facts.generalForceReserve = 1;
+        facts.vergeForceReserve = 1;
+
+        PolicyResult result = assess(facts, false);
+        PolicyOperation general = byId(result, "V58-draw-down");
+        PolicyOperation verge = byId(result, "V79-verge-draw-reserve");
+
+        assertBits(80.0f, general.delta());
+        assertEquals(TraceDomainId.DRAW_COUNT, general.domainId());
+        assertBits(-95.0f, verge.delta());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT, verge.domainId());
+        assertEquals(TraceOutputKind.BANDED, verge.outputKind());
+        assertEquals("ADD", verge.kind().name());
+        assertBits(-15.0f, general.delta() + verge.delta());
+        assertFalse(hasId(result, "V67z-hidden-path-draw-reserve"));
+    }
+
+    @Test
+    public void hiddenPathReserveIsTypedAtItsLateHoldBoundary() {
+        Facts facts = new Facts();
+        facts.hand = 7;
+        facts.turn = 5;
+        facts.force = 3;
+        facts.generalForceReserve = 1;
+        facts.hiddenPathForceReserve = 2;
+
+        PolicyResult result = assess(facts, false);
+        PolicyOperation general = byId(result, "V58-draw-down");
+        PolicyOperation hidden = byId(
+                result, "V67z-hidden-path-draw-reserve");
+
+        assertBits(160.0f, general.delta());
+        assertEquals(TraceDomainId.DRAW_COUNT, general.domainId());
+        assertBits(-175.0f, hidden.delta());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT, hidden.domainId());
+        assertEquals(TraceOutputKind.BANDED, hidden.outputKind());
+        assertEquals("ADD", hidden.kind().name());
+        assertBits(-15.0f, general.delta() + hidden.delta());
+        assertFalse(hasId(result, "V79-verge-draw-reserve"));
+    }
+
+    @Test
+    public void objectiveReserveSourcesShareOneMinusThreeHundredCeiling() {
+        Facts facts = new Facts();
+        facts.hand = 7;
+        facts.turn = 5;
+        facts.force = 5;
+        facts.generalForceReserve = 0;
+        facts.vergeForceReserve = 1;
+        facts.hiddenPathForceReserve = 10;
+
+        PolicyResult result = assess(facts, false);
+
+        assertBits(400.0f, byId(result, "V58-draw-down").delta());
+        assertBits(-80.0f,
+                byId(result, "V79-verge-draw-reserve").delta());
+        assertBits(-220.0f,
+                byId(result, "V67z-hidden-path-draw-reserve").delta());
+        assertBits(-300.0f, objectiveTotal(result));
     }
 
     @Test
@@ -231,7 +300,7 @@ public class DrawPhasePolicyTest {
         facts.reserve = 6;
         facts.used = 20;
         facts.force = 1;
-        facts.forceReserve = 1;
+        facts.generalForceReserve = 1;
 
         List<PolicyOperation> operations = assess(facts, false).operations();
 
@@ -249,7 +318,7 @@ public class DrawPhasePolicyTest {
         facts.turn = 5;
         facts.holdBack = new DrawPhasePolicy.HoldBack(true, "could not deploy");
         facts.piett = true;
-        facts.forceReserve = 1;
+        facts.generalForceReserve = 1;
 
         List<PolicyOperation> operations = assess(facts, true).operations();
         Set<String> ids = new HashSet<>();
@@ -304,6 +373,16 @@ public class DrawPhasePolicyTest {
         return total;
     }
 
+    private static float objectiveTotal(PolicyResult result) {
+        float total = 0.0f;
+        for (PolicyOperation operation : result.operations()) {
+            if (operation.domainId() == TraceDomainId.OBJECTIVE_INTENT) {
+                total += operation.delta();
+            }
+        }
+        return total;
+    }
+
     private static final class Facts implements DrawPhasePolicy.Facts {
         private boolean hasBoard = true;
         private int hand = 7;
@@ -320,7 +399,9 @@ public class DrawPhasePolicyTest {
         private DrawPhaseFactsReader.ForceStarved starved =
                 new DrawPhaseFactsReader.ForceStarved(0, 999);
         private boolean piett;
-        private int forceReserve;
+        private int generalForceReserve;
+        private int vergeForceReserve;
+        private int hiddenPathForceReserve;
         private boolean offensiveBankRead;
         private boolean reserveRead;
         private boolean ordinaryStockDraw = true;
@@ -365,9 +446,14 @@ public class DrawPhasePolicyTest {
         @Override public DrawPhaseFactsReader.ForceStarved forceStarved() { return starved; }
         @Override public boolean piettNeedsDig() { return piett; }
 
-        @Override public int forceToReserve() {
+        @Override public DrawReserveAssessment reserveAssessment() {
             reserveRead = true;
-            return forceReserve;
+            return new DrawReserveAssessment(
+                    generalForceReserve
+                            + vergeForceReserve
+                            + hiddenPathForceReserve,
+                    vergeForceReserve,
+                    hiddenPathForceReserve);
         }
     }
 }

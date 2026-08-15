@@ -66,10 +66,11 @@ public class MoveVergeSourceParityTest {
         assertTrue(move.contains("V79b flip-state check error"));
         assertTrue(move.contains("V79 Death Star move check error"));
         assertTrue(move.contains("action.addReasoning("));
+        assertTrue(move.contains("addObjectiveContribution("));
         assertTrue(move.contains(
+                "MOVE.OBJECTIVE.ON_THE_VERGE.DEATH_STAR_ROUTE"));
+        assertFalse(move.contains(
                 "ladderVetoHard = v79Evaluation.hardVeto()"));
-        assertTrue(move.contains(
-                "ladderVetoHardReason = v79Evaluation.hardVetoReason()"));
     }
 
     @Test
@@ -88,11 +89,9 @@ public class MoveVergeSourceParityTest {
         int classify = move.indexOf(
                 "MoveVergePolicy.evaluate(", analyzerRead);
         int add = move.indexOf(
-                "action.addReasoning(", classify);
-        int hardVeto = move.indexOf(
-                "ladderVetoHard = v79Evaluation.hardVeto()", add);
+                "addObjectiveContribution(", classify);
         int pilotLock = move.indexOf(
-                "MoveTransitPolicy.pilotLock(", hardVeto);
+                "MoveTransitPolicy.pilotLock(", add);
 
         assertTrue(cardResolve >= 0);
         assertTrue(deathStarGate > cardResolve);
@@ -101,12 +100,11 @@ public class MoveVergeSourceParityTest {
         assertTrue(analyzerRead > orbitRead);
         assertTrue(classify > analyzerRead);
         assertTrue(add > classify);
-        assertTrue(hardVeto > add);
-        assertTrue(pilotLock > hardVeto);
+        assertTrue(pilotLock > add);
     }
 
     @Test
-    public void adapterKeepsExactBranchesLogsAndHardVeto() throws IOException {
+    public void adapterKeepsExactBranchesAndBoundedLogs() throws IOException {
         String move = evaluatorSource("rando", "MoveEvaluator.java");
 
         for (String branch : new String[]{
@@ -119,7 +117,7 @@ public class MoveVergeSourceParityTest {
         assertTrue(move.contains(
                 "objective back does not require Scarif orbit"));
         assertTrue(move.contains(
-                "Death Star orbiting Scarif pre-flip, hyperspeed move VETOED"));
+                "Death Star orbiting Scarif pre-flip, bounded movement penalty"));
     }
 
     @Test
@@ -170,7 +168,7 @@ public class MoveVergeSourceParityTest {
         assertTrue(policy.contains(
                 "V79 PARSEC 7 (Scarif!) — pick this"));
         assertTrue(policy.contains(
-                "V79 ORBIT SCARIF — must take!"));
+                "V79 ORBIT SCARIF: preferred objective destination (+300)"));
         assertTrue(policy.contains(
                 "V79 destination not Scarif — avoid"));
         assertTrue(policy.contains(
@@ -278,7 +276,9 @@ public class MoveVergeSourceParityTest {
             assertTrue(actionText.contains(
                     "V103 PARSEC FALLBACK: Verge implied by Death Star ownership + parsec prompt"));
             assertTrue(actionText.contains(
-                    "V79 PARSEC CHOICE: parsec 7 (Scarif) → +1500"));
+                    "V79 PARSEC CHOICE: parsec 7 (Scarif) -> +300"));
+            assertFalse(actionText.contains(
+                    "V79 PARSEC CHOICE: parsec 7 (Scarif) -> +1500"));
             assertTrue(actionText.contains(
                     "MoveVergePolicy.evaluateParsecFallback(fparsec)"));
             assertEquals(3, countOccurrences(actionText,

@@ -175,17 +175,17 @@ public class TdigwattClassicEngineDeployBehaviorTest {
                     scn, analyzers, ccoAction.actionId());
         assertFalse(ccoEvaluation.hardVeto());
         assertTrue(
-                "The exact classic engine action must receive +900: "
+                "The exact classic engine action must receive +300: "
                     + ccoEvaluation.reasoning(),
                 ccoEvaluation.reasoning().stream()
                     .anyMatch(reason ->
                         reason.contains(CCO_ENGINE_REASON)
-                        && reason.contains("(+900.0)")));
+                        && reason.contains("(+300.0)")));
 
         EvaluationView combined =
                 evaluateCombinedBoth(scn, analyzers);
         assertEquals(
-                "The +900 classic engine action must beat Pass",
+                "The bounded engine preference plus live tactics beats Pass",
                 ccoAction.actionId(), combined.actionId());
 
         PublicBots bots = PublicBots.forGame(scn);
