@@ -8788,12 +8788,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         objectiveMove.reason(),
                         objectiveMove.delta(),
                         "MOVE.OBJECTIVE.DOCKING_TRANSIT");
-            } else if (admissible) {
-                addObjectiveContribution(action,
-                    "MOVE.OBJECTIVE.DOCKING_TRANSIT_SAFE_COMPLETION: finish the selected transit without breaking the flip formation",
-                    10.0f,
-                    "MOVE.OBJECTIVE.DOCKING_TRANSIT_SAFE_COMPLETION");
-            } else if (boundRoute && formationSafeRoute
+            } else if (!admissible && boundRoute && formationSafeRoute
                     && objectiveHeld) {
                 addObjectiveContribution(action,
                     "OBJECTIVE.HUNT_DOWN.RUNTIME_ACTOR_TRANSIT_HOLD: this legal transit relaxes the objective actor hold",

@@ -2,9 +2,13 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.models.common.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardType;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
@@ -13,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
@@ -76,6 +81,81 @@ public class BattleDecisionPolicyTest {
         assertEquals(1, results.size());
         assertEquals(1, predictions.get());
         assertFalse(results.get(0).contributions().isEmpty());
+    }
+
+    @Test
+    public void opponentRawFivePlusOneActiveLightsaberReachesPredictorAsTenExactlyOnce() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard location = mock(PhysicalCard.class);
+        PhysicalCard opponent = mock(PhysicalCard.class);
+        PhysicalCard lightsaber = mock(PhysicalCard.class);
+        SwccgCardBlueprint opponentBlueprint =
+                mock(SwccgCardBlueprint.class);
+        AtomicInteger predictions = new AtomicInteger();
+        AtomicInteger predictedOpponentPower =
+                new AtomicInteger(-1);
+
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getOpponent("bot")).thenReturn("opponent");
+        when(gameState.getTopLocations()).thenReturn(List.of(location));
+        when(gameState.getCardsAtLocation(location))
+                .thenReturn(List.of(opponent));
+        when(gameState.getAllPermanentCards())
+                .thenReturn(List.of(opponent));
+        when(location.getCardId()).thenReturn(7);
+        when(location.getTitle()).thenReturn("Armed Opponent Site");
+        when(opponent.getOwner()).thenReturn("opponent");
+        when(opponent.getBlueprint()).thenReturn(opponentBlueprint);
+        when(opponentBlueprint.getCardCategory())
+                .thenReturn(CardCategory.CHARACTER);
+        when(gameState.getAttachedCards(opponent))
+                .thenReturn(List.of(lightsaber));
+        when(gameState.isCardInPlayActive(
+                lightsaber, true, true, true,
+                false, false, true, true, false))
+                .thenReturn(true);
+        when(modifiers.getCardTypes(gameState, lightsaber))
+                .thenReturn(Set.of(CardType.WEAPON));
+        when(modifiers.hasKeyword(
+                gameState, lightsaber, Keyword.LIGHTSABER))
+                .thenReturn(true);
+        when(modifiers.getTotalPowerAtLocation(
+                any(), any(), anyString(),
+                anyBoolean(), anyBoolean()))
+                .thenAnswer(invocation ->
+                        "bot".equals(invocation.getArgument(2))
+                                ? 7.0f : 5.0f);
+        when(modifiers.getTotalAbilityAtLocation(
+                any(), anyString(), any()))
+                .thenReturn(4.0f);
+
+        BattleDecisionPolicy.Context base = context(
+                gameState, game, List.of("battle"),
+                List.of("Initiate battle"), List.of("7"),
+                predictions);
+        BattleDecisionPolicy.Context capture =
+                new DelegatingContext(base) {
+                    @Override
+                    public BattleDecisionPolicy.Prediction predictBattle(
+                            int myPower, int myDestinyDraws,
+                            int opponentPower,
+                            int opponentDestinyDraws) {
+                        predictions.incrementAndGet();
+                        predictedOpponentPower.set(opponentPower);
+                        return new BattleDecisionPolicy.Prediction(
+                                0.75f, 3.0f, 1.0f);
+                    }
+                };
+
+        List<BattleDecisionPolicy.ScoredAction> results =
+                BattleDecisionPolicy.evaluate(capture);
+
+        assertEquals(1, results.size());
+        assertEquals(1, predictions.get());
+        assertEquals(10, predictedOpponentPower.get());
     }
 
     @Test

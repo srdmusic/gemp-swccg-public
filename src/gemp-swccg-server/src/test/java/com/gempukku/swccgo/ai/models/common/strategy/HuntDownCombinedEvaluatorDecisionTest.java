@@ -755,7 +755,7 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                     bot, fixture, decision,
                     true, "0");
             assertFalse(held.outcome().hardVeto());
-            assertEquals(-295.0f, held.outcome().score(), 0.0f);
+            assertEquals(-310.0f, held.outcome().score(), 0.0f);
             assertContains(
                     held.outcome(),
                     "RUNTIME_ACTOR_TRANSIT_HOLD");
@@ -856,15 +856,19 @@ public class HuntDownCombinedEvaluatorDecisionTest {
 
             Decision destinationDecision = Decision.dockingDestination(
                     List.of(decoy, destination));
-            Outcome advancingDestination =
-                    dockingCardSelectionAdapter(
+            TracedOutcome advancingDestination =
+                    tracedDockingCardSelectionAdapter(
                             bot, fixture, destinationDecision,
                             source, null,
                             String.valueOf(
                                     BATTLEGROUND_DOCKING_BAY_ID));
             assertContains(
-                    advancingDestination,
+                    advancingDestination.outcome(),
                     "MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION");
+            assertObjectiveDelta(
+                    advancingDestination,
+                    "MOVE.OBJECTIVE.DOCKING_TRANSIT",
+                    300.0f);
             List<Outcome> sequence = combinedSequence(
                     bot, fixture,
                     Decision.dockingTransitTop(source),
@@ -877,9 +881,9 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                     "MOVE.OBJECTIVE.ACTOR_LOCATION_START");
             assertEquals(
                     String.valueOf(
-                        DECOY_DOCKING_BAY_ID),
+                        BATTLEGROUND_DOCKING_BAY_ID),
                     sequence.get(1).actionId());
-            assertNotContains(
+            assertContains(
                     sequence.get(1),
                     "MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION");
             results.add(sequence);
@@ -939,25 +943,24 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                     bot, fixture, top,
                     true, "0");
             assertTrue(transit.score() > -10000.0f);
-            Outcome safeDestination =
-                    dockingCardSelectionAdapter(
+            TracedOutcome safeDestination =
+                    tracedDockingCardSelectionAdapter(
                         bot, fixture,
                         Decision.dockingDestination(
                             List.of(destination)),
                         source, null,
                         String.valueOf(
                             NON_BATTLEGROUND_DOCKING_BAY_ID));
-            assertContains(
-                    safeDestination,
-                    "DOCKING_TRANSIT_SAFE_COMPLETION");
-            Outcome safeBuddy =
-                    dockingCardSelectionAdapter(
+            assertNoObjectiveContribution(safeDestination);
+            assertEquals(
+                    0.0f, safeDestination.outcome().score(), 0.0f);
+            TracedOutcome safeBuddy =
+                    tracedDockingCardSelectionAdapter(
                         bot, fixture, movers, source,
                         destination,
                         String.valueOf(DISTRACTOR_ID));
-            assertContains(
-                    safeBuddy,
-                    "DOCKING_TRANSIT_SAFE_COMPLETION");
+            assertNoObjectiveContribution(safeBuddy);
+            assertEquals(0.0f, safeBuddy.outcome().score(), 0.0f);
             TracedOutcome heldVader =
                     tracedDockingCardSelectionAdapter(
                         bot, fixture, movers, source,
@@ -976,8 +979,8 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                     -300.0f);
             parentChoices.add(parent);
             transitCandidates.add(transit);
-            safeDestinations.add(safeDestination);
-            safeBuddies.add(safeBuddy);
+            safeDestinations.add(safeDestination.outcome());
+            safeBuddies.add(safeBuddy.outcome());
             heldVaders.add(heldVader.outcome());
         }
         assertParity(parentChoices);
@@ -1806,6 +1809,24 @@ public class HuntDownCombinedEvaluatorDecisionTest {
                         && operation.getDeltaBits() != null
                         && operation.getDeltaBits()
                             == Float.floatToRawIntBits(delta)
+                        && !operation.isVetoed()));
+    }
+
+    private static void assertNoObjectiveContribution(
+            TracedOutcome traced) {
+        assertTrue(
+                "Expected no nonzero objective contribution for "
+                    + traced.outcome().actionId() + " in "
+                    + traced.trace().getOperations(),
+                traced.trace().getOperations().stream()
+                    .noneMatch(operation ->
+                        traced.outcome().actionId().equals(
+                            operation.getActionId())
+                        && operation.getDomainId()
+                            == TraceDomainId.OBJECTIVE_INTENT
+                        && operation.getDeltaBits() != null
+                        && Float.intBitsToFloat(
+                            operation.getDeltaBits()) != 0.0f
                         && !operation.isVetoed()));
     }
 

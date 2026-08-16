@@ -1804,6 +1804,231 @@ public class DeployPlanRankingAdapterParityTest {
     }
 
     @Test
+    public void stopBleedingUsesOneDestinyThresholdAndSharedToleranceBoundary()
+            throws Exception {
+        PhysicalCard lowerCorridor = mock(PhysicalCard.class);
+        when(lowerCorridor.getCardId()).thenReturn(LOCATION_ID);
+        when(lowerCorridor.getTitle()).thenReturn("Death Star II: Lower Corridor");
+
+        PhysicalCard thrawn = character(
+                "207_21", "Grand Admiral Thrawn (V)", 501, 4, 4, 4);
+        PhysicalCard kirKanos = character(
+                "208_32", "Kir Kanos (V)", 502, 5, 3, 3);
+        setForfeit(thrawn, 7.0f);
+        setForfeit(kirKanos, 4.0f);
+
+        List<PhysicalCard> deploymentCandidates = new ArrayList<>();
+        for (int index = 0; index < 7; index++) {
+            PhysicalCard decoy = character(
+                    "1_" + (900 + index), "High-forfeit decoy " + index,
+                    600 + index, 4, 0, 1);
+            setForfeit(decoy, 10.0f);
+            deploymentCandidates.add(decoy);
+        }
+        deploymentCandidates.add(thrawn);
+        deploymentCandidates.add(kirKanos);
+        List<PhysicalCard> sitePair = List.of(thrawn, kirKanos);
+
+        PhysicalCard opponent = character(
+                "test_stack", "Opponent stack",
+                503, 11, 10, 0);
+        when(opponent.getOwner()).thenReturn("opponent");
+        setForfeit(opponent, 10.0f);
+
+        GameState gameState = mock(GameState.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        SwccgGame game = mock(SwccgGame.class);
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(game.getOpponent("player")).thenReturn("opponent");
+        when(gameState.getCardsAtLocation(lowerCorridor))
+                .thenReturn(List.of(opponent));
+        when(modifiers.getTotalPowerAtLocation(
+                gameState, lowerCorridor, "opponent", false, false))
+                .thenReturn(11.0f);
+        when(modifiers.getForceDrainAmount(
+                gameState, lowerCorridor, "opponent"))
+                .thenReturn(2.0f);
+
+        AiBoardAnalyzer.LocationAnalysis bleeding =
+                new AiBoardAnalyzer.LocationAnalysis(
+                        lowerCorridor,
+                        0.0f, 11.0f, 0.0f, 10.0f,
+                        2, 1, 0, 1,
+                        AiBoardAnalyzer.ContestStatus.LOSING, true);
+
+        var randoPlanner = newRandoPlanner();
+        configurePlannerState(randoPlanner, game);
+        var randoPlan =
+                (com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                randoPlanner,
+                                deploymentCandidates.stream()
+                                        .map(com.gempukku.swccgo.ai.models.rando.strategy.CardInfo::new)
+                                        .toList(),
+                                List.of(bleeding), 9);
+
+        var chosenPlanner = newChosenPlanner();
+        configurePlannerState(chosenPlanner, game);
+        var chosenPlan =
+                (com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                chosenPlanner,
+                                deploymentCandidates.stream()
+                                        .map(com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo::new)
+                                        .toList(),
+                                List.of(bleeding), 9);
+
+        assertEquals(2, randoPlan.getInstructions().size());
+        assertEquals(2, chosenPlan.getInstructions().size());
+        assertEquals(
+                List.of("207_21", "208_32"),
+                randoPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getCardBlueprintId())
+                        .sorted()
+                        .toList());
+        assertEquals(
+                List.of("207_21", "208_32"),
+                chosenPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getCardBlueprintId())
+                        .sorted()
+                        .toList());
+        assertEquals(
+                randoPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getTargetLocationId())
+                        .toList(),
+                chosenPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getTargetLocationId())
+                        .toList());
+        assertTrue(randoPlan.getInstructions().stream().allMatch(
+                instruction -> String.valueOf(LOCATION_ID).equals(
+                        instruction.getTargetLocationId())));
+
+        when(modifiers.getForceDrainAmount(
+                gameState, lowerCorridor, "opponent"))
+                .thenReturn(1.0f);
+        var rejectedRando =
+                (com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                randoPlanner,
+                                sitePair.stream()
+                                        .map(com.gempukku.swccgo.ai.models.rando.strategy.CardInfo::new)
+                                        .toList(),
+                                List.of(bleeding), 9);
+        var rejectedChosen =
+                (com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                chosenPlanner,
+                                sitePair.stream()
+                                        .map(com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo::new)
+                                        .toList(),
+                                List.of(bleeding), 9);
+        assertTrue(rejectedRando.getInstructions().isEmpty());
+        assertTrue(rejectedChosen.getInstructions().isEmpty());
+
+        when(modifiers.getForceDrainAmount(
+                gameState, lowerCorridor, "opponent"))
+                .thenReturn(2.0f);
+        setForfeit(opponent, 5.0f);
+        var forfeitMismatchRando =
+                (com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                randoPlanner,
+                                sitePair.stream()
+                                        .map(com.gempukku.swccgo.ai.models.rando.strategy.CardInfo::new)
+                                        .toList(),
+                                List.of(bleeding), 9);
+        var forfeitMismatchChosen =
+                (com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                chosenPlanner,
+                                sitePair.stream()
+                                        .map(com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo::new)
+                                        .toList(),
+                                List.of(bleeding), 9);
+        assertTrue(forfeitMismatchRando.getInstructions().isEmpty());
+        assertTrue(forfeitMismatchChosen.getInstructions().isEmpty());
+        setForfeit(opponent, 10.0f);
+
+        when(modifiers.getTotalPowerAtLocation(
+                gameState, lowerCorridor, "opponent", false, false))
+                .thenReturn(13.0f);
+        AiBoardAnalyzer.LocationAnalysis excessiveGap =
+                new AiBoardAnalyzer.LocationAnalysis(
+                        lowerCorridor,
+                        0.0f, 13.0f, 0.0f, 10.0f,
+                        2, 1, 0, 1,
+                        AiBoardAnalyzer.ContestStatus.LOSING, true);
+        var gapRando =
+                (com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                randoPlanner,
+                                sitePair.stream()
+                                        .map(com.gempukku.swccgo.ai.models.rando.strategy.CardInfo::new)
+                                        .toList(),
+                                List.of(excessiveGap), 9);
+        var gapChosen =
+                (com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                chosenPlanner,
+                                sitePair.stream()
+                                        .map(com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo::new)
+                                        .toList(),
+                                List.of(excessiveGap), 9);
+        assertTrue(gapRando.getInstructions().isEmpty());
+        assertTrue(gapChosen.getInstructions().isEmpty());
+        when(modifiers.getTotalPowerAtLocation(
+                gameState, lowerCorridor, "opponent", false, false))
+                .thenReturn(11.0f);
+
+        AiBoardAnalyzer.LocationAnalysis systemBleed =
+                new AiBoardAnalyzer.LocationAnalysis(
+                        lowerCorridor,
+                        0.0f, 11.0f, 0.0f, 4.0f,
+                        2, 1, 0, 1,
+                        AiBoardAnalyzer.ContestStatus.LOSING, true,
+                        false, false, false, true);
+        var rejectedSpaceRando =
+                (com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                randoPlanner,
+                                sitePair.stream()
+                                        .map(com.gempukku.swccgo.ai.models.rando.strategy.CardInfo::new)
+                                        .toList(),
+                                List.of(systemBleed), 9);
+        var rejectedSpaceChosen =
+                (com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                chosenPlanner,
+                                sitePair.stream()
+                                        .map(com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo::new)
+                                        .toList(),
+                                List.of(systemBleed), 9);
+        assertTrue(rejectedSpaceRando.getInstructions().isEmpty());
+        assertTrue(rejectedSpaceChosen.getInstructions().isEmpty());
+
+        PhysicalCard dominantShip = starship(
+                "1_999", "Legacy power-dominant ship", 700,
+                15, 0, 5);
+        var dominantSpaceRando =
+                (com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                randoPlanner,
+                                List.of(new com.gempukku.swccgo.ai.models.rando.strategy.CardInfo(
+                                        dominantShip)),
+                                List.of(systemBleed), 9);
+        var dominantSpaceChosen =
+                (com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan)
+                        invokeStopBleedingPlan(
+                                chosenPlanner,
+                                List.of(new com.gempukku.swccgo.ai.models.chosenone.strategy.CardInfo(
+                                        dominantShip)),
+                                List.of(systemBleed), 9);
+        assertEquals(1, dominantSpaceRando.getInstructions().size());
+        assertEquals(1, dominantSpaceChosen.getInstructions().size());
+    }
+
+    @Test
     public void existingBuddyAllowsTheExactActorToJoinAloneInBothBots()
             throws Exception {
         FormationFixture fixture = formationFixture();
@@ -2075,6 +2300,19 @@ public class DeployPlanRankingAdapterParityTest {
                 "generateFlipGateFormationPlan", List.class, List.class, int.class);
         method.setAccessible(true);
         return method.invoke(planner, characters, locations, forceAvailable);
+    }
+
+    private static Object invokeStopBleedingPlan(
+            Object planner, List<?> characters,
+            List<AiBoardAnalyzer.LocationAnalysis> locations,
+            int forceAvailable) throws Exception {
+        Method method = planner.getClass().getDeclaredMethod(
+                "generateStopBleedingPlan",
+                List.class, List.class, int.class, int.class, String.class);
+        method.setAccessible(true);
+        return method.invoke(
+                planner, characters, new ArrayList<>(locations),
+                forceAvailable, 0, "ground");
     }
 
     private static Object invokeSelectBestPlan(
@@ -2350,12 +2588,18 @@ public class DeployPlanRankingAdapterParityTest {
         when(card.getPermanentCardId()).thenReturn(permanentId);
         when(card.getCardId()).thenReturn(permanentId + 1000);
         when(blueprint.getCardCategory()).thenReturn(CardCategory.CHARACTER);
+        when(blueprint.getGameText()).thenReturn("");
         when(blueprint.hasPowerAttribute()).thenReturn(true);
         when(blueprint.getPower()).thenReturn((float) power);
         when(blueprint.hasAbilityAttribute()).thenReturn(true);
         when(blueprint.getAbility()).thenReturn((float) ability);
         when(blueprint.getDeployCost()).thenReturn((float) cost);
         return card;
+    }
+
+    private static void setForfeit(PhysicalCard card, float forfeit) {
+        when(card.getBlueprint().hasForfeitAttribute()).thenReturn(true);
+        when(card.getBlueprint().getForfeit()).thenReturn(forfeit);
     }
 
     private static PhysicalCard starship(

@@ -3400,11 +3400,6 @@ public class ObjectiveAnalyzer {
                 game, playerId, candidate, location)) {
             return true;
         }
-        if (isISBOperations
-                && isPreferredIsbOnTableAgentCandidate(
-                    game, playerId, candidate)) {
-            return true;
-        }
         for (FlipLocationRule rule : activeFlipLocationRules) {
             if (!isActivePreFlipRule(rule) || isRuleSatisfied(
                     game, playerId, rule)) {

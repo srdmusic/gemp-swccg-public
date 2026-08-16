@@ -8,6 +8,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.common.strategy.PublicImmediateReactAnalyzer;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
@@ -647,6 +648,153 @@ public class DeployPhasePlanner {
                 .weaponBonusAt(gs, location, gs.getOpponent(playerId));
         } catch (Exception e) {
             return 0f;
+        }
+    }
+
+    private float projectedForfeitTotal(List<PhysicalCard> cards) {
+        float total = 0.0f;
+        if (cards == null) return total;
+        for (PhysicalCard card : cards) {
+            try {
+                if (card == null || card.getBlueprint() == null
+                        || !card.getBlueprint().hasForfeitAttribute()) {
+                    continue;
+                }
+                Float forfeit = card.getBlueprint().getForfeit();
+                if (forfeit != null && Float.isFinite(forfeit)
+                        && forfeit > 0.0f) {
+                    total += forfeit;
+                }
+            } catch (Exception ignored) {
+                // Unknown forfeit remains zero, matching MovePredicates.
+            }
+        }
+        return total;
+    }
+
+    private OptimalCombination findWinnableSiteCombination(
+            List<CardInfo> cards, int budget,
+            AiBoardAnalyzer.LocationAnalysis location) {
+        int cleanWinPower = Math.max(0, (int) Math.ceil(location.theirPower));
+        Map<SiteWaveState, SiteWaveCandidate> states = new HashMap<>();
+        SiteWaveCandidate empty = SiteWaveCandidate.empty();
+        states.put(SiteWaveState.of(empty, cleanWinPower), empty);
+
+        for (CardInfo card : cards) {
+            if (card == null || card.cost > budget) continue;
+            float forfeit = projectedForfeitTotal(List.of(card.card));
+            Map<SiteWaveState, SiteWaveCandidate> expanded =
+                new HashMap<>(states);
+            for (SiteWaveCandidate existing : states.values()) {
+                if (existing.totalCost + card.cost > budget) continue;
+                SiteWaveCandidate candidate = existing.add(card, forfeit);
+                SiteWaveState state = SiteWaveState.of(
+                    candidate, cleanWinPower);
+                SiteWaveCandidate incumbent = expanded.get(state);
+                if (incumbent == null
+                        || candidate.preferredTo(
+                            incumbent, cleanWinPower)) {
+                    expanded.put(state, candidate);
+                }
+            }
+            states = expanded;
+        }
+
+        int contestPowerFloor = Math.max(0,
+            (int) Math.ceil(location.theirPower - MovePredicates.POWER_GAP_MAX));
+        List<SiteWaveCandidate> frontier =
+            new ArrayList<>(states.values());
+        frontier.sort(Comparator
+            .comparingInt((SiteWaveCandidate candidate) -> candidate.cards.size())
+            .thenComparingInt(candidate -> candidate.totalCost)
+            .thenComparingInt(candidate -> -candidate.totalPower)
+            .thenComparingInt(candidate -> -candidate.totalAbility)
+            .thenComparingDouble(candidate -> candidate.totalForfeit));
+
+        for (SiteWaveCandidate candidate : frontier) {
+            if (candidate.cards.isEmpty()
+                    || candidate.totalPower < contestPowerFloor) {
+                continue;
+            }
+            if (MovePredicates.canWinAt(
+                    currentGame,
+                    currentGame != null ? currentGame.getGameState() : null,
+                    currentPlayerId,
+                    location.location,
+                    candidate.totalPower,
+                    candidate.totalAbility,
+                    candidate.totalForfeit)) {
+                return candidate.toOptimalCombination();
+            }
+        }
+        return OptimalCombination.empty();
+    }
+
+    private static class SiteWaveCandidate {
+        private final List<PhysicalCard> cards;
+        private final int totalPower;
+        private final int totalCost;
+        private final int totalAbility;
+        private final float totalForfeit;
+
+        private SiteWaveCandidate(List<PhysicalCard> cards, int totalPower,
+                                  int totalCost, int totalAbility,
+                                  float totalForfeit) {
+            this.cards = cards;
+            this.totalPower = totalPower;
+            this.totalCost = totalCost;
+            this.totalAbility = totalAbility;
+            this.totalForfeit = totalForfeit;
+        }
+
+        private static SiteWaveCandidate empty() {
+            return new SiteWaveCandidate(
+                new ArrayList<>(), 0, 0, 0, 0.0f);
+        }
+
+        private SiteWaveCandidate add(CardInfo card, float forfeit) {
+            List<PhysicalCard> selected = new ArrayList<>(cards);
+            selected.add(card.card);
+            return new SiteWaveCandidate(
+                selected,
+                totalPower + card.power,
+                totalCost + card.cost,
+                totalAbility + card.ability,
+                totalForfeit + forfeit);
+        }
+
+        private boolean preferredTo(
+                SiteWaveCandidate other, int cleanWinPower) {
+            float risk = totalPower >= cleanWinPower && totalAbility >= 4
+                ? 0.0f : totalForfeit;
+            float otherRisk = other.totalPower >= cleanWinPower
+                    && other.totalAbility >= 4
+                ? 0.0f : other.totalForfeit;
+            int riskComparison = Float.compare(risk, otherRisk);
+            if (riskComparison != 0) return riskComparison < 0;
+            if (cards.size() != other.cards.size()) {
+                return cards.size() < other.cards.size();
+            }
+            if (totalPower != other.totalPower) {
+                return totalPower > other.totalPower;
+            }
+            return totalAbility > other.totalAbility;
+        }
+
+        private OptimalCombination toOptimalCombination() {
+            return new OptimalCombination(
+                cards, totalPower, totalCost, totalAbility,
+                totalAbility >= RandoConfig.ABILITY_THRESHOLD, true);
+        }
+    }
+
+    private record SiteWaveState(int cost, int power, int ability) {
+        private static SiteWaveState of(
+                SiteWaveCandidate candidate, int cleanWinPower) {
+            return new SiteWaveState(
+                candidate.totalCost,
+                Math.min(candidate.totalPower, cleanWinPower),
+                Math.min(candidate.totalAbility, 4));
         }
     }
 
@@ -2070,23 +2218,29 @@ public class DeployPhasePlanner {
                 continue;
             }
 
-            // Calculate power needed accounting for ability differential
-            // If enemy has more ability, they draw more destiny (avg ~2.5 per ability)
-            // So we need extra power margin to compensate
-            float abilityPenalty = Math.max(0, loc.theirAbility - 4) * 2.5f; // Penalize if they have >4 ability
-            int effectivePowerNeeded = (int) (loc.theirPower + abilityPenalty);
+            OptimalCombination combo;
+            boolean winnable;
+            if (loc.isSite) {
+                // Ability 4 permits one normal battle-destiny draw. Extra
+                // aggregate ability does not create extra draws, so sites use
+                // the shared V181 bounded-contest rule.
+                combo = findWinnableSiteCombination(
+                    deployableHere, remaining, loc);
+                winnable = !combo.isEmpty();
+            } else {
+                // Preserve the legacy space boundary. CardInfo does not model
+                // permanent-pilot ability or starship forfeit well enough for
+                // the character-based V181 site predicate.
+                float abilityPenalty = Math.max(0, loc.theirAbility - 4) * 2.5f;
+                int effectivePowerNeeded = (int) (loc.theirPower + abilityPenalty);
+                combo = findOptimalCombination(
+                    deployableHere, remaining, effectivePowerNeeded, true);
+                boolean abilityOk = combo.totalAbility >= loc.theirAbility
+                    || combo.totalPower >= loc.theirPower + 3;
+                winnable = !combo.isEmpty() && combo.achievesGoal && abilityOk;
+            }
 
-            // Find optimal combination to beat enemy effective power
-            OptimalCombination combo = findOptimalCombination(
-                deployableHere, remaining, effectivePowerNeeded, true);
-
-            // CRITICAL FIX: Only deploy if we can ACTUALLY beat them!
-            // Also check ability - if they have significantly more ability, they'll draw
-            // more destiny and likely win even with equal power.
-            boolean abilityOk = combo.totalAbility >= loc.theirAbility ||
-                                combo.totalPower >= loc.theirPower + 3; // Need power margin if ability disadvantage
-
-            if (!combo.isEmpty() && combo.achievesGoal && abilityOk) {
+            if (winnable) {
                 for (PhysicalCard card : combo.cards) {
                     CardInfo info = findCardInfo(available, card);
                     if (info != null) {
@@ -2097,13 +2251,11 @@ public class DeployPhasePlanner {
                         available.removeIf(c -> c.card == card);
                     }
                 }
-            } else if (!combo.isEmpty() && !abilityOk) {
-                LOG.info("📋 Skipping stop-bleed at {} - ability disadvantage (ours: {}, theirs: {}) with only {} power margin",
-                    loc.location.getTitle(), combo.totalAbility, (int) loc.theirAbility,
-                    combo.totalPower - (int) loc.theirPower);
             } else if (!combo.isEmpty()) {
-                LOG.info("📋 Skipping stop-bleed at {} - can't beat enemy power {} with available cards (best: {})",
-                    loc.location.getTitle(), (int) loc.theirPower, combo.totalPower);
+                LOG.info("📋 Skipping stop-bleed at {} - stop-bleed gate rejects wave power/ability {}/{} against {}/{}",
+                    loc.location.getTitle(), combo.totalPower,
+                    combo.totalAbility, (int) loc.theirPower,
+                    (int) loc.theirAbility);
             }
         }
 

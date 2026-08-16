@@ -693,6 +693,52 @@ public class IsbOperationsObjectiveEngineContractTest {
     }
 
     @Test
+    public void isboPreferredOnTableCandidateRemainsParentProgressButArbitraryDestinationIsNotLocationProgress() {
+        var scn = isboScenario();
+        var corusDb = scn.GetDSCard("corusDb");
+        var agent4 = scn.GetDSCard("agent4");
+
+        scn.MoveCardsToDSHand(agent4);
+        scn.StartGame();
+        scn.MoveCardsToLocation(corusDb,
+                scn.GetDSCard("agent1"),
+                scn.GetDSCard("agent2"),
+                scn.GetDSCard("agent3"));
+        keepOnlyDarkHandCards(scn, agent4);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.strategy
+                .ObjectiveAnalyzer();
+        rando.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        chosen.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+
+        assertEquals(
+                "The preferred fourth agent remains parent-level objective progress",
+                ObjectiveAnalyzer.ObjectiveProgressCandidateRole
+                        .REQUIRED_ON_TABLE_CARD,
+                rando.classifyPreFlipProgressCandidate(
+                        scn.game(), VirtualTableScenario.DS, agent4));
+        assertEquals(
+                rando.classifyPreFlipProgressCandidate(
+                        scn.game(), VirtualTableScenario.DS, agent4),
+                chosen.classifyPreFlipProgressCandidate(
+                        scn.game(), VirtualTableScenario.DS, agent4));
+        assertFalse(
+                "An on-table count is parent progress, not a reason to score an arbitrary child destination",
+                rando.advancesPreFlipRequirementAt(
+                        scn.game(), VirtualTableScenario.DS,
+                        agent4, corusDb));
+        assertEquals(
+                rando.advancesPreFlipRequirementAt(
+                        scn.game(), VirtualTableScenario.DS,
+                        agent4, corusDb),
+                chosen.advancesPreFlipRequirementAt(
+                        scn.game(), VirtualTableScenario.DS,
+                        agent4, corusDb));
+    }
+
+    @Test
     public void isboRouteAFinalAgentMaySpendLegacyBattleReserveAndFlip() {
         var scn = isboScenario();
         var objective = scn.GetDSCard("objective");

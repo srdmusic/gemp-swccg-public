@@ -435,16 +435,15 @@ public class MoveTransitPolicyTest {
     }
 
     @Test
-    public void dockingBayAndTakeoffContributionsPreserveValues() {
+    public void genericDockingBayTextHasNoUnconditionalPositive() {
         MoveTransitPolicy.MovementTypes result =
                 MoveTransitPolicy.movementTypes(
                         "docking bay transit and take off", null, PLAYER);
 
         assertFalse(result.shuttleAction());
-        assertTrue(result.dockingBayTransit().applies());
-        assertEquals("Docking bay transit",
-                result.dockingBayTransit().reason());
-        assertRawFloat(15.0f, result.dockingBayTransit().delta());
+        assertFalse(result.dockingBayTransit().applies());
+        assertNull(result.dockingBayTransit().reason());
+        assertRawFloat(0.0f, result.dockingBayTransit().delta());
         assertTrue(result.takeOff().applies());
         assertEquals("Take off (space deployment)",
                 result.takeOff().reason());

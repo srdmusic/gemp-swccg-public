@@ -356,9 +356,10 @@ public final class MoveTransitPolicy {
             }
         }
 
-        Contribution dockingBay = actionLower.contains("docking bay")
-                ? new Contribution(true, "Docking bay transit", 15.0f)
-                : Contribution.none();
+        // The parent action identifies the source docking bay, not the mover
+        // or destination. Text alone proves no tactical gain and must not beat
+        // Pass. Other evaluators may still score a concrete route with proof.
+        Contribution dockingBay = Contribution.none();
         Contribution takeOff = actionLower.contains("take off")
                 ? new Contribution(true, "Take off (space deployment)", 10.0f)
                 : Contribution.none();

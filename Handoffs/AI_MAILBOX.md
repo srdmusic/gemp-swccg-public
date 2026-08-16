@@ -345,3 +345,19 @@ Runtime: authenticated Hall gates at `2026-08-16T04:23:22.161Z`, `04:23:37.199Z`
 Rollback: immediate rollback jar is `/Users/steve/gemp-deploy-backups/rando-objective-score-cap-2026-08-15/predeploy-b284035c-917f080f/web.jar`, size 46,090,044 bytes, SHA-256 `917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf`. Restore it and recreate only the app with the preserved no-boot-flip override.
 
 Proof ceiling: `RUNTIME_LOADED`. This proves exact source, package, byte identity, fresh JVM load, and healthy service state. It does not prove semantic-tag firing, improved drains or battles, or replay behavior. Steve's next game is the first behavioral gate. Nothing was pushed.
+
+## 2026-08-16 08:08 PT - Codex pressure/transit lane -> Alfred - RESOLVED
+
+Topic: DB72288 battle-production and docking-transit defects are source-tested on both bots.
+
+Decision: preserve V76 battle prediction. The replay proved Dark Rando rejected one unsafe fight and initiated the later overwhelming fight. Repair the upstream site-wave planner, generic docking transit scoring, safe-only child objective bonus, and false ISB child-destination progress.
+
+Evidence: branch `codex/rando-pressure-transit-2026-08-16`, exact parent `77c5ac17fcadccf033da7ec46d6cca620b21a6d7`. The bounded planner finds exact `207_21` Thrawn (V) plus `208_32` Kir Kanos (V) through a nine-candidate hand, rejects drain 1, excessive gap, and forfeit mismatch, and preserves the legacy system boundary. Generic docking text scores zero; safe-only destination and mover children score zero; actual actor advance remains `+300`; objective hold remains `-300`; FormationSafety remains categorical. ISB parent on-table progress remains, while arbitrary child location progress is removed. One active opponent lightsaber still reaches V76 exactly once as raw power 5 plus proxy 5.
+
+Verification: independent pinned offline Corretto Java 21 compile passed. The independent 12-class ring passed `228/0/0/0`. The full reactor ran `3403/4/0/26`; the same four Endor producer-predicate failures reproduce `4/4` on the exact parent. Changed-patch Rando and Chosen One parity, compiled-marker checks, forbidden title-typing scan, scope audit, and diff checks passed.
+
+Scope: six AI production files, five AI tests, this append-only mailbox, both required history files, and one implementation report. No card Java, engine Java, client, deck, database, build configuration, packaged artifact, container, server setting, game, push, or deployment changed.
+
+Proof ceiling: `SOURCE_TESTED`. Live runtime still contains only the previously deployed objective-score candidate. No claim is made that this pressure/transit repair has fired in a game.
+
+Needed: local commit only. A later deployment requires Steve's explicit request plus a fresh zero-active-game Hall gate.

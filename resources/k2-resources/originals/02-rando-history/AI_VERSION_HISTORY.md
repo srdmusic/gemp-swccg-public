@@ -10879,3 +10879,52 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     /Users/steve/gemp-deploy-backups/rando-objective-score-cap-2026-08-15/predeploy-b284035c-917f080f/web.jar.
     Revert local source commit 2d143e1695dc63eca695c11de411788048b6e233
     to remove the migration from source. No push occurred.
+
+  ==== DB72288 PRESSURE PACKAGE AND DOCKING-TRANSIT CORRECTION (2026-08-16, both bots, source-tested) ====
+
+    DB 72288 separated battle scoring from battle production. Dark Rando had
+    two own-turn Battle phases with an opponent present. It refused a fight
+    predicted at only 10 to 19 percent, then initiated and won the later fight
+    predicted at 100 percent. Most other Battle prompts offered no initiation
+    action because deploy planning had not created contact. V76 battle
+    prediction and the one-active-lightsaber +5 proxy remain unchanged.
+
+    The mirrored deploy planners no longer convert enemy aggregate ability
+    above 4 into fictional extra normal battle-destiny draws at sites. A
+    bounded state search now tests affordable site waves through the existing
+    shared V181 contract. It requires ability 4, a raw power gap no greater
+    than 3, opponent drain at least 2, and acceptable forfeit parity, or a
+    clean power win. The search caps state power at the clean-win threshold,
+    caps state ability at 4, retains the lowest-risk representative per
+    cost/capped-power/capped-ability state, and prefers fewer bodies. A
+    nine-candidate regression proves it
+    finds exact Thrawn (V) 207_21 plus Kir Kanos (V) 208_32 instead of stopping
+    at a cheap invalid package. Drain 1, excessive gap, and forfeit mismatch
+    reject. System planning preserves the legacy boundary, including its
+    power-dominant escape, because CardInfo lacks permanent-pilot ability and
+    starship forfeit facts required by the character-based V181 predicate.
+
+    Generic docking-bay action text no longer adds +15. A child route that is
+    only safe contributes zero, while an actual objective actor advance still
+    receives bounded +300. Objective retention remains -300 and FormationSafety
+    remains categorical. This closes the DB72288 move where the source docking
+    bay itself owned the parent action, generic +15 overcame the missing-mover
+    -10 and Pass +2, and Rando spent 1 Force to move Palpatine between adjacent
+    equal-icon docking bays without new damage pressure.
+
+    ISB Operations still recognizes the fourth qualifying agent anywhere as
+    parent-level REQUIRED_ON_TABLE_CARD progress. That card identity no longer
+    makes an arbitrary child destination count as progress toward the separate
+    two-Rebel-Base-location route. Exact Rebel Base completion remains tested.
+
+    Branch codex/rando-pressure-transit-2026-08-16 has exact parent
+    77c5ac17fcadccf033da7ec46d6cca620b21a6d7. Independent pinned offline
+    Corretto Java 21 compile passed. The 12-class focused ring passed
+    228/0/0/0. The full server reactor ran 3403/4/0/26; the four failures are
+    the same Endor Operations producer-predicate failures reproduced 4/4 on
+    the exact parent. Changed-patch bot parity, compiled-marker checks,
+    forbidden title-typing scan, and diff checks passed. Six AI production
+    files, five AI tests, and four required records or report paths changed.
+    No package, deployment, game, database mutation, push, or live behavior
+    proof occurred. Revert the implementation commit containing this entry to
+    remove the candidate.
