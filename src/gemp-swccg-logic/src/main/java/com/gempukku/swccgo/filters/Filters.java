@@ -8587,12 +8587,14 @@ public class Filters {
                 if (card.isUndercover())
                     return false;
 
-                if (card.getBlueprint().getCardCategory() != CardCategory.CHARACTER)
-                    return false;
+                if (card.getBlueprint().getCardCategory() != CardCategory.CHARACTER &&
+                    !card.getBlueprint().isMovesLikeCharacter())
+                        return false;
 
                 if(physicalCard.getBlueprint().getCardCategory() == CardCategory.VEHICLE
                         || physicalCard.getBlueprint().getCardCategory() == CardCategory.STARSHIP){
-                    if (!physicalCard.getBlueprint().getValidPassengerFilter(physicalCard.getOwner(), gameState.getGame(), physicalCard, !card.getZone().isInPlay()).accepts(gameState, modifiersQuerying, card))
+                    if (!physicalCard.getBlueprint().getValidPassengerFilter(physicalCard.getOwner(), gameState.getGame(), physicalCard, !card.getZone().isInPlay()).accepts(gameState, modifiersQuerying, card) &&
+                        !card.getBlueprint().isMovesLikeCharacter())
                         return false;
                 }
 
