@@ -26,16 +26,16 @@ These five semantic operations are source-reachable on `codex/rando-replay-repai
 
 ## 2026-08-15 objective-score candidate amendment
 
-The frozen 367-arm census and the 2026-08-12 rows above remain historical snapshots. The source-tested amendment below changes current score ownership without rewriting those counts. Do not label these rows LIVE until an exact artifact is packaged, loaded in a fresh JVM, and behaviorally exercised.
+The frozen 367-arm census and the 2026-08-12 rows above remain historical snapshots. The amendment below changes current score ownership without rewriting those counts. Exact artifact packaging and fresh-JVM loading passed on 2026-08-15. These rows remain below behavioral LIVE status until a replay exercises them.
 
 | Semantic owner | Domain | KIND | Magnitude / control | Source owner | Exact boundary | Status |
 |---|---|---|---|---|---|---|
-| `objective-preference-signed-ceiling` | objective-intent | BANDED | positive signal `+300`; signed net `[-300,+300]` per action and decision | `ObjectivePreferencePolicy` | Every ordinary typed objective addition, including merged evaluators and plan ranking; categorical legality, FormationSafety, terminal loss, and exact mechanically self-defeating options remain separate | SOURCE_TESTED; package/runtime proof pending |
-| `move-rank-r2` | move | ORDERING | ADD `+1000` | `MoveLadderPolicy` | Shared generic R2 rank for both bots; tactical fines may now override it | SOURCE_TESTED; package/runtime proof pending |
-| `deploy-objective-critical-eviction-selected` current override | objective-intent | BANDED | normalized ADD `+300` | `PersistentResponsePolicy` | Ordinary exact objective-critical response member; only the hard-loss role retains structural priority | SOURCE_TESTED; package/runtime proof pending |
-| `OBJECTIVE.MWYHL.FLIP` current override | objective-intent | BANDED | normalized ADD `+300` | `ObjectiveFlipActionPolicy` | Same exact `225_53` front-side action boundary as the 2026-08-12 row | SOURCE_TESTED; package/runtime proof pending |
-| `V79-verge-draw-reserve` | objective-intent | BANDED | exact counterfactual ADD, no less than `-300` after the shared cap | `DrawPhasePolicy` | Marginal draw-score effect of the one-Force Death Star movement reserve only | SOURCE_TESTED; package/runtime proof pending |
-| `V67z-hidden-path-draw-reserve` | objective-intent | BANDED | exact counterfactual ADD, shared signed floor `-300` | `DrawPhasePolicy` | Marginal draw-score effect of proved Hidden Path transit Force only | SOURCE_TESTED; package/runtime proof pending |
+| `objective-preference-signed-ceiling` | objective-intent | BANDED | positive signal `+300`; signed net `[-300,+300]` per action and decision | `ObjectivePreferencePolicy` | Every ordinary typed objective addition, including merged evaluators and plan ranking; categorical legality, FormationSafety, terminal loss, and exact mechanically self-defeating options remain separate | RUNTIME_LOADED; behavior proof pending |
+| `move-rank-r2` | move | ORDERING | ADD `+1000` | `MoveLadderPolicy` | Shared generic R2 rank for both bots; tactical fines may now override it | RUNTIME_LOADED; behavior proof pending |
+| `deploy-objective-critical-eviction-selected` current override | objective-intent | BANDED | normalized ADD `+300` | `PersistentResponsePolicy` | Ordinary exact objective-critical response member; only the hard-loss role retains structural priority | RUNTIME_LOADED; behavior proof pending |
+| `OBJECTIVE.MWYHL.FLIP` current override | objective-intent | BANDED | normalized ADD `+300` | `ObjectiveFlipActionPolicy` | Same exact `225_53` front-side action boundary as the 2026-08-12 row | RUNTIME_LOADED; behavior proof pending |
+| `V79-verge-draw-reserve` | objective-intent | BANDED | exact counterfactual ADD, no less than `-300` after the shared cap | `DrawPhasePolicy` | Marginal draw-score effect of the one-Force Death Star movement reserve only | RUNTIME_LOADED; behavior proof pending |
+| `V67z-hidden-path-draw-reserve` | objective-intent | BANDED | exact counterfactual ADD, shared signed floor `-300` | `DrawPhasePolicy` | Marginal draw-score effect of proved Hidden Path transit Force only | RUNTIME_LOADED; behavior proof pending |
 
 ## 1. Domain overview
 

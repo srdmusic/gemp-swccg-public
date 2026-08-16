@@ -6,13 +6,13 @@ Branch: `codex/objective-score-cap-2026-08-15`
 
 Exact base: `efbb36723cd0ce9e33efb42764c2217126f6ea26`
 
-Current source state: local source commit `2d143e1695dc63eca695c11de411788048b6e233`
+Packaged source state: exact clean head `b284035c9f9e2f9c860a6c0d0dc25669d5d53f80`; production source commit `2d143e1695dc63eca695c11de411788048b6e233`
 
-Highest proof gate: `SOURCE_TESTED`
+Highest proof gate: `RUNTIME_LOADED`
 
 ## Outcome
 
-The locally tested source implements Steve's two scoring directives:
+The deployed and locally tested source implements Steve's two scoring directives:
 
 • The sole executable positive AI `+6000` literal is now `+1000`.
 
@@ -145,7 +145,7 @@ Excluded:
 
 • Objective workbook changes.
 
-• Packaging, deployment, server restart, or live game creation.
+• Live game creation, replay capture, or post-deploy behavioral retuning.
 
 ## Verification ledger
 
@@ -160,23 +160,31 @@ Excluded:
 | Full reactor comparison | BASELINE FAILURES ONLY | `3400/4/0/26`; the same four Endor failures, with no migration-specific failure or error |
 | Independent compile | PASS | Pinned offline Corretto Java 21, network disabled, exit `0` |
 | Static scope and data | PASS | 216 intended paths, zero prohibited paths; valid JSON with 164 numbers and zero outside `[-300,+300]` |
-| Package and byte identity | NOT RUN | No candidate jar exists |
-| Loaded JVM | NOT RUN | Deployed server remains on the prior artifact |
+| Package and byte identity | PASS | Pinned offline Java 21 package; ZIP-valid 46,094,165-byte jar, SHA-256 `b06764dd88f97209c0910929ed48c9dbe0d4a300999aef9fcc725d1a38e082a3`; 521 changed-source class outputs plus JSON match target/server/web with zero missing or mismatched bytes |
+| Loaded JVM | PASS | Sealed artifact, host jar, and container jar match; fresh direct-Java app started `2026-08-16T04:27:24.859Z`, reached HTTP `200`, and entered operational mode |
 | Semantic branch firing | NOT RUN | No candidate log evidence exists |
 | Replay behavior | NOT RUN | No candidate replay exists |
 
-The prior deployed `web.jar` SHA-256 is `917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf`. It is baseline evidence only and does not contain this migration.
+The deployed `web.jar` SHA-256 is `b06764dd88f97209c0910929ed48c9dbe0d4a300999aef9fcc725d1a38e082a3`. It is runtime-load evidence for this migration, not semantic branch-firing or replay proof.
 
 The four baseline failures are `classicActorsMoveToOpenThirdSiteWithTypedProgress`, `classicMoveDoesNotScoreWhenItOnlyRelocatesSoleActor`, `duplicateBlueprintMoverResolutionBindsTheChosenPhysicalCopy`, and `botMoveLatchCarriesExactPhysicalCopyIntoChildScoring` in `EndorOperationsCombinedEvaluatorDecisionTest`. They remain failures. This report classifies them as unchanged baseline defects rather than turning a red reactor into a false PASS.
 
 ## Required next gates
 
-• Keep the local source commit and append-only mailbox closure together as the exact review boundary. Do not push.
-
-• Package and deploy only under a separately verified zero-active-game gate.
-
 • Use a fresh Chosen One versus Rando game, then Steve's replay, to prove actual damage decisions. Jar presence is not branch-firing proof.
+
+• Keep the deployment breadcrumb commit local. Do not push.
+
+## Deployment record
+
+The exact clean packaged head was `b284035c9f9e2f9c860a6c0d0dc25669d5d53f80`, whose production source is unchanged from `2d143e1695dc63eca695c11de411788048b6e233`. Packaging used the pinned Corretto Java 21 image `sha256:3db65087c1a663b264017845ae5f67eef27b6a6aa4259f1c1efdb2dbda649a80`, the normalized offline Maven cache, and no network. ZIP integrity passed with 27,013 total entries.
+
+The changed-output allowlist contains 522 expected entries: 521 class files generated from 78 changed AI sources plus `objective_playbooks.json`. Target classes, the server jar, and `web.jar` had zero missing or mismatched outputs. Relative to the prior live jar, the candidate had 311 changed entries, one added entry, 210 expected identical outputs, zero removed entries, and zero unaccounted entries. There are 25,807 identical non-directory archive entries total, including the 210 expected unchanged outputs.
+
+Authenticated Hall observations at `2026-08-16T04:23:22.161Z`, `04:23:37.199Z`, and the final gate at `04:26:53.069Z` each showed zero WAITING and zero PLAYING tables. The prior live jar was saved before replacement at `/Users/steve/gemp-deploy-backups/rando-objective-score-cap-2026-08-15/predeploy-b284035c-917f080f/web.jar`, size 46,090,044 bytes, SHA-256 `917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf`. The candidate is sealed at `/Users/steve/gemp-deploy-artifacts/rando-objective-score-cap-2026-08-15/b284035c-b06764dd/web.jar`.
+
+Only `gemp_swccg_app_1` was recreated. Database container `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6` was not recreated. New app container `8134bb6a430d928c00aeb4aa14147f550234069a5431f3c78d62a58531cb2a9d` uses the pinned image and direct Java command with the preserved no-boot-flip override. The server reached startup complete, HTTP `200`, and operational mode. `privateGamesEnabled`, `aiTablesEnabled`, `newAccountRegistrationEnabled`, and `inGameStatistics` are all `1`. The authenticated post-deploy Hall showed zero WAITING and zero PLAYING tables. One known benign warning about multi-release JAR location support appeared before startup completed; there were zero warnings after startup complete and zero real ERROR, FATAL, exception, OOM, or boot-flip processes.
 
 ## Revert
 
-The candidate is locally committed and undeployed. Revert local source commit `2d143e1695dc63eca695c11de411788048b6e233` to remove the migration. A runtime rollback is unnecessary unless a later package is deployed.
+For immediate runtime rollback, restore `/Users/steve/gemp-deploy-backups/rando-objective-score-cap-2026-08-15/predeploy-b284035c-917f080f/web.jar`, verify SHA-256 `917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf`, and recreate only the app with the preserved no-boot-flip override. Revert local source commit `2d143e1695dc63eca695c11de411788048b6e233` to remove the migration from source.

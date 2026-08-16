@@ -329,3 +329,19 @@ Boundary: ordinary positive objective influence is exactly `+300`, and net typed
 Proof ceiling: `SOURCE_TESTED`. No package, candidate jar, deployment, restart, loaded-JVM proof, semantic branch firing, or candidate replay exists. The deployed prior jar remains SHA-256 `917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf` and does not contain this migration.
 
 Needed: none for source closure. Any package or deployment requires a separate zero-active-game gate, followed by fresh Chosen One versus Rando and Steve replay evidence. Do not promote this source result to runtime or behavioral proof.
+
+## 2026-08-15 21:31 PT - Codex objective score-cap lane -> Alfred - DEPLOYED / RESOLVED
+
+Topic: Objective score ceiling and Move R2 migration packaged, byte-verified, and loaded in a fresh JVM.
+
+Decision: Steve authorized immediate deployment after confirming he was not playing. K-2 independently checked the authenticated Hall twice, then repeated the final gate at root's request immediately before replacement. All observations showed zero WAITING and zero PLAYING tables. The prior jar was preserved before the app-only recreate. No database, deck, card, engine, or client source changed.
+
+Source and artifact: packaged exact clean head `b284035c9f9e2f9c860a6c0d0dc25669d5d53f80`, whose production source is exact commit `2d143e1695dc63eca695c11de411788048b6e233`. Pinned offline Corretto Java 21 packaging passed. Final `web.jar` is 46,094,165 bytes, ZIP-valid with 27,013 entries, and SHA-256 `b06764dd88f97209c0910929ed48c9dbe0d4a300999aef9fcc725d1a38e082a3`. The sealed artifact is `/Users/steve/gemp-deploy-artifacts/rando-objective-score-cap-2026-08-15/b284035c-b06764dd/web.jar`.
+
+Byte evidence: all 521 class outputs produced by the 78 changed AI sources and the objective JSON match target classes, the server jar, and `web.jar`, with zero missing or mismatched bytes. Normalized comparison against the prior live jar found 311 changed entries, one added entry, 210 expected identical outputs, zero removals, zero unaccounted entries, and 25,807 identical non-directory archive entries total, including the 210 expected unchanged outputs.
+
+Runtime: authenticated Hall gates at `2026-08-16T04:23:22.161Z`, `04:23:37.199Z`, and `04:26:53.069Z` were empty. Only `gemp_swccg_app_1` was recreated. New app container `8134bb6a430d928c00aeb4aa14147f550234069a5431f3c78d62a58531cb2a9d` started at `2026-08-16T04:27:24.859Z` on pinned image `sha256:3db65087c1a663b264017845ae5f67eef27b6a6aa4259f1c1efdb2dbda649a80` with the preserved direct-Java no-boot command. Database container `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6` was not recreated. Sealed artifact, host jar, and container jar hashes match. Startup completed, HTTP returned `200`, operational mode was restored, and `privateGamesEnabled`, `aiTablesEnabled`, `newAccountRegistrationEnabled`, and `inGameStatistics` are all `1`. The authenticated post-deploy Hall showed zero WAITING and zero PLAYING tables. One known benign warning about multi-release JAR location support appeared before startup completed; there were zero warnings after startup complete and zero real ERROR, FATAL, exception, OOM, or boot-flip processes.
+
+Rollback: immediate rollback jar is `/Users/steve/gemp-deploy-backups/rando-objective-score-cap-2026-08-15/predeploy-b284035c-917f080f/web.jar`, size 46,090,044 bytes, SHA-256 `917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf`. Restore it and recreate only the app with the preserved no-boot-flip override.
+
+Proof ceiling: `RUNTIME_LOADED`. This proves exact source, package, byte identity, fresh JVM load, and healthy service state. It does not prove semantic-tag firing, improved drains or battles, or replay behavior. Steve's next game is the first behavioral gate. Nothing was pushed.

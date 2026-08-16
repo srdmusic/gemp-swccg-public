@@ -10802,7 +10802,7 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     unchanged DB identity, zero restarts, zero OOM, and no exact-game abort,
     timeout, AI-chain guard, or infrastructure error. No push or PR occurred.
 
-  ==== OBJECTIVE SCORE CEILING AND ORDINARY PREEMPTION RETIREMENT (2026-08-15, both bots, source candidate) ====
+  ==== OBJECTIVE SCORE CEILING AND ORDINARY PREEMPTION RETIREMENT (2026-08-15, both bots, deployed runtime) ====
 
     Steve set two global scoring boundaries after the latest EOPS and First
     Order replays: every executable positive +6000 value becomes +1000, and
@@ -10862,9 +10862,20 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     verification found 216 intended paths, zero prohibited paths, zero
     executable positive 6000 values, 164 objective-playbook numeric values
     with zero outside [-300,+300], and exact normalized parity across all 10
-    changed Rando/Chosen One pairs. No package, candidate jar, deployment,
-    restart, loaded-byte proof, semantic-tag firing, or live replay proof
-    exists. The deployed prior jar remains
-    917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf and
-    does not contain this source candidate. Revert local source commit
-    2d143e1695dc63eca695c11de411788048b6e233 to remove the migration.
+    changed Rando/Chosen One pairs. Clean documentation child
+    b284035c9f9e2f9c860a6c0d0dc25669d5d53f80 was packaged offline under the
+    pinned Java 21 image. The ZIP-valid 46,094,165-byte web.jar has SHA-256
+    b06764dd88f97209c0910929ed48c9dbe0d4a300999aef9fcc725d1a38e082a3.
+    All 521 compiled outputs from 78 changed AI sources and the objective JSON
+    match target classes, the server jar, and web.jar. Normalized comparison
+    with the prior live jar accounts for 311 changed entries, one addition,
+    210 expected identical outputs, zero removals, and zero unaccounted
+    entries. The authenticated Hall was empty before replacement. Sealed,
+    host, and container bytes match, and a fresh direct-Java process reached
+    HTTP 200 plus operational mode with all four intended settings enabled.
+    Semantic-tag firing and candidate replay behavior remain unproved. Runtime
+    rollback is the sealed prior jar SHA-256
+    917f080f863bf26a6574a693bbccff1d6d8c7855e3bbde9fdc611bf2cfb1c8cf at
+    /Users/steve/gemp-deploy-backups/rando-objective-score-cap-2026-08-15/predeploy-b284035c-917f080f/web.jar.
+    Revert local source commit 2d143e1695dc63eca695c11de411788048b6e233
+    to remove the migration from source. No push occurred.
