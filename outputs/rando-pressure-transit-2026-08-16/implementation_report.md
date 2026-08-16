@@ -1,12 +1,12 @@
 # DB72288 Pressure and Docking-Transit Correction
 
-Status: source-tested, independently verified, not packaged, not deployed.
+Status: packaged, byte-verified, and loaded in a fresh local JVM. Live gameplay remains pending.
 
 ## Identity
 
 - Branch: `codex/rando-pressure-transit-2026-08-16`
 - Exact parent: `77c5ac17fcadccf033da7ec46d6cca620b21a6d7`
-- Implementation: the local commit containing this report
+- Implementation: exact local commit `7310ea95fe72d5831927f86090c2afc0db61d936`
 - Replay anchor: DB `72288`, Light `LIKE MY SAGA` versus Dark `ISB_v2`
 
 ## Replay Findings
@@ -64,17 +64,40 @@ No battle production code changed. The active-opponent-lightsaber proxy remains 
 - Generic docking `+15` and safe-completion objective marker absence: pass.
 - Forbidden title-typing scan: pass.
 - `git diff --check`: pass.
+- Pinned offline Corretto Java 21 package: pass.
+- Packaged `web.jar`: 46,102,860 bytes, 27,017 ZIP entries, SHA-256 `102ca01b5da7365a64ef669ae6398f013350dd87f2ae3d3bb9f3a315891c121d`.
+- Artifact allowlist: 54 changed and four added class entries, all owned by the six changed production sources, with zero removals or unaccounted entries.
+- Byte identity: all 85 class outputs from those sources match `target/classes`, the server jar, and `web.jar`.
+- Independent K2 post-deploy verification: pass, mailbox message `m01739`.
 
 ## Scope
 
 - Production: six AI files.
 - Tests: five AI files.
 - Records: `AI_CHANGELOG.md`, `AI_VERSION_HISTORY.md`, append-only `AI_MAILBOX.md`, and this report.
-- Excluded: card Java, engine Java, client, deck library, database, build configuration, package, deployment, container, server settings, and live games.
+- Excluded: card Java, engine Java, client, deck library, database code or schema, build configuration, and live games.
 
 ## Proof Ceiling
 
-`SOURCE_TESTED` only. The local live server still runs the previously deployed objective-score candidate and does not contain this repair. A live claim requires a later package, byte verification, fresh zero-table deployment gate, fresh JVM, and replay/log evidence.
+`RUNTIME_LOADED`. Exact source, packaged bytes, fresh JVM loading, settings, and service health are proved. Semantic branch firing, improved pressure, and replay behavior are not yet proved.
+
+## Deployment Record
+
+- Authenticated Hall checks at `2026-08-16T19:23:16.446Z`, `19:23:32.459Z`, and `19:26:03.150Z` each showed zero total, WAITING, and PLAYING tables.
+- The server was placed in shutdown mode before the final empty-Hall check and jar replacement.
+- Candidate artifact: `/Users/steve/gemp-deploy-artifacts/rando-pressure-transit-2026-08-16/7310ea95-102ca01b/web.jar`.
+- Prior live jar backup: `/Users/steve/gemp-deploy-backups/rando-pressure-transit-2026-08-16/predeploy-7310ea95-b06764dd/web.jar`, SHA-256 `b06764dd88f97209c0910929ed48c9dbe0d4a300999aef9fcc725d1a38e082a3`.
+- The live jar was replaced by atomic rename. Only `gemp_swccg_app_1` was recreated with the copied no-boot-flip override and `--no-deps --no-build`.
+- Fresh app container: `d7d52391302e9488d530f6aa8b1d73cd6d5cc9ada17826fd3499a494292306bc`, started `2026-08-16T19:27:50.335016345Z`, restart count `0`, OOM false, direct Java PID 1.
+- Database container remained `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6`, with unchanged `2026-08-16T04:21:38.537361708Z` start time and restart count `0`.
+- Sealed artifact, host jar, and container jar hashes all equal `102ca01b5da7365a64ef669ae6398f013350dd87f2ae3d3bb9f3a315891c121d`.
+- HTTP returned `200`; operational mode, AI tables, private games, stat tracking, and new accounts were restored; authenticated Hall remained empty.
+- Startup completed with one known pre-start multi-release-JAR warning, zero warnings after startup, and zero material ERROR, FATAL, exception, or OOM lines.
+- Packaged byte checks found the site-wave classes in both bots and found neither the generic docking-bay reward nor the safe-completion objective marker.
+
+## Runtime Rollback
+
+Atomically restore the new `b06764dd...` backup above, recreate only the app with the copied no-boot-flip override, restore the five operational/settings switches, and repeat the hash, HTTP, Hall, database-identity, and startup checks. Do not use the older `917f080f...` jar as the immediate rollback for this deployment.
 
 ## Suggested Live Check
 

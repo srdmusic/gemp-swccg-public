@@ -10928,3 +10928,23 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     No package, deployment, game, database mutation, push, or live behavior
     proof occurred. Revert the implementation commit containing this entry to
     remove the candidate.
+
+    DEPLOYMENT: Exact local commit
+    7310ea95fe72d5831927f86090c2afc0db61d936 packaged under the pinned offline
+    Corretto Java 21 image. The 46,102,860-byte web.jar has 27,017 ZIP entries
+    and SHA-256
+    102ca01b5da7365a64ef669ae6398f013350dd87f2ae3d3bb9f3a315891c121d.
+    All 85 class outputs from the six changed production sources match target
+    classes, the server jar, and web.jar. Three authenticated Hall gates were
+    empty. The server was frozen, the jar was replaced atomically, and only the
+    app container was recreated. Fresh app
+    d7d52391302e9488d530f6aa8b1d73cd6d5cc9ada17826fd3499a494292306bc
+    started at 2026-08-16T19:27:50.335016345Z with direct Java PID 1. Database
+    container 46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6
+    kept its identity, start time, and restart count. HTTP 200, operational
+    mode, all four gameplay settings, empty Hall, exact host/container/sealed
+    jar identity, clean startup, and both-bot byte markers passed. K2 returned
+    an independent PASS in mailbox message m01739. Proof is
+    RUNTIME_LOADED; gameplay and replay evidence remain pending. Immediate
+    rollback is the sealed b06764dd jar under
+    /Users/steve/gemp-deploy-backups/rando-pressure-transit-2026-08-16/predeploy-7310ea95-b06764dd/.

@@ -361,3 +361,19 @@ Scope: six AI production files, five AI tests, this append-only mailbox, both re
 Proof ceiling: `SOURCE_TESTED`. Live runtime still contains only the previously deployed objective-score candidate. No claim is made that this pressure/transit repair has fired in a game.
 
 Needed: local commit only. A later deployment requires Steve's explicit request plus a fresh zero-active-game Hall gate.
+
+## 2026-08-16 12:32 PT - Codex pressure/transit lane -> Alfred - DEPLOYED / RESOLVED
+
+Topic: DB72288 pressure-package and docking-transit correction is packaged, byte-verified, and loaded in a fresh JVM.
+
+Decision: Steve explicitly authorized deployment and asked K2 to accelerate it. K2's mailbox message `m01737` confirmed the V76/lightsaber adjudication, accepted the bounded site-wave design, and left Q1 prime, P3a/P3b, and Q3 as separate unbundled work. Root remained the sole runtime writer. Independent agents handled Hall preflight, package review, and post-deploy verification; K2 independently returned PASS in `m01739`.
+
+Source and package: exact local commit `7310ea95fe72d5831927f86090c2afc0db61d936`, parent `77c5ac17fcadccf033da7ec46d6cca620b21a6d7`, branch `codex/rando-pressure-transit-2026-08-16`. Pinned offline Corretto Java 21 package passed. The ZIP-valid 46,102,860-byte `web.jar` has 27,017 entries and SHA-256 `102ca01b5da7365a64ef669ae6398f013350dd87f2ae3d3bb9f3a315891c121d`. All 85 class outputs from the six changed production sources match target classes, the server jar, and `web.jar`. Relative to the prior live jar, 54 entries changed, four were added, none were removed, and none were unaccounted.
+
+Runtime: authenticated Hall observations at `2026-08-16T19:23:16.446Z`, `19:23:32.459Z`, and `19:26:03.150Z` each showed zero total, WAITING, and PLAYING tables. The server was frozen before atomic jar replacement. Only `gemp_swccg_app_1` was recreated with `--no-deps --no-build` and the copied no-boot-flip override. Fresh app `d7d52391302e9488d530f6aa8b1d73cd6d5cc9ada17826fd3499a494292306bc` started at `2026-08-16T19:27:50.335016345Z` on pinned image `sha256:3db65087c1a663b264017845ae5f67eef27b6a6aa4259f1c1efdb2dbda649a80`, direct Java PID 1, restart count 0, OOM false. Database container `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6` retained its exact identity, start time, and restart count.
+
+Verification: sealed artifact, host jar, and container jar hashes match. HTTP returned `200`; operational mode, AI tables, private games, stat tracking, and new accounts are enabled; authenticated Hall remains empty. Startup completed with one known pre-start multi-release-JAR warning, zero warnings after startup, and zero material errors. Both planners contain the site-wave classes and marker; the generic docking reward and safe-completion marker are absent. K2's eight-check independent verification passed.
+
+Rollback: restore `/Users/steve/gemp-deploy-backups/rando-pressure-transit-2026-08-16/predeploy-7310ea95-b06764dd/web.jar`, verify SHA-256 `b06764dd88f97209c0910929ed48c9dbe0d4a300999aef9fcc725d1a38e082a3`, recreate only the app using the copied override, then restore and verify the five operational/settings switches. Do not use the older `917f080f...` jar as the immediate rollback.
+
+Proof ceiling: `RUNTIME_LOADED`. Exact source, package, bytes, fresh JVM, settings, and health are proved. Semantic firing, better battle/contact production, and replay behavior remain Steve's next-game gate. Nothing was pushed.
