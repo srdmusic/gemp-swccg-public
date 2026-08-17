@@ -377,3 +377,15 @@ Verification: sealed artifact, host jar, and container jar hashes match. HTTP re
 Rollback: restore `/Users/steve/gemp-deploy-backups/rando-pressure-transit-2026-08-16/predeploy-7310ea95-b06764dd/web.jar`, verify SHA-256 `b06764dd88f97209c0910929ed48c9dbe0d4a300999aef9fcc725d1a38e082a3`, recreate only the app using the copied override, then restore and verify the five operational/settings switches. Do not use the older `917f080f...` jar as the immediate rollback.
 
 Proof ceiling: `RUNTIME_LOADED`. Exact source, package, bytes, fresh JVM, settings, and health are proved. Semantic firing, better battle/contact production, and replay behavior remain Steve's next-game gate. Nothing was pushed.
+
+## 2026-08-16 21:24 PT - Codex Wokling hold lane -> Alfred - RESOLVED
+
+Topic: DB72296 premature Wokling sacrifice is repaired for Rando and Chosen One.
+
+Decision: exact virtual Wokling printings `200_47` and `601_61` may not use `Place out of play to retrieve 1 Force` until every physical original main-deck location is currently in `Zone.LOCATIONS`. The sacrifice is removed from V184's free-trigger eligibility. Once released, ordinary retrieval scoring decides; the bot is not forced to sacrifice Wokling.
+
+Identity boundary: both mirrored DeckOracles bind the immutable pre-pipe deck location inventory to exact permanent card IDs. Engine construction order proves outside-deck copies precede main-deck copies. Duplicate originals are all required. Converted, missing, unknown, and zero-location inventories fail closed. Same-blueprint outside and later-acquired copies cannot substitute.
+
+Verification: the pinned offline Java 21 16-class focused and impacted ring passed `175/0/0/0`. Clean compile, ActionText mirror parity, exact DeckOracle changed-hunk parity, diff checks, and independent adversarial review passed. Exact base is `c82dd272aa56242b6d06bf1b2152858f27c0973d`; branch is `codex/wokling-generation-hold-2026-08-17`.
+
+Scope and proof ceiling: five AI production files, three AI tests, and the required records changed. No card Java, engine Java, deck data, build configuration, package, jar, deployment, restart, database or game mutation, push, or live semantic firing occurred. Proof is `SOURCE_TESTED`. Revert the local commit containing this entry to remove V53d only.

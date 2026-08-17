@@ -10948,3 +10948,37 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     RUNTIME_LOADED; gameplay and replay evidence remain pending. Immediate
     rollback is the sealed b06764dd jar under
     /Users/steve/gemp-deploy-backups/rando-pressure-transit-2026-08-16/predeploy-7310ea95-b06764dd/.
+
+  ==== V53d WOKLING ORIGINAL-LOCATION GENERATION HOLD (2026-08-16, both bots, source-tested) ====
+
+    DB 72296 exposed a gap beside V53c. On Light Rando's first turn,
+    the broad V184 text rule treated Wokling (V)'s place-out-of-play
+    retrieval as free value. Its +300 plus the ordinary one-card Lost
+    Pile -30 made the sacrifice score 270 against Pass 2, destroying a
+    recurring Force generator before the location ramp was complete.
+
+    Exact virtual Wokling printings 200_47 and 601_61 now keep their
+    place-out-of-play action hard-vetoed until every physical location
+    from that player's original main deck is currently in Zone.LOCATIONS.
+    The inventory is bound to permanent card IDs from the immutable
+    pre-pipe deck list. Outside-deck cards are separated through the
+    engine's verified outside-first, main-deck-second construction order.
+    Duplicate originals are all required. Same-blueprint outside and
+    later-acquired copies cannot substitute. Converted, missing, unknown,
+    and zero-location inventories fail closed.
+
+    The paid Wokling sacrifice no longer receives V184. After every exact
+    original location is on table, the action merely returns to the old
+    generic retrieval boundary, -30 through Lost Pile 15 and +30 above 15.
+    It is permitted, not forced. Classic 8_42, genuine V184 routes, V53c's
+    separate 3-Force Effect search hold, and all non-Wokling retrievals are
+    unchanged.
+
+    The pinned offline Java 21 focused and impacted ring passed 175/0/0/0.
+    Clean compile, ActionText mirror parity, exact DeckOracle changed-hunk
+    parity, diff checks, and independent adversarial review passed. Exact
+    base is c82dd272aa56242b6d06bf1b2152858f27c0973d on branch
+    codex/wokling-generation-hold-2026-08-17. Proof is SOURCE_TESTED.
+    No package, deployment, restart, database or game mutation, push, or
+    live firing proof occurred. Revert the local commit containing this
+    entry to remove V53d only.

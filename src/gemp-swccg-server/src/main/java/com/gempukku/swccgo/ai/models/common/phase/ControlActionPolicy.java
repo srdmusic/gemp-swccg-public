@@ -56,6 +56,24 @@ public final class ControlActionPolicy {
     public static PolicyResult retrieve(String actionId, int lostPileSize,
                                         boolean exactIsbAgentRetrieval,
                                         boolean exactEndorBikerRetrieval) {
+        return retrieve(actionId, lostPileSize, exactIsbAgentRetrieval,
+                exactEndorBikerRetrieval, false, true);
+    }
+
+    public static PolicyResult retrieve(String actionId, int lostPileSize,
+                                        boolean exactIsbAgentRetrieval,
+                                        boolean exactEndorBikerRetrieval,
+                                        boolean exactWoklingSacrifice,
+                                        boolean allOriginalDeckLocationsInPlay) {
+        if (exactWoklingSacrifice && !allOriginalDeckLocationsInPlay) {
+            return new PolicyResult("CONTROL_ACTION_POLICY", List.of(
+                    PolicyOperation.hardVeto(
+                            actionId,
+                            TraceRuleId.of("V53d-wokling-location-ramp"),
+                            TraceDomainId.FORCE_BUDGET,
+                            TraceOutputKind.VETO,
+                            "V53d WOKLING HOLD: preserve +1 Force generation until every original deck location is deployed")));
+        }
         // 2026-08-07 (m01675): Endor back-side free biker-scout retrieval joins the ISB
         // carve-out — same BANDED magnitude, reused not rebalanced.
         if (exactEndorBikerRetrieval) {

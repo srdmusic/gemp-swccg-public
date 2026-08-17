@@ -8,6 +8,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ControlActionPolicyTest {
     @Test
@@ -49,6 +50,44 @@ public class ControlActionPolicyTest {
         assertOperation(ControlActionPolicy.retrieve("A", 16),
                 "CONTROL-retrieve", TraceOutputKind.ORDERING,
                 30.0f, "High lost pile - retrieve worth it");
+    }
+
+    @Test
+    public void woklingStaysUntilEveryOriginalDeckLocationIsDeployed() {
+        PolicyResult held = ControlActionPolicy.retrieve(
+                "A", 1, false, false, true, false);
+
+        assertEquals("CONTROL_ACTION_POLICY", held.producerId());
+        assertEquals(1, held.operations().size());
+        PolicyOperation operation = held.operations().get(0);
+        assertEquals("A", operation.actionId());
+        assertEquals("V53d-wokling-location-ramp",
+                operation.ruleArmId().id());
+        assertEquals(TraceDomainId.FORCE_BUDGET, operation.domainId());
+        assertEquals(TraceOutputKind.VETO, operation.outputKind());
+        assertEquals(PolicyOperationKind.HARD_VETO, operation.kind());
+        assertEquals(0.0f, operation.delta(), 0.0f);
+        assertEquals(
+                "V53d WOKLING HOLD: preserve +1 Force generation until every original deck location is deployed",
+                operation.reason());
+    }
+
+    @Test
+    public void woklingFallsBackToGenericRetrievalAfterLocationRampCompletes() {
+        assertOperation(ControlActionPolicy.retrieve(
+                        "A", 15, false, false, true, true),
+                "CONTROL-retrieve", TraceOutputKind.ORDERING,
+                -30.0f, "Low lost pile - save retrieve");
+        assertOperation(ControlActionPolicy.retrieve(
+                        "A", 16, false, false, true, true),
+                "CONTROL-retrieve", TraceOutputKind.ORDERING,
+                30.0f, "High lost pile - retrieve worth it");
+
+        PolicyResult ordinary = ControlActionPolicy.retrieve(
+                "A", 1, false, false, false, false);
+        assertTrue("Only exact Wokling sacrifice may use the location-ramp hold",
+                ordinary.operations().stream().allMatch(op ->
+                        op.kind() == PolicyOperationKind.ADD));
     }
 
     @Test

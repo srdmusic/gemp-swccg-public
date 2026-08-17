@@ -195,6 +195,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
             } catch (NumberFormatException ignored) {
                 // Unknown physical sources receive no exact-source exception.
             }
+            String exactSourceBlueprintId = actionSource == null
+                    || actionSource.getBlueprintId(true) == null
+                    ? ""
+                    : CARD_LIBRARY.stripBlueprintModifiers(
+                            actionSource.getBlueprintId(true));
+            boolean exactWoklingSacrifice =
+                    ("200_47".equals(exactSourceBlueprintId)
+                            || "601_61".equals(exactSourceBlueprintId))
+                    && "place out of play to retrieve 1 force"
+                            .equals(textLower.trim());
 
             EvaluatedAction action = new EvaluatedAction(actionId, ActionType.UNKNOWN, 0.0f, actionText);
             boolean exactTdigwattPullAction = false;
@@ -1337,7 +1347,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             && (textLower.contains("reserve") || textLower.contains("top two")
                                 || textLower.contains("top card") || textLower.contains("top of"));
                     boolean v184Retrieve = textLower.contains("retrieve") && textLower.contains("force")
-                            && !textLower.contains("use ");   // skip cost-bearing retrieves
+                            && !textLower.contains("use ")
+                            && !exactWoklingSacrifice; // placing Wokling out of play is a real cost
                     boolean v184Fire = false; String v184Why = null;
                     if (v184Reveal) {
                         boolean v184HasReserve = false;
@@ -5151,10 +5162,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .isEndorBackBikerScoutRetrievalAction(
                             game, context.getPlayerId(),
                             actionSource, actionText);
+                boolean allOriginalDeckLocationsInPlay =
+                        context.getDeckOracle() != null
+                        && context.getDeckOracle()
+                                .areAllOriginalDeckLocationsInPlay();
                 controlLedger.register(ControlActionPolicy.retrieve(
                         actionId, lostPileSize,
                         exactIsbAgentRetrieval,
-                        exactEndorBikerRetrieval));
+                        exactEndorBikerRetrieval,
+                        exactWoklingSacrifice,
+                        allOriginalDeckLocationsInPlay));
                 PolicyOperationAdapter.apply(action, controlLedger);
             }
 

@@ -9,6 +9,8 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -85,6 +87,30 @@ public class ControlActionTextPolicyParityTest {
     public void revealRetrieveBoundariesAndV184StackingStayMirrored() {
         assertUtilityBoundary(6, 15, -50.0f, 270.0f);
         assertUtilityBoundary(7, 16, 50.0f, 330.0f);
+    }
+
+    @Test
+    public void woklingSacrificeIsHeldUntilTheOriginalLocationRampCompletes() {
+        for (String blueprintId : List.of("200_47", "601_61")) {
+            assertWoklingBoundary(blueprintId, false, 1,
+                    true, 0.0f);
+            assertWoklingBoundary(blueprintId, true, 16,
+                    false, 30.0f);
+        }
+    }
+
+    @Test
+    public void classicWoklingTitleDoesNotTriggerTheVirtualWoklingHold() {
+        EvaluatedPair pair = evaluateWokling("8_42", false, 1);
+
+        assertFalse(pair.rando().isHardVetoed());
+        assertFalse(pair.chosen().isHardVetoed());
+        assertEquals("wokling", pair.randoWinner().getActionId());
+        assertEquals("wokling", pair.chosenWinner().getActionId());
+        assertEquals(Float.floatToRawIntBits(270.0f),
+                Float.floatToRawIntBits(pair.rando().getScore()));
+        assertTrue(pair.rando().getReasoning().stream().anyMatch(reason ->
+                reason.startsWith("V184 WHEN-DEPLOYED TRIGGER:")));
     }
 
     @Test
@@ -186,5 +212,104 @@ public class ControlActionTextPolicyParityTest {
         assertEquals(2, rando.get(1).getReasoning().size());
         assertEquals(true, rando.get(1).getReasoning().get(0)
                 .startsWith("V184 WHEN-DEPLOYED TRIGGER:"));
+    }
+
+    private static void assertWoklingBoundary(String blueprintId,
+                                              boolean locationsComplete,
+                                              int lostPileSize,
+                                              boolean expectedHardVeto,
+                                              float expectedScore) {
+        EvaluatedPair pair = evaluateWokling(
+                blueprintId, locationsComplete, lostPileSize);
+
+        assertEquals(pair.rando().getActionId(), pair.chosen().getActionId());
+        assertEquals(Float.floatToRawIntBits(pair.rando().getScore()),
+                Float.floatToRawIntBits(pair.chosen().getScore()));
+        assertEquals(pair.rando().getReasoning(), pair.chosen().getReasoning());
+        assertEquals(pair.rando().isHardVetoed(),
+                pair.chosen().isHardVetoed());
+        assertEquals(pair.rando().getVetoReason(),
+                pair.chosen().getVetoReason());
+        assertEquals(expectedHardVeto, pair.rando().isHardVetoed());
+        assertEquals(expectedHardVeto ? "" : "wokling",
+                pair.randoWinner().getActionId());
+        assertEquals(pair.randoWinner().getActionId(),
+                pair.chosenWinner().getActionId());
+        assertEquals(Float.floatToRawIntBits(expectedScore),
+                Float.floatToRawIntBits(pair.rando().getScore()));
+        assertFalse("Wokling's self-sacrifice is not a free V184 trigger",
+                pair.rando().getReasoning().stream().anyMatch(reason ->
+                        reason.startsWith("V184 WHEN-DEPLOYED TRIGGER:")));
+        if (expectedHardVeto) {
+            assertEquals(
+                    "V53d WOKLING HOLD: preserve +1 Force generation until every original deck location is deployed",
+                    pair.rando().getVetoReason());
+        }
+    }
+
+    private static EvaluatedPair evaluateWokling(String blueprintId,
+                                                 boolean locationsComplete,
+                                                 int lostPileSize) {
+        GameState gameState = mock(GameState.class);
+        PhysicalCard source = mock(PhysicalCard.class);
+        when(source.getBlueprintId(true)).thenReturn(blueprintId);
+        when(source.getTitle()).thenReturn("Wokling (V)");
+        when(gameState.findCardById(243)).thenReturn(source);
+        when(gameState.getPlayersLatestTurnNumber("tester")).thenReturn(1);
+        when(gameState.getCurrentPlayerId()).thenReturn("tester");
+        when(gameState.getLostPile("tester")).thenReturn(
+                java.util.Collections.nCopies(lostPileSize,
+                        mock(PhysicalCard.class)));
+        when(gameState.getHand("tester")).thenReturn(List.of());
+        when(gameState.getAllPermanentCards()).thenReturn(List.of(source));
+
+        var randoOracle = mock(
+                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.class);
+        var chosenOracle = mock(
+                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.class);
+        when(randoOracle.areAllOriginalDeckLocationsInPlay())
+                .thenReturn(locationsComplete);
+        when(chosenOracle.areAllOriginalDeckLocationsInPlay())
+                .thenReturn(locationsComplete);
+
+        var randoContext = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
+                gameState, "tester", "ACTION_CHOICE", "Choose ACTIVATE action",
+                "wokling-location-ramp", Phase.ACTIVATE);
+        var chosenContext = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
+                gameState, "tester", "ACTION_CHOICE", "Choose ACTIVATE action",
+                "wokling-location-ramp", Phase.ACTIVATE);
+        randoContext.setActionIds(List.of("wokling"));
+        randoContext.setActionTexts(List.of(
+                "Place out of play to retrieve 1 Force"));
+        randoContext.setCardIds(List.of("243"));
+        randoContext.setDeckOracle(randoOracle);
+        randoContext.setNoPass(false);
+        randoContext.setMin(0);
+        randoContext.setMax(1);
+        chosenContext.setActionIds(List.of("wokling"));
+        chosenContext.setActionTexts(List.of(
+                "Place out of play to retrieve 1 Force"));
+        chosenContext.setCardIds(List.of("243"));
+        chosenContext.setDeckOracle(chosenOracle);
+        chosenContext.setNoPass(false);
+        chosenContext.setMin(0);
+        chosenContext.setMax(1);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.ActionTextEvaluator()
+                .evaluate(randoContext).get(0);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionTextEvaluator()
+                .evaluate(chosenContext).get(0);
+        var randoWinner = new com.gempukku.swccgo.ai.models.rando.evaluators.CombinedEvaluator()
+                .evaluateDecision(randoContext);
+        var chosenWinner = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CombinedEvaluator()
+                .evaluateDecision(chosenContext);
+        return new EvaluatedPair(rando, chosen, randoWinner, chosenWinner);
+    }
+
+    private record EvaluatedPair(
+            com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction rando,
+            com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction chosen,
+            com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction randoWinner,
+            com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction chosenWinner) {
     }
 }

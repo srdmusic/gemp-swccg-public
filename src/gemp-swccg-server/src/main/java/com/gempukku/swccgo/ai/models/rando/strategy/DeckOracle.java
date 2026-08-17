@@ -7,6 +7,7 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
+import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 
@@ -47,6 +48,8 @@ import java.util.stream.Collectors;
  */
 public class DeckOracle {
     private static final Logger LOG = RandoLogger.getStrategyLogger();
+    private static final SwccgCardBlueprintLibrary CARD_LIBRARY =
+            new SwccgCardBlueprintLibrary();
 
     // =========================================================================
     // Inner Class: DeckCard
@@ -147,6 +150,21 @@ public class DeckOracle {
     /** Master list of all DeckCard instances (flat). */
     private final List<DeckCard> allCards = new ArrayList<>();
 
+    /** Original main-deck location counts. Outside-deck cards after '|' never enter this map. */
+    private final Map<String, Integer> originalDeckLocationCopies =
+            new LinkedHashMap<>();
+
+    /** Exact permanent IDs of the original main-deck location copies. */
+    private final Set<Integer> originalDeckLocationCardIds =
+            new LinkedHashSet<>();
+
+    /** Current zones of those exact original location copies. */
+    private final Map<Integer, Zone> originalDeckLocationZones =
+            new LinkedHashMap<>();
+
+    /** True only when the immutable serialized main deck was parsed successfully. */
+    private boolean originalDeckLocationInventoryKnown = false;
+
     /** Failed pull tracking: blueprintId → consecutive failure count. */
     private final Map<String, Integer> failedPulls = new HashMap<>();
 
@@ -180,6 +198,10 @@ public class DeckOracle {
         catalogByBlueprint.clear();
         catalogByTitle.clear();
         allCards.clear();
+        originalDeckLocationCopies.clear();
+        originalDeckLocationCardIds.clear();
+        originalDeckLocationZones.clear();
+        originalDeckLocationInventoryKnown = false;
         failedPulls.clear();
         totalDeckSize = 0;
 
@@ -213,6 +235,7 @@ public class DeckOracle {
         }
 
         totalDeckSize = allCards.size();
+        catalogOriginalDeckLocations(game.getDeckString(side), gs, playerId);
         analyzed = true;
 
         logCatalogSummary();
@@ -279,6 +302,7 @@ public class DeckOracle {
                 // Leave as null (callers should handle gracefully)
             }
         }
+        refreshOriginalDeckLocationZones(gameState, playerId);
     }
 
     /**
@@ -288,6 +312,10 @@ public class DeckOracle {
         catalogByBlueprint.clear();
         catalogByTitle.clear();
         allCards.clear();
+        originalDeckLocationCopies.clear();
+        originalDeckLocationCardIds.clear();
+        originalDeckLocationZones.clear();
+        originalDeckLocationInventoryKnown = false;
         failedPulls.clear();
         amsdFailedOnTurn = -1;
         totalDeckSize = 0;
@@ -297,6 +325,109 @@ public class DeckOracle {
 
     public boolean isAnalyzed() {
         return analyzed;
+    }
+
+    /**
+     * Whether every physical location listed in the player's original main deck
+     * is currently on the table. Outside-deck, converted, and later-acquired
+     * locations do not satisfy an original copy.
+     */
+    public boolean areAllOriginalDeckLocationsInPlay() {
+        if (!analyzed || !originalDeckLocationInventoryKnown) return false;
+        int requiredCopies = originalDeckLocationCopies.values().stream()
+                .mapToInt(Integer::intValue)
+                .sum();
+        if (requiredCopies == 0) return false;
+        if (originalDeckLocationCardIds.size() != requiredCopies) return false;
+
+        for (Integer permanentCardId : originalDeckLocationCardIds) {
+            Zone zone = originalDeckLocationZones.get(permanentCardId);
+            if (zone != Zone.LOCATIONS) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void catalogOriginalDeckLocations(String deckString,
+                                              GameState gameState,
+                                              String playerId) {
+        originalDeckLocationCopies.clear();
+        originalDeckLocationCardIds.clear();
+        originalDeckLocationZones.clear();
+        originalDeckLocationInventoryKnown = false;
+        if (deckString == null || gameState == null || playerId == null) return;
+
+        String[] sections = deckString.split("\\|", -1);
+        Map<String, Integer> outsideDeckLocationCopies = new LinkedHashMap<>();
+        if (!parseLocationCopies(sections[0], originalDeckLocationCopies)
+                || (sections.length > 1
+                && !parseLocationCopies(sections[1], outsideDeckLocationCopies))) {
+            originalDeckLocationCopies.clear();
+            return;
+        }
+
+        Map<String, List<PhysicalCard>> physicalCopies = new LinkedHashMap<>();
+        for (PhysicalCard card : gameState.getAllPermanentCards()) {
+            if (card == null || !playerId.equals(card.getOwner())) continue;
+            String blueprintId = CARD_LIBRARY.stripBlueprintModifiers(
+                    card.getBlueprintId(true));
+            if (!originalDeckLocationCopies.containsKey(blueprintId)) continue;
+            physicalCopies.computeIfAbsent(blueprintId, ignored -> new ArrayList<>())
+                    .add(card);
+        }
+
+        for (Map.Entry<String, Integer> entry : originalDeckLocationCopies.entrySet()) {
+            List<PhysicalCard> copies = physicalCopies.getOrDefault(
+                    entry.getKey(), Collections.emptyList());
+            copies.sort(Comparator.comparingInt(PhysicalCard::getPermanentCardId));
+            // GameState.addPlayerCards creates outside-deck cards before the
+            // original main-deck cards, so permanent ID order preserves origin.
+            int outsideCopies = outsideDeckLocationCopies.getOrDefault(entry.getKey(), 0);
+            int endExclusive = outsideCopies + entry.getValue();
+            if (copies.size() < endExclusive) {
+                originalDeckLocationCardIds.clear();
+                return;
+            }
+            for (int i = outsideCopies; i < endExclusive; i++) {
+                originalDeckLocationCardIds.add(copies.get(i).getPermanentCardId());
+            }
+        }
+
+        originalDeckLocationInventoryKnown = true;
+        refreshOriginalDeckLocationZones(gameState, playerId);
+    }
+
+    private boolean parseLocationCopies(String serializedCards,
+                                        Map<String, Integer> locationCopies) {
+        if (serializedCards == null || serializedCards.isBlank()) return true;
+        for (String rawBlueprintId : serializedCards.split(",")) {
+            String blueprintId = rawBlueprintId.trim();
+            if (blueprintId.isEmpty()) continue;
+            SwccgCardBlueprint blueprint =
+                    CARD_LIBRARY.getSwccgoCardBlueprint(blueprintId);
+            if (blueprint == null) return false;
+            if (blueprint.getCardCategory() == CardCategory.LOCATION) {
+                locationCopies.merge(
+                        CARD_LIBRARY.stripBlueprintModifiers(blueprintId),
+                        1, Integer::sum);
+            }
+        }
+        return true;
+    }
+
+    private void refreshOriginalDeckLocationZones(GameState gameState,
+                                                  String playerId) {
+        originalDeckLocationZones.clear();
+        if (!originalDeckLocationInventoryKnown || gameState == null
+                || playerId == null) return;
+        for (PhysicalCard card : gameState.getAllPermanentCards()) {
+            if (card == null || !playerId.equals(card.getOwner())) continue;
+            int permanentCardId = card.getPermanentCardId();
+            if (originalDeckLocationCardIds.contains(permanentCardId)) {
+                originalDeckLocationZones.put(permanentCardId, card.getZone());
+            }
+        }
     }
 
     // =========================================================================
