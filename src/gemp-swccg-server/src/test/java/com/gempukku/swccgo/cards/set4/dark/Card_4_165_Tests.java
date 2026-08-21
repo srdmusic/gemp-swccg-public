@@ -97,7 +97,7 @@ public class Card_4_165_Tests {
 	public void StarDestroyerLaunchBayLSCanLandTest() {
         //test1: LS can land starfighter from a system (where the related star destroyer is) to the launch bay
         //test2: starfighter lands at the bay
-        //test3: regular landing force cost of 1 paid
+        //test3: landing was free (treated as if from a docking bay)
         //test4: regular move was used (unable to make a regular move to take off, this turn)
         var scn = GetScenario();
 
@@ -128,7 +128,7 @@ public class Card_4_165_Tests {
 
         assertTrue(scn.AwaitingDSMovePhaseActions());
         assertTrue(scn.CardsAtLocation(bay,ywing)); //test2
-        assertEquals(1, scn.GetLSUsedPileCount()); //test3
+        assertEquals(0, scn.GetLSUsedPileCount()); //test3
         scn.DSPass();
 
         assertTrue(scn.AwaitingLSMovePhaseActions());
@@ -139,7 +139,7 @@ public class Card_4_165_Tests {
     public void StarDestroyerLaunchBayLSCanTakeOffTest() {
         //test1: LS can take a starfighter off from launch bay to a system (where the related star destroyer is)
         //test2: starfighter moves to system of the related star destroyer
-        //test3: regular take off force cost of 1 paid
+        //test3: take off was free (treated as if from a docking bay)
         //test4: regular move was used (unable to make a regular move to land or use hyperspeed this turn)
         var scn = GetScenario();
 
@@ -173,7 +173,7 @@ public class Card_4_165_Tests {
 
         assertTrue(scn.AwaitingDSMovePhaseActions());
         assertTrue(scn.CardsAtLocation(system,ywing)); //test2
-        assertEquals(1, scn.GetLSUsedPileCount()); //test3
+        assertEquals(0, scn.GetLSUsedPileCount()); //test3
         scn.DSPass();
 
         assertTrue(scn.AwaitingLSMovePhaseActions());
