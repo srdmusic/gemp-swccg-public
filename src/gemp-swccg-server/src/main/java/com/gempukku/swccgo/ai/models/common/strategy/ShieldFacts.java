@@ -41,7 +41,8 @@ public final class ShieldFacts {
                                   int ownBattlegroundCount,
                                   boolean opponentCanDrainThreePlus,
                                   boolean opponentDrainsNonBattleground,
-                                  boolean battleOrderPlanEquivalentOnTable) {
+                                  boolean battleOrderPlanEquivalentOnTable,
+                                  boolean nonBattlegroundShieldWindowLive) {
         public FourthSlotFacts(
                 boolean occupiesBothTheaters,
                 boolean occupiesAnyBattleground,
@@ -53,7 +54,25 @@ public final class ShieldFacts {
             this(occupiesBothTheaters, occupiesAnyBattleground,
                     opponentBattlegroundCount, opponentHasDrainBonus,
                     ownBattlegroundCount, opponentCanDrainThreePlus,
-                    opponentDrainsNonBattleground, false);
+                    opponentDrainsNonBattleground, false,
+                    occupiesAnyBattleground && opponentBattlegroundCount < 2);
+        }
+
+        public FourthSlotFacts(
+                boolean occupiesBothTheaters,
+                boolean occupiesAnyBattleground,
+                int opponentBattlegroundCount,
+                boolean opponentHasDrainBonus,
+                int ownBattlegroundCount,
+                boolean opponentCanDrainThreePlus,
+                boolean opponentDrainsNonBattleground,
+                boolean battleOrderPlanEquivalentOnTable) {
+            this(occupiesBothTheaters, occupiesAnyBattleground,
+                    opponentBattlegroundCount, opponentHasDrainBonus,
+                    ownBattlegroundCount, opponentCanDrainThreePlus,
+                    opponentDrainsNonBattleground,
+                    battleOrderPlanEquivalentOnTable,
+                    occupiesAnyBattleground && opponentBattlegroundCount < 2);
         }
     }
 
@@ -63,13 +82,15 @@ public final class ShieldFacts {
                                                   String playerId) {
         if (gs == null || game == null || playerId == null) {
             return new FourthSlotFacts(false, false, 0, false,
-                    0, false, false, false);
+                    0, false, false, false, false);
         }
 
         boolean bothTheaters = occupiesBothTheaters(game, playerId);
         boolean anyBattleground = occupiesAnyBattleground(game, playerId);
+        boolean anyCardTextBattleground =
+                occupiesAnyCardTextBattleground(game, playerId);
         int opponentBattlegrounds = 0;
-        boolean opponentHasDrainBonus = false;
+        int opponentCardTextBattlegrounds = 0;
         int ownBattlegrounds = 0;
         boolean opponentCanDrainThreePlus = false;
         boolean opponentDrainsNonBattleground = false;
@@ -81,35 +102,15 @@ public final class ShieldFacts {
             if (opponent != null) {
                 for (PhysicalCard location : gs.getTopLocations()) {
                     if (location == null || location.getBlueprint() == null) continue;
-                    float opponentPower = 0f;
-                    try {
-                        opponentPower = modifiers.getTotalPowerAtLocation(
-                                gs, location, opponent, false, false);
-                    } catch (Exception ignored) {
-                    }
-                    if (opponentPower > 0f
+                    if (com.gempukku.swccgo.filters.Filters.occupies(opponent)
+                            .accepts(gs, modifiers, location)
                             && isBattleOrderBattleground(gs, game, location, modifiers)) {
                         opponentBattlegrounds++;
                     }
-                }
-                for (PhysicalCard card : gs.getAllPermanentCards()) {
-                    if (card == null || card.getBlueprint() == null) continue;
-                    if (!opponent.equals(card.getOwner())) continue;
-                    com.gempukku.swccgo.common.Zone zone = card.getZone();
-                    if (zone == null || !zone.isInPlay()) continue;
-                    if (com.gempukku.swccgo.filters.Filters.lightsaber
-                            .accepts(gs, modifiers, card)) {
-                        opponentHasDrainBonus = true;
-                        break;
-                    }
-                    String gameText = card.getBlueprint().getGameText();
-                    if (gameText == null) continue;
-                    String lower = gameText.toLowerCase(Locale.ROOT);
-                    if (lower.contains("force drain")
-                            && (lower.contains("+1") || lower.contains("+2")
-                                || lower.contains("+3"))) {
-                        opponentHasDrainBonus = true;
-                        break;
+                    if (com.gempukku.swccgo.filters.Filters.occupies(opponent)
+                            .accepts(gs, modifiers, location)
+                            && isCardTextBattleground(gs, location, modifiers)) {
+                        opponentCardTextBattlegrounds++;
                     }
                 }
             }
@@ -122,24 +123,36 @@ public final class ShieldFacts {
                     game.getModifiersQuerying();
             for (PhysicalCard location : gs.getTopLocations()) {
                 if (location == null || location.getBlueprint() == null) continue;
-                float ownPower = 0f;
-                try {
-                    ownPower = modifiers.getTotalPowerAtLocation(
-                            gs, location, playerId, false, false);
-                } catch (Exception ignored) {
-                }
-                if (ownPower > 0f
+                if (com.gempukku.swccgo.filters.Filters.occupies(playerId)
+                        .accepts(gs, modifiers, location)
                         && isBattleOrderBattleground(gs, game, location, modifiers)) {
                     ownBattlegrounds++;
                 }
                 if (opponent != null) {
                     try {
                         float drain = modifiers.getForceDrainAmount(gs, location, opponent);
-                        if (drain >= 3f) {
+                        boolean controlsForDrain =
+                                com.gempukku.swccgo.filters.Filters
+                                        .controlsForForceDrain(opponent)
+                                        .accepts(gs, modifiers, location);
+                        boolean drainProhibited =
+                                modifiers.isProhibitedFromForceDrainingAtLocation(
+                                        gs, location, opponent)
+                                || com.gempukku.swccgo.filters.Filters.canSpot(
+                                        game, null,
+                                        com.gempukku.swccgo.filters.Filters.and(
+                                                com.gempukku.swccgo.filters.Filters
+                                                        .owner(opponent),
+                                                com.gempukku.swccgo.filters.Filters
+                                                        .at(location),
+                                                com.gempukku.swccgo.filters.Filters
+                                                        .cannotParticipateInForceDrain));
+                        controlsForDrain = controlsForDrain && !drainProhibited;
+                        if (controlsForDrain && drain >= 3f) {
                             opponentCanDrainThreePlus = true;
                         }
-                        if (drain > 0f
-                                && !isBattleOrderBattleground(gs, game, location, modifiers)) {
+                        if (controlsForDrain && drain > 0f
+                                && !isCardTextBattleground(gs, location, modifiers)) {
                             opponentDrainsNonBattleground = true;
                         }
                     } catch (Exception ignored) {
@@ -151,9 +164,66 @@ public final class ShieldFacts {
         }
 
         return new FourthSlotFacts(bothTheaters, anyBattleground,
-                opponentBattlegrounds, opponentHasDrainBonus, ownBattlegrounds,
+                opponentBattlegrounds, false, ownBattlegrounds,
                 opponentCanDrainThreePlus, opponentDrainsNonBattleground,
-                battleOrderPlanEquivalentOnTable(gs));
+                battleOrderPlanEquivalentOnTable(gs),
+                anyCardTextBattleground && opponentCardTextBattlegrounds < 2);
+    }
+
+    /**
+     * Remembers an opponent non-battleground drain after the transient drain
+     * window closes. The active state is exact; the same-turn attempted flag
+     * covers the next normal bot decision after the drain has resolved.
+     */
+    public static boolean opponentNonBattlegroundDrainObservedNow(
+            GameState gameState, SwccgGame game, String playerId) {
+        if (gameState == null || game == null || playerId == null) return false;
+        try {
+            String opponent = game.getOpponent(playerId);
+            if (opponent == null) return false;
+            com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying modifiers =
+                    game.getModifiersQuerying();
+            if (gameState.isDuringForceDrainInitiatedBy(opponent)) {
+                PhysicalCard location = gameState.getForceDrainLocation();
+                return location != null
+                        && !isCardTextBattleground(gameState, location, modifiers);
+            }
+            if (!opponent.equals(gameState.getCurrentPlayerId())) return false;
+            for (PhysicalCard location : gameState.getTopLocations()) {
+                if (location != null
+                        && modifiers.isForceDrainAttemptedThisTurn(location)
+                        && !isCardTextBattleground(gameState, location, modifiers)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Non-battleground drain observation error: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    /** Returns whether the exact named shield is stacked and engine-playable. */
+    public static boolean stackedCardTitlePlayable(GameState gameState,
+                                                   SwccgGame game,
+                                                   PhysicalCard source,
+                                                   String preferredTitle) {
+        if (gameState == null || game == null || source == null
+                || preferredTitle == null) return false;
+        try {
+            List<PhysicalCard> stacked = gameState.getStackedCards(source);
+            if (stacked == null) return false;
+            for (PhysicalCard card : stacked) {
+                String title = card != null ? card.getTitle() : null;
+                if (title != null && title.equalsIgnoreCase(preferredTitle)
+                        && com.gempukku.swccgo.filters.Filters.playable(source)
+                                .accepts(gameState, game.getModifiersQuerying(), card)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Stacked shield scan error: {}", e.getMessage());
+        }
+        return false;
     }
 
     public static boolean battleOrderPlanEquivalentOnTable(GameState gs) {
@@ -279,6 +349,21 @@ public final class ShieldFacts {
         }
     }
 
+    private static boolean occupiesAnyCardTextBattleground(
+            SwccgGame game, String playerId) {
+        if (game == null || playerId == null) return false;
+        try {
+            return com.gempukku.swccgo.filters.Filters.canSpot(
+                    game, null,
+                    com.gempukku.swccgo.filters.Filters.and(
+                            com.gempukku.swccgo.filters.Filters.occupies(playerId),
+                            com.gempukku.swccgo.filters.Filters.battleground));
+        } catch (Exception e) {
+            LOG.debug("Card-text battleground occupation error: {}", e.getMessage());
+            return false;
+        }
+    }
+
     public static boolean shouldReserveEopBattleOrderSlot(
             SwccgGame game, String playerId, PhysicalCard stackedPileSource,
             int shieldsOnTable) {
@@ -369,6 +454,13 @@ public final class ShieldFacts {
         return !isInvasionNabooSystem(game, location)
                 && com.gempukku.swccgo.filters.Filters.battleground.accepts(
                         gameState, modifiers, location);
+    }
+
+    private static boolean isCardTextBattleground(
+            GameState gameState, PhysicalCard location,
+            com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying modifiers) {
+        return com.gempukku.swccgo.filters.Filters.battleground
+                .accepts(gameState, modifiers, location);
     }
 
     // Hoth repair #1 (2026-07-27): package-visible so ObjectiveAnalyzer's

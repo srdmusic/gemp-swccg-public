@@ -88,6 +88,14 @@ public final class ShieldPolicy {
     public static FourthSlotPick fourthSlotPick(Side side,
                                                 ShieldFacts.FourthSlotFacts facts,
                                                 Predicate<String> preferredOnMenu) {
+        return fourthSlotPick(side, facts, false, preferredOnMenu);
+    }
+
+    public static FourthSlotPick fourthSlotPick(
+            Side side,
+            ShieldFacts.FourthSlotFacts facts,
+            boolean opponentPreviouslyDrainedNonBattleground,
+            Predicate<String> preferredOnMenu) {
         Objects.requireNonNull(facts, "facts");
         if (side == null) {
             return new FourthSlotPick(null, false, FourthSlotTrigger.CLOSED);
@@ -95,7 +103,14 @@ public final class ShieldPolicy {
 
         String preferred = null;
         FourthSlotTrigger trigger = FourthSlotTrigger.CLOSED;
-        if (facts.occupiesBothTheaters()
+        if (facts.nonBattlegroundShieldWindowLive()
+                && (facts.opponentDrainsNonBattleground()
+                    || opponentPreviouslyDrainedNonBattleground)) {
+            preferred = side == Side.DARK
+                    ? "Come Here You Big Coward"
+                    : "Simple Tricks And Nonsense";
+            trigger = FourthSlotTrigger.NON_BATTLEGROUND_DRAIN;
+        } else if (facts.occupiesBothTheaters()
                 && !facts.battleOrderPlanEquivalentOnTable()) {
             preferred = side == Side.DARK ? "Battle Order" : "Battle Plan";
             trigger = FourthSlotTrigger.BATTLE_ORDER_PLAN;
@@ -104,14 +119,6 @@ public final class ShieldPolicy {
                     || facts.opponentBattlegroundCount() == 0)) {
             preferred = side == Side.DARK ? "Resistance" : "Ultimatum";
             trigger = FourthSlotTrigger.DRAIN_CAP;
-        } else if (facts.occupiesAnyBattleground()
-                && facts.opponentBattlegroundCount() < 2
-                && facts.opponentHasDrainBonus()
-                && facts.opponentDrainsNonBattleground()) {
-            preferred = side == Side.DARK
-                    ? "Come Here You Big Coward"
-                    : "Simple Tricks And Nonsense";
-            trigger = FourthSlotTrigger.NON_BATTLEGROUND_DRAIN;
         }
 
         boolean pursue = preferred != null
@@ -159,6 +166,8 @@ public final class ShieldPolicy {
                                                  boolean reserveForBattleOrder) {
         Objects.requireNonNull(fourthSlot, "fourthSlot");
         List<PolicyOperation> operations = new ArrayList<>();
+        boolean urgentNonBattlegroundShield =
+                isUrgentNonBattlegroundShield(fourthSlot);
 
         // Hoth repair #2 (2026-07-27): the hold is re-keyed from
         // !occupiesBothTheaters(self) to !battleOrderLive. The old key made
@@ -168,7 +177,11 @@ public final class ShieldPolicy {
         // Callers additionally release the hold when a Battle Order/Plan
         // equivalent is already on table (the reserve target is spent).
         // OLD: if (shieldsOnTable == 2 && !occupiesBothTheaters) {
-        if (shieldsOnTable == 2 && !battleOrderLive) {
+        if (urgentNonBattlegroundShield) {
+            add(operations, actionId, "V106-non-bg-shield-parent",
+                    TraceOutputKind.ORDERING, 2000.0f,
+                    "V106 NON-BG SHIELD: deploy the available drain and retrieval counter");
+        } else if (shieldsOnTable == 2 && !battleOrderLive) {
             add(operations, actionId, "V112-third-slot-reserve",
                     TraceOutputKind.ORDERING, -3000.0f,
                     "V112 3RD SLOT HOLD: reserve the third shield for Battle Order");
@@ -177,13 +190,18 @@ public final class ShieldPolicy {
                     TraceOutputKind.ORDERING, -300.0f,
                     "EOP SHIELD HOLD: preserve slot four until Endor system occupation makes Battle Order live");
         }
-        if (shieldsOnTable >= 3 && !fourthSlot.pursue()) {
+        if (!urgentNonBattlegroundShield
+                && shieldsOnTable >= 3 && !fourthSlot.pursue()) {
             add(operations, actionId, "V124", TraceOutputKind.ORDERING, -3000.0f,
                     "V124 K&D 4TH-SLOT BLOCK: " + shieldsOnTable
                             + " shields already on table, no V105/V107 trigger — don't activate K&D for 4th shield");
         }
 
-        if (atActivationCap) {
+        if (urgentNonBattlegroundShield) {
+            add(operations, actionId, "SHIELDS-stacked-pile-available",
+                    TraceOutputKind.BANDED, 50.0f,
+                    "K&D: Play urgent defensive shield");
+        } else if (atActivationCap) {
             add(operations, actionId, "V102", TraceOutputKind.VETO, -2000.0f,
                     "V102 K&D ACTIVATION CAP: " + activationCount
                             + " activations already this turn (turn " + turnNumber
@@ -250,6 +268,19 @@ public final class ShieldPolicy {
                                                  String cardTitle,
                                                  FourthSlotPick pick) {
         Objects.requireNonNull(pick, "pick");
+        if (isUrgentNonBattlegroundShield(pick)) {
+            if (titleMatches(cardTitle, pick.preferred())) {
+                return one("SHIELD_UNKNOWN_POLICY", actionId,
+                        "V106-non-bg-shield-selection",
+                        TraceOutputKind.ORDERING, 2000.0f,
+                        "V106 NON-BG SHIELD: select '" + pick.preferred() + "' +2000");
+            }
+            return one("SHIELD_UNKNOWN_POLICY", actionId,
+                    "V106-non-bg-shield-selection",
+                    TraceOutputKind.ORDERING, -5000.0f,
+                    "V106 NON-BG SHIELD: hold other shields for '"
+                            + pick.preferred() + "' -5000");
+        }
         if (shieldsOnTable < 3) {
             return result("SHIELD_UNKNOWN_POLICY", List.of());
         }
@@ -298,6 +329,10 @@ public final class ShieldPolicy {
         Objects.requireNonNull(pick, "pick");
         Objects.requireNonNull(route, "route");
         List<PolicyOperation> operations = new ArrayList<>();
+        boolean urgentNonBattlegroundShield =
+                isUrgentNonBattlegroundShield(pick);
+        boolean exactUrgentShield = urgentNonBattlegroundShield
+                && titleMatches(cardTitle, pick.preferred());
 
         PolicyResult redundancy = battleOrderPlanRedundancyGate(
                 actionId, cardTitle, equivalentOnTable);
@@ -309,7 +344,8 @@ public final class ShieldPolicy {
         // the corrected battleOrderLive law (see ShieldFacts.battleOrderLive).
         boolean battleOrderTurnOneException = turnNumber == 1
                 && isBattleOrderOrPlan(cardTitle) && battleOrderLive;
-        if (turnNumber < minTurnToPlay && !battleOrderTurnOneException) {
+        if (turnNumber < minTurnToPlay
+                && !battleOrderTurnOneException && !exactUrgentShield) {
             add(operations, actionId, "V53-shield-min-turn",
                     TraceOutputKind.VETO, -5000.0f,
                     "V53 SHIELD MIN-TURN: '" + cardTitle + "' waits until turn "
@@ -321,7 +357,15 @@ public final class ShieldPolicy {
         // already on table — the slot's target is spent and holding every
         // other shield would stall slot three for the rest of the game.
         // OLD: occupiesBothTheaters && shieldScore > -50.0f, no release
-        if (shieldsOnTable == 2 && !equivalentOnTable) {
+        if (urgentNonBattlegroundShield) {
+            add(operations, actionId, "V106-non-bg-shield-selection",
+                    TraceOutputKind.ORDERING,
+                    exactUrgentShield ? 2000.0f : -5000.0f,
+                    exactUrgentShield
+                            ? "V106 NON-BG SHIELD: exact counter +2000"
+                            : "V106 NON-BG SHIELD: reserve selection for '"
+                                    + pick.preferred() + "' -5000");
+        } else if (shieldsOnTable == 2 && !equivalentOnTable) {
             if (isBattleOrderOrPlan(cardTitle)
                     && battleOrderLive && shieldScore > -50.0f) {
                 add(operations, actionId, "V112-third-slot-selection",
@@ -334,7 +378,7 @@ public final class ShieldPolicy {
             }
         }
 
-        if (shieldsOnTable >= 3) {
+        if (!urgentNonBattlegroundShield && shieldsOnTable >= 3) {
             if (!pick.pursue()) {
                 add(operations, actionId, "V105-V107-selection",
                         TraceOutputKind.ORDERING, -5000.0f,
@@ -356,6 +400,11 @@ public final class ShieldPolicy {
                 battleOrderLive, shieldsOnTable,
                 route == CandidateRoute.RESERVE);
         return result("SHIELD_CANDIDATE_POLICY", operations);
+    }
+
+    private static boolean isUrgentNonBattlegroundShield(FourthSlotPick pick) {
+        return pick.pursue()
+                && pick.trigger() == FourthSlotTrigger.NON_BATTLEGROUND_DRAIN;
     }
 
     private static void addBattleOrderSelection(List<PolicyOperation> operations,

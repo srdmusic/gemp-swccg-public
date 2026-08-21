@@ -389,3 +389,35 @@ Identity boundary: both mirrored DeckOracles bind the immutable pre-pipe deck lo
 Verification: the pinned offline Java 21 16-class focused and impacted ring passed `175/0/0/0`. Clean compile, ActionText mirror parity, exact DeckOracle changed-hunk parity, diff checks, and independent adversarial review passed. Exact base is `c82dd272aa56242b6d06bf1b2152858f27c0973d`; branch is `codex/wokling-generation-hold-2026-08-17`.
 
 Scope and proof ceiling: five AI production files, three AI tests, and the required records changed. No card Java, engine Java, deck data, build configuration, package, jar, deployment, restart, database or game mutation, push, or live semantic firing occurred. Proof is `SOURCE_TESTED`. Revert the local commit containing this entry to remove V53d only.
+
+## 2026-08-21 08:20 PT - Codex V106 shield-response lane -> Alfred - OPEN
+
+Topic: DB72307 Simple Tricks timing failure is repaired in source for Rando and Chosen One.
+
+Replay evidence: Light Rando recording `3owm2ijucupsaavw` had `Simple Tricks And Nonsense` (`200_28`, legacy `601_67`) available while its printed condition was live. V112 kept the third slot reserved, scoring the stacked-pile parent `-3000 + 50 = -2950`, so the menu never reopened. Steve completed six non-battleground drains totaling 8 Force and seven successful retrievals.
+
+Decision: amend V106 in place. While the printed deployment window is live, current controlled and legally proven non-battleground drain capability or a sticky prior observed non-battleground drain makes the exact Light or Dark cancellation shield urgent at any shield count. It outranks Battle Order or Battle Plan. The exact candidate receives `+2000`. The exact stacked-pile parent receives `+2000` plus its existing `+50` only when the source has the exact title and is engine-playable through `Filters.playable`. An unplayable source receives neither `+2050` nor any hold bypass. Only that exact available and playable shield bypasses V112, end-of-phase reserve, pacing, minimum-turn, and fourth-slot holds. Other shield candidates receive `-5000`. The latch resets per game.
+
+Boundary: actual card-text battleground classification and exact occupation govern the printed shield condition. Current capability retains control, positive drain, prohibition, and participation checks. V276's separate Battle Order treatment of Invasion and Naboo is unchanged. No current or observed threat preserves prior behavior. Rando and Chosen One are mirrored. Dark virtual `225_3` itself makes sectors non-battleground, and this patch does not project that post-play modifier. It therefore does not claim exact behavioral equivalence between Dark `13_61` and `225_3` in sector states. That pre-existing V106 Dark limitation is nonblocking for Steve's Light Simple Tricks request.
+
+Evidence: exact base `bb989d8db`, branch `codex/simple-tricks-nonbg-shield-2026-08-21`. Pinned offline Java 21 compile passed. The complete shield ring, including the unplayable-source regression, passed `115/0/0/0`. Final adversarial review returned STATIC PASS. Independent verification and the local commit remain pending.
+
+Proof ceiling: provisional `SOURCE_TESTED`. No package, jar, deployment, restart, runtime mutation, database or game mutation, push, or candidate replay firing occurred.
+
+Needed: finish adversarial and independent verification, resolve any blocker, run final diff and parity checks, then create one local commit. Keep this thread OPEN until those gates pass.
+
+## 2026-08-21 09:55 PT - Codex V106 shield-response lane -> Alfred - RESOLVED
+
+Topic: DB72307 Simple Tricks source correction passed final independent verification with zero blockers.
+
+Decision: close the source-verification gate at `SOURCE_TESTED`. The original OPEN entry remains above as the request record. The local commit containing this entry is still pending, and no exact commit SHA is claimed.
+
+Independent evidence: pinned Corretto `21.0.11` and Maven `3.9.6`, offline with network disabled, produced a clean server compile at exit `0`. The complete shield ring passed `115/0/0/0`, including the unplayable stacked-source regression. Final adversarial review returned STATIC PASS. All three changed Rando and Chosen One mirror pairs normalize exactly. Card law, action reachability, scoring discipline, source boundaries, and static checks passed.
+
+Scope: the independent verifier's clean snapshot contained 16 paths, consisting of nine AI production files, four AI test files, and three required records, with 676 insertions and 142 deletions. There were no untracked files and no diff-check errors. This RESOLVED append is records-only and also passes the diff check.
+
+Boundary: the Light `Simple Tricks And Nonsense` request is sealed in source. Dark virtual `225_3` still has the pre-existing V106 limitation recorded above: the planner does not project its own post-play sector modifier, so no exact `13_61` and `225_3` behavioral-twin claim is made.
+
+Delivery: no package, jar, deployment, restart, runtime mutation, database mutation, game mutation, push, or live candidate firing occurred.
+
+Needed: create the one local commit containing this entry. Any package or deployment remains a separate gate.

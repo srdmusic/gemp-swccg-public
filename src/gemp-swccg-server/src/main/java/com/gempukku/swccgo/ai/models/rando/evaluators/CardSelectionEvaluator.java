@@ -11940,11 +11940,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 ShieldPolicy.FourthSlotPick fourthSlot =
                         new ShieldPolicy.FourthSlotPick(null, false,
                                 ShieldPolicy.FourthSlotTrigger.CLOSED);
-                if (shieldsOnTable >= 3 && shieldStrategy != null) {
-                    ShieldFacts.FourthSlotFacts fourthSlotFacts =
-                            ShieldFacts.fourthSlotFacts(context.getGameState(),
-                                    context.getGame(), context.getPlayerId());
+                ShieldFacts.FourthSlotFacts fourthSlotFacts =
+                        ShieldFacts.fourthSlotFacts(context.getGameState(),
+                                context.getGame(), context.getPlayerId());
+                if (shieldStrategy != null) {
                     fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts,
+                            preferred -> preferredShieldInCandidates(context, preferred));
+                } else {
+                    fourthSlot = ShieldPolicy.fourthSlotPick(
+                            context.getSide(), fourthSlotFacts,
                             preferred -> preferredShieldInCandidates(context, preferred));
                 }
                 shieldLedger.register(ShieldPolicy.unknownFourthSlot(
@@ -12477,17 +12481,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 ShieldPolicy.FourthSlotPick fourthSlot =
                         new ShieldPolicy.FourthSlotPick(null, false,
                                 ShieldPolicy.FourthSlotTrigger.CLOSED);
-                if (shieldsOnTable >= 3) {
-                    ShieldFacts.FourthSlotFacts fourthSlotFacts =
-                            ShieldFacts.fourthSlotFacts(context.getGameState(),
-                                    game, playerId);
-                    if (shieldStrategy != null) {
-                        fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts,
-                                preferred -> preferredShieldInCandidates(context, preferred));
-                    } else {
-                        fourthSlot = ShieldPolicy.fourthSlotPick(side, fourthSlotFacts,
-                                preferred -> preferredShieldInCandidates(context, preferred));
-                    }
+                ShieldFacts.FourthSlotFacts fourthSlotFacts =
+                        ShieldFacts.fourthSlotFacts(context.getGameState(),
+                                game, playerId);
+                if (shieldStrategy != null) {
+                    fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts,
+                            preferred -> preferredShieldInCandidates(context, preferred));
+                } else {
+                    fourthSlot = ShieldPolicy.fourthSlotPick(side, fourthSlotFacts,
+                            preferred -> preferredShieldInCandidates(context, preferred));
                 }
 
                 // Hoth repair #2 (2026-07-27): corrected battleOrderLive law.
@@ -12697,18 +12699,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     ShieldPolicy.FourthSlotPick fourthSlot =
                             new ShieldPolicy.FourthSlotPick(null, false,
                                     ShieldPolicy.FourthSlotTrigger.CLOSED);
-                    if (shieldsOnTable >= 3) {
-                        ShieldFacts.FourthSlotFacts fourthSlotFacts =
-                                ShieldFacts.fourthSlotFacts(context.getGameState(),
-                                        context.getGame(), context.getPlayerId());
-                        if (shieldStrategy != null) {
-                            fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts,
-                                    preferred -> preferredShieldInCandidates(context, preferred));
-                        } else {
-                            fourthSlot = ShieldPolicy.fourthSlotPick(context.getSide(),
-                                    fourthSlotFacts,
-                                    preferred -> preferredShieldInCandidates(context, preferred));
-                        }
+                    ShieldFacts.FourthSlotFacts fourthSlotFacts =
+                            ShieldFacts.fourthSlotFacts(context.getGameState(),
+                                    context.getGame(), context.getPlayerId());
+                    if (shieldStrategy != null) {
+                        fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts,
+                                preferred -> preferredShieldInCandidates(context, preferred));
+                    } else {
+                        fourthSlot = ShieldPolicy.fourthSlotPick(context.getSide(),
+                                fourthSlotFacts,
+                                preferred -> preferredShieldInCandidates(context, preferred));
                     }
                     // Hoth repair #2 (2026-07-27): corrected battleOrderLive law.
                     // OLD: ShieldFacts.occupiesBothTheaters(game, playerId)

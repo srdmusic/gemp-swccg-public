@@ -13,6 +13,7 @@ import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhaseScript;
 import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer;
 // V295 RETIRED: import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
+import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
@@ -2848,6 +2849,9 @@ public class RandoCalAi extends HeuristicAiBase {
             LOG.info("New game started vs {} as {}", opponentName, mySide);
         }
 
+        shieldStrategy.observeOpponentNonBattlegroundDrain(
+                ShieldFacts.opponentNonBattlegroundDrainObservedNow(
+                        gameState, currentGame, playerId));
         strategyController.observePersistentResponse(gameState, playerId);
 
         // Turn changed

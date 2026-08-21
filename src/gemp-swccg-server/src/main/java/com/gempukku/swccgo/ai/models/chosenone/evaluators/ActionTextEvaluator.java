@@ -3484,6 +3484,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
                 }
                 if (ShieldPolicy.isStackedPileShieldSource(stackedPileSourceTitle)) {
+                    final PhysicalCard shieldPileSource = stackedPileSource;
                     ShieldStrategy shieldStrategy = context.getShieldStrategy();
                     int turnNumber = context.getTurnNumber();
                     int shieldsOnTable = ShieldFacts.shieldsOnTable(
@@ -3498,10 +3499,23 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     // otherwise slot three stalls for the rest of the game).
                     // OLD: occupiesBothTheaters = fourthSlotFacts.occupiesBothTheaters();
                     boolean holdReleased = false;
-                    if (shieldsOnTable >= 2 && shieldStrategy != null) {
-                        ShieldFacts.FourthSlotFacts fourthSlotFacts =
-                                ShieldFacts.fourthSlotFacts(gameState, context.getGame(),
-                                        context.getPlayerId());
+                    ShieldFacts.FourthSlotFacts fourthSlotFacts =
+                            ShieldFacts.fourthSlotFacts(gameState, context.getGame(),
+                                    context.getPlayerId());
+                    if (shieldStrategy != null) {
+                        fourthSlot = shieldStrategy.fourthSlotPick(
+                                fourthSlotFacts,
+                                preferred -> ShieldFacts.stackedCardTitlePlayable(
+                                        gameState, context.getGame(), shieldPileSource,
+                                        preferred));
+                    } else {
+                        fourthSlot = ShieldPolicy.fourthSlotPick(
+                                context.getSide(), fourthSlotFacts,
+                                preferred -> ShieldFacts.stackedCardTitlePlayable(
+                                        gameState, context.getGame(), shieldPileSource,
+                                        preferred));
+                    }
+                    if (shieldsOnTable >= 2) {
                         boolean opponentOutDrains =
                                 CardSelectionEvaluator.computeNetDrainBalance(
                                     context.getGame(), gameState,
@@ -3511,9 +3525,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 opponentOutDrains)
                             || ShieldFacts.battleOrderPlanEquivalentOnTable(
                                 gameState);
-                        if (shieldsOnTable >= 3) {
-                            fourthSlot = shieldStrategy.fourthSlotPick(fourthSlotFacts, null);
-                        }
                     }
                     boolean activationCap = shieldStrategy != null
                             && shieldStrategy.atKnDActivationCap(turnNumber);
@@ -3524,7 +3535,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     boolean reserveEopBattleOrder =
                             ShieldFacts.shouldReserveEopBattleOrderSlot(
                                 context.getGame(), context.getPlayerId(),
-                                stackedPileSource, shieldsOnTable);
+                                shieldPileSource, shieldsOnTable);
 
                     controlLedger.register(ShieldPolicy.stackedPileParent(
                             actionId, shieldsOnTable, holdReleased,

@@ -84,6 +84,20 @@ public class ShieldSourceOwnershipTest {
     }
 
     @Test
+    public void mirroredBotsLatchObservedOpponentNonBattlegroundDrains() throws IOException {
+        for (String ai : new String[] {
+                aiSource("rando", "RandoCalAi.java"),
+                aiSource("chosenone", "TheChosenOneAi.java")}) {
+            String tracker = method(ai,
+                    "private void trackGameState(String playerId, GameState gameState)");
+            assertEquals(1, occurrences(tracker,
+                    "shieldStrategy.observeOpponentNonBattlegroundDrain("));
+            assertEquals(1, occurrences(tracker,
+                    "ShieldFacts.opponentNonBattlegroundDrainObservedNow("));
+        }
+    }
+
+    @Test
     public void retiredProductionFieldsRemainCommentsWithZeroLiveUsages() throws IOException {
         String production = allAiProductionSource();
         for (String retired : new String[] {
@@ -116,6 +130,12 @@ public class ShieldSourceOwnershipTest {
         return Files.readString(mainJavaRoot()
                 .resolve("com/gempukku/swccgo/ai/models")
                 .resolve(bot).resolve("evaluators/CardSelectionEvaluator.java"));
+    }
+
+    private static String aiSource(String bot, String file) throws IOException {
+        return Files.readString(mainJavaRoot()
+                .resolve("com/gempukku/swccgo/ai/models")
+                .resolve(bot).resolve(file));
     }
 
     private static String commonPhaseSource(String file) throws IOException {

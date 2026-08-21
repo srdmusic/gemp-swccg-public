@@ -334,6 +334,7 @@ public class ShieldStrategy {
     // actually selected. Counter resets when turnSeen changes.
     private int knDActivationsThisTurn = 0;
     private int knDActivationsTurnSeen = -1;
+    private boolean opponentDrainedNonBattleground = false;
 
     /**
      * Default constructor - side will be set when game starts.
@@ -372,6 +373,16 @@ public class ShieldStrategy {
         // V102: clear per-turn K&D activation counter
         knDActivationsThisTurn = 0;
         knDActivationsTurnSeen = -1;
+        opponentDrainedNonBattleground = false;
+    }
+
+    /** Latches a seen opponent non-battleground drain for the current game. */
+    public void observeOpponentNonBattlegroundDrain(boolean observedNow) {
+        opponentDrainedNonBattleground |= observedNow;
+    }
+
+    public boolean hasObservedOpponentNonBattlegroundDrain() {
+        return opponentDrainedNonBattleground;
     }
 
     /**
@@ -451,11 +462,11 @@ public class ShieldStrategy {
     // one of three specific board states:
     //   A. Battle Order / Battle Plan when we occupy SYSTEM + SITE battlegrounds
     //   B. Come Here You Big Coward / Simple Tricks And Nonsense when opponent
-    //      has drain-bonus sources (lightsabers etc.) AND occupies < 2 battlegrounds
+    //      can drain at a non-battleground or has already done so
     //   C. Resistance / Ultimatum when opponent can drain 3+ AND we occupy >=3
     //      battlegrounds (or opponent occupies 0)
-    // Priority when multiple fire: A > C > B (A buys most ongoing force value;
-    // C is hard damage cap; B is conditional).
+    // Priority when multiple fire: B > A > C. B cancels both the demonstrated
+    // drain route and all opponent retrieval while its card-law window is live.
     // Returns the recommended shield TITLE (canonical "Battle Order" / "Battle Plan"
     // / "Come Here You Big Coward" / "Simple Tricks And Nonsense" / "Resistance"
     // / "Ultimatum") or null if no trigger fires (4th slot stays closed).
@@ -471,7 +482,8 @@ public class ShieldStrategy {
             java.util.function.Predicate<String> preferredOnMenu) {
         com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy.FourthSlotPick pick =
                 com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy.fourthSlotPick(
-                        mySide, facts, preferredOnMenu);
+                        mySide, facts, opponentDrainedNonBattleground,
+                        preferredOnMenu);
         switch (pick.trigger()) {
             case BATTLE_ORDER_PLAN -> LOG.warn(
                     "V105 4TH SLOT (A): {} - we occupy system+site battlegrounds",
@@ -481,7 +493,7 @@ public class ShieldStrategy {
                     pick.preferred(), facts.ownBattlegroundCount(),
                     facts.opponentBattlegroundCount());
             case NON_BATTLEGROUND_DRAIN -> LOG.warn(
-                    "V106 4TH SLOT (B): {} - opp draining a non-BG; we occupy BG, opp bg<2 + drain-bonus",
+                    "V106 SHIELD RESPONSE: {} - opponent can drain or has drained at a non-BG",
                     pick.preferred());
             case CLOSED -> LOG.info(
                     "V105/V107: no 4th-slot trigger - HOLD indefinitely (myBg={} oppBg={} bothTheaters={} anyBg={} drain3+={})",

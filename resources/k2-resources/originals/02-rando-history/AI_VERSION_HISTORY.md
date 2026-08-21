@@ -10982,3 +10982,64 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     No package, deployment, restart, database or game mutation, push, or
     live firing proof occurred. Revert the local commit containing this
     entry to remove V53d only.
+
+  ==== V106 UPDATE: NON-BATTLEGROUND DRAIN SHIELD URGENCY (2026-08-21, both bots, source-tested) ====
+
+    DB 72307, Light Rando recording 3owm2ijucupsaavw, proved that V106 could
+    identify Simple Tricks And Nonsense 200_28 / legacy 601_67 during setup
+    but could not reach it after two shields. V112 scored the stacked-pile
+    Play a card parent -3000, and existing parent availability added only
+    +50, producing -2950. The shield menu never reopened even though the
+    printed deployment condition became live. Steve completed six Force
+    drains at non-battlegrounds for 8 total Force loss and seven successful
+    retrievals, all effects the shield would have canceled.
+
+    V106 now becomes urgent when the printed deployment window is live and
+    either the opponent currently controls a legally drainable
+    non-battleground with positive Force-drain capability or the bot has
+    observed the opponent initiate a non-battleground Force drain earlier in
+    the game. The observation is sticky only for that game and resets with
+    ShieldStrategy. Retrieval remains payoff, not a trigger. Light selects
+    Simple Tricks And Nonsense; Dark selects Come Here You Big Coward.
+
+    The urgent V106 pick applies at any shield count and precedes Battle
+    Order or Battle Plan and Resistance or Ultimatum. The exact available
+    candidate receives +2000. Its stacked-pile parent receives +2000 plus
+    the existing +50 only when the source contains the exact title and the
+    engine reports the source playable through Filters.playable. An
+    unplayable stacked shield receives neither the +2050 parent score nor
+    any hold bypass. Only that exact available and playable shield bypasses
+    V112's third-slot reserve, end-of-phase reserve, activation pacing,
+    minimum-turn pacing, and fourth-slot holds. Other shield candidates
+    score -5000 while the urgent exact pick remains available.
+
+    The printed window still requires exact occupation of an actual
+    card-text battleground by Rando and fewer than two actual card-text
+    battlegrounds occupied by the opponent. Current capability still
+    requires opponent control for a Force drain, positive drain amount, no
+    drain prohibition, and a participating opponent card. V276's separate
+    Battle Order semantics for Invasion and Naboo are preserved. No current
+    or observed non-battleground drain threat preserves the prior V105,
+    V107, V112, and pacing behavior. Rando and Chosen One remain mirrored.
+    Known Dark virtual boundary remains: Come Here You Big Coward 225_3
+    itself makes sectors non-battleground, but this V106 update does not
+    project that post-play modifier. Legacy 13_61 and virtual 225_3 are not
+    claimed as exact behavioral twins in sector states. This pre-existing
+    Dark limitation does not block Steve's Light Simple Tricks request.
+
+    Final adversarial review returned STATIC PASS. Independent verification
+    under pinned Corretto 21.0.11 and Maven 3.9.6, offline with network
+    disabled, produced a clean server compile at exit 0 and a complete
+    shield ring of 115/0/0/0. All three changed Rando and Chosen One mirror
+    pairs normalize exactly. Card law, action reachability, scoring
+    discipline, source boundaries, and static checks passed with zero
+    blockers. The independent verifier's clean snapshot contains 16 paths:
+    nine AI production files, four AI tests, and these three records, with
+    676 insertions and 142 deletions and no untracked files. The later
+    verification-closure text is records-only and also diff-clean. Exact
+    base is bb989d8db on branch
+    codex/simple-tricks-nonbg-shield-2026-08-21. Final proof ceiling is
+    SOURCE_TESTED. No package, jar, deployment, restart, runtime mutation,
+    database or game mutation, push, or live candidate firing occurred.
+    Revert the local commit containing this entry to remove only the V106
+    correction.

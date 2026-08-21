@@ -77,23 +77,30 @@ public class ShieldPolicyTest {
     }
 
     @Test
-    public void fourthSlotPriorityRemainsAThenCThenBForBothSides() {
+    public void nonBattlegroundThreatPreemptsBattlePlanAndNoLongerRequiresDrainBonus() {
         ShieldFacts.FourthSlotFacts allTriggers =
-                facts(true, true, 0, true, 3, true, true);
-        assertPick(Side.DARK, allTriggers, "Battle Order",
+                facts(true, true, 0, false, 3, true, true);
+        assertPick(Side.DARK, allTriggers, "Come Here You Big Coward",
+                ShieldPolicy.FourthSlotTrigger.NON_BATTLEGROUND_DRAIN);
+        assertPick(Side.LIGHT, allTriggers, "Simple Tricks And Nonsense",
+                ShieldPolicy.FourthSlotTrigger.NON_BATTLEGROUND_DRAIN);
+
+        ShieldFacts.FourthSlotFacts battlePlanAndDrainCap =
+                facts(true, true, 0, true, 3, true, false);
+        assertPick(Side.DARK, battlePlanAndDrainCap, "Battle Order",
                 ShieldPolicy.FourthSlotTrigger.BATTLE_ORDER_PLAN);
-        assertPick(Side.LIGHT, allTriggers, "Battle Plan",
+        assertPick(Side.LIGHT, battlePlanAndDrainCap, "Battle Plan",
                 ShieldPolicy.FourthSlotTrigger.BATTLE_ORDER_PLAN);
 
         ShieldFacts.FourthSlotFacts drainCap =
-                facts(false, true, 0, true, 3, true, true);
+                facts(false, true, 0, true, 3, true, false);
         assertPick(Side.DARK, drainCap, "Resistance",
                 ShieldPolicy.FourthSlotTrigger.DRAIN_CAP);
         assertPick(Side.LIGHT, drainCap, "Ultimatum",
                 ShieldPolicy.FourthSlotTrigger.DRAIN_CAP);
 
         ShieldFacts.FourthSlotFacts nonBattlegroundDrain =
-                facts(false, true, 1, true, 1, false, true);
+                facts(false, true, 1, false, 1, false, true);
         assertPick(Side.DARK, nonBattlegroundDrain, "Come Here You Big Coward",
                 ShieldPolicy.FourthSlotTrigger.NON_BATTLEGROUND_DRAIN);
         assertPick(Side.LIGHT, nonBattlegroundDrain, "Simple Tricks And Nonsense",
@@ -102,9 +109,58 @@ public class ShieldPolicyTest {
         ShieldFacts.FourthSlotFacts redundantBattleOrder =
                 new ShieldFacts.FourthSlotFacts(
                         true, true, 0, true, 3,
-                        true, true, true);
+                        true, false, true);
         assertPick(Side.DARK, redundantBattleOrder, "Resistance",
                 ShieldPolicy.FourthSlotTrigger.DRAIN_CAP);
+    }
+
+    @Test
+    public void nonBattlegroundShieldRequiresItsPrintedOccupationWindow() {
+        ShieldPolicy.FourthSlotPick noOwnBattleground =
+                ShieldPolicy.fourthSlotPick(
+                        Side.LIGHT,
+                        facts(false, false, 0, false, 0, false, true),
+                        false, title -> true);
+        assertEquals(ShieldPolicy.FourthSlotTrigger.CLOSED,
+                noOwnBattleground.trigger());
+
+        ShieldPolicy.FourthSlotPick opponentAtTwoBattlegrounds =
+                ShieldPolicy.fourthSlotPick(
+                        Side.LIGHT,
+                        facts(false, true, 2, false, 1, false, true),
+                        false, title -> true);
+        assertEquals(ShieldPolicy.FourthSlotTrigger.CLOSED,
+                opponentAtTwoBattlegrounds.trigger());
+    }
+
+    @Test
+    public void historicalNonBattlegroundDrainOpensTheSameShieldRoute() {
+        ShieldFacts.FourthSlotFacts noCurrentDrain =
+                facts(false, true, 1, false, 1, false, false);
+
+        ShieldPolicy.FourthSlotPick historical =
+                ShieldPolicy.fourthSlotPick(
+                        Side.LIGHT, noCurrentDrain, true, title -> true);
+
+        assertEquals("Simple Tricks And Nonsense", historical.preferred());
+        assertTrue(historical.pursue());
+        assertEquals(ShieldPolicy.FourthSlotTrigger.NON_BATTLEGROUND_DRAIN,
+                historical.trigger());
+    }
+
+    @Test
+    public void noCurrentOrHistoricalNonBattlegroundThreatPreservesOldPriority() {
+        ShieldFacts.FourthSlotFacts battlePlanFacts =
+                facts(true, true, 1, false, 2, false, false);
+        assertPick(Side.LIGHT, battlePlanFacts, "Battle Plan",
+                ShieldPolicy.FourthSlotTrigger.BATTLE_ORDER_PLAN);
+
+        ShieldPolicy.FourthSlotPick closed = ShieldPolicy.fourthSlotPick(
+                Side.LIGHT,
+                facts(false, true, 1, false, 1, false, false),
+                false, title -> true);
+        assertEquals(ShieldPolicy.FourthSlotTrigger.CLOSED, closed.trigger());
+        assertFalse(closed.pursue());
     }
 
     @Test
@@ -166,6 +222,19 @@ public class ShieldPolicyTest {
         PolicyResult held = ShieldPolicy.stackedPileParent(
                 "A", 2, false, closed(), false, 0, false, 3);
         assertOperations(held, "V112-third-slot-reserve", -3000.0f,
+                "SHIELDS-stacked-pile-available", 50.0f);
+    }
+
+    @Test
+    public void urgentNonBattlegroundShieldReleasesThirdSlotParentReserve() {
+        PolicyResult released = ShieldPolicy.stackedPileParent(
+                "A", 2, false,
+                pick("Simple Tricks And Nonsense",
+                        ShieldPolicy.FourthSlotTrigger.NON_BATTLEGROUND_DRAIN),
+                false, 0, false, 1);
+
+        assertOperations(released,
+                "V106-non-bg-shield-parent", 2000.0f,
                 "SHIELDS-stacked-pile-available", 50.0f);
     }
 
@@ -360,6 +429,36 @@ public class ShieldPolicyTest {
     }
 
     @Test
+    public void exactUrgentShieldBeatsMinimumTurnAndThirdSlotHolds() {
+        ShieldPolicy.FourthSlotPick urgent = pick(
+                "Simple Tricks And Nonsense",
+                ShieldPolicy.FourthSlotTrigger.NON_BATTLEGROUND_DRAIN);
+
+        PolicyResult exact = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Simple Tricks And Nonsense", 80.0f, 2, 1, 2,
+                urgent, false, ShieldPolicy.CandidateRoute.DEDICATED);
+        assertOperations(exact,
+                "V106-non-bg-shield-selection", 2000.0f);
+
+        PolicyResult otherShield = ShieldPolicy.shieldCandidateAdjustments(
+                "B", "Other Shield", 80.0f, 0, 1, 2,
+                urgent, false, ShieldPolicy.CandidateRoute.DEDICATED);
+        assertOperations(otherShield,
+                "V106-non-bg-shield-selection", -5000.0f);
+    }
+
+    @Test
+    public void absentUrgentThreatKeepsMinimumTurnAndThirdSlotHolds() {
+        PolicyResult unchanged = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Simple Tricks And Nonsense", 80.0f, 2, 1, 2,
+                closed(), false, ShieldPolicy.CandidateRoute.DEDICATED);
+
+        assertOperations(unchanged,
+                "V53-shield-min-turn", -5000.0f,
+                "V112-third-slot-selection", -5000.0f);
+    }
+
+    @Test
     public void onePolicyResultNeverRepeatsAnActionRuleContribution() {
         List<PolicyResult> results = List.of(
                 ShieldPolicy.stackedPileParent("A", 3, false, closed(), true, 2, true, 1),
@@ -401,6 +500,11 @@ public class ShieldPolicyTest {
     private static ShieldPolicy.FourthSlotPick pick(String title) {
         return new ShieldPolicy.FourthSlotPick(
                 title, true, ShieldPolicy.FourthSlotTrigger.BATTLE_ORDER_PLAN);
+    }
+
+    private static ShieldPolicy.FourthSlotPick pick(
+            String title, ShieldPolicy.FourthSlotTrigger trigger) {
+        return new ShieldPolicy.FourthSlotPick(title, true, trigger);
     }
 
     private static void assertPick(Side side, ShieldFacts.FourthSlotFacts facts,

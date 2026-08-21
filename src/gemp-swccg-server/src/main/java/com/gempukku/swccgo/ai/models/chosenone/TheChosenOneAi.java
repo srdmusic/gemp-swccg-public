@@ -13,6 +13,7 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhaseScript;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
 // V295 RETIRED: import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
+import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
@@ -2697,6 +2698,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
             LOG.info("New game started vs {} as {}", opponentName, mySide);
         }
 
+        shieldStrategy.observeOpponentNonBattlegroundDrain(
+                ShieldFacts.opponentNonBattlegroundDrainObservedNow(
+                        gameState, currentGame, playerId));
         strategyController.observePersistentResponse(gameState, playerId);
 
         // Turn changed

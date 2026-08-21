@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
+import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.common.Side;
 import org.junit.Test;
 
@@ -81,6 +82,43 @@ public class ShieldStrategyTest {
         strategy.setOpponentObjective("Watch Your Step");
         assertBits(250.0f,
                 strategy.scoreShield("223_7", "A Useless Gesture (V)", 2));
+    }
+
+    @Test
+    public void opponentNonBattlegroundDrainLatchPersistsUntilReset() {
+        ShieldStrategy strategy = new ShieldStrategy(Side.LIGHT);
+
+        assertFalse(strategy.hasObservedOpponentNonBattlegroundDrain());
+        strategy.observeOpponentNonBattlegroundDrain(true);
+        assertTrue(strategy.hasObservedOpponentNonBattlegroundDrain());
+
+        strategy.observeOpponentNonBattlegroundDrain(false);
+        assertTrue(strategy.hasObservedOpponentNonBattlegroundDrain());
+
+        strategy.reset();
+        assertFalse(strategy.hasObservedOpponentNonBattlegroundDrain());
+    }
+
+    @Test
+    public void historicalDrainLatchFeedsTheSharedShieldPick() {
+        ShieldStrategy strategy = new ShieldStrategy(Side.LIGHT);
+        ShieldFacts.FourthSlotFacts noCurrentDrain =
+                new ShieldFacts.FourthSlotFacts(
+                        false, true, 1, false, 1, false, false);
+
+        assertEquals(
+                ShieldPolicy.FourthSlotTrigger.CLOSED,
+                strategy.fourthSlotPick(noCurrentDrain, title -> true)
+                        .trigger());
+
+        strategy.observeOpponentNonBattlegroundDrain(true);
+        ShieldPolicy.FourthSlotPick pick =
+                strategy.fourthSlotPick(noCurrentDrain, title -> true);
+        assertEquals("Simple Tricks And Nonsense", pick.preferred());
+        assertTrue(pick.pursue());
+        assertEquals(
+                ShieldPolicy.FourthSlotTrigger.NON_BATTLEGROUND_DRAIN,
+                pick.trigger());
     }
 
     private static void assertBits(float expected, float actual) {
