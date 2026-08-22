@@ -180,7 +180,7 @@ public class Card219_038 extends AbstractSystem {
                     ghost = cardsChosen.get(1);
                 }
                 action.appendEffect(
-                        new DeployCardsSimultaneouslyEffect(action, ghost, false, 0, hera, false, 0, Filters.title(Title.Lothal)));
+                        new DeployCardsSimultaneouslyEffect(action, ghost, false, 0, hera, false, 0, Filters.Lothal_system));
             }
         };
     }
