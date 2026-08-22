@@ -112,7 +112,7 @@ public class Card219_038 extends AbstractSystem {
                                                                     @Override
                                                                     protected void cardSelected(SwccgGame game, PhysicalCard hera) {
                                                                         action.appendEffect(
-                                                                                new DeployCardsSimultaneouslyEffect(action, ghost, false, 0, hera, false, 0));
+                                                                                new DeployCardsSimultaneouslyEffect(action, ghost, false, 0, hera, false, 0, Filters.and(self)));
                                                                     }
                                                                 }
                                                         );
@@ -171,10 +171,18 @@ public class Card219_038 extends AbstractSystem {
 
             @Override
             protected void cardsChosen(List<PhysicalCard> cardsChosen) {
-                PhysicalCard ghost = cardsChosen.get(0);
-                PhysicalCard hera = cardsChosen.get(1);
+                PhysicalCard ghost;
+                PhysicalCard hera;
+                //if(cardsChosen.get(0) is ghost) { //not sure how to check - something like Filters.Hera.accepts(hera) ?
+                ghost = cardsChosen.get(0);
+                hera = cardsChosen.get(1);
+                //}
+                //else {
+                //hera = cardsChosen.get(0);
+                //ghost = cardsChosen.get(1);
+                //}
                 action.appendEffect(
-                        new DeployCardsSimultaneouslyEffect(action, ghost, false, 0, hera, false, 0));
+                        new DeployCardsSimultaneouslyEffect(action, ghost, false, 0, hera, false, 0, Filters.title("Lothal")));
             }
         };
     }
