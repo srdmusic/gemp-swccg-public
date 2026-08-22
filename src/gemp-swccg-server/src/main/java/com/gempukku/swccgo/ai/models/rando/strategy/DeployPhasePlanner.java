@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.LateEstablishPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
@@ -1089,12 +1090,12 @@ public class DeployPhasePlanner {
 
         // Plan 3: Establish at uncontested locations
         if (!categories.establishTargets.isEmpty()) {
-            DeploymentPlan establishPlan = generateEstablishPlan(
+            DeploymentPlan establishPlan = generateLateGroundEstablishPlan(
                 groundCards,
                 categories.establishTargets.stream()
                     .filter(AiBoardAnalyzer.LocationAnalysis::isGround)
                     .collect(Collectors.toList()),
-                forceAvailable, threshold, "ground");
+                forceAvailable, threshold, "ground", turn);
             if (!establishPlan.getInstructions().isEmpty()) {
                 float score = scorePlan(establishPlan, allLocations, turn,
                     endorPostFlipPlanAdjustment(establishPlan, false, true));
@@ -1998,6 +1999,9 @@ public class DeployPhasePlanner {
             float cost = currentGame.getModifiersQuerying().getDeployCost(
                     currentGame.getGameState(), card, card, location,
                     false, null, false, 0.0f, null, true);
+            if (!Float.isFinite(cost)) {
+                return null;
+            }
             return (int) Math.ceil(Math.max(0.0f, cost));
         } catch (Exception e) {
             return null;
@@ -2312,9 +2316,35 @@ public class DeployPhasePlanner {
     /**
      * Generate establish plan for uncontested locations.
      */
+    private DeploymentPlan generateLateGroundEstablishPlan(
+            List<CardInfo> cards,
+            List<AiBoardAnalyzer.LocationAnalysis> establishTargets,
+            int forceAvailable, int threshold, String domain,
+            int currentTurn) {
+        int opponentLostPileSize = -1;
+        try {
+            String opponentId = currentGame.getOpponent(currentPlayerId);
+            opponentLostPileSize = currentGame.getGameState()
+                    .getLostPile(opponentId).size();
+        } catch (Exception ignored) {
+            // Unknown Lost Pile state keeps every legacy restriction.
+        }
+        return generateEstablishPlan(cards, establishTargets,
+                forceAvailable, threshold, domain,
+                currentTurn, opponentLostPileSize);
+    }
+
     private DeploymentPlan generateEstablishPlan(List<CardInfo> cards,
                                                   List<AiBoardAnalyzer.LocationAnalysis> establishTargets,
                                                   int forceAvailable, int threshold, String domain) {
+        return generateEstablishPlan(cards, establishTargets,
+                forceAvailable, threshold, domain, -1, -1);
+    }
+
+    private DeploymentPlan generateEstablishPlan(List<CardInfo> cards,
+                                                  List<AiBoardAnalyzer.LocationAnalysis> establishTargets,
+                                                  int forceAvailable, int threshold, String domain,
+                                                  int currentTurn, int opponentLostPileSize) {
         DeploymentPlan plan = new DeploymentPlan(DeployStrategy.ESTABLISH,
             "Establish in " + domain);
 
@@ -2331,16 +2361,55 @@ public class DeployPhasePlanner {
         int remaining = forceAvailable;
         int establishCount = 0;
         List<CardInfo> available = new ArrayList<>(cards);
+        int establishLimit = LateEstablishPolicy.groundEstablishLimit(
+                currentTurn, opponentLostPileSize,
+                RandoConfig.MAX_ESTABLISH_LOCATIONS);
 
         for (AiBoardAnalyzer.LocationAnalysis loc : establishTargets) {
             if (remaining <= 0 || available.isEmpty()) break;
-            if (establishCount >= RandoConfig.MAX_ESTABLISH_LOCATIONS) break;
+            if (establishCount >= establishLimit) break;
             if (loc.theirForceIcons <= 0) continue;
 
             // CRITICAL: Filter cards to only those that can deploy to this location
             List<CardInfo> deployableHere = filterDeployableCards(available, loc.location);
             if (deployableHere.isEmpty()) {
                 LOG.debug("📋 No cards can deploy to {} - skipping", loc.location.getTitle());
+                continue;
+            }
+
+            // Steve 2026-08-22: from turn five, while the opponent has fewer
+            // than 20 cards lost, permit one additional drain platform. The
+            // third site must be one exact, legal, affordable ability-4 body.
+            if (establishCount
+                    >= RandoConfig.MAX_ESTABLISH_LOCATIONS) {
+                CardInfo lateBest = null;
+                LateGroundCandidate lateFacts = null;
+                for (CardInfo candidate : deployableHere) {
+                    LateGroundCandidate assessed = assessLateGroundCandidate(
+                            candidate, loc, remaining, currentTurn,
+                            opponentLostPileSize);
+                    if (!assessed.allowed()) {
+                        continue;
+                    }
+                    if (lateBest == null
+                            || candidate.getValueRatio()
+                            > lateBest.getValueRatio()) {
+                        lateBest = candidate;
+                        lateFacts = assessed;
+                    }
+                }
+                if (lateBest != null && lateFacts != null) {
+                    addCardToPlan(plan, lateBest.card, loc, 2,
+                            String.format(
+                                    "Late establish at %s (%d icons, exact ability %.0f)",
+                                    loc.location.getTitle(),
+                                    loc.theirForceIcons,
+                                    lateFacts.projectedAbility()),
+                            lateFacts.exactCost());
+                    remaining -= lateFacts.exactCost();
+                    available.remove(lateBest);
+                    establishCount++;
+                }
                 continue;
             }
 
@@ -2447,6 +2516,43 @@ public class DeployPhasePlanner {
         }
 
         return plan;
+    }
+
+    private LateGroundCandidate assessLateGroundCandidate(
+            CardInfo candidate,
+            AiBoardAnalyzer.LocationAnalysis location,
+            int remaining,
+            int currentTurn,
+            int opponentLostPileSize) {
+        Integer exactCost = exactDeployCostAt(
+                candidate.card, location.location);
+        boolean exactEligible = exactCost != null
+                && !AiCardHelper.isDeadCard(
+                        candidate.card, currentGame, currentPlayerId)
+                && canDeployPaidDirectly(candidate.card, location.location);
+        float projectedAbility = exactAbility(candidate.card,
+                candidate.isStarship || candidate.isVehicle);
+        boolean allowed = LateEstablishPolicy.allowsWeakSolo(
+                new LateEstablishPolicy.CandidateFacts(
+                        currentTurn,
+                        opponentLostPileSize,
+                        location.isSite,
+                        location.ourCardCount == 0
+                                && location.theirCardCount == 0,
+                        exactEligible,
+                        exactCost != null && exactCost <= remaining,
+                        projectedAbility));
+        return allowed
+                ? new LateGroundCandidate(
+                        true, exactCost, projectedAbility)
+                : LateGroundCandidate.denied();
+    }
+
+    private record LateGroundCandidate(
+            boolean allowed, int exactCost, float projectedAbility) {
+        private static LateGroundCandidate denied() {
+            return new LateGroundCandidate(false, 0, 0.0f);
+        }
     }
 
     /**
@@ -3005,6 +3111,12 @@ public class DeployPhasePlanner {
 
     private void addCardToPlan(DeploymentPlan plan, PhysicalCard card,
                                AiBoardAnalyzer.LocationAnalysis loc, int priority, String reason) {
+        addCardToPlan(plan, card, loc, priority, reason, null);
+    }
+
+    private void addCardToPlan(DeploymentPlan plan, PhysicalCard card,
+                               AiBoardAnalyzer.LocationAnalysis loc, int priority,
+                               String reason, Integer exactDeployCost) {
         SwccgCardBlueprint bp = card.getBlueprint();
         int cost = 0;
         int power = 0;
@@ -3019,6 +3131,9 @@ public class DeployPhasePlanner {
                 Float p = bp.getPower();
                 power = p != null ? p.intValue() : 0;
             }
+        }
+        if (exactDeployCost != null) {
+            cost = exactDeployCost;
         }
 
         DeploymentInstruction inst = new DeploymentInstruction(

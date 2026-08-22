@@ -22,6 +22,9 @@ public final class ControlDrainAssessment {
         Primary primary();
         boolean simpleTricksBlocks();
         Economy economy();
+        default DownstreamUses downstreamUses(float drainCost) {
+            return DownstreamUses.unknown();
+        }
         boolean battleOrderCostWaived();
         DrainValue battleOrderDrainValue();
         MultiDrain multiDrain();
@@ -41,6 +44,23 @@ public final class ControlDrainAssessment {
                           boolean hasDeployableCard,
                           int cheapestDeployCost,
                           int turnNumber) {
+    }
+
+    public record DownstreamUses(
+            boolean complete,
+            int usableForce,
+            int reserveDeckSize,
+            boolean deployWouldBeStranded,
+            boolean paidBattlePresent,
+            boolean paidBattleWouldBeStranded) {
+        public static DownstreamUses unknown() {
+            return new DownstreamUses(false, 0, Integer.MAX_VALUE,
+                    false, false, false);
+        }
+
+        public boolean hasPaidBattle() {
+            return paidBattlePresent;
+        }
     }
 
     public record DrainValue(float amount, String locationTitle) {
@@ -87,6 +107,8 @@ public final class ControlDrainAssessment {
             return result(operations);
         }
 
+        Economy economy = null;
+        boolean postTurnThreeTaxedDrain = false;
         Primary primary = facts.primary();
         if (primary != null) {
             if (primary.drainAmount() <= 0f) {
@@ -95,12 +117,17 @@ public final class ControlDrainAssessment {
                     -9999.0f);
             }
             if (primary.initiateCost() > primary.drainAmount()) {
-                if (primary.initiateCost() - primary.drainAmount() >= 2.0f) {
+                economy = facts.economy();
+                postTurnThreeTaxedDrain =
+                        economy.underBattleOrder() && economy.turnNumber() > 3;
+                if (!postTurnThreeTaxedDrain
+                        && primary.initiateCost() - primary.drainAmount() >= 2.0f) {
                     return terminal(operations, actionId, "V189", TraceOutputKind.VETO, String.format(
                         "V189 DRAIN NET-VALUE BLOCK: initiate cost %.0f > drain %.0f at %s - net <= -2, never worth it",
                         primary.initiateCost(), primary.drainAmount(), primary.locationTitle()), -2000.0f);
                 }
-                if (primary.forcePile() - primary.initiateCost()
+                if (!postTurnThreeTaxedDrain
+                        && primary.forcePile() - primary.initiateCost()
                         < primary.plannedDeploySpend() + primary.moveAllowance()) {
                     return terminal(operations, actionId, "V189", TraceOutputKind.VETO, String.format(
                         "V189 DRAIN NET-VALUE BLOCK: net -1 but budget fails - %d Force - %.0f cost < %d planned deploys + %d move allowance at %s",
@@ -115,18 +142,56 @@ public final class ControlDrainAssessment {
                 "V25 SIMPLE TRICKS: Non-battleground drain will be CANCELLED by Simple Tricks And Nonsense!",
                 -9999.0f);
         }
+        DownstreamUses downstreamUses = null;
+        boolean releaseTaxedDrain = false;
+        if (postTurnThreeTaxedDrain) {
+            if (economy.forceAvailable()
+                    < Math.ceil(primary.initiateCost())) {
+                return terminal(operations, actionId,
+                        "CONTROL-battle-order-afford",
+                        TraceOutputKind.BANDED,
+                        "Under Battle Order but can't afford drain (need "
+                            + (int) Math.ceil(primary.initiateCost())
+                            + ", have " + economy.forceAvailable() + ")",
+                        -50.0f);
+            }
+            downstreamUses = facts.downstreamUses(primary.initiateCost());
+            releaseTaxedDrain = shouldReleaseTaxedDrain(
+                    economy.turnNumber(), downstreamUses);
+            if (!releaseTaxedDrain) {
+                String detail = downstreamUses == null
+                        || !downstreamUses.complete()
+                        ? "V189 DRAIN NET-VALUE BLOCK: downstream deploy/battle forecast incomplete"
+                        : String.format(
+                                "V189 DRAIN NET-VALUE BLOCK: paying %.0f would strand %s",
+                                primary.initiateCost(),
+                                strandedUseSummary(downstreamUses));
+                return terminal(operations, actionId, "V189",
+                        TraceOutputKind.VETO, detail, -2000.0f);
+            }
+        }
 
-        Economy economy = facts.economy();
-        boolean suppressTurnLogic = false;
+        if (economy == null) {
+            economy = facts.economy();
+        }
         if (economy.underBattleOrder()) {
-            final int battleOrderCost = 3;
+            if (facts.battleOrderCostWaived()) {
+                return terminal(operations, actionId, "V140",
+                    TraceOutputKind.ORDERING,
+                    "V140 BATTLE ORDER COST WAIVED: engine initiate-cost is 0 - drain is FREE!",
+                    60.0f);
+            }
+            final int battleOrderCost = releaseTaxedDrain
+                    ? (int) Math.ceil(primary.initiateCost())
+                    : 3;
             if (economy.forceAvailable() < battleOrderCost) {
                 return terminal(operations, actionId, "CONTROL-battle-order-afford",
                     TraceOutputKind.BANDED,
                     "Under Battle Order but can't afford drain (need " + battleOrderCost
                         + ", have " + economy.forceAvailable() + ")", -50.0f);
             }
-            if (economy.hasDeployableCard()
+            if (!releaseTaxedDrain
+                    && economy.hasDeployableCard()
                     && economy.cheapestDeployCost() < Integer.MAX_VALUE
                     && economy.forceAvailable() - battleOrderCost
                         < economy.cheapestDeployCost()) {
@@ -135,23 +200,23 @@ public final class ControlDrainAssessment {
                     "Under Battle Order - saving force for deploy (cost "
                         + economy.cheapestDeployCost() + ")", -50.0f);
             }
-            if (!economy.hasDeployableCard()) {
+            if (!economy.hasDeployableCard()
+                    && (downstreamUses == null
+                        || !downstreamUses.hasPaidBattle())) {
                 return terminal(operations, actionId, "CONTROL-battle-order-only-pressure",
                     TraceOutputKind.BANDED,
                     "Under Battle Order but NO deployable cards - drain is our only pressure!", 70.0f);
             }
-            if (facts.battleOrderCostWaived()) {
-                return terminal(operations, actionId, "V140", TraceOutputKind.ORDERING,
-                    "V140 BATTLE ORDER COST WAIVED: engine initiate-cost is 0 - drain is FREE!", 60.0f);
-            }
-
-            DrainValue drainValue = facts.battleOrderDrainValue();
-            if (drainValue != null && drainValue.amount() <= 1.0f) {
-                add(operations, actionId, "V104", TraceOutputKind.VETO, String.format(
-                    "V104 BATTLE ORDER + DRAIN <= 1: drain %.0f at %s, pay 3 = net %.0f - hard block",
-                    drainValue.amount(), drainValue.locationTitle(), drainValue.amount() - 3.0f),
-                    -2000.0f);
-                suppressTurnLogic = true;
+            boolean suppressTurnLogic = false;
+            if (!releaseTaxedDrain) {
+                DrainValue drainValue = facts.battleOrderDrainValue();
+                if (drainValue != null && drainValue.amount() <= 1.0f) {
+                    add(operations, actionId, "V104", TraceOutputKind.VETO, String.format(
+                        "V104 BATTLE ORDER + DRAIN <= 1: drain %.0f at %s, pay 3 = net %.0f - hard block",
+                        drainValue.amount(), drainValue.locationTitle(), drainValue.amount() - 3.0f),
+                        -2000.0f);
+                    suppressTurnLogic = true;
+                }
             }
             if (!suppressTurnLogic) {
                 if (economy.turnNumber() >= 3) {
@@ -204,6 +269,36 @@ public final class ControlDrainAssessment {
         }
 
         return result(operations);
+    }
+
+    private static boolean shouldReleaseTaxedDrain(
+            int turnNumber, DownstreamUses uses) {
+        if (uses == null) {
+            return false;
+        }
+        boolean lowReserveEndgame = turnNumber >= 5
+                && uses.reserveDeckSize() <= 6;
+        if (lowReserveEndgame) {
+            return true;
+        }
+        return uses.complete()
+                && !uses.deployWouldBeStranded()
+                && !uses.paidBattleWouldBeStranded();
+    }
+
+    private static String strandedUseSummary(DownstreamUses uses) {
+        boolean deploy = uses.deployWouldBeStranded();
+        boolean battle = uses.paidBattleWouldBeStranded();
+        if (deploy && battle) {
+            return "a deploy and a favorable paid battle";
+        }
+        if (deploy) {
+            return "an affordable deploy";
+        }
+        if (battle) {
+            return "a favorable paid battle";
+        }
+        return "an unknown downstream use";
     }
 
     private static void add(List<PolicyOperation> operations, String actionId,

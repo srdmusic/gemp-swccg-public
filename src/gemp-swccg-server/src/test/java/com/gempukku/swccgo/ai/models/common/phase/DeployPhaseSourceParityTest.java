@@ -13,6 +13,28 @@ import static org.junit.Assert.assertTrue;
 
 public class DeployPhaseSourceParityTest {
     @Test
+    public void deployPhasePlannersStayNormalizedMirrorsAndUseSharedLateOwner()
+            throws IOException {
+        String rando = strategySource("rando", "DeployPhasePlanner.java");
+        String chosen = strategySource("chosenone", "DeployPhasePlanner.java");
+        assertEquals(normalize(rando), normalize(chosen));
+
+        assertTrue(rando.contains("LateEstablishPolicy.groundEstablishLimit("));
+        assertTrue(rando.contains("LateEstablishPolicy.allowsWeakSolo("));
+        assertTrue(rando.contains("generateLateGroundEstablishPlan("));
+        assertTrue(rando.contains(
+                "generateEstablishPlan(\n                new ArrayList<>(starships), spaceEstablish"));
+        assertEquals(1, occurrences(rando,
+                "LateEstablishPolicy.groundEstablishLimit("));
+        assertEquals(1, occurrences(rando,
+                "LateEstablishPolicy.allowsWeakSolo("));
+        assertTrue(rando.indexOf("LateEstablishPolicy.allowsWeakSolo(")
+                > rando.indexOf("establishCount\n                    >= RandoConfig.MAX_ESTABLISH_LOCATIONS"));
+        assertTrue(rando.contains("location.ourCardCount == 0"));
+        assertTrue(rando.contains("location.theirCardCount == 0"));
+    }
+
+    @Test
     public void deployEvaluatorsStayNormalizedMirrors() throws IOException {
         assertNormalizedMirror("DeployEvaluator.java");
     }
@@ -300,5 +322,15 @@ public class DeployPhaseSourceParityTest {
     private static String normalize(String source) {
         return source.replace("models.rando", "models.BOT")
                 .replace("models.chosenone", "models.BOT");
+    }
+
+    private static int occurrences(String source, String token) {
+        int count = 0;
+        int index = 0;
+        while ((index = source.indexOf(token, index)) >= 0) {
+            count++;
+            index += token.length();
+        }
+        return count;
     }
 }

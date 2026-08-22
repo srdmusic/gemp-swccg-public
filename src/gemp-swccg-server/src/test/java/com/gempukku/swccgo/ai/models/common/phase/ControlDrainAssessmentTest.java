@@ -45,7 +45,7 @@ public class ControlDrainAssessmentTest {
     public void largeNetLossStopsAtV189() {
         Facts facts = new Facts();
         facts.primary = primary(1, 3, 10, 0);
-        assertPlan(facts, List.of("primary"),
+        assertPlan(facts, List.of("primary", "economy"),
                 op("V189", -2000, TraceOutputKind.VETO));
     }
 
@@ -53,7 +53,7 @@ public class ControlDrainAssessmentTest {
     public void netMinusOneStopsWhenTurnPlanIsUnfunded() {
         Facts facts = new Facts();
         facts.primary = primary(2, 3, 5, 1);
-        assertPlan(facts, List.of("primary"),
+        assertPlan(facts, List.of("primary", "economy"),
                 op("V189", -2000, TraceOutputKind.VETO));
     }
 
@@ -69,12 +69,14 @@ public class ControlDrainAssessmentTest {
     public void battleOrderAffordabilityAndNoBodyAreTerminal() {
         Facts cannotAfford = new Facts();
         cannotAfford.economy = economy(true, 2, true, 1, 3);
-        assertPlan(cannotAfford, List.of("primary", "simpleTricks", "economy"),
+        assertPlan(cannotAfford,
+                List.of("primary", "simpleTricks", "economy", "costWaived"),
                 op("CONTROL-battle-order-afford", -50, TraceOutputKind.BANDED));
 
         Facts noBody = new Facts();
         noBody.economy = economy(true, 8, false, Integer.MAX_VALUE, 3);
-        assertPlan(noBody, List.of("primary", "simpleTricks", "economy"),
+        assertPlan(noBody,
+                List.of("primary", "simpleTricks", "economy", "costWaived"),
                 op("CONTROL-battle-order-only-pressure", 70, TraceOutputKind.BANDED));
     }
 
@@ -89,9 +91,9 @@ public class ControlDrainAssessmentTest {
     }
 
     @Test
-    public void v104SuppressesTurnLogicButContinuesLaterContributions() {
+    public void v104StillBlocksThroughTurnThreeButContinuesLaterContributions() {
         Facts facts = new Facts();
-        facts.economy = economy(true, 8, true, 2, 4);
+        facts.economy = economy(true, 8, true, 2, 3);
         facts.drainValue = new ControlDrainAssessment.DrainValue(1, "site");
         facts.multi = new ControlDrainAssessment.MultiDrain(2, 2, "site");
         facts.huntDown = new ControlDrainAssessment.HuntDown(true, 2);
@@ -103,6 +105,244 @@ public class ControlDrainAssessmentTest {
                 op("V52-multi-drain", 200, TraceOutputKind.BANDED),
                 op("V29.9-HuntDown-high", 40, TraceOutputKind.BANDED),
                 op("V29.9-HuntDown-drain", 30, TraceOutputKind.BANDED));
+    }
+
+    @Test
+    public void turnFourBattleOrderDrainStillBlocksWhenItStrandsDeploy() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 3, 8, 0);
+        facts.economy = economy(true, 8, true, 7, 4);
+        facts.downstream = uses(true, 8, 20, true, false, false);
+        facts.drainValue = new ControlDrainAssessment.DrainValue(1, "site");
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks", "downstream"),
+                op("V189", -2000, TraceOutputKind.VETO));
+    }
+
+    @Test
+    public void replay6bTurnFourThreeForOneDrainsWhenNoUseIsStranded() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 3, 8, 0);
+        facts.economy = economy(true, 8, false, Integer.MAX_VALUE, 4);
+        facts.downstream = uses(true, 8, 20, false, false, false);
+        facts.drainValue = new ControlDrainAssessment.DrainValue(1, "Jakku");
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks", "downstream",
+                        "costWaived"),
+                op("CONTROL-battle-order-only-pressure", 70,
+                        TraceOutputKind.BANDED));
+    }
+
+    @Test
+    public void replayRviTurnEightThreeForTwoDrainsWhenNoUseIsStranded() {
+        Facts facts = new Facts();
+        facts.primary = primary(2, 3, 5, 1);
+        facts.economy = economy(true, 5, false, Integer.MAX_VALUE, 8);
+        facts.downstream = uses(true, 5, 20, false, false, false);
+        facts.drainValue = new ControlDrainAssessment.DrainValue(2, "Hoth");
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks", "downstream",
+                        "costWaived"),
+                op("CONTROL-battle-order-only-pressure", 70,
+                        TraceOutputKind.BANDED));
+    }
+
+    @Test
+    public void turnFourBattleOrderDrainStillBlocksWhenItStrandsBattle() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 3, 5, 0);
+        facts.economy = economy(true, 5, false, Integer.MAX_VALUE, 4);
+        facts.downstream = uses(true, 5, 20, false, true, true);
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks", "downstream"),
+                op("V189", -2000, TraceOutputKind.VETO));
+    }
+
+    @Test
+    public void turnFourDrainCanPayAndStillFundDeployAndBattle() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 3, 10, 0);
+        facts.economy = economy(true, 10, true, 4, 4);
+        facts.downstream = uses(true, 10, 20, false, true, false);
+        facts.drainValue = new ControlDrainAssessment.DrainValue(1, "site");
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks", "downstream",
+                        "costWaived", "multi", "huntDown"),
+                op("V52-drain-anyway", 50, TraceOutputKind.BANDED));
+    }
+
+    @Test
+    public void releasedTaxedDrainUsesExactEngineCostInsteadOfHardcodedThree() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 2, 2, 0);
+        facts.economy = economy(true, 2, false, Integer.MAX_VALUE, 4);
+        facts.downstream = uses(true, 2, 20, false, false, false);
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks", "downstream",
+                        "costWaived"),
+                op("CONTROL-battle-order-only-pressure", 70,
+                        TraceOutputKind.BANDED));
+    }
+
+    @Test
+    public void freeDrainBypassesSaveDeployEvenWithThreeForceAvailable() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 0, 5, 0);
+        facts.economy = economy(true, 5, true, 5, 4);
+        facts.costWaived = true;
+
+        assertPlan(facts,
+                List.of("primary", "simpleTricks", "economy", "costWaived"),
+                op("V140", 60, TraceOutputKind.ORDERING));
+    }
+
+    @Test
+    public void unknownDownstreamUsesFailClosed() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 3, 8, 0);
+        facts.economy = economy(true, 8, false, Integer.MAX_VALUE, 4);
+        facts.downstream = uses(false, 8, 20, false, false, false);
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks", "downstream"),
+                op("V189", -2000, TraceOutputKind.VETO));
+    }
+
+    @Test
+    public void lowReserveEndgameReleasesEvenWhenUseWouldBeStranded() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 3, 5, 0);
+        facts.economy = economy(true, 5, true, 4, 5);
+        facts.downstream = uses(true, 5, 6, true, true, true);
+        facts.drainValue = new ControlDrainAssessment.DrainValue(1, "site");
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks", "downstream",
+                        "costWaived", "multi", "huntDown"),
+                op("V52-drain-anyway", 50, TraceOutputKind.BANDED));
+    }
+
+    @Test
+    public void lowReserveReleaseStartsTurnFiveAndEndsAboveSix() {
+        Facts turnFour = new Facts();
+        turnFour.primary = primary(1, 3, 5, 0);
+        turnFour.economy = economy(true, 5, true, 4, 4);
+        turnFour.downstream = uses(true, 5, 6, true, false, false);
+        assertPlan(turnFour,
+                List.of("primary", "economy", "simpleTricks", "downstream"),
+                op("V189", -2000, TraceOutputKind.VETO));
+
+        Facts reserveSeven = new Facts();
+        reserveSeven.primary = primary(1, 3, 5, 0);
+        reserveSeven.economy = economy(true, 5, true, 4, 9);
+        reserveSeven.downstream = uses(true, 5, 7, true, false, false);
+        assertPlan(reserveSeven,
+                List.of("primary", "economy", "simpleTricks", "downstream"),
+                op("V189", -2000, TraceOutputKind.VETO));
+    }
+
+    @Test
+    public void turnThreeBattleOrderDrainKeepsNetValueBlock() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 3, 8, 0);
+        facts.economy = economy(true, 8, true, 7, 3);
+
+        assertPlan(facts, List.of("primary", "economy"),
+                op("V189", -2000, TraceOutputKind.VETO));
+    }
+
+    @Test
+    public void turnThreeBattleOrderDrainStillSavesForDeploy() {
+        Facts facts = new Facts();
+        facts.primary = primary(3, 3, 4, 0);
+        facts.economy = economy(true, 4, true, 2, 3);
+
+        assertPlan(facts,
+                List.of("primary", "simpleTricks", "economy", "costWaived"),
+                op("CONTROL-battle-order-save-deploy", -50,
+                        TraceOutputKind.BANDED));
+    }
+
+    @Test
+    public void turnFourNonBattleOrderCostKeepsNetValueBlock() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 3, 8, 0);
+        facts.economy = economy(false, 8, true, 7, 4);
+
+        assertPlan(facts, List.of("primary", "economy"),
+                op("V189", -2000, TraceOutputKind.VETO));
+    }
+
+    @Test
+    public void impossiblePostTurnThreeFactSliceStillFailsAffordability() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 3, 2, 0);
+        facts.economy = economy(true, 2, true, 1, 4);
+        facts.downstream = uses(true, 2, 20, true, false, false);
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks"),
+                op("CONTROL-battle-order-afford", -50,
+                        TraceOutputKind.BANDED));
+    }
+
+    @Test
+    public void turnFourBattleOrderDrainStillRespectsSimpleTricks() {
+        Facts facts = new Facts();
+        facts.primary = primary(1, 3, 8, 0);
+        facts.economy = economy(true, 8, true, 7, 4);
+        facts.downstream = uses(true, 8, 20, true, false, false);
+        facts.simpleTricks = true;
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks"),
+                op("V25-SimpleTricks", -9999, TraceOutputKind.VETO));
+    }
+
+    @Test
+    public void turnFourBattleOrderNetMinusOneBypassesTurnPlanBudget() {
+        // Supplemental canceled replay rvi0xfak1jt65c5p: turn 8 offered a
+        // cost-3, drain-2 action, but V189's deployment forecast selected Pass.
+        Facts facts = new Facts();
+        facts.primary = primary(2, 3, 5, 1);
+        facts.economy = economy(true, 5, true, 4, 4);
+        facts.downstream = uses(true, 5, 20, false, false, false);
+        facts.drainValue = new ControlDrainAssessment.DrainValue(2, "site");
+
+        assertPlan(facts,
+                List.of("primary", "economy", "simpleTricks", "downstream",
+                        "costWaived",
+                        "multi", "huntDown"),
+                op("V52-drain-anyway", 50,
+                        TraceOutputKind.BANDED));
+    }
+
+    @Test
+    public void turnFourBattleOrderReleasePreservesExactCostWaiver() {
+        Facts facts = new Facts();
+        facts.economy = economy(true, 2, true, 2, 4);
+        facts.costWaived = true;
+
+        assertPlan(facts,
+                List.of("primary", "simpleTricks", "economy", "costWaived"),
+                op("V140", 60, TraceOutputKind.ORDERING));
+    }
+
+    @Test
+    public void turnFourBattleOrderReleasePreservesOnlyPressureBonus() {
+        Facts facts = new Facts();
+        facts.economy = economy(true, 8, false, Integer.MAX_VALUE, 4);
+
+        assertPlan(facts,
+                List.of("primary", "simpleTricks", "economy", "costWaived"),
+                op("CONTROL-battle-order-only-pressure", 70,
+                        TraceOutputKind.BANDED));
     }
 
     @Test
@@ -197,6 +437,15 @@ public class ControlDrainAssessmentTest {
                 battleOrder, force, deployable, cheapest, turn);
     }
 
+    private static ControlDrainAssessment.DownstreamUses uses(
+            boolean complete, int force, int reserve,
+            boolean deployStranded, boolean paidBattlePresent,
+            boolean paidBattleStranded) {
+        return new ControlDrainAssessment.DownstreamUses(
+                complete, force, reserve, deployStranded,
+                paidBattlePresent, paidBattleStranded);
+    }
+
     private record Expected(String ruleId, float delta, TraceOutputKind outputKind) { }
 
     private static final class Facts implements ControlDrainAssessment.Facts {
@@ -206,6 +455,8 @@ public class ControlDrainAssessmentTest {
         private boolean simpleTricks;
         private ControlDrainAssessment.Economy economy =
                 ControlDrainAssessmentTest.economy(false, 10, true, 2, 3);
+        private ControlDrainAssessment.DownstreamUses downstream =
+                ControlDrainAssessment.DownstreamUses.unknown();
         private boolean costWaived;
         private ControlDrainAssessment.DrainValue drainValue =
                 new ControlDrainAssessment.DrainValue(2, "site");
@@ -231,6 +482,12 @@ public class ControlDrainAssessmentTest {
         @Override public ControlDrainAssessment.Economy economy() {
             queries.add("economy");
             return economy;
+        }
+
+        @Override public ControlDrainAssessment.DownstreamUses downstreamUses(
+                float drainCost) {
+            queries.add("downstream");
+            return downstream;
         }
 
         @Override public boolean battleOrderCostWaived() {

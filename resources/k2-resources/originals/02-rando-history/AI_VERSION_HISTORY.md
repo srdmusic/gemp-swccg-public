@@ -11084,3 +11084,71 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     102ca01b5da7365a64ef669ae6398f013350dd87f2ae3d3bb9f3a315891c121d.
     Proof is RUNTIME_LOADED. Semantic branch firing and replay behavior remain
     unproved. Nothing was pushed.
+
+  ==== CONDITIONAL TAXED-DRAIN RELEASE + TURN-FIVE GROUND SPREAD (2026-08-22, both bots, source-tested) ====
+
+    Mailbox m01748 corrected m01747's completed corpus. Canceled
+    rvi0xfak1jt65c5p remains supplemental Falcon/Luke and drain evidence but
+    is not one of the last ten completed games. q7nqoln2uac828wp and
+    1s06m2plgitrpaug are paired recordings of one completed Light Rando loss.
+    The official completed record is 4-6, but only bapsmqcp3oz0vqcy is a
+    competitive natural win. Across the six losses, Rando averaged 1.0
+    retained battle initiations and 2.5 Force drained versus 5 battles and 12
+    Force drained in that win, and was out-drained 108-15.
+
+    The corrected corpus has 11 post-turn-3 Battle Order or Battle Plan drain
+    offers. Rando passed ten, including three exact pay-3/drain-1 offers at
+    Tuanul Village. In the paired game it selected the turn-5 pay-3/drain-2
+    offer and still funded Anakin. None of the ten passed offers would have
+    prevented a deployment Rando actually made or a favorable battle it
+    selected. On the paired game's turn 8, only ability 3, 3, and 2 deploy
+    bodies were offered, while winning move parents repeatedly reached child
+    destinations that canceled. This preserves the late ability-4 floor and
+    keeps F1/F2/F3 parent-child coherence next.
+
+    V52, V104, and V189 are amended in place. After turn 3, a taxed drain
+    whose initiate cost exceeds its damage bypasses the old blanket net-loss
+    and drain-1 vetoes only when paying the exact engine cost leaves every
+    currently legal, affordable, exact-target character, vehicle, or starship
+    deploy from hand and every formation-safe favorable paid battle affordable.
+    The scan checks all candidates, not the cheapest one, uses all
+    engine-usable Force, and fails closed on missing, non-finite, or ambiguous
+    facts. Dead, prohibited, title-limited, uniqueness-conflicting, and
+    engine-illegal deploy routes are excluded. An unpriced simultaneous
+    unpiloted-starship package preserves Force. V140 free drains remain first.
+    Turn 5 plus Reserve Deck 6 or fewer is the requested independent endgame
+    release.
+
+    The new shared late-establish owner raises only the ground establish cap
+    from two to three, beginning turn 5 while the opponent has fewer than 20
+    cards in Lost Pile. Only the third site is relaxed. It must be physically
+    empty and receive one exact legal, affordable body projecting ability at
+    least 4. Turns 1 through 4, opponent Lost Pile 20+, first and second
+    establish slots, contested sites, reinforcements, safe solos, terminal
+    defense, and all space establish rules remain unchanged. A blanket late
+    starship release is deliberately excluded because the Falcon/Luke replay
+    requires pilot-package and actual space-need facts.
+
+    No shield score changed. Current source already applies the corrected
+    Battle Order or Battle Plan self-tax gate to unknown, Reserve, dedicated,
+    and stacked-parent routes: Rando must occupy both battleground theaters and
+    the opponent must lack that exemption. Replay 6b confirms that law: Rando
+    established a battleground site and system before playing Battle Order
+    while Steve occupied only a site. Ground priority and formation collapse,
+    not an illegal shield choice, caused that loss.
+
+    Failure-first regressions proved both the old blanket drain veto and the
+    absent late owner. Direct fact-collector probes pin target-specific
+    surcharges, all-target scanning, known no-use, ambiguous routing,
+    non-finite costs, and unpiloted-starship fail-closed behavior. The final
+    focused ring passed 57/0/0/0. The impacted
+    Control, deploy, formation, battle, mirror, and shield ring passed
+    297/0/0/0. Exact normalized planner parity and diff checks pass from base
+    45873ad95ee03cce70cf25a016021be740b46a5d on branch
+    codex/rando-strategy-2026-08-22. Independent verification and the final
+    compile are recorded in the closing mailbox entry. Proof stops at
+    SOURCE_TESTED. The deploy forecast is a current-state engine projection;
+    no safe public API simulates phase-boundary triggers before Deploy. No card
+    Java, engine Java, deck, database, package, jar, deployment, restart,
+    runtime mutation, game mutation, push, or candidate replay firing occurred.
+    Revert the local commit containing this entry to remove this batch.

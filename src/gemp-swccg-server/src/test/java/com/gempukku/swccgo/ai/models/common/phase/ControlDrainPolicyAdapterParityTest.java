@@ -33,6 +33,46 @@ public class ControlDrainPolicyAdapterParityTest {
                 return new ControlDrainAssessment.HuntDown(true, 2);
             }
         };
+        assertMirrored(facts, 4, 420.0f);
+    }
+
+    @Test
+    public void mirroredAdaptersApplyTurnFourBattleOrderReleaseOnce() {
+        ControlDrainAssessment.Facts facts = new ControlDrainAssessment.Facts() {
+            @Override public ControlDrainAssessment.Primary primary() {
+                return new ControlDrainAssessment.Primary(1, 3, "site", 8, 0, 2);
+            }
+
+            @Override public boolean simpleTricksBlocks() { return false; }
+
+            @Override public ControlDrainAssessment.Economy economy() {
+                return new ControlDrainAssessment.Economy(
+                        true, 8, false, Integer.MAX_VALUE, 4);
+            }
+
+            @Override public ControlDrainAssessment.DownstreamUses downstreamUses(
+                    float drainCost) {
+                return new ControlDrainAssessment.DownstreamUses(
+                        true, 8, 20, false, false, false);
+            }
+
+            @Override public boolean battleOrderCostWaived() { return false; }
+
+            @Override public ControlDrainAssessment.DrainValue battleOrderDrainValue() {
+                return new ControlDrainAssessment.DrainValue(1, "site");
+            }
+
+            @Override public ControlDrainAssessment.MultiDrain multiDrain() { return null; }
+
+            @Override public ControlDrainAssessment.HuntDown huntDown() {
+                return new ControlDrainAssessment.HuntDown(false, 0);
+            }
+        };
+        assertMirrored(facts, 1, 70.0f);
+    }
+
+    private static void assertMirrored(ControlDrainAssessment.Facts facts,
+                                       int expectedCount, float expectedScore) {
         PolicyContributionLedger ledger = new PolicyContributionLedger("control-decision");
         ledger.register(ControlDrainAssessment.assess("A", facts));
 
@@ -50,9 +90,9 @@ public class ControlDrainPolicyAdapterParityTest {
         int chosenCount = com.gempukku.swccgo.ai.models.chosenone.evaluators.PolicyOperationAdapter
                 .apply(chosenOne, ledger);
 
-        assertEquals(4, randoCount);
+        assertEquals(expectedCount, randoCount);
         assertEquals(randoCount, chosenCount);
-        assertEquals(Float.floatToRawIntBits(420.0f),
+        assertEquals(Float.floatToRawIntBits(expectedScore),
                 Float.floatToRawIntBits(rando.getScore()));
         assertEquals(Float.floatToRawIntBits(rando.getScore()),
                 Float.floatToRawIntBits(chosenOne.getScore()));
