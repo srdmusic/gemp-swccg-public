@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set219.light;
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -171,18 +172,15 @@ public class Card219_038 extends AbstractSystem {
 
             @Override
             protected void cardsChosen(List<PhysicalCard> cardsChosen) {
-                PhysicalCard ghost;
-                PhysicalCard hera;
-                //if(cardsChosen.get(0) is ghost) { //not sure how to check - something like Filters.Hera.accepts(hera) ?
-                ghost = cardsChosen.get(0);
-                hera = cardsChosen.get(1);
-                //}
-                //else {
-                //hera = cardsChosen.get(0);
-                //ghost = cardsChosen.get(1);
-                //}
+                PhysicalCard ghost = cardsChosen.get(0); //starship
+                PhysicalCard hera = cardsChosen.get(1); //pilot
+                if(hera.getBlueprint().isCardType(CardType.STARSHIP)) {
+                    //guessed card selection order wrong, so swap labels
+                    hera = cardsChosen.get(0);
+                    ghost = cardsChosen.get(1);
+                }
                 action.appendEffect(
-                        new DeployCardsSimultaneouslyEffect(action, ghost, false, 0, hera, false, 0, Filters.title("Lothal")));
+                        new DeployCardsSimultaneouslyEffect(action, ghost, false, 0, hera, false, 0, Filters.title(Title.Lothal)));
             }
         };
     }
