@@ -41,7 +41,7 @@ public class Card5_106 extends AbstractCharacterDevice {
         setLore("Because standard binders are durable but not easily adaptable, bounty hunters often carry special binders which automatically tighten around a captive's appendages.");
         setGameText("Deploy on one of your warriors or bounty hunters. May now escort any number of captives. If device removed from your character, select one captive escorted by that character to remain and release all others.");
         addIcons(Icon.CLOUD_CITY);
-        addKeywords(Keyword.DEPLOYS_ON_SITE);
+        addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
     }
 
     @Override
