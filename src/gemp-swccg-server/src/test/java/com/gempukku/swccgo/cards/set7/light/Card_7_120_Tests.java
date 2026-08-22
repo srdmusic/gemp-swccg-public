@@ -132,15 +132,12 @@ public class Card_7_120_Tests {
         scn.DSPass(); //LOOKED_AT_CARDS_IN_CARD_PILE - Optional responses
         scn.LSPass();
 
-        assertTrue(scn.LSHasCardChoiceAvailable(farm)); //test2
-        assertFalse(scn.LSHasCardChoiceAvailable(tat_site)); //test3
-        assertFalse(scn.LSHasCardChoiceAvailable(rebeltrooper)); //test4
-        scn.LSChooseCard(farm);
+        //scn.LSChooseCard(farm); //only valid choice is automatically selected (test2, test3, test4)
         scn.PassAllResponses();
 
         assertTrue(scn.AwaitingDSDeployPhaseActions());
-        assertTrue(scn.IsAttachedTo(farm, hydroponics));
-        assertEquals(1,scn.GetLSUsedPileCount()); //test5
+        assertTrue(scn.IsAttachedTo(farm, hydroponics)); //test5
+        assertEquals(1,scn.GetLSUsedPileCount()); //test6
     }
 
     @Test
@@ -181,15 +178,12 @@ public class Card_7_120_Tests {
         scn.DSPass(); //LOOKED_AT_CARDS_IN_CARD_PILE - Optional responses
         scn.LSPass();
 
-        assertTrue(scn.LSHasCardChoiceAvailable(farm)); //test2
-        assertFalse(scn.LSHasCardChoiceAvailable(tat_site)); //test3
-        assertFalse(scn.LSHasCardChoiceAvailable(rebeltrooper)); //test4
-        scn.LSChooseCard(farm);
+        //scn.LSChooseCard(farm); //only valid choice is automatically selected (test2, test3, test4)
         scn.PassAllResponses();
 
         assertTrue(scn.AwaitingDSDeployPhaseActions());
-        assertTrue(scn.IsAttachedTo(farm, vaporator));
-        assertEquals(1,scn.GetLSUsedPileCount()); //test5
+        assertTrue(scn.IsAttachedTo(farm, vaporator)); //test5
+        assertEquals(1,scn.GetLSUsedPileCount()); //test6
     }
 
     @Test
