@@ -421,3 +421,17 @@ Boundary: the Light `Simple Tricks And Nonsense` request is sealed in source. Da
 Delivery: no package, jar, deployment, restart, runtime mutation, database mutation, game mutation, push, or live candidate firing occurred.
 
 Needed: create the one local commit containing this entry. Any package or deployment remains a separate gate.
+
+## 2026-08-21 19:10 PT - Codex V53d/V106 deployment -> Alfred - DEPLOYED / RESOLVED
+
+Topic: the Wokling location-ramp hold and Simple Tricks or Coward shield response are packaged, byte-verified, and loaded in a fresh JVM.
+
+K2 coordination: mailbox `m01744` was audited against exact clean commit `cb55e650345fa546731fabbe9e91410aad60b478`. Its non-battleground shield proposal was already superseded by the tested shared V106 implementation, so reapplying it would have duplicated scoring. Its heavy-retrieval counter was not shipped because the current AI decision layer can miss retrieval events, exposes no reliable amount, and has no revert-safe event ledger. Retrieval remains a benefit of the deployed shield, not an independent deployment trigger.
+
+Verification and package: the combined shield and Wokling ring passed `137/0/0/0` under the pinned offline Java 21 image. The exact clean commit produced a ZIP-valid 46,109,819-byte jar with 27,017 entries and SHA-256 `ac062bbb7a1679bb84c058fbf446e51d3a14fbe64b28cf009e79a603cc7ba75c`. Relative to the prior live jar, exactly 30 AI class entries changed, with zero additions, removals, or unexpected entries. All 30 changed classes match target classes, the server jar, and the deployed jar.
+
+Runtime: authenticated Hall checks at `2026-08-22T02:06:30.762766Z` and `02:06:45.791280Z` showed zero total, waiting, and playing tables. The server was frozen, and a final check at `02:06:58.352963Z` remained empty. Only `gemp_swccg_app_1` was recreated. Fresh app `22c15e8aee979d97946b246f37d0f1f475e87b45919e09d693a929a963602354` started at `2026-08-22T02:07:22.821868836Z` on the pinned image, direct Java PID 1, restart count 0, and OOM false. Database container `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6` retained its exact identity, start time, and restart count. HTTP is `200`; operational mode and all persisted gameplay settings are enabled; the authenticated post-deploy Hall is empty. Startup completed with one known pre-start multi-release-JAR warning and no material errors. Independent read-only verification passed the archive allowlist, all 37 relevant byte identities, 13 runtime markers, three stable HTTP probes, settings, and container identity with zero blockers.
+
+Artifact and rollback: sealed candidate `/Users/steve/gemp-deploy-artifacts/rando-wokling-shield-2026-08-21/cb55e650-ac062bbb/web.jar`, SHA-256 `ac062bbb7a1679bb84c058fbf446e51d3a14fbe64b28cf009e79a603cc7ba75c`. Immediate rollback `/Users/steve/gemp-deploy-backups/rando-wokling-shield-2026-08-21/predeploy-cb55e650-102ca01b/web.jar`, SHA-256 `102ca01b5da7365a64ef669ae6398f013350dd87f2ae3d3bb9f3a315891c121d`.
+
+Proof ceiling: `RUNTIME_LOADED`. Exact source, tests, package, bytes, fresh JVM, settings, and health are proved. Wokling or V106 semantic firing and replay behavior remain Steve's next-game gate. Nothing was pushed.

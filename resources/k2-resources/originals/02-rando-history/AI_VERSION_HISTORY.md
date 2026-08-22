@@ -11043,3 +11043,44 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     database or game mutation, push, or live candidate firing occurred.
     Revert the local commit containing this entry to remove only the V106
     correction.
+
+  ==== V53d + V106 DEPLOYMENT (2026-08-21, both bots, runtime-loaded) ====
+
+    K2 mailbox message m01744 was checked against exact clean commit
+    cb55e650345fa546731fabbe9e91410aad60b478. Its non-battleground shield
+    recommendation was already implemented by the tested shared V106 owner,
+    so no duplicate scoring arm was added. A retrieval-event counter was
+    deferred because the AI decision layer has no reliable retrieval amount
+    or revert-safe event ledger. The deployed shield still cancels retrieval
+    whenever its printed condition is live.
+
+    The combined shield and Wokling ring passed 137/0/0/0 under the pinned
+    offline Java 21 image. The exact clean commit produced a ZIP-valid
+    46,109,819-byte web.jar with 27,017 entries and SHA-256
+    ac062bbb7a1679bb84c058fbf446e51d3a14fbe64b28cf009e79a603cc7ba75c.
+    Relative to the prior live jar, exactly 30 AI class entries changed, with
+    zero additions, removals, or unexpected entries. Every changed class
+    matches target classes, the server jar, and web.jar.
+
+    Authenticated Hall checks at 2026-08-22T02:06:30.762766Z and
+    02:06:45.791280Z showed zero total, waiting, and playing tables. The
+    server was frozen, and the final 02:06:58.352963Z check remained empty.
+    Only the app container was recreated. Fresh app
+    22c15e8aee979d97946b246f37d0f1f475e87b45919e09d693a929a963602354
+    started at 2026-08-22T02:07:22.821868836Z with direct Java PID 1,
+    restart count 0, and OOM false. Database container
+    46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6
+    retained its exact identity, start time, and restart count.
+
+    Sealed, host, and container jar hashes match. HTTP is 200, operational
+    mode and gameplay settings are enabled, startup completed cleanly apart
+    from the known pre-start multi-release-JAR warning, and the authenticated
+    Hall remained empty. Independent read-only verification passed the
+    archive allowlist, all 37 relevant byte identities, 13 runtime markers,
+    three stable HTTP probes, settings, and container identity with zero
+    blockers. Immediate rollback is
+    /Users/steve/gemp-deploy-backups/rando-wokling-shield-2026-08-21/
+    predeploy-cb55e650-102ca01b/web.jar with SHA-256
+    102ca01b5da7365a64ef669ae6398f013350dd87f2ae3d3bb9f3a315891c121d.
+    Proof is RUNTIME_LOADED. Semantic branch firing and replay behavior remain
+    unproved. Nothing was pushed.
