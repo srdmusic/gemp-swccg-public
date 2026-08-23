@@ -11268,3 +11268,51 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     runtime mutation, game mutation, or push occurred. Proof stops at
     SOURCE_TESTED. Revert the local commit containing this entry to remove
     only this source batch.
+
+  ==== F1/F2/F3 + DB72314 DEPLOYMENT (2026-08-22, runtime-loaded) ====
+
+    Steve explicitly authorized immediate deployment for testing. Exact
+    source commit 48bdb40d00aec2dd93d51e15d693e69347b836d0, parent
+    56aa9e2d9a7d414bc7d0ce4bf3c64f88f937147a, produced a ZIP-valid
+    46,133,200-byte web.jar with 27,027 entries and SHA-256
+    75468a5ae10543ec1459bef7fcc220ae50841a1ab68cf83caddc9797b0072fb9.
+    Independent package verification found all 82 class outputs from the 12
+    changed production sources byte-identical across target classes, the
+    server jar, and web.jar. Relative to the previous live jar, exactly 53
+    expected AI entries changed and four were added, with no removals or
+    unexpected entries. Existing verification remains 288/0/0/0 impacted,
+    compile PASS, exact Rando and Chosen One mirrors PASS, and independent
+    source PASS. Steve requested immediate deploy, so no extra test ring ran.
+
+    Authenticated Hall preflight at 2026-08-23T05:09:45Z and the final gate
+    at 05:11:19Z each showed zero total, waiting, and playing tables. The
+    server was frozen before replacement. The prior jar and pinned direct-
+    Java no-boot-flip override were preserved. Only the app was recreated.
+    Fresh container
+    cc8b59e123f45e3a70bbbbbc17ae8efd5d74562b997774c4a9369cea19cfb10b
+    started at 2026-08-23T05:11:36.582505417Z on pinned image
+    sha256:3db65087c1a663b264017845ae5f67eef27b6a6aa4259f1c1efdb2dbda649a80
+    with direct Java PID 1, restart count zero, and OOM false. Database
+    container
+    46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6
+    retained its exact predeploy identity, 2026-08-22T23:57:21.845145834Z
+    start time, restart count zero, and OOM false.
+
+    Sealed, live-host, and container jar hashes match. Startup completed at
+    05:11:37.677Z. Operational mode and aitables, privategames, stattracking,
+    and newaccounts were restored. Three stable application probes,
+    authenticated login, and Hall returned HTTP 200; postdeploy Hall remained
+    0/0/0; and no material issue appeared after startup. Immediate rollback
+    is /Users/steve/gemp-deploy-backups/rando-tatooine-coherence-2026-08-22/
+    predeploy-48bdb40d-88cde504/web.jar, SHA-256
+    88cde504592a754d1c45d4fca969c2ff995c753accd094f4e8555a0d2976c3e4.
+    The sealed candidate is /Users/steve/gemp-deploy-artifacts/
+    rando-tatooine-coherence-2026-08-22/48bdb40d-75468a5a/web.jar.
+
+    Proof is RUNTIME_LOADED, not REPLAY_FIRED. This jar fixes global false
+    permanent-pilot demand and formation or child-target coherence. It does
+    not contain Steve's later ability-4 system-satisfaction doctrine. The next
+    batch must include permanent-pilot ability in the system total, keep the
+    buddy system until ability 4, then prioritize ground unless actual enemy
+    space pressure, a required favorable space battle, a space-centric
+    objective, or terminal defense requires more. Nothing was pushed.
