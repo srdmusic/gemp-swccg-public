@@ -94,15 +94,21 @@ public class ShieldFactsEopBattleOrderTest {
     }
 
     @Test
-    public void battleOrderRequiresOwnSiteAndSystemBeforeItCanGoLive() {
+    public void battleOrderLiveUsesTaxValueWhenSelfLacksBothTheaters() {
         Fixture fixture = new Fixture();
 
-        assertFalse("Out-draining must not bypass our own two-theater prerequisite",
+        // Callers pass true only once the post-turn-2 actual net drain gap is
+        // at least 2. Battle Order has no play prerequisite. It taxes both
+        // players, so that pressure is worth accepting while the opponent is
+        // not exempt even when we are not exempt either.
+        assertTrue("Actual net drain gap 2+ justifies accepting our own tax",
                 ShieldFacts.battleOrderLive(fixture.game, PLAYER, true));
+        assertFalse("Gap below 2 stays closed while we also lack both theaters",
+                ShieldFacts.battleOrderLive(fixture.game, PLAYER, false));
 
         when(fixture.modifiers.occupiesLocation(
                 fixture.gameState, fixture.endor, PLAYER)).thenReturn(true);
-        assertTrue("Own battleground site plus system may play Battle Order",
+        assertTrue("Self-exemption keeps Battle Order live without a drain gap",
                 ShieldFacts.battleOrderLive(fixture.game, PLAYER, false));
 
         when(fixture.modifiers.occupiesLocation(

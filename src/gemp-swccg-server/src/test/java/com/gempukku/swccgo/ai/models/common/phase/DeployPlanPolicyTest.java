@@ -96,7 +96,11 @@ public class DeployPlanPolicyTest {
         assertEquals("deploy-plan-target-other", other.ruleArmId().id());
         assertEquals(-100.0f, other.delta(), 0.0f);
         assertEquals("Not planned target (want null)", other.reason());
-        assertEquals(1, offeredOther.size());
+        assertEquals(2, offeredOther.size());
+        assertEquals("deploy-plan-target-coherence",
+                offeredOther.get(1).ruleArmId().id());
+        assertEquals(PolicyOperationKind.DEFER,
+                offeredOther.get(1).kind());
 
         List<PolicyOperation> unavailableOther = DeployPlanPolicy.evaluateDestinationTarget(
                 new DeployPlanPolicy.DestinationTargetFacts(
@@ -119,13 +123,16 @@ public class DeployPlanPolicyTest {
     }
 
     @Test
-    public void nonDominantAlternativeRemainsAComparableScore() {
+    public void nonDominantAlternativeDefersBehindExactPlan() {
         List<PolicyOperation> operations = DeployPlanPolicy.evaluateDestinationTarget(
                 new DeployPlanPolicy.DestinationTargetFacts(
                         "a", false, true, "Bespin", false)).operations();
-        assertEquals(1, operations.size());
+        assertEquals(2, operations.size());
         assertEquals("deploy-plan-target-other", operations.get(0).ruleArmId().id());
         assertEquals(PolicyOperationKind.ADD, operations.get(0).kind());
+        assertEquals("deploy-plan-target-coherence",
+                operations.get(1).ruleArmId().id());
+        assertEquals(PolicyOperationKind.DEFER, operations.get(1).kind());
     }
 
     @Test

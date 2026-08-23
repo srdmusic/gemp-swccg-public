@@ -121,6 +121,7 @@ public final class DeployTacticalPolicy {
         boolean waveViable = eligible && !soloDominant
                 && facts.handCharacterCount() >= 2
                 && facts.affordableBuddyCount() >= 1.0f
+                && facts.projectedBattleDestinyAbility() >= 4.0f
                 && contactGapClosed;
         return new ContactAssessment(projectedPower, hitAdjustedPower,
                 contactGapClosed, soloDominant, waveViable);
@@ -146,7 +147,7 @@ public final class DeployTacticalPolicy {
         ResponseFormationRoute route = ResponseFormationRoute.NONE;
         if (contact.soloDominant()) {
             route = ResponseFormationRoute.V172_SOLO;
-        } else if (contact.waveViable()) {
+        } else if (contact.waveViable() && projectedAbility >= 4.0f) {
             route = ResponseFormationRoute.V171_WAVE;
         } else if (facts.ourPower() > 0.0f
                 && facts.deployingPower() + facts.affordableWavePower()
@@ -816,10 +817,15 @@ public final class DeployTacticalPolicy {
                                float reservedForce,
                                float opponentEffectivePower,
                                float maxHandCharacterPower,
-                               int armedOpponentCount) {
+                               int armedOpponentCount,
+                               float projectedBattleDestinyAbility) {
         public ContactFacts {
             Objects.requireNonNull(actionId, "actionId");
             locationTitle = locationTitle == null ? "" : locationTitle;
+            if (projectedBattleDestinyAbility < 0.0f) {
+                throw new IllegalArgumentException(
+                        "projectedBattleDestinyAbility must be nonnegative");
+            }
         }
     }
 

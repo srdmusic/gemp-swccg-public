@@ -121,6 +121,60 @@ public class ControlDrainFactsTest {
         assertFalse(uses.deployWouldBeStranded());
     }
 
+    @Test
+    public void imperialEntanglementsFrontProjectsZeroTatooineDrainEverywhere() {
+        // Game 72314 / replay 70jll8yaavkpyy8h: Imperial Entanglements was
+        // still front-side up. Its actual card source limits the opponent's
+        // Force loss from a Tatooine-system drain to zero, even though the
+        // engine's nominal drain amount remains 2.
+        ControlDrainFacts facts = drainFacts(2.0f, 0.0f);
+
+        assertEquals(0.0f, facts.primary().drainAmount(), 0.0f);
+        assertEquals(0.0f, facts.battleOrderDrainValue().amount(), 0.0f);
+        assertEquals(0.0f, facts.multiDrain().thisDrainAmount(), 0.0f);
+        assertEquals(0, facts.multiDrain().drainCapableSites());
+    }
+
+    @Test
+    public void imperialEntanglementsPostflipKeepsUncappedTatooineDrain() {
+        // No One To Stop Us This Time does not retain the front-side Force-loss
+        // limit. An unlimited engine value must preserve the nominal drain.
+        ControlDrainFacts facts = drainFacts(2.0f, Float.MAX_VALUE);
+
+        assertEquals(2.0f, facts.primary().drainAmount(), 0.0f);
+        assertEquals(2.0f, facts.battleOrderDrainValue().amount(), 0.0f);
+        assertEquals(2.0f, facts.multiDrain().thisDrainAmount(), 0.0f);
+        assertEquals(1, facts.multiDrain().drainCapableSites());
+    }
+
+    private static ControlDrainFacts drainFacts(
+            float nominalDrain, float opponentForceLossLimit) {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard tatooine = mock(PhysicalCard.class);
+        SwccgCardBlueprint blueprint = mock(SwccgCardBlueprint.class);
+
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getOpponent(PLAYER)).thenReturn("opponent");
+        when(gameState.findCardById(301)).thenReturn(tatooine);
+        when(gameState.getTopLocations()).thenReturn(List.of(tatooine));
+        when(gameState.getHand(PLAYER)).thenReturn(List.of());
+        when(tatooine.getBlueprint()).thenReturn(blueprint);
+        when(tatooine.getTitle()).thenReturn("Tatooine");
+        when(modifiers.getForceDrainAmount(
+                gameState, tatooine, PLAYER)).thenReturn(nominalDrain);
+        when(modifiers.getForceToLoseFromForceDrainLimit(
+                gameState, "opponent", tatooine))
+                .thenReturn(opponentForceLossLimit);
+        when(modifiers.getTotalPowerAtLocation(
+                gameState, tatooine, PLAYER, false, false)).thenReturn(8.0f);
+
+        return new ControlDrainFacts(
+                gameState, game, PLAYER, "301", 4,
+                () -> false, () -> false, () -> false);
+    }
+
     private static Fixture fixture(
             CardCategory category,
             boolean hasDeployAction,

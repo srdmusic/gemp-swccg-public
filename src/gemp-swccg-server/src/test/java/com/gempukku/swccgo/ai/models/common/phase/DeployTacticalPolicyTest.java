@@ -119,7 +119,7 @@ public class DeployTacticalPolicyTest {
                         new DeployTacticalPolicy.ContactFacts(
                                 "objective-plan", "Naboo: Theed Palace Throne Room",
                                 true, true, 2, 0.0f, 3.0f, 2.0f,
-                                1.0f, 0.0f, 9.0f, 3.0f, 0));
+                                1.0f, 0.0f, 9.0f, 3.0f, 0, 4.0f));
         assertFalse(replay.viable());
         assertEquals(5.0f, replay.projectedPower(), 0.0f);
 
@@ -128,7 +128,7 @@ public class DeployTacticalPolicyTest {
                         new DeployTacticalPolicy.ContactFacts(
                                 "objective-plan", "Naboo: Theed Palace Throne Room",
                                 true, true, 2, 0.0f, 4.0f, 3.0f,
-                                1.0f, 0.0f, 9.0f, 4.0f, 0));
+                                1.0f, 0.0f, 9.0f, 4.0f, 0, 4.0f));
         assertTrue(nearParity.waveViable());
     }
 
@@ -177,7 +177,7 @@ public class DeployTacticalPolicyTest {
                         new DeployTacticalPolicy.ContactFacts(
                                 "reinforce", "Theed Palace Throne Room",
                                 true, true, 1, 4.0f, 4.0f, 0.0f,
-                                0.0f, 0.0f, 8.0f, 4.0f, 0),
+                                0.0f, 0.0f, 8.0f, 4.0f, 0, 4.0f),
                         3.0f, 1.0f);
         assertEquals(DeployTacticalPolicy.ResponseFormationRoute
                         .EXISTING_FORMATION_REINFORCEMENT,
@@ -188,7 +188,7 @@ public class DeployTacticalPolicyTest {
                         new DeployTacticalPolicy.ContactFacts(
                                 "isolated", "Theed Palace Throne Room",
                                 true, true, 1, 0.0f, 3.0f, 0.0f,
-                                0.0f, 0.0f, 8.0f, 3.0f, 0),
+                                0.0f, 0.0f, 8.0f, 3.0f, 0, 2.0f),
                         0.0f, 2.0f);
         assertEquals(DeployTacticalPolicy.ResponseFormationRoute.NONE,
                 isolated.route());
@@ -201,7 +201,7 @@ public class DeployTacticalPolicyTest {
                         new DeployTacticalPolicy.ContactFacts(
                                 "four-unit-wave", "Theed Palace Throne Room",
                                 true, true, 4, 0.0f, 3.0f, 9.0f,
-                                3.0f, 0.0f, 10.0f, 3.0f, 0),
+                                3.0f, 0.0f, 10.0f, 3.0f, 0, 4.0f),
                         0.0f, 4.0f);
         assertEquals(DeployTacticalPolicy.ResponseFormationRoute.V171_WAVE,
                 fourUnitWave.route());
@@ -657,7 +657,7 @@ public class DeployTacticalPolicyTest {
                         handCharacterCount, ourPower, deployingPower,
                         wavePower, buddyCount, reservedForce,
                         opponentEffectivePower, maxHandCharacterPower,
-                        armedOpponentCount));
+                        armedOpponentCount, 4.0f));
     }
 
     private static DeployTacticalPolicy.DrainContestEvaluation drainContest(

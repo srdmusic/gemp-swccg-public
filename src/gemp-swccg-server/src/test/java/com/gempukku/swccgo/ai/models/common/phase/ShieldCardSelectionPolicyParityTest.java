@@ -128,7 +128,7 @@ public class ShieldCardSelectionPolicyParityTest {
     }
 
     @Test
-    public void fourthSlotBoostsMatchingPreferredAndRejectsEveryOtherShield() {
+    public void fourthSlotClosesBattleOrderWhenOpponentIsAlreadyExempt() {
         Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
         candidates.put(7, card(new Card13_054(), "13_54"));
         candidates.put(8, card(new Card13_095(), "13_95"));
@@ -140,19 +140,17 @@ public class ShieldCardSelectionPolicyParityTest {
                 new ShieldStrategy(Side.DARK), new ShieldStrategy(Side.DARK));
 
         var preferred = action(pair.rando(), "7");
-        // Hoth repair #2 (2026-07-27): this mock board answers every canSpot
-        // true, so the OPPONENT also occupies both theaters and is self-exempt
-        // from Battle Order's tax — the corrected gate is rightly dead here
-        // (V51 -9999, and the V53 turn-1 exception no longer applies). The
-        // live-gate path is covered in ShieldPolicyTest.
-        assertBits(-12919.0f, preferred.getScore());
-        assertReasonOnce(preferred.getReasoning(), "4TH SLOT BOOST");
+        // Both players occupy both theaters, so Battle Order cannot tax the
+        // opponent and must not consume the conditional fourth slot.
+        assertBits(-19919.0f, preferred.getScore());
+        assertReasonOnce(preferred.getReasoning(), "4TH SLOT HOLD");
+        assertNoReasonContaining(preferred.getReasoning(), "4TH SLOT BOOST");
         assertReasonOnce(preferred.getReasoning(), "V51 BATTLE ORDER GATE");
         assertReasonOnce(preferred.getReasoning(), "V53 SHIELD MIN-TURN");
 
         var other = action(pair.rando(), "8");
         assertBits(-4950.0f, other.getScore());
-        assertReasonOnce(other.getReasoning(), "not preferred");
+        assertReasonOnce(other.getReasoning(), "4TH SLOT HOLD");
     }
 
     @Test
@@ -193,13 +191,14 @@ public class ShieldCardSelectionPolicyParityTest {
                 "Deploy from Reserve Deck", List.of(), List.of("13_54", "13_95"),
                 List.of(), new ShieldStrategy(Side.DARK), new ShieldStrategy(Side.DARK));
 
-        // Hoth repair #2: corrected gate dead on this both-players-occupy
-        // mock board (see fourthSlot test note); preferred discovery and
-        // parity semantics unchanged.
-        assertBits(-12869.0f, pair.rando().get(0).getScore());
-        assertReasonOnce(pair.rando().get(0).getReasoning(), "4TH SLOT BOOST");
+        // The reserve route shares the same opponent-exemption gate as the
+        // dedicated shield menu.
+        assertBits(-19869.0f, pair.rando().get(0).getScore());
+        assertReasonOnce(pair.rando().get(0).getReasoning(), "4TH SLOT HOLD");
+        assertNoReasonContaining(
+                pair.rando().get(0).getReasoning(), "4TH SLOT BOOST");
         assertBits(-4900.0f, pair.rando().get(1).getScore());
-        assertReasonOnce(pair.rando().get(1).getReasoning(), "not preferred");
+        assertReasonOnce(pair.rando().get(1).getReasoning(), "4TH SLOT HOLD");
     }
 
     @Test
@@ -386,7 +385,8 @@ public class ShieldCardSelectionPolicyParityTest {
     }
 
     private static void assertReasonOnce(List<String> reasons, String marker) {
-        assertEquals(1, reasons.stream().filter(reason -> reason.contains(marker)).count());
+        assertEquals(reasons.toString(), 1,
+                reasons.stream().filter(reason -> reason.contains(marker)).count());
     }
 
     private static void assertNoReasonContaining(List<String> reasons, String marker) {

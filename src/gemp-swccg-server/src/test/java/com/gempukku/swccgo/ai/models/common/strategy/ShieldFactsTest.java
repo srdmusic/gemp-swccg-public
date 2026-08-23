@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
+import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
@@ -217,12 +219,16 @@ public class ShieldFactsTest {
         when(gameState.getGame()).thenReturn(game);
         when(game.getModifiersQuerying()).thenReturn(modifiers);
         when(game.getOpponent("tester")).thenReturn("opponent");
+        when(game.getOpponent("opponent")).thenReturn("tester");
         when(gameState.getAllPermanentCards()).thenReturn(List.of());
         when(gameState.getTopLocations()).thenReturn(List.of(nonBattleground));
         when(modifiers.isBattleground(
                 gameState, nonBattleground, null)).thenReturn(false);
         when(modifiers.getForceDrainAmount(
                 gameState, nonBattleground, "opponent")).thenReturn(1.0f);
+        when(modifiers.getForceToLoseFromForceDrainLimit(
+                gameState, "tester", nonBattleground))
+                .thenReturn(Float.MAX_VALUE);
 
         ShieldFacts.FourthSlotFacts iconsOnly =
                 ShieldFacts.fourthSlotFacts(gameState, game, "tester");
@@ -233,6 +239,107 @@ public class ShieldFactsTest {
         ShieldFacts.FourthSlotFacts controlled =
                 ShieldFacts.fourthSlotFacts(gameState, game, "tester");
         assertTrue(controlled.opponentDrainsNonBattleground());
+    }
+
+    @Test
+    public void drainPressureUsesProjectedOpponentForceLossNotNominalDrain() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard cappedBattleground = location(
+                "Tatooine", CardSubtype.SYSTEM);
+        PhysicalCard cappedNonBattleground = location(
+                "Coruscant: The Works", CardSubtype.SITE);
+
+        when(game.getGameState()).thenReturn(gameState);
+        when(gameState.getGame()).thenReturn(game);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(game.getOpponent("tester")).thenReturn("opponent");
+        when(game.getOpponent("opponent")).thenReturn("tester");
+        when(gameState.getAllPermanentCards()).thenReturn(List.of());
+        when(gameState.getTopLocations()).thenReturn(
+                List.of(cappedBattleground, cappedNonBattleground));
+        when(modifiers.isBattleground(
+                gameState, cappedBattleground, null)).thenReturn(true);
+        when(modifiers.isBattleground(
+                gameState, cappedNonBattleground, null)).thenReturn(false);
+        when(modifiers.controlsLocation(
+                gameState, cappedBattleground, "opponent")).thenReturn(true);
+        when(modifiers.controlsLocation(
+                gameState, cappedNonBattleground, "opponent")).thenReturn(true);
+        when(modifiers.getForceDrainAmount(
+                gameState, cappedBattleground, "opponent")).thenReturn(3.0f);
+        when(modifiers.getForceDrainAmount(
+                gameState, cappedNonBattleground, "opponent")).thenReturn(1.0f);
+        when(modifiers.getForceToLoseFromForceDrainLimit(
+                gameState, "tester", cappedBattleground)).thenReturn(0.0f);
+        when(modifiers.getForceToLoseFromForceDrainLimit(
+                gameState, "tester", cappedNonBattleground)).thenReturn(0.0f);
+
+        ShieldFacts.FourthSlotFacts capped =
+                ShieldFacts.fourthSlotFacts(gameState, game, "tester");
+        assertFalse(capped.opponentCanDrainThreePlus());
+        assertFalse(capped.opponentDrainsNonBattleground());
+
+        when(modifiers.getForceToLoseFromForceDrainLimit(
+                gameState, "tester", cappedBattleground))
+                .thenReturn(Float.MAX_VALUE);
+        when(modifiers.getForceToLoseFromForceDrainLimit(
+                gameState, "tester", cappedNonBattleground))
+                .thenReturn(Float.MAX_VALUE);
+
+        ShieldFacts.FourthSlotFacts uncapped =
+                ShieldFacts.fourthSlotFacts(gameState, game, "tester");
+        assertTrue(uncapped.opponentCanDrainThreePlus());
+        assertTrue(uncapped.opponentDrainsNonBattleground());
+    }
+
+    @Test
+    public void drainGapCanOpenBattlePlanAsFourthShieldWithoutSelfExemption() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard opponentSystem = location(
+                "Tatooine", CardSubtype.SYSTEM);
+        PhysicalCard opponentCard = mock(PhysicalCard.class);
+
+        when(game.getGameState()).thenReturn(gameState);
+        when(gameState.getGame()).thenReturn(game);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(game.getOpponent("tester")).thenReturn("opponent");
+        when(game.getOpponent("opponent")).thenReturn("tester");
+        when(gameState.getOpponent("tester")).thenReturn("opponent");
+        when(gameState.getOpponent("opponent")).thenReturn("tester");
+        when(gameState.getAllPermanentCards()).thenReturn(List.of());
+        when(gameState.getTopLocations()).thenReturn(List.of(opponentSystem));
+        when(gameState.getLocationsInOrder()).thenReturn(List.of(opponentSystem));
+        when(gameState.getCardsAtLocation(opponentSystem))
+                .thenReturn(List.of(opponentCard));
+        when(opponentCard.getOwner()).thenReturn("opponent");
+        when(modifiers.isBattleground(
+                gameState, opponentSystem, null)).thenReturn(true);
+        when(modifiers.occupiesLocation(
+                gameState, opponentSystem, "opponent")).thenReturn(true);
+        when(modifiers.controlsLocation(
+                gameState, opponentSystem, "opponent")).thenReturn(true);
+        when(modifiers.getForceDrainAmount(
+                gameState, opponentSystem, "opponent")).thenReturn(3.0f);
+        when(modifiers.getForceToLoseFromForceDrainLimit(
+                gameState, "tester", opponentSystem))
+                .thenReturn(Float.MAX_VALUE);
+
+        ShieldFacts.FourthSlotFacts facts =
+                ShieldFacts.fourthSlotFacts(gameState, game, "tester");
+        ShieldPolicy.FourthSlotPick pick = ShieldPolicy.fourthSlotPick(
+                Side.LIGHT, facts, candidate -> true);
+
+        assertFalse(facts.occupiesBothTheaters());
+        assertEquals(1, facts.opponentBattlegroundCount());
+        assertTrue(facts.opponentCanDrainThreePlus());
+        assertEquals("Battle Plan", pick.preferred());
+        assertTrue(pick.pursue());
+        assertEquals(ShieldPolicy.FourthSlotTrigger.BATTLE_ORDER_PLAN,
+                pick.trigger());
     }
 
     @Test

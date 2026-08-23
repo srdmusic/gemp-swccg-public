@@ -280,6 +280,17 @@ public class ShieldPolicyTest {
     }
 
     @Test
+    public void pressureOnlyBattleOrderDoesNotBorrowTurnOneSelfExemption() {
+        PolicyResult pressureOnly = ShieldPolicy.shieldCandidateAdjustments(
+                "A", "Battle Order", 80.0f, 2, 1, 0,
+                closed(), true, false, false,
+                ShieldPolicy.CandidateRoute.RESERVE);
+        assertOperations(pressureOnly,
+                "V53-shield-min-turn", -5000.0f,
+                "V51-battle-order-ready", 50.0f);
+    }
+
+    @Test
     public void redundancyGateStillWinsOverTheCorrectedGate() {
         // T12: an equivalent card on table vetoes before any gate scoring.
         PolicyResult redundant = ShieldPolicy.shieldCandidateAdjustments(

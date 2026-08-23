@@ -670,7 +670,8 @@ public final class PersistentResponsePlanAdapter {
                                     Math.max(0,
                                             plannedCards.size() - 1),
                                     0.0f, opponentEffective, maxPower,
-                                    armedOpponents),
+                                    armedOpponents,
+                                    target.ourAbility + plannedAbility),
                             target.ourAbility, plannedAbility);
             route = assessment.route();
         } else if (allStarships && plannedCards.size() == 1

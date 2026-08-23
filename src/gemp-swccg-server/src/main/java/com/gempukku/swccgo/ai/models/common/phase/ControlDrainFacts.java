@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.models.common.strategy.FormationSafety;
+import com.gempukku.swccgo.ai.models.common.strategy.ForceDrainProjection;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
@@ -75,8 +76,8 @@ public final class ControlDrainFacts implements ControlDrainAssessment.Facts {
             if (location == null || game == null) {
                 return null;
             }
-            float amount = game.getModifiersQuerying().getForceDrainAmount(
-                gameState, location, playerId);
+            float amount = ForceDrainProjection.projectedDamage(
+                gameState, game, location, playerId);
             if (amount <= 0.0f) {
                 return new ControlDrainAssessment.Primary(amount, 0.0f, title(location),
                     0, 0, 2);
@@ -339,8 +340,8 @@ public final class ControlDrainFacts implements ControlDrainAssessment.Facts {
             if (gameState == null || location == null || game == null) {
                 return null;
             }
-            float amount = game.getModifiersQuerying().getForceDrainAmount(
-                gameState, location, playerId);
+            float amount = ForceDrainProjection.projectedDamage(
+                gameState, game, location, playerId);
             return new ControlDrainAssessment.DrainValue(amount, title(location));
         } catch (Exception e) {
             return null;
@@ -363,8 +364,8 @@ public final class ControlDrainFacts implements ControlDrainAssessment.Facts {
                 try {
                     float power = game.getModifiersQuerying().getTotalPowerAtLocation(
                         gameState, location, playerId, false, false);
-                    if (power > 0.0f && game.getModifiersQuerying().getForceDrainAmount(
-                            gameState, location, playerId) > 0.0f) {
+                    if (power > 0.0f && ForceDrainProjection.projectedDamage(
+                            gameState, game, location, playerId) > 0.0f) {
                         drainCapableSites++;
                     }
                 } catch (Exception ignored) {
@@ -372,8 +373,8 @@ public final class ControlDrainFacts implements ControlDrainAssessment.Facts {
             }
             if (thisLocation != null) {
                 try {
-                    thisDrainAmount = game.getModifiersQuerying().getForceDrainAmount(
-                        gameState, thisLocation, playerId);
+                    thisDrainAmount = ForceDrainProjection.projectedDamage(
+                        gameState, game, thisLocation, playerId);
                 } catch (Exception ignored) {
                 }
             }

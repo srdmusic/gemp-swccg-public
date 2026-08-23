@@ -1400,7 +1400,7 @@ public class DeployPhasePlanner {
                     0.0f, target.theirPower,
                     selected.stream().mapToInt(card -> card.power)
                         .max().orElse(0),
-                    armedOpponentCount));
+                    armedOpponentCount, projectedAbility));
         return contact.viable() && projectedAbility >= 4.0f;
     }
 
@@ -1554,7 +1554,7 @@ public class DeployPhasePlanner {
                         Math.max(0, formationBodies - 1), 0.0f,
                         gate.theirPower,
                         selected.stream().mapToInt(card -> card.power).max().orElse(0),
-                        0));
+                        0, projectedAbility));
             if (!contact.viable() || projectedAbility < 4.0f) {
                 LOG.warn("OBJECTIVE FORMATION REJECTED: {} at {} projects power {}/ability {} "
                         + "into power {}/ability {} (V171/V172 contact={}, battle destiny={})",
@@ -3198,14 +3198,14 @@ public class DeployPhasePlanner {
                     card.getBlueprint() != null &&
                     card.getBlueprint().getCardCategory() == CardCategory.STARSHIP) {
 
-                    // Check if ship has a pilot aboard
-                    List<PhysicalCard> aboard = gameState.getAboardCards(card, false);
-                    boolean hasPilot = aboard.stream().anyMatch(c ->
-                        c.getBlueprint() != null &&
-                        c.getBlueprint().getCardCategory() == CardCategory.CHARACTER);
-
-                    if (!hasPilot) {
-                        unpiloted.add(card);
+                    try {
+                        if (Filters.unpiloted.accepts(
+                                gameState,
+                                game.getModifiersQuerying(), card)) {
+                            unpiloted.add(card);
+                        }
+                    } catch (Exception ignored) {
+                        // An unreadable ship is not proof that it needs a pilot.
                     }
                 }
             }

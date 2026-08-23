@@ -2545,11 +2545,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 .accepts(
                                     gameState,
                                     game.getModifiersQuerying(),
+                                    destination)
+                            && !Filters.piloted.accepts(
+                                    gameState,
+                                    game.getModifiersQuerying(),
                                     destination)) {
                         boardingOpenPilotDestinationOffered = true;
                         break;
                     }
-                } catch (NumberFormatException ignored) {
+                } catch (Exception ignored) {
                 }
             }
         }
@@ -2671,8 +2675,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         // V30 ADJUSTED 2026-08-08 (passivity fix, m01683): the +3000
                         // PILOT PROTECTION only applies when the destination actually
                         // NEEDS a pilot — no permanent pilot and no character pilot
-                        // already aboard (Filters.piloted covers both). Fail-open to
-                        // true (the old behavior) if the read throws.
+                        // already aboard (Filters.piloted covers both). An unreadable
+                        // destination is not proof that a pilot is needed.
                         boolean destinationNeedsPilot = false;
                         if (destinationHasOpenPilotSlot) {
                             try {
@@ -2681,7 +2685,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         game.getModifiersQuerying(),
                                         location);
                             } catch (Exception needsPilotE) {
-                                destinationNeedsPilot = true;
+                                destinationNeedsPilot = false;
                             }
                         }
                         applyDeployPilotPolicy(action,
@@ -2959,8 +2963,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 String v166Opp = gameState.getOpponent(playerId);
                                 float v166TheirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                     gameState, location, v166Opp, false, false);
-                                int v166OppDrain = (int) game.getModifiersQuerying()
-                                    .getForceDrainAmount(gameState, location, v166Opp);
+                                int v166OppDrain = (int) com.gempukku.swccgo.ai.models
+                                    .common.strategy.ForceDrainProjection.projectedDamage(
+                                        gameState, game, location, v166Opp);
                                 if (v166TheirPower > 0 && v166OppDrain > 0
                                         && computeNetDrainBalance(game, gameState, playerId) >= 2) {
                                     // V177 (Steve, 2026-06): SURVIVABILITY GATE. Replay aab2jiaa5sca:
@@ -2985,7 +2990,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     // (b) weapon-adjust their power (V29.7 heuristic: lightsaber +5, other +3,
                                     // attached or permanent). Boundary: T2 case now 0+3+0 vs (10+10)-2=18 → GATED
                                     // (was 8 vs 8 → "survivable" → +350 lure → Yoda died, 8 battle damage).
-                                    float[] v166WaveArr = v173WaveProjection(gameState, playerId, deployingBlueprintId);
+                                    float[] v166WaveArr = v173WaveProjection(
+                                        game, gameState, playerId,
+                                        objectiveProgressDeployingCard,
+                                        deployingBlueprintId, location,
+                                        deploymentPlanSnapshot != null
+                                            ? deploymentPlanSnapshot.getHoldBackCards()
+                                            : java.util.Set.of());
                                     float v166Wave = (v166WaveArr[1] >= 1f) ? v166WaveArr[0] : 0f;
                                     float v166OppWeapons = v177OppWeaponBonus(gameState, location, v166Opp);
                                     boolean v166Survivable = (v166OurPow + v166ThisPow + v166Wave)
@@ -3056,7 +3067,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             v172SkippedSelf = true;
                                         }
                                     }
-                                    float[] v172WaveR = v173WaveProjection(gameState, playerId, deployingBlueprintId);
+                                    float[] v172WaveR = v173WaveProjection(
+                                        game, gameState, playerId,
+                                        objectiveProgressDeployingCard,
+                                        deployingBlueprintId, location,
+                                        deploymentPlanSnapshot != null
+                                            ? deploymentPlanSnapshot.getHoldBackCards()
+                                            : java.util.Set.of());
                                     float v172Wave = v172WaveR[0];
                                     if (v172This + v172Wave >= v169Excess - 4f) {
                                         DeployTacticalPolicy.ProtectEndangeredFacts v169Facts =
@@ -3148,7 +3165,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 // Falcon+Han): contact steers are CHARACTER logic only.
                                 SwccgCardBlueprint v171DeployBp = getBlueprintFromId(context, deployingBlueprintId);
                                 if (v171DeployBp == null
-                                        || v171DeployBp.getCardCategory() != CardCategory.CHARACTER) {
+                                        || v171DeployBp.getCardCategory() != CardCategory.CHARACTER
+                                        || objectiveProgressDeployingCard == null) {
                                     v171OppHere = false;
                                 }
                                 if (v171OppHere) {
@@ -3186,10 +3204,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     // affordable after reserves".
                                     float v171OurPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                         gameState, location, playerId, false, false);
+                                    float v171OurAbility = game.getModifiersQuerying()
+                                        .getTotalAbilityAtLocation(
+                                            gameState, playerId, location);
                                     float v171TheirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                         gameState, location, v171Opp, false, false);
-                                    float[] v171WaveR = v173WaveProjection(gameState, playerId, deployingBlueprintId);
+                                    float[] v171WaveR = v173WaveProjection(
+                                        game, gameState, playerId,
+                                        objectiveProgressDeployingCard,
+                                        deployingBlueprintId, location,
+                                        deploymentPlanSnapshot != null
+                                            ? deploymentPlanSnapshot.getHoldBackCards()
+                                            : java.util.Set.of());
                                     float v171Wave = v171WaveR[0];
+                                    float v171ThisAbility = v171DeployBp.hasAbilityAttribute()
+                                            && v171DeployBp.getAbility() != null
+                                        ? v171DeployBp.getAbility() : 0.0f;
+                                    float v171ProjectedAbility = v171OurAbility
+                                        + v171ThisAbility + v171WaveR[3];
+                                    int v171EligibleCharacters =
+                                        1 + (int) v171WaveR[1];
                                     // V171 ADJUSTED 2026-07-10b (replay f27ws5lgy0g58k5p, T4 Savage+Nute →
                                     // Carbonite Chamber suicide): the projection was whole-hand optimistic vs
                                     // RAW enemy power — same hole wave 1 closed in V166. (a) weapon-adjust
@@ -3229,9 +3263,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     DeployTacticalPolicy.ContactFacts v171Facts =
                                         new DeployTacticalPolicy.ContactFacts(
                                             action.getActionId(), title, v171OppHere, true,
-                                            v171HandChars, v171OurPower, v171ThisPower,
+                                            v171EligibleCharacters, v171OurPower, v171ThisPower,
                                             v171Wave, v171WaveR[1], v171WaveR[2],
-                                            v171TheirEff, v171MaxHandPower, v171ArmedOpps);
+                                            v171TheirEff, v171MaxHandPower, v171ArmedOpps,
+                                            v171ProjectedAbility);
                                     PolicyContributionLedger v171Ledger = new PolicyContributionLedger(
                                         "deploy-tactical-v171-v172-" + action.getActionId());
                                     v171Ledger.register(
@@ -3243,10 +3278,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         logger.warn("V172 SOLO DOMINANCE: {} ({}+{} vs eff {}) -> +600 (buddy gate waived, Steve 2026-07-11)",
                                             title, (int) v171OurPower, (int) v171ThisPower, (int) v171TheirEff);
                                     } else if (!v171Ledger.orderedOperations().isEmpty()) {
-                                        logger.warn("V171 DEPLOY TO CONTACT: {} (handChars={} wave={} buddies={} reserved={} theirsEff={}) -> +600",
-                                            title, v171HandChars, (int) v171Wave,
+                                        logger.warn("V171 DEPLOY TO CONTACT: {} (eligibleChars={} wave={} buddies={} reserved={} theirsEff={}) -> +600",
+                                            title, v171EligibleCharacters, (int) v171Wave,
                                             (int) v171WaveR[1], (int) v171WaveR[2], (int) v171TheirEff);
-                                    } else if (v171HandChars >= 2) {
+                                    } else if (v171EligibleCharacters >= 2) {
                                         logger.warn("V172 CONTACT GATED: {} wave={} buddies={} reserved={} vs eff {} — can't match their stack (or wave unaffordable after reserves), assemble adjacent instead",
                                             title, (int) v171Wave,
                                             (int) v171WaveR[1], (int) v171WaveR[2], (int) v171TheirEff);
@@ -4570,9 +4605,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 SwccgCardBlueprint v136DepBp = getBlueprintFromId(context, deployingBlueprintId);
                                 if (v136DepBp != null
                                         && v136DepBp.getCardCategory() == com.gempukku.swccgo.common.CardCategory.CHARACTER) {
-                                    // Find the actual PhysicalCard in hand by matching blueprintId
-                                    PhysicalCard v136DeployingCard = null;
-                                    if (plannedDeployInstruction != null
+                                    // Use the exact zone-aware card resolved for this child.
+                                    // This includes hand, Reserve, Lost Pile, stacked, and
+                                    // virtual/source-proven deploy routes.
+                                    PhysicalCard v136DeployingCard =
+                                            objectiveProgressDeployingCard;
+                                    if (v136DeployingCard == null
+                                            && plannedDeployInstruction != null
                                             && plannedDeployInstruction.getCardPermanentCardId() != null
                                             && plannedDeployInstruction.getCardCurrentCardId() != null) {
                                         for (PhysicalCard h : gameState.getHand(context.getPlayerId())) {
@@ -7587,7 +7626,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
      * the old "maintenance cost = deploy cost, the V22.3/V59 rule" claim was refuted and
      * the buddy "double" (2x deploy cost) spend over-charged the wave; the table scan is
      * also Zone.isInPlay()-gated (getAllPermanentCards returns reserve-deck cards too).
-     * Returns {wavePower, buddiesTaken, reservedForce}.
+     * Returns {wavePower, buddiesTaken, reservedForce, buddyAbility}.
      */
     /** V177 helper (2026-07-10): estimate the opponent's WEAPON power at a location — the raw power
      *  totals are blind to weapons/hits, which is how Rando kept walking Jedi into armed stacks
@@ -7621,14 +7660,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         return bonus;
     }
 
-    private static float[] v173WaveProjection(GameState gs, String playerId, String deployingBpId) {
+    private record V173WaveCandidate(PhysicalCard card, float power,
+                                     float cost, float maintainCost,
+                                     float ability) {
+    }
+
+    private static float[] v173WaveProjection(
+            SwccgGame game, GameState gs, String playerId,
+            PhysicalCard deployingCard, String deployingBpId,
+            PhysicalCard destination,
+            java.util.Set<String> blacklistedBlueprints) {
         try {
             float thisCost = 0f;
             // T2 COMMIT-1 (2026-07-06): track the deploying card's ENGINE maintain cost
             // (was: boolean thisIsMaint reserving its full deploy cost).
             float thisMaintCost = 0f;
+            if (deployingCard != null && deployingCard.getBlueprint() != null) {
+                SwccgCardBlueprint deployingBlueprint =
+                        deployingCard.getBlueprint();
+                Float deployCost = deployingBlueprint.getDeployCost();
+                thisCost = deployCost != null ? deployCost : 0.0f;
+                thisMaintCost = com.gempukku.swccgo.ai.models.common.strategy
+                        .MaintenanceFacts.maintainCost(deployingBlueprint);
+            }
             boolean skippedSelf = false;
-            java.util.List<float[]> buddies = new java.util.ArrayList<>(); // {power, cost, maintainCost}
+            java.util.List<V173WaveCandidate> buddies =
+                    new java.util.ArrayList<>();
             int sabers = 0, otherWeapons = 0, interrupts = 0;
             for (PhysicalCard h : gs.getHand(playerId)) {
                 if (h == null || h.getBlueprint() == null) continue;
@@ -7640,13 +7697,36 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     // T2 COMMIT-1 (2026-07-06): engine maintain cost, not deploy cost
                     float maintCost = com.gempukku.swccgo.ai.models.common.strategy
                         .MaintenanceFacts.maintainCost(bp);
-                    if (!skippedSelf && deployingBpId != null
-                            && deployingBpId.equals(h.getBlueprintId(true))) {
-                        thisCost = cv;
-                        thisMaintCost = maintCost;
-                        skippedSelf = true; // the deploying card is not its own buddy
+                    boolean exactSelf = deployingCard != null
+                            && h.getPermanentCardId()
+                                == deployingCard.getPermanentCardId()
+                            && h.getCardId() == deployingCard.getCardId();
+                    boolean blueprintSelf = deployingCard == null
+                            && !skippedSelf && deployingBpId != null
+                            && deployingBpId.equals(h.getBlueprintId(true));
+                    if (exactSelf || blueprintSelf) {
+                        if (deployingCard == null) {
+                            thisCost = cv;
+                            thisMaintCost = maintCost;
+                        }
+                        skippedSelf = true;
                     } else {
-                        buddies.add(new float[]{pv, cv, maintCost});
+                        String candidateBlueprint = h.getBlueprintId(true);
+                        boolean blacklisted = blacklistedBlueprints != null
+                                && candidateBlueprint != null
+                                && blacklistedBlueprints.contains(
+                                    candidateBlueprint);
+                        if (com.gempukku.swccgo.ai.models.common.strategy
+                                .FormationWaveEligibility.isAdmissible(
+                                    game, gs, playerId, deployingCard, h,
+                                    destination, java.util.List.of(),
+                                    blacklisted)) {
+                            Float ability = bp.hasAbilityAttribute()
+                                    ? bp.getAbility() : null;
+                            buddies.add(new V173WaveCandidate(
+                                    h, pv, cv, maintCost,
+                                    ability != null ? ability : 0.0f));
+                        }
                     }
                 } else if (bp.getCardCategory() == CardCategory.WEAPON) {
                     String wt = h.getTitle() != null
@@ -7689,15 +7769,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             float v177ForcePile = gs.getForcePileSize(playerId);
             reserved = Math.min(reserved, Math.max(0f, v177ForcePile - thisCost - 3f));
             float budget = Math.max(0f, v177ForcePile - thisCost - reserved);
-            buddies.sort((a, b) -> Float.compare(b[0], a[0])); // strongest first
+            buddies.sort((a, b) -> Float.compare(
+                    b.power(), a.power()));
             float addPower = 0f;
+            float addAbility = 0f;
             int taken = 0;
-            for (float[] ch : buddies) {
+            java.util.List<PhysicalCard> selected = new java.util.ArrayList<>();
+            for (V173WaveCandidate ch : buddies) {
                 // a maintenance buddy must bring its own upkeep: deploy cost + upkeep
-                // T2 COMMIT-1 (2026-07-06): upkeep = engine maintain cost (ch[2]), fixing
+                // T2 COMMIT-1 (2026-07-06): upkeep = engine maintain cost, fixing
                 // the double-spend that charged 2x deploy cost for maintenance buddies.
-                float spend = ch[1] + ch[2];
-                if (spend <= budget) { addPower += ch[0]; budget -= spend; taken++; }
+                float spend = ch.cost() + ch.maintainCost();
+                boolean identitySafe = com.gempukku.swccgo.ai.models.common
+                        .strategy.FormationWaveEligibility.isAdmissible(
+                                game, gs, playerId, deployingCard, ch.card(),
+                                destination, selected, false);
+                if (identitySafe && spend <= budget) {
+                    addPower += ch.power();
+                    addAbility += ch.ability();
+                    budget -= spend;
+                    selected.add(ch.card());
+                    taken++;
+                }
                 // unaffordable big hitter: skip and try the next (cheaper) character
             }
             int weaponsCounted = 0;
@@ -7706,30 +7799,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 else { addPower += 3f; otherWeapons--; }
                 budget -= 1f; weaponsCounted++;
             }
-            return new float[]{addPower, taken, reserved};
-        } catch (Exception e) { return new float[]{0f, 0f, 0f}; }
+            return new float[]{addPower, taken, reserved, addAbility};
+        } catch (Exception e) {
+            return new float[]{0f, 0f, 0f, 0f};
+        }
     }
 
     // Hoth repair #2 (2026-07-27): package-visible so ActionTextEvaluator can
     // feed the corrected battleOrderLive gate without duplicating drain math.
     static int computeNetDrainBalance(SwccgGame game, GameState gs, String playerId) {
-        String oppId = gs.getOpponent(playerId);
-        if (oppId == null) return 0;
-        int oppTotal = 0, ourTotal = 0;
-        for (PhysicalCard loc : gs.getLocationsInOrder()) {
-            if (loc == null) continue;
-            boolean weHere = false, oppHere = false;
-            for (PhysicalCard c : gs.getCardsAtLocation(loc)) {
-                if (c == null) continue;
-                if (playerId.equals(c.getOwner())) weHere = true;
-                else if (oppId.equals(c.getOwner())) oppHere = true;
-            }
-            try {
-                if (oppHere) oppTotal += (int) game.getModifiersQuerying().getForceDrainAmount(gs, loc, oppId);
-                if (weHere) ourTotal += (int) game.getModifiersQuerying().getForceDrainAmount(gs, loc, playerId);
-            } catch (Exception ignore) { /* skip this location */ }
-        }
-        return oppTotal - ourTotal;
+        return com.gempukku.swccgo.ai.models.common.strategy
+                .ForceDrainProjection.netDamageBalance(
+                        gs, game, playerId);
     }
 
     private void addObjectiveContribution(
@@ -12505,6 +12586,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 shieldLedger.register(ShieldPolicy.shieldCandidateAdjustments(
                         action.getActionId(), cardTitle, shieldScore, minTurnToPlay,
                         turnNumber, shieldsOnTable, fourthSlot, battleOrderLive,
+                        fourthSlotFacts.occupiesBothTheaters()
+                            && ShieldFacts.opponentLacksBothTheaters(
+                                game, playerId),
                         ShieldFacts.battleOrderPlanEquivalentOnTable(
                             context.getGameState()),
                         ShieldPolicy.CandidateRoute.RESERVE));
@@ -12725,6 +12809,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     shieldLedger.register(ShieldPolicy.shieldCandidateAdjustments(
                             cardId, title, shieldScore, minTurnToPlay, turnNumber,
                             shieldsOnTable, fourthSlot, battleOrderLive,
+                            fourthSlotFacts.occupiesBothTheaters()
+                                && ShieldFacts.opponentLacksBothTheaters(
+                                    context.getGame(), context.getPlayerId()),
                             ShieldFacts.battleOrderPlanEquivalentOnTable(
                                 context.getGameState()),
                             ShieldPolicy.CandidateRoute.DEDICATED));
@@ -12861,6 +12948,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         PhysicalCard match = null;
         for (PhysicalCard candidate : candidates) {
             if (candidate == null || !seen.add(candidate)) continue;
+            if (!playerId.equals(candidate.getOwner())) continue;
             if (!blueprintId.equals(candidate.getBlueprintId(true))) continue;
             if (match != null) return null;
             match = candidate;

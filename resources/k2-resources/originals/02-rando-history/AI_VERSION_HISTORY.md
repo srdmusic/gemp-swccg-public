@@ -11183,3 +11183,88 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     ac062bbb7a1679bb84c058fbf446e51d3a14fbe64b28cf009e79a603cc7ba75c.
     Proof is RUNTIME_LOADED. Drain-release, late-spread, and retained V106
     shield semantic firing remain live-game evidence, not source claims.
+
+  ==== F1/F2/F3 FORMATION COHERENCE + DB72314 TATOOINE CORRECTION (2026-08-22, both bots, source-tested) ====
+
+    The final usable replay segment for canceled game-history row 72314 is
+    supplemental behavior evidence, not a completed competitive loss.
+    Imperial Entanglements 201_39 never flipped. Rando attempted four drains
+    at the Tatooine system that could cause zero Force loss on the objective
+    front, including two taxed attempts. It stacked six characters aboard
+    Devastator V even though 216_8 supplies a permanent pilot, sent the legal
+    turn-three Thrawn plus Gideon ground packet aboard, and redirected the
+    turn-five Tarkin child away from its planned Jawa Camp ground packet to
+    the already-operational ship. The unchanged objective source blocks
+    opponent Force loss from Tatooine-system drains on the front and flips
+    only after Rando controls three Tatooine sites while the opponent controls
+    fewer than three.
+
+    K-2 mailbox m01757 and m01758 delivered the ten newest completed
+    competitive losses as a separate line-cited corpus. Across those games,
+    Rando committed 22 bodies into opponent-held locations, left 25 of its
+    own deployed locations empty, entered 30 of 33 measurable battles at a
+    power deficit, and lost the drain ledger 183 to 37. Only two games reached
+    five opponent drain by turn three, and Steve had already played the
+    relevant shield in both. The early reactive-shield premise therefore does
+    not reproduce across those completed losses. DB72314 supports only the
+    narrower pressure fallback below. Formation collapse and ground-versus-
+    space allocation remain the primary correction. K-2's pilot matrix is a
+    separate active follow-on lane.
+
+    F1 is closed for uniquely resolved deploys. CardSelection binds one exact
+    owned physical card from source provenance, hand, Reserve Deck, Lost Pile,
+    or a stack, then feeds that card through V136 at every destination child.
+    Ambiguous and unresolved direct-contact selections cannot earn V171.
+    Unresolved non-contact deploys are not blanket-vetoed, preserving spies,
+    reinforcements, deliberate safe solos, terminal defense, and unrelated
+    legacy paths.
+
+    F2 and F3 now share an admissibility gate for contact companions. Dead,
+    blacklisted, engine-illegal, unavailable-at-target, unique-conflicting,
+    and persona-conflicting cards cannot contribute projected power, ability,
+    cost, or maintenance. A V171 contact wave must project actual battle-
+    destiny ability of at least 4 while retaining the existing whole-wave
+    affordability, reserve, and battle-initiation-fee rules. Persistent
+    response formation uses the same ability boundary. When an exact safe
+    planned target remains offered, non-dominant child destinations defer;
+    dominant contested alternatives remain in the score race.
+
+    V30 pilot protection now requires the actual destination asset to be
+    engine-proven unpiloted. Unknown state fails closed, and both mirrored
+    planners use Filters.unpiloted. A permanent-pilot Devastator V therefore
+    creates no false open-pilot demand, while a genuinely unpiloted ship keeps
+    its existing pilot route. Shared drain projection caps nominal drain by
+    the engine Force-loss limit. ControlDrainFacts, ShieldFacts, and both
+    CardSelection drain-gap adapters use that projection, making the
+    front-side Tatooine system worth zero projected damage.
+
+    The prior 2026-08-22 history claim that Battle Order or Battle Plan
+    requires Rando to occupy both battleground theaters is superseded. The
+    actual card source has no play prerequisite. The corrected shared live
+    gate requires the opponent to lack the site-plus-system exemption and
+    either Rando to hold that exemption or the projected opponent drain lead
+    to be at least 2. Pressure alone cannot borrow the turn-one exception;
+    turn one still requires Rando to occupy both theaters while the opponent
+    does not. The owner-agnostic equivalent scan closes Battle Order when
+    either player's Battle Plan is in play, matching Card13_054 and the
+    ordinaryBattlePlanClosesTheBattleOrderRoute regression. This accepts a
+    symmetric tax only as the narrow DB72314 pressure response and does not
+    claim it was a recurring miss in K-2's completed ten-loss corpus.
+
+    Failure-first regressions cover exact Reserve, Lost Pile, stacked, and
+    provenanced deploy routes; permanent-pilot and truly-unpiloted assets;
+    parent-child coherence and dominant alternatives; Tatooine zero-damage
+    projection; pressure-only turn-one shielding; unique and persona
+    conflicts; blacklist exclusion; and engine-illegal companions. The final
+    impacted ring passed 288/0/0/0. Pinned offline server-reactor compile,
+    diff check, normalized Rando and Chosen One evaluator and planner mirrors,
+    and independent current-snapshot verification passed. Exact base is
+    56aa9e2d9a7d414bc7d0ce4bf3c64f88f937147a on branch
+    codex/rando-tatooine-coherence-2026-08-22.
+
+    Twelve AI production files, fourteen AI tests, and the three required
+    append-only records changed. No card Java, engine Java, objective data,
+    deck data, database, package, jar, deployment, server start, restart,
+    runtime mutation, game mutation, or push occurred. Proof stops at
+    SOURCE_TESTED. Revert the local commit containing this entry to remove
+    only this source batch.

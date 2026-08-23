@@ -31,14 +31,18 @@ public class ShieldSourceOwnershipTest {
         String policy = commonPhaseSource("ShieldPolicy.java");
         String signature =
                 "public static PolicyResult shieldCandidateAdjustments(";
-        int compatibilityOverload = policy.indexOf(signature);
+        int firstOverload = policy.indexOf(signature);
         String compatibility = method(policy, signature);
-        String candidate = method(
-                policy.substring(compatibilityOverload + signature.length()),
-                signature);
+        String remaining = policy.substring(firstOverload + signature.length());
+        int secondOverload = remaining.indexOf(signature);
+        String equivalentCompatibility = method(remaining, signature);
+        String candidate = method(remaining.substring(
+                secondOverload + signature.length()), signature);
 
-        assertEquals(2, occurrences(policy, signature));
+        assertEquals(3, occurrences(policy, signature));
         assertTrue(compatibility.contains("return shieldCandidateAdjustments("));
+        assertTrue(equivalentCompatibility.contains(
+                "return shieldCandidateAdjustments("));
         assertFalse(policy.contains("shieldSelectionAdjustments("));
         assertFalse(policy.contains("reserveBattleOrderAdjustments("));
         assertEquals(1, occurrences(candidate, "\"V53-shield-min-turn\""));

@@ -110,7 +110,7 @@ public final class ShieldPolicy {
                     ? "Come Here You Big Coward"
                     : "Simple Tricks And Nonsense";
             trigger = FourthSlotTrigger.NON_BATTLEGROUND_DRAIN;
-        } else if (facts.occupiesBothTheaters()
+        } else if (facts.battleOrderPlanLive()
                 && !facts.battleOrderPlanEquivalentOnTable()) {
             preferred = side == Side.DARK ? "Battle Order" : "Battle Plan";
             trigger = FourthSlotTrigger.BATTLE_ORDER_PLAN;
@@ -326,6 +326,23 @@ public final class ShieldPolicy {
                                                           boolean battleOrderLive,
                                                           boolean equivalentOnTable,
                                                           CandidateRoute route) {
+        return shieldCandidateAdjustments(
+                actionId, cardTitle, shieldScore, minTurnToPlay,
+                turnNumber, shieldsOnTable, pick, battleOrderLive,
+                battleOrderLive, equivalentOnTable, route);
+    }
+
+    public static PolicyResult shieldCandidateAdjustments(String actionId,
+                                                          String cardTitle,
+                                                          float shieldScore,
+                                                          int minTurnToPlay,
+                                                          int turnNumber,
+                                                          int shieldsOnTable,
+                                                          FourthSlotPick pick,
+                                                          boolean battleOrderLive,
+                                                          boolean battleOrderTurnOneReady,
+                                                          boolean equivalentOnTable,
+                                                          CandidateRoute route) {
         Objects.requireNonNull(pick, "pick");
         Objects.requireNonNull(route, "route");
         List<PolicyOperation> operations = new ArrayList<>();
@@ -341,9 +358,11 @@ public final class ShieldPolicy {
         }
 
         // Hoth repair #2 (2026-07-27): re-keyed from occupiesBothTheaters to
-        // the corrected battleOrderLive law (see ShieldFacts.battleOrderLive).
+        // the corrected gate. Pressure may justify the symmetric tax later,
+        // but only self-exemption preserves the turn-one exception.
         boolean battleOrderTurnOneException = turnNumber == 1
-                && isBattleOrderOrPlan(cardTitle) && battleOrderLive;
+                && isBattleOrderOrPlan(cardTitle)
+                && battleOrderTurnOneReady;
         if (turnNumber < minTurnToPlay
                 && !battleOrderTurnOneException && !exactUrgentShield) {
             add(operations, actionId, "V53-shield-min-turn",

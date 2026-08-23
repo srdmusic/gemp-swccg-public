@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,7 +24,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Focused adapter regressions from replay jpjhvzkjczbx3ctm.
+ * Focused adapter regressions from replays jpjhvzkjczbx3ctm and
+ * 70jll8yaavkpyy8h (game 72314).
  */
 public class HothReplayDeployRegressionTest {
     private static final String PLAYER = "~Rando_Cal";
@@ -87,8 +89,9 @@ public class HothReplayDeployRegressionTest {
                 evaluateChosenDeploy(state, prompt,
                         List.of(false, true), blizzard, site))) {
             Candidate legalSite = candidates.byId("317");
-            assertFalse(legalSite.reasoning.contains("V30 PILOT PROTECTION"));
-            assertTrue(legalSite.score > -100.0f);
+            assertFalse(legalSite.reasoning,
+                    legalSite.reasoning.contains("V30 PILOT PROTECTION"));
+            assertFalse(legalSite.reasoning, legalSite.hardVeto);
         }
     }
 
@@ -165,6 +168,137 @@ public class HothReplayDeployRegressionTest {
     }
 
     @Test
+    public void tatooineReplayPilotedDevastatorDoesNotVetoTarkinsGroundRoute() {
+        PhysicalCard tarkin = card(350, "Grand Moff Tarkin (V)", "200_82",
+                CardCategory.CHARACTER, true, 4.0f);
+        PhysicalCard devastator = card(351, "Devastator (V)", "216_8",
+                CardCategory.STARSHIP, false, null);
+        PhysicalCard jawaCamp = card(352, "Tatooine: Jawa Camp", "1_292",
+                CardCategory.LOCATION, false, null);
+        GameState permanentPilotState = state(
+                Map.of(351, devastator, 352, jawaCamp), tarkin);
+
+        PhysicalCard characterPilotedShip = card(
+                353, "Imperial-Class Star Destroyer", "1_302",
+                CardCategory.STARSHIP, false, null);
+        PhysicalCard aboardPilot = card(
+                354, "Admiral Ozzel", "3_82",
+                CardCategory.CHARACTER, true, 2.0f);
+        GameState characterPilotState = state(
+                Map.of(352, jawaCamp, 353, characterPilotedShip), tarkin);
+        when(characterPilotState.getAboardCards(characterPilotedShip, false))
+                .thenReturn(List.of(aboardPilot));
+
+        // Replay 70jll8yaavkpyy8h: an offered spare seat on a ship that is
+        // already piloted, whether by a permanent or physical character pilot,
+        // must not manufacture V30's -5000 veto on Tarkin's ground destination.
+        for (CandidateSet candidates : List.of(
+                evaluateRandoDeployWithPilotedAssets(
+                        permanentPilotState, deployPrompt(tarkin, false),
+                        Set.of(351), devastator, jawaCamp),
+                evaluateChosenDeployWithPilotedAssets(
+                        permanentPilotState, deployPrompt(tarkin, false),
+                        Set.of(351), devastator, jawaCamp),
+                evaluateRandoDeployWithPilotedAssets(
+                        characterPilotState, deployPrompt(tarkin, false),
+                        Set.of(353), characterPilotedShip, jawaCamp),
+                evaluateChosenDeployWithPilotedAssets(
+                        characterPilotState, deployPrompt(tarkin, false),
+                        Set.of(353), characterPilotedShip, jawaCamp))) {
+            Candidate ground = candidates.byId("352");
+            assertFalse(ground.reasoning.contains("V30 PILOT PROTECTION"));
+            assertTrue(ground.score > -100.0f);
+        }
+    }
+
+    @Test
+    public void tatooineReplayTrulyUnpilotedShipStillForcesBoarding() {
+        PhysicalCard tarkin = card(360, "Grand Moff Tarkin (V)", "200_82",
+                CardCategory.CHARACTER, true, 4.0f);
+        PhysicalCard unpilotedShip = card(
+                361, "Imperial-Class Star Destroyer", "1_302",
+                CardCategory.STARSHIP, false, null);
+        PhysicalCard jawaCamp = card(362, "Tatooine: Jawa Camp", "1_292",
+                CardCategory.LOCATION, false, null);
+        GameState state = state(
+                Map.of(361, unpilotedShip, 362, jawaCamp), tarkin);
+
+        // Negative boundary for replay 70jll8yaavkpyy8h: removing the false
+        // Devastator steer must preserve V30 when the offered ship is genuinely
+        // unpiloted and the character can legally fill its open pilot slot.
+        for (CandidateSet candidates : List.of(
+                evaluateRandoDeploy(
+                        state, deployPrompt(tarkin, false),
+                        unpilotedShip, jawaCamp),
+                evaluateChosenDeploy(
+                        state, deployPrompt(tarkin, false),
+                        unpilotedShip, jawaCamp))) {
+            Candidate ship = candidates.byId("361");
+            Candidate ground = candidates.byId("362");
+            assertTrue(ship.score > ground.score);
+            assertTrue(ship.reasoning.contains(
+                    "fills an offered open pilot slot"));
+            assertTrue(ground.reasoning.contains(
+                    "must fill an offered open pilot slot"));
+        }
+    }
+
+    @Test
+    public void everyResolvedDeployZoneReceivesFormationSafety() {
+        PhysicalCard pilot = card(370, "Admiral Ozzel", "3_82",
+                CardCategory.CHARACTER, true, 2.0f);
+        PhysicalCard opponentCopy = card(371, "Admiral Ozzel", "3_82",
+                CardCategory.CHARACTER, true, 2.0f);
+        when(opponentCopy.getOwner()).thenReturn("opponent");
+        PhysicalCard site = card(372, "Hoth: North Ridge (4th Marker)", "217_12",
+                CardCategory.LOCATION, false, null);
+
+        GameState reserveState = state(
+                Map.of(370, pilot, 371, opponentCopy, 372, site), pilot);
+        when(reserveState.getHand(PLAYER)).thenReturn(List.of());
+        when(reserveState.getCardPile(PLAYER, Zone.RESERVE_DECK))
+                .thenReturn(List.of(pilot));
+        when(reserveState.getAllStackedCards()).thenReturn(List.of(opponentCopy));
+
+        GameState lostState = state(Map.of(370, pilot, 372, site), pilot);
+        when(lostState.getHand(PLAYER)).thenReturn(List.of());
+        when(lostState.getLostPile(PLAYER)).thenReturn(List.of(pilot));
+
+        GameState stackedState = state(Map.of(370, pilot, 372, site), pilot);
+        when(stackedState.getHand(PLAYER)).thenReturn(List.of());
+        when(stackedState.getAllStackedCards()).thenReturn(List.of(pilot));
+
+        GameState sourceProvenState = state(
+                Map.of(370, pilot, 372, site), pilot);
+        when(sourceProvenState.getHand(PLAYER)).thenReturn(List.of());
+
+        for (GameState zoneState : List.of(
+                reserveState, lostState, stackedState)) {
+            for (CandidateSet candidates : List.of(
+                    evaluateRandoDeploy(
+                            zoneState, deployPrompt(pilot, false), site),
+                    evaluateChosenDeploy(
+                            zoneState, deployPrompt(pilot, false), site))) {
+                Candidate ground = candidates.byId("372");
+                assertTrue(ground.reasoning,
+                        ground.reasoning.contains("L3 NO-PLAN SOLO"));
+            }
+        }
+
+        for (CandidateSet candidates : List.of(
+                evaluateRandoDeployWithProvenance(
+                        sourceProvenState, deployPrompt(pilot, false),
+                        pilot.getPermanentCardId(), site),
+                evaluateChosenDeployWithProvenance(
+                        sourceProvenState, deployPrompt(pilot, false),
+                        pilot.getPermanentCardId(), site))) {
+            Candidate ground = candidates.byId("372");
+            assertTrue(ground.reasoning,
+                    ground.reasoning.contains("L3 NO-PLAN SOLO"));
+        }
+    }
+
+    @Test
     public void veersRevealRequiresARealReserveTarget() {
         PhysicalCard veers = card(320, "Veers", "206_11",
                 CardCategory.CHARACTER, true, 5.0f);
@@ -218,6 +352,40 @@ public class HothReplayDeployRegressionTest {
     private static CandidateSet evaluateRandoDeploy(
             GameState state, String prompt, List<Boolean> selectable,
             PhysicalCard... destinations) {
+        return evaluateRandoDeploy(
+                state, prompt, selectable, Set.of(), destinations);
+    }
+
+    private static CandidateSet evaluateRandoDeployWithPilotedAssets(
+            GameState state, String prompt, Set<Integer> pilotedAssetIds,
+            PhysicalCard... destinations) {
+        return evaluateRandoDeploy(
+                state, prompt,
+                java.util.Collections.nCopies(destinations.length, true),
+                pilotedAssetIds, destinations);
+    }
+
+    private static CandidateSet evaluateRandoDeploy(
+            GameState state, String prompt, List<Boolean> selectable,
+            Set<Integer> pilotedAssetIds, PhysicalCard... destinations) {
+        return evaluateRandoDeploy(
+                state, prompt, selectable, pilotedAssetIds,
+                null, destinations);
+    }
+
+    private static CandidateSet evaluateRandoDeployWithProvenance(
+            GameState state, String prompt, Integer deployingPermanentId,
+            PhysicalCard... destinations) {
+        return evaluateRandoDeploy(
+                state, prompt,
+                java.util.Collections.nCopies(destinations.length, true),
+                Set.of(), deployingPermanentId, destinations);
+    }
+
+    private static CandidateSet evaluateRandoDeploy(
+            GameState state, String prompt, List<Boolean> selectable,
+            Set<Integer> pilotedAssetIds, Integer deployingPermanentId,
+            PhysicalCard... destinations) {
         var context = new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(
                 state, PLAYER, "CARD_SELECTION", prompt,
                 "hoth-deploy-child", Phase.DEPLOY);
@@ -225,7 +393,18 @@ public class HothReplayDeployRegressionTest {
         var modifiers = mock(
                 com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying.class);
         when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(modifiers.isPiloted(
+                org.mockito.ArgumentMatchers.same(state),
+                any(PhysicalCard.class),
+                org.mockito.ArgumentMatchers.eq(false)))
+                .thenAnswer(call -> pilotedAssetIds.contains(
+                        call.getArgument(1, PhysicalCard.class).getCardId()));
         context.setGame(game);
+        if (deployingPermanentId != null) {
+            context.setExtra(
+                    ObjectiveAnalyzer.OBJECTIVE_DEPLOYING_CARD_ID_EXTRA,
+                    deployingPermanentId);
+        }
         setDeployCandidates(context, selectable, destinations);
         return new CandidateSet(
                 new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
@@ -245,6 +424,40 @@ public class HothReplayDeployRegressionTest {
     private static CandidateSet evaluateChosenDeploy(
             GameState state, String prompt, List<Boolean> selectable,
             PhysicalCard... destinations) {
+        return evaluateChosenDeploy(
+                state, prompt, selectable, Set.of(), destinations);
+    }
+
+    private static CandidateSet evaluateChosenDeployWithPilotedAssets(
+            GameState state, String prompt, Set<Integer> pilotedAssetIds,
+            PhysicalCard... destinations) {
+        return evaluateChosenDeploy(
+                state, prompt,
+                java.util.Collections.nCopies(destinations.length, true),
+                pilotedAssetIds, destinations);
+    }
+
+    private static CandidateSet evaluateChosenDeploy(
+            GameState state, String prompt, List<Boolean> selectable,
+            Set<Integer> pilotedAssetIds, PhysicalCard... destinations) {
+        return evaluateChosenDeploy(
+                state, prompt, selectable, pilotedAssetIds,
+                null, destinations);
+    }
+
+    private static CandidateSet evaluateChosenDeployWithProvenance(
+            GameState state, String prompt, Integer deployingPermanentId,
+            PhysicalCard... destinations) {
+        return evaluateChosenDeploy(
+                state, prompt,
+                java.util.Collections.nCopies(destinations.length, true),
+                Set.of(), deployingPermanentId, destinations);
+    }
+
+    private static CandidateSet evaluateChosenDeploy(
+            GameState state, String prompt, List<Boolean> selectable,
+            Set<Integer> pilotedAssetIds, Integer deployingPermanentId,
+            PhysicalCard... destinations) {
         var context = new com.gempukku.swccgo.ai.models.chosenone.evaluators.DecisionContext(
                 state, PLAYER, "CARD_SELECTION", prompt,
                 "hoth-deploy-child", Phase.DEPLOY);
@@ -252,7 +465,18 @@ public class HothReplayDeployRegressionTest {
         var modifiers = mock(
                 com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying.class);
         when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(modifiers.isPiloted(
+                org.mockito.ArgumentMatchers.same(state),
+                any(PhysicalCard.class),
+                org.mockito.ArgumentMatchers.eq(false)))
+                .thenAnswer(call -> pilotedAssetIds.contains(
+                        call.getArgument(1, PhysicalCard.class).getCardId()));
         context.setGame(game);
+        if (deployingPermanentId != null) {
+            context.setExtra(
+                    ObjectiveAnalyzer.OBJECTIVE_DEPLOYING_CARD_ID_EXTRA,
+                    deployingPermanentId);
+        }
         setDeployCandidates(context, selectable, destinations);
         return new CandidateSet(
                 new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()

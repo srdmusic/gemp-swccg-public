@@ -128,14 +128,19 @@ public final class DeployPlanPolicy {
                     -100.0f,
                     "Not planned target (want "
                             + facts.plannedTargetName() + ")"));
-            // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): a dominant contested
-            // alternative (we would hold >=2x their weapon-adjusted power after this
-            // deploy — the V172/FormationSafety.DOMINANCE_MULTIPLE test, computed by
-            // the caller) must stay in the score race: the non-additive defer REMOVED
-            // every overpower row from comparison instead of outscoring it. The -100
-            // add above still applies; only the defer is skipped.
-            // if (facts.plannedTargetOffered()) {
-            // The planned target remains a preference, not a categorical filter.
+            // Keep an exact safe parent plan coherent through the destination child.
+            // A genuinely dominant contested alternative remains in the score race.
+            if (facts.plannedTargetOffered()
+                    && !facts.dominantAlternative()) {
+                operations.add(PolicyOperation.defer(
+                        facts.actionId(),
+                        TraceRuleId.of("deploy-plan-target-coherence"),
+                        TraceDomainId.DEPLOY_SEQUENCING,
+                        TraceOutputKind.ORDERING, 0.0f,
+                        "Exact planned destination "
+                                + facts.plannedTargetName()
+                                + " remains offered"));
+            }
         }
         return new PolicyResult("DEPLOY_PLAN_DESTINATION_POLICY", operations);
     }

@@ -41,6 +41,7 @@ public final class ShieldFacts {
                                   int ownBattlegroundCount,
                                   boolean opponentCanDrainThreePlus,
                                   boolean opponentDrainsNonBattleground,
+                                  boolean battleOrderPlanLive,
                                   boolean battleOrderPlanEquivalentOnTable,
                                   boolean nonBattlegroundShieldWindowLive) {
         public FourthSlotFacts(
@@ -54,7 +55,7 @@ public final class ShieldFacts {
             this(occupiesBothTheaters, occupiesAnyBattleground,
                     opponentBattlegroundCount, opponentHasDrainBonus,
                     ownBattlegroundCount, opponentCanDrainThreePlus,
-                    opponentDrainsNonBattleground, false,
+                    opponentDrainsNonBattleground, occupiesBothTheaters, false,
                     occupiesAnyBattleground && opponentBattlegroundCount < 2);
         }
 
@@ -70,9 +71,27 @@ public final class ShieldFacts {
             this(occupiesBothTheaters, occupiesAnyBattleground,
                     opponentBattlegroundCount, opponentHasDrainBonus,
                     ownBattlegroundCount, opponentCanDrainThreePlus,
-                    opponentDrainsNonBattleground,
+                    opponentDrainsNonBattleground, occupiesBothTheaters,
                     battleOrderPlanEquivalentOnTable,
                     occupiesAnyBattleground && opponentBattlegroundCount < 2);
+        }
+
+        public FourthSlotFacts(
+                boolean occupiesBothTheaters,
+                boolean occupiesAnyBattleground,
+                int opponentBattlegroundCount,
+                boolean opponentHasDrainBonus,
+                int ownBattlegroundCount,
+                boolean opponentCanDrainThreePlus,
+                boolean opponentDrainsNonBattleground,
+                boolean battleOrderPlanEquivalentOnTable,
+                boolean nonBattlegroundShieldWindowLive) {
+            this(occupiesBothTheaters, occupiesAnyBattleground,
+                    opponentBattlegroundCount, opponentHasDrainBonus,
+                    ownBattlegroundCount, opponentCanDrainThreePlus,
+                    opponentDrainsNonBattleground, occupiesBothTheaters,
+                    battleOrderPlanEquivalentOnTable,
+                    nonBattlegroundShieldWindowLive);
         }
     }
 
@@ -82,7 +101,7 @@ public final class ShieldFacts {
                                                   String playerId) {
         if (gs == null || game == null || playerId == null) {
             return new FourthSlotFacts(false, false, 0, false,
-                    0, false, false, false, false);
+                    0, false, false, false, false, false);
         }
 
         boolean bothTheaters = occupiesBothTheaters(game, playerId);
@@ -130,7 +149,8 @@ public final class ShieldFacts {
                 }
                 if (opponent != null) {
                     try {
-                        float drain = modifiers.getForceDrainAmount(gs, location, opponent);
+                        float drain = ForceDrainProjection.projectedDamage(
+                                gs, game, location, opponent);
                         boolean controlsForDrain =
                                 com.gempukku.swccgo.filters.Filters
                                         .controlsForForceDrain(opponent)
@@ -163,10 +183,15 @@ public final class ShieldFacts {
             LOG.debug("V107 scan error: {}", e.getMessage());
         }
 
+        boolean equivalentOnTable = battleOrderPlanEquivalentOnTable(gs);
+        boolean battleOrderPlanLive = battleOrderLive(
+                game, playerId,
+                ForceDrainProjection.netDamageBalance(
+                        gs, game, playerId) >= 2);
         return new FourthSlotFacts(bothTheaters, anyBattleground,
                 opponentBattlegrounds, false, ownBattlegrounds,
                 opponentCanDrainThreePlus, opponentDrainsNonBattleground,
-                battleOrderPlanEquivalentOnTable(gs),
+                battleOrderPlanLive, equivalentOnTable,
                 anyCardTextBattleground && opponentCardTextBattlegrounds < 2);
     }
 
@@ -309,16 +334,15 @@ public final class ShieldFacts {
     }
 
     /**
-     * Battle Order / Battle Plan may be played only after we occupy both a
-     * battleground site and system, and only while the opponent still lacks
-     * that same exemption. The out-drain fact remains in the stable signature
-     * for existing callers, but it may not bypass the deployment prerequisite.
+     * Battle Order / Battle Plan is live while the opponent lacks its
+     * two-theater tax exemption and either we are exempt or their projected
+     * drain lead is large enough to justify accepting the symmetric tax.
      */
     public static boolean battleOrderLive(SwccgGame game, String playerId,
                                           boolean opponentOutDrainsByTwoPlus) {
-        return occupiesBothTheaters(game, playerId)
-                && opponentLacksBothTheaters(
-                    game, playerId);
+        return opponentLacksBothTheaters(game, playerId)
+                && (occupiesBothTheaters(game, playerId)
+                    || opponentOutDrainsByTwoPlus);
     }
 
     /**
