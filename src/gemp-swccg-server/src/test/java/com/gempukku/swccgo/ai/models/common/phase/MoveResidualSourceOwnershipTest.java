@@ -179,6 +179,22 @@ public class MoveResidualSourceOwnershipTest {
         assertTrue(actionText.contains(
                 "if (pcLoc != embarkLoc) continue;"));
         assertTrue(actionText.contains(
+                ".isStormtrooperFamily(embarkGame, embarker)"));
+        assertTrue(actionText.contains(
+                "embarkerStormtrooper\n"
+                        + "                            && cat == com.gempukku.swccgo.common.CardCategory.STARSHIP"));
+        assertTrue(actionText.contains(
+                ".readExactPilotAssignmentFacts("));
+        assertTrue(actionText.contains(
+                ".evaluateExactPilotAssignment(facts)"));
+        assertTrue(actionText.contains(
+                "Filters.hasAvailablePilotCapacity(embarker)"));
+        assertTrue(actionText.contains(
+                "Filters.hasAvailablePassengerCapacity(embarker)"));
+        assertTrue(actionText.contains(
+                "blockedStarship != null\n"
+                        + "                        && !groundVehicleAlternative"));
+        assertTrue(actionText.contains(
                 "if (unmannedTitle == null) {\n"
                         + "                        unmannedTitle = pc.getTitle();"));
         assertTrue(actionText.contains(
@@ -190,6 +206,17 @@ public class MoveResidualSourceOwnershipTest {
 
         assertTrue(selection.contains(
                 "catch (Exception fsSplitE) { /* fail-open */ }"));
+        String embarkTarget = between(selection,
+                "private List<EvaluatedAction>\n"
+                        + "            evaluateObjectiveEmbarkTarget(",
+                "private void applyMoveBattlegroundPolicy(");
+        assertTrue(embarkTarget.contains(
+                ".readExactPilotAssignmentFacts("));
+        assertTrue(embarkTarget.contains(
+                ".evaluateExactPilotAssignment(facts)"));
+        assertTrue(embarkTarget.contains(
+                "embarker, target,\n"
+                        + "                        objectiveTarget"));
         assertTrue(selection.contains(
                 "catch (Exception e) { /* ignore */ }"));
         assertTrue(selection.contains(

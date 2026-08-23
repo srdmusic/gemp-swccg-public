@@ -1870,3 +1870,40 @@ errors 0; skipped 0; 18 side-aware pull consumers per bot; 12 ATE consumers
 per bot; 2 Krennic printings positive; 2 negative controls negative; 4 unique
 terminal Here/There DB titles preserved; 0 lowercase-title collisions; 0 new
 type-by-title violations; 0 correction helper symbols in live web.jar; HTTP 200.
+
+## 2026-08-23 00:21 PDT - V299 exact pilot assignment (AI evaluator edit) -> PASS
+
+1. SCOPE AND STATE: PASS. Branch
+`codex/rando-space-ability-four-2026-08-22` remained at base
+`16ff65137770c77c295fefe637da7a7ee409e026` during review. Nineteen production
+and test files were modified before records. No package, deployment, database,
+server, or push action occurred.
+
+2. ACTUAL CARD SOURCE: PASS. Exact fixtures cover Luke, Solo, both Chewbaccas,
+Thrawn, Neimoidian Pilot, Piett, Avarik, TK-422, Dooku, Ozzel, Devastator,
+Executor, and Ket Maliss. Ket's +2 modifier is correctly read from the
+always-on hook. Prospective reads do not move or attach cards, and unsafe or
+attachment-dependent evaluator paths fail open.
+
+3. POLICY BOUNDARIES: PASS. Exact added power, ability-four buddy progress,
+initial and orphan re-pilots, matching and named routes, objective exceptions,
+Stormtrooper ground duty, vehicle fallback, zero-power Star Destroyer
+deferral, terminal defense, and mandatory fallback are preserved.
+
+4. ROUTE AND MIRROR COVERAGE: PASS. Parent, child, simultaneous, planner, and
+embark routes call the shared policy. All four Rando and Chosen One source
+pairs match after package normalization. Compiled bytecode contains the
+expected route calls and all three V299 policy markers.
+
+5. TEST AND COMPILE EVIDENCE: PASS. Independent current-snapshot tests passed
+186/0/0/0. The main focused and impacted ring passed 153/0/0/0. Server-reactor
+compile, diff check, ownership checks, and forbidden title-typing scan passed.
+The 450-test broad ring's one stale source assertion and four extra Endor test
+failures were reproduced exactly on untouched base, so they are not V299
+regressions.
+
+NUMBERS: 19 production and test files before records; +1139/-131 before
+records; focused 153/0/0/0; independent 186/0/0/0; broad 450/1/0/0 with 1/1
+base reproduction; extra Endor 52/4/0/0 with 4/4 base reproduction; compile 0;
+diff-check 0; mirror mismatches 0; type-by-title violations 0; package 0;
+deployments 0; pushes 0. Proof ceiling SOURCE_TESTED.

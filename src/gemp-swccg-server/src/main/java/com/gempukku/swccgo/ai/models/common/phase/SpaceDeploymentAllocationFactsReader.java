@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-/** Engine-backed V298 fact adapter shared by Rando and Chosen One. */
+/** Engine-backed space-allocation and pilot facts shared by both bots. */
 public final class SpaceDeploymentAllocationFactsReader {
     private SpaceDeploymentAllocationFactsReader() {
     }
@@ -190,6 +190,30 @@ public final class SpaceDeploymentAllocationFactsReader {
         }
     }
 
+    public static boolean isStarDestroyer(
+            SwccgGame game, PhysicalCard ship) {
+        if (game == null || game.getGameState() == null
+                || ship == null) return false;
+        try {
+            return Filters.Star_Destroyer.accepts(
+                    game.getGameState(), game.getModifiersQuerying(), ship);
+        } catch (RuntimeException unavailable) {
+            return false;
+        }
+    }
+
+    public static boolean isStormtrooperFamily(
+            SwccgGame game, PhysicalCard pilot) {
+        if (game == null || game.getGameState() == null
+                || pilot == null) return false;
+        try {
+            return Filters.stormtrooper.accepts(
+                    game.getGameState(), game.getModifiersQuerying(), pilot);
+        } catch (RuntimeException unavailable) {
+            return false;
+        }
+    }
+
     /** Null means the card-source modifier list could not be read. */
     public static Boolean readsAddsPowerWhenPiloting(
             SwccgGame game, PhysicalCard pilot) {
@@ -197,8 +221,7 @@ public final class SpaceDeploymentAllocationFactsReader {
                 || pilot.getBlueprint() == null) return null;
         try {
             List<com.gempukku.swccgo.logic.modifiers.Modifier> modifiers =
-                    pilot.getBlueprint()
-                            .getWhileInPlayModifiers(game, pilot);
+                    readProspectivePilotModifiers(game, pilot);
             if (modifiers == null) return null;
             return modifiers.stream()
                     .anyMatch(modifier -> modifier
@@ -208,13 +231,163 @@ public final class SpaceDeploymentAllocationFactsReader {
         }
     }
 
+    /** Null means exact intrinsic power cannot be projected safely. */
+    public static Float powerAddedIfPiloting(
+            SwccgGame game, PhysicalCard pilot, PhysicalCard shipOrVehicle) {
+        if (game == null || game.getGameState() == null
+                || pilot == null || pilot.getBlueprint() == null
+                || shipOrVehicle == null) return null;
+        try {
+            List<com.gempukku.swccgo.logic.modifiers.Modifier> modifiers =
+                    readProspectivePilotModifiers(game, pilot);
+            if (modifiers == null) return null;
+            float total = 0.0f;
+            for (com.gempukku.swccgo.logic.modifiers.Modifier modifier
+                    : modifiers) {
+                if (modifier instanceof AddsPowerToPilotedBySelfModifier) {
+                    Float amount = ((AddsPowerToPilotedBySelfModifier) modifier)
+                            .getProspectiveIntrinsicPowerModifier(
+                                    game.getGameState(),
+                                    game.getModifiersQuerying(),
+                                    shipOrVehicle);
+                    if (amount == null) return null;
+                    total += amount;
+                    if (!Float.isFinite(total)) return null;
+                }
+            }
+            return total;
+        } catch (RuntimeException unavailable) {
+            return null;
+        }
+    }
+
+    private static List<com.gempukku.swccgo.logic.modifiers.Modifier>
+            readProspectivePilotModifiers(
+                    SwccgGame game, PhysicalCard pilot) {
+        List<com.gempukku.swccgo.logic.modifiers.Modifier> alwaysOn =
+                pilot.getBlueprint().getAlwaysOnModifiers(game, pilot);
+        List<com.gempukku.swccgo.logic.modifiers.Modifier> whileInPlay =
+                pilot.getBlueprint().getWhileInPlayModifiers(game, pilot);
+        if (alwaysOn == null || whileInPlay == null) return null;
+        List<com.gempukku.swccgo.logic.modifiers.Modifier> modifiers =
+                new ArrayList<>(alwaysOn.size() + whileInPlay.size());
+        modifiers.addAll(alwaysOn);
+        modifiers.addAll(whileInPlay);
+        return modifiers;
+    }
+
+    public static Optional<DeployPilotShipPolicy.ExactPilotAssignmentFacts>
+            readExactPilotAssignmentFacts(
+                    String actionId, SwccgGame game, PhysicalCard pilot,
+                    PhysicalCard shipOrVehicle,
+                    boolean specificallyReferencesDestination) {
+        if (game == null || game.getGameState() == null
+                || pilot == null || pilot.getBlueprint() == null
+                || shipOrVehicle == null
+                || shipOrVehicle.getBlueprint() == null) {
+            return Optional.empty();
+        }
+        CardCategory destinationCategory =
+                shipOrVehicle.getBlueprint().getCardCategory();
+        if (pilot.getBlueprint().getCardCategory() != CardCategory.CHARACTER
+                || (destinationCategory != CardCategory.STARSHIP
+                    && destinationCategory != CardCategory.VEHICLE)) {
+            return Optional.empty();
+        }
+        boolean destinationStarDestroyer;
+        boolean stormtrooperFamily;
+        boolean matchingPilot;
+        boolean destinationNeedsPilot;
+        try {
+            destinationStarDestroyer = Filters.Star_Destroyer.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    shipOrVehicle);
+            stormtrooperFamily = Filters.stormtrooper.accepts(
+                    game.getGameState(), game.getModifiersQuerying(), pilot);
+            matchingPilot = game.getModifiersQuerying().isMatchingPair(
+                    game.getGameState(), pilot, shipOrVehicle);
+            destinationNeedsPilot = !Filters.piloted.accepts(
+                    game.getGameState(), game.getModifiersQuerying(),
+                    shipOrVehicle);
+        } catch (RuntimeException unavailable) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                        actionId,
+                        pilot.getTitle(), shipOrVehicle.getTitle(),
+                        destinationCategory == CardCategory.STARSHIP,
+                        destinationStarDestroyer,
+                        stormtrooperFamily,
+                        matchingPilot,
+                        specificallyReferencesDestination,
+                        destinationNeedsPilot,
+                        abilityFourBuddyProgress(
+                                game, pilot, shipOrVehicle),
+                        powerAddedIfPiloting(game, pilot, shipOrVehicle)));
+    }
+
+    /** Null means the exact ability projection could not be read safely. */
+    private static Boolean abilityFourBuddyProgress(
+            SwccgGame game, PhysicalCard pilot,
+            PhysicalCard shipOrVehicle) {
+        if (shipOrVehicle.getBlueprint().getCardCategory()
+                != CardCategory.STARSHIP || pilot.getOwner() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = game.getGameState();
+            float pilotAbility = game.getModifiersQuerying()
+                    .getAbility(gameState, pilot, true);
+            PhysicalCard spaceLocation = resolveSpaceLocation(
+                    game, gameState, shipOrVehicle);
+            float currentAbility;
+            if (spaceLocation != null) {
+                currentAbility = game.getModifiersQuerying()
+                        .getTotalAbilityAtLocation(
+                                gameState, pilot.getOwner(),
+                                spaceLocation);
+                if (shipOrVehicle.getZone() == null
+                        || !shipOrVehicle.getZone().isInPlay()) {
+                    currentAbility += game.getModifiersQuerying()
+                            .getAbility(gameState, shipOrVehicle, true);
+                }
+            } else {
+                currentAbility = game.getModifiersQuerying()
+                        .getAbility(gameState, shipOrVehicle, true);
+            }
+            if (!Float.isFinite(currentAbility)
+                    || !Float.isFinite(pilotAbility)) {
+                return null;
+            }
+            return currentAbility < 4.0f && pilotAbility > 0.0f;
+        } catch (RuntimeException unavailable) {
+            return null;
+        }
+    }
+
+    public static boolean isPlannerPilotEligible(
+            SwccgGame game, PhysicalCard pilot, PhysicalCard ship) {
+        Optional<DeployPilotShipPolicy.ExactPilotAssignmentFacts> facts =
+                readExactPilotAssignmentFacts(
+                        "planner-pilot", game, pilot, ship, false);
+        if (facts.isEmpty()) return true;
+        return DeployPilotShipPolicy.evaluateExactPilotAssignment(facts.get())
+                .operations().stream().noneMatch(operation ->
+                        operation.kind()
+                                == com.gempukku.swccgo.ai.models.common.policy
+                                        .PolicyOperationKind.DEFER);
+    }
+
     public static int plannerPilotQualityTier(
             SwccgGame game, PhysicalCard pilot, PhysicalCard ship) {
+        if (!isPlannerPilotEligible(game, pilot, ship)) {
+            return Integer.MIN_VALUE;
+        }
         return DeployPilotShipPolicy.plannerPilotQualityTier(
                 new DeployPilotShipPolicy.PlannerPilotQualityFacts(
                         isMatchingPilot(game, pilot, ship),
-                        Boolean.TRUE.equals(
-                                readsAddsPowerWhenPiloting(game, pilot))));
+                        powerAddedIfPiloting(game, pilot, ship)));
     }
 
     private static Optional<SpaceDeploymentAllocationPolicy.Evaluation>

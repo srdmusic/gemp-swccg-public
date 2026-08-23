@@ -380,18 +380,6 @@ public final class DeployPilotShipPolicy {
                     "DEPLOY_SIMULTANEOUS_PILOT_CHOICE_POLICY",
                     operations);
         }
-        if (!facts.matchingPilot()
-                && !facts.addsPowerWhenPiloting()
-                && facts.strongGroundBody()) {
-            operations.add(PolicyOperation.defer(
-                    facts.actionId(),
-                    TraceRuleId.of("V298-zero-power-pilot"),
-                    TraceDomainId.DEPLOY_ATTACH,
-                    TraceOutputKind.VETO,
-                    -500.0f,
-                    "V298 PILOT QUALITY: strong ground character adds no power when piloting "
-                            + facts.shipName()));
-        }
         if (facts.plannedPilot()) {
             addAttach(operations, facts.actionId(), "pilot-plan-match",
                     TraceOutputKind.ORDERING, 200.0f,
@@ -414,12 +402,61 @@ public final class DeployPilotShipPolicy {
                         "Matching pilot for " + facts.shipName() + "!");
             }
         }
-        if (facts.addsPowerWhenPiloting()) {
-            addAttach(operations, facts.actionId(), "V298-pilot-power",
-                    TraceOutputKind.ORDERING, 100.0f,
-                    "V298 PILOT QUALITY: actual card source adds power when piloting");
-        }
         return new PolicyResult("DEPLOY_SIMULTANEOUS_PILOT_CHOICE_POLICY", operations);
+    }
+
+    public static PolicyResult evaluateExactPilotAssignment(
+            ExactPilotAssignmentFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (facts.destinationStarship() && facts.stormtrooperFamily()) {
+            operations.add(PolicyOperation.defer(
+                    facts.actionId(),
+                    TraceRuleId.of("V299-stormtrooper-ground-duty"),
+                    TraceDomainId.DEPLOY_ATTACH,
+                    TraceOutputKind.VETO,
+                    -1000.0f,
+                    "V299 PILOT ROLE: " + facts.pilotName()
+                            + " stays ground-side for vehicles, not "
+                            + facts.destinationName()));
+            return new PolicyResult(
+                    "DEPLOY_EXACT_PILOT_ASSIGNMENT_POLICY", operations);
+        }
+        if (facts.destinationStarDestroyer()
+                && facts.powerAddedWhenPiloting() != null
+                && Float.isFinite(facts.powerAddedWhenPiloting())
+                && facts.powerAddedWhenPiloting() <= 0.0f
+                && !facts.matchingPilot()
+                && !facts.specificallyReferencesDestination()
+                && !facts.destinationNeedsPilot()
+                && Boolean.FALSE.equals(
+                        facts.abilityFourBuddyProgress())) {
+            operations.add(PolicyOperation.defer(
+                    facts.actionId(),
+                    TraceRuleId.of("V299-zero-power-star-destroyer"),
+                    TraceDomainId.DEPLOY_ATTACH,
+                    TraceOutputKind.VETO,
+                    -800.0f,
+                    "V299 PILOT ROLE: " + facts.pilotName()
+                            + " adds no power and has no specific role aboard "
+                            + facts.destinationName()));
+            return new PolicyResult(
+                    "DEPLOY_EXACT_PILOT_ASSIGNMENT_POLICY", operations);
+        }
+        if (facts.powerAddedWhenPiloting() != null
+                && Float.isFinite(facts.powerAddedWhenPiloting())
+                && facts.powerAddedWhenPiloting() > 0.0f) {
+            addAttach(operations, facts.actionId(), "V299-pilot-power",
+                    TraceOutputKind.ORDERING,
+                    facts.powerAddedWhenPiloting() * 50.0f,
+                    String.format(
+                            "V299 PILOT POWER: %s adds %.0f to %s",
+                            facts.pilotName(),
+                            facts.powerAddedWhenPiloting(),
+                            facts.destinationName()));
+        }
+        return new PolicyResult(
+                "DEPLOY_EXACT_PILOT_ASSIGNMENT_POLICY", operations);
     }
 
     private static void addPilotQuality(List<PolicyOperation> operations,
@@ -566,14 +603,66 @@ public final class DeployPilotShipPolicy {
 
     public record PlannerPilotQualityFacts(
             boolean matchingPilot,
-            boolean addsPowerWhenPiloting) {
+            Float powerAddedWhenPiloting) {
     }
 
     public static int plannerPilotQualityTier(
             PlannerPilotQualityFacts facts) {
         Objects.requireNonNull(facts, "facts");
-        return (facts.addsPowerWhenPiloting() ? 2 : 0)
-                + (facts.matchingPilot() ? 1 : 0);
+        int powerScore = facts.powerAddedWhenPiloting() == null
+                || !Float.isFinite(facts.powerAddedWhenPiloting())
+                ? 0 : Math.round(facts.powerAddedWhenPiloting() * 100.0f);
+        return powerScore + (facts.matchingPilot() ? 25 : 0);
+    }
+
+    public record ExactPilotAssignmentFacts(
+            String actionId, String pilotName, String destinationName,
+            boolean destinationStarship,
+            boolean destinationStarDestroyer,
+            boolean stormtrooperFamily,
+            boolean matchingPilot,
+            boolean specificallyReferencesDestination,
+            boolean destinationNeedsPilot,
+            Boolean abilityFourBuddyProgress,
+            Float powerAddedWhenPiloting) {
+        public ExactPilotAssignmentFacts(
+                String actionId, String pilotName, String destinationName,
+                boolean destinationStarship,
+                boolean destinationStarDestroyer,
+                boolean stormtrooperFamily,
+                boolean matchingPilot,
+                boolean specificallyReferencesDestination,
+                Float powerAddedWhenPiloting) {
+            this(actionId, pilotName, destinationName,
+                    destinationStarship, destinationStarDestroyer,
+                    stormtrooperFamily, matchingPilot,
+                    specificallyReferencesDestination, false, false,
+                    powerAddedWhenPiloting);
+        }
+
+        public ExactPilotAssignmentFacts(
+                String actionId, String pilotName, String destinationName,
+                boolean destinationStarship,
+                boolean destinationStarDestroyer,
+                boolean stormtrooperFamily,
+                boolean matchingPilot,
+                boolean specificallyReferencesDestination,
+                boolean destinationNeedsPilot,
+                Float powerAddedWhenPiloting) {
+            this(actionId, pilotName, destinationName,
+                    destinationStarship, destinationStarDestroyer,
+                    stormtrooperFamily, matchingPilot,
+                    specificallyReferencesDestination,
+                    destinationNeedsPilot, false,
+                    powerAddedWhenPiloting);
+        }
+
+        public ExactPilotAssignmentFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            pilotName = pilotName == null ? "pilot" : pilotName;
+            destinationName = destinationName == null
+                    ? "destination" : destinationName;
+        }
     }
 
     public record ExecutorDestinationFacts(String actionId,
@@ -620,23 +709,12 @@ public final class DeployPilotShipPolicy {
     public record SimultaneousPilotChoiceFacts(
             String actionId, String shipName, boolean plannedPilot,
             Float deployCost, Float ability, boolean matchingPilot,
-            boolean reservedEopBunkerGarrison,
-            boolean addsPowerWhenPiloting,
-            boolean strongGroundBody) {
+            boolean reservedEopBunkerGarrison) {
         public SimultaneousPilotChoiceFacts(
                 String actionId, String shipName, boolean plannedPilot,
                 Float deployCost, Float ability, boolean matchingPilot) {
             this(actionId, shipName, plannedPilot, deployCost, ability,
-                    matchingPilot, false, false, false);
-        }
-
-        public SimultaneousPilotChoiceFacts(
-                String actionId, String shipName, boolean plannedPilot,
-                Float deployCost, Float ability, boolean matchingPilot,
-                boolean reservedEopBunkerGarrison) {
-            this(actionId, shipName, plannedPilot, deployCost, ability,
-                    matchingPilot, reservedEopBunkerGarrison,
-                    false, false);
+                    matchingPilot, false);
         }
 
         public SimultaneousPilotChoiceFacts {

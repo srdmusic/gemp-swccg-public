@@ -4863,8 +4863,15 @@ public class DeployEvaluator extends ActionEvaluator {
                                     for (PhysicalCard hc : vpHand) {
                                         if (hc == null || hc.getBlueprint() == null) continue;
                                         if (hc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                        if (!hc.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.PILOT)
-                                                && !hc.getBlueprint().hasKeyword(com.gempukku.swccgo.common.Keyword.TROOPER)) continue;
+                                        boolean hcPilotIcon = hc.getBlueprint().hasIcon(
+                                            com.gempukku.swccgo.common.Icon.PILOT);
+                                        boolean hcTrooper = hc.getBlueprint().hasKeyword(
+                                            com.gempukku.swccgo.common.Keyword.TROOPER);
+                                        boolean hcEligible = category == CardCategory.STARSHIP
+                                            ? hcPilotIcon && !SpaceDeploymentAllocationFactsReader
+                                                .isStormtrooperFamily(game, hc)
+                                            : hcPilotIcon || hcTrooper;
+                                        if (!hcEligible) continue;
                                         hasPilotInHand = true;
                                         // Affordability: can Rando pay for vehicle + this pilot
                                         // this turn? Use base deploy cost; matching-pilot reductions
@@ -4888,8 +4895,15 @@ public class DeployEvaluator extends ActionEvaluator {
                                                 || tc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
                                         com.gempukku.swccgo.common.Zone z = tc.getZone();
                                         if (z == null || !z.isInPlay()) continue;
-                                        if (tc.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.PILOT)
-                                                || tc.getBlueprint().hasKeyword(com.gempukku.swccgo.common.Keyword.TROOPER)) {
+                                        boolean tcPilotIcon = tc.getBlueprint().hasIcon(
+                                            com.gempukku.swccgo.common.Icon.PILOT);
+                                        boolean tcTrooper = tc.getBlueprint().hasKeyword(
+                                            com.gempukku.swccgo.common.Keyword.TROOPER);
+                                        boolean tcEligible = category == CardCategory.STARSHIP
+                                            ? tcPilotIcon && !SpaceDeploymentAllocationFactsReader
+                                                .isStormtrooperFamily(game, tc)
+                                            : tcPilotIcon || tcTrooper;
+                                        if (tcEligible) {
                                             hasFreePilotOnTable = true;
                                             break;
                                         }
@@ -4915,10 +4929,16 @@ public class DeployEvaluator extends ActionEvaluator {
                             Float pathBPower = (card.getBlueprint().hasPowerAttribute()
                                 ? card.getBlueprint().getPower() : null);
                             boolean pathBPowerOK = (pathBPower == null) || (pathBPower < 4f);
+                            boolean pathBPilotIcon = card.getBlueprint().hasIcon(
+                                com.gempukku.swccgo.common.Icon.PILOT);
+                            boolean pathBTrooper = card.getBlueprint().hasKeyword(
+                                com.gempukku.swccgo.common.Keyword.TROOPER);
+                            boolean pathBStormtrooper =
+                                SpaceDeploymentAllocationFactsReader
+                                    .isStormtrooperFamily(game, card);
                             if (category == CardCategory.CHARACTER
                                     && pathBPowerOK
-                                    && (card.getBlueprint().hasIcon(com.gempukku.swccgo.common.Icon.PILOT)
-                                        || card.getBlueprint().hasKeyword(com.gempukku.swccgo.common.Keyword.TROOPER))) {
+                                    && (pathBPilotIcon || pathBTrooper)) {
                                 v213DeployingPilotCandidate = true;
                                 String unmannedTitle = null;
                                 for (PhysicalCard tc : gameState.getAllPermanentCards()) {
@@ -4926,6 +4946,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                     if (tc.getBlueprint() == null
                                             || (tc.getBlueprint().getCardCategory() != CardCategory.VEHICLE
                                                 && tc.getBlueprint().getCardCategory() != CardCategory.STARSHIP)) continue;
+                                    if (tc.getBlueprint().getCardCategory() == CardCategory.STARSHIP
+                                            && (!pathBPilotIcon || pathBStormtrooper)) continue;
                                     com.gempukku.swccgo.common.Zone z = tc.getZone();
                                     if (z == null || !z.isInPlay()) continue;
                                     if (!com.gempukku.swccgo.filters.Filters.piloted.accepts(
@@ -5546,6 +5568,29 @@ public class DeployEvaluator extends ActionEvaluator {
                 ledger.register(evaluation.result());
                 PolicyOperationAdapter.apply(action, ledger);
             });
+        if (plannedInstruction != null
+                && plannedInstruction.getAboardShipCardId() != null) {
+            try {
+                PhysicalCard exactShip = context.getGameState().findCardById(
+                        Integer.parseInt(
+                                plannedInstruction.getAboardShipCardId()));
+                SpaceDeploymentAllocationFactsReader
+                    .readExactPilotAssignmentFacts(
+                        action.getActionId(), context.getGame(),
+                        deployingCard, exactShip, typedObjective)
+                    .ifPresent(facts -> {
+                        PolicyContributionLedger ledger =
+                                new PolicyContributionLedger(
+                                        "deploy-parent-v299-"
+                                                + action.getActionId());
+                        ledger.register(DeployPilotShipPolicy
+                                .evaluateExactPilotAssignment(facts));
+                        PolicyOperationAdapter.apply(action, ledger);
+                    });
+            } catch (NumberFormatException ignored) {
+                // Unknown planned destination remains fail-open.
+            }
+        }
     }
 
     /**

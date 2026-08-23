@@ -27,4 +27,9 @@ public class ConstantEvaluator extends BaseEvaluator {
     public float evaluateExpression(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard card, PhysicalCard targetCard) {
         return _value;
     }
+
+    @Override
+    public boolean supportsProspectiveCardEvaluation() {
+        return true;
+    }
 }

@@ -23,6 +23,8 @@ public class SpaceDeploymentAllocationSourceOwnershipTest {
                     "evaluators/CardSelectionEvaluator.java");
             String planner = botSource(bot,
                     "strategy/DeployPhasePlanner.java");
+            String actionText = botSource(bot,
+                    "evaluators/ActionTextEvaluator.java");
             String legacy = legacySource(bot);
 
             assertEquals(bot + ": parent deploy", 1,
@@ -41,6 +43,16 @@ public class SpaceDeploymentAllocationSourceOwnershipTest {
                     count(planner, ".plannerPilotQualityTier("));
             assertEquals(bot + ": all planner pilot seams", 3,
                     count(planner, "pilotQualityTier("));
+            assertEquals(bot + ": exact parent pilot assignment", 1,
+                    count(parent, "readExactPilotAssignmentFacts("));
+            assertEquals(bot + ": exact child, simultaneous, and embark assignments", 3,
+                    count(child, "readExactPilotAssignmentFacts("));
+            assertEquals(bot + ": exact planner eligibility seams", 2,
+                    count(planner, ".isPlannerPilotEligible("));
+            assertEquals(bot + ": planner intrinsic power owner", 1,
+                    count(planner, ".powerAddedIfPiloting("));
+            assertEquals(bot + ": embark starship bypass closed", 1,
+                    count(actionText, "readExactPilotAssignmentFacts("));
             String endor = slice(planner,
                     "private DeploymentPlan generateEopEndorSystemPlan(",
                     "private DeploymentPlan generateEopBunkerGarrisonPlan(");

@@ -11,4 +11,14 @@ public interface Evaluator {
     float evaluateExpression(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard cardAffected);
 
     float evaluateExpression(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard cardAffected, PhysicalCard otherCard);
+
+    /**
+     * True when evaluating against a proposed target does not require the
+     * source card to be attached to that target already. Implementations
+     * that inspect filters must also keep those filters independent of the
+     * proposed attachment relationship.
+     */
+    default boolean supportsProspectiveCardEvaluation() {
+        return false;
+    }
 }

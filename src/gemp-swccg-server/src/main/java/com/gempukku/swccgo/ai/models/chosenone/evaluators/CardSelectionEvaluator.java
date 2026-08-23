@@ -3665,6 +3665,27 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     || charGameText.contains("add 1 to force drain");
                             }
 
+                            boolean specificallyReferencesThisShip =
+                                gameTextReferencesThisShip
+                                && matchedShipName != null
+                                && !matchedShipName.equals("capital starship")
+                                && !matchedShipName.equals("star destroyer")
+                                && !matchedShipName.equals("super star destroyer");
+                            if (boardingPilot
+                                    && objectiveProgressDeployingCard != null) {
+                                SpaceDeploymentAllocationFactsReader
+                                    .readExactPilotAssignmentFacts(
+                                        action.getActionId(), game,
+                                        objectiveProgressDeployingCard,
+                                        location,
+                                        specificallyReferencesThisShip
+                                            || v298TypedSpaceObjectiveNeed)
+                                    .ifPresent(facts -> applyDeployPilotPolicy(
+                                        action,
+                                        DeployPilotShipPolicy
+                                            .evaluateExactPilotAssignment(facts)));
+                            }
+
                             DeployPilotShipPolicy.Evaluation boardingEvaluation =
                                 DeployPilotShipPolicy.evaluateShipBoarding(
                                     new DeployPilotShipPolicy.ShipBoardingFacts(
@@ -7398,13 +7419,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             Float pilotPower = null;
                             Float pilotDeployCost = null;
 
-                            // Adapter retains the exact blueprint read order.
+                            // No exact destination exists in this decision, so printed
+                            // ground power is not a ship-power contribution.
                             if (blueprint.hasAbilityAttribute()) {
                                 pilotAbility = blueprint.getAbility();
-                            }
-
-                            if (blueprint.hasPowerAttribute()) {
-                                pilotPower = blueprint.getPower();
                             }
 
                             // V43: Wrap in try-catch — some cards (Interrupts, Effects like
@@ -7454,17 +7472,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
         // Detect if the ship being piloted is a Star Destroyer (capital ship).
         // Only Imperial/First Order characters should pilot Star Destroyers.
-        boolean isStarDestroyerDeploy = decisionText != null &&
-            decisionText.toLowerCase(java.util.Locale.ROOT).contains("star destroyer");
+        boolean isStarDestroyerDeploy = simultaneousShip != null
+            ? SpaceDeploymentAllocationFactsReader.isStarDestroyer(
+                context.getGame(), simultaneousShip)
+            : decisionText != null && decisionText
+                .toLowerCase(java.util.Locale.ROOT)
+                .contains("star destroyer");
 
         // Check deploy plan for a planned pilot for this ship
         String plannedPilotBlueprintId = null;
+        boolean typedPilotObjectivePlan = false;
         Integer reservedEopGarrisonPermanentId = null;
         Integer reservedEopGarrisonCurrentId = null;
         DeployPhasePlanner planner = context.getDeployPhasePlanner();
         if (planner != null) {
             DeploymentPlan plan = planner.getCurrentPlan();
             if (plan != null) {
+                typedPilotObjectivePlan = plan.getReason() != null
+                    && (plan.getReason().toLowerCase(Locale.ROOT)
+                        .contains("objective")
+                        || plan.getReason().startsWith("EOP:"));
                 for (DeploymentInstruction instruction : plan.getInstructions()) {
                     // Check if this instruction is for a pilot boarding a ship
                     String aboardShipName = instruction.getAboardShipName();
@@ -7542,16 +7569,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             Float pilotDeployCost = null;
                             Float pilotAbility = null;
                             boolean matchingPilot = false;
-                            Boolean addsPowerWhenPiloting =
-                                    SpaceDeploymentAllocationFactsReader
-                                        .readsAddsPowerWhenPiloting(
-                                            context.getGame(), card);
-                            Float pilotPrintedPower = blueprint.hasPowerAttribute()
-                                    ? blueprint.getPower() : null;
-                            boolean strongGroundBody =
-                                    addsPowerWhenPiloting != null
-                                    && pilotPrintedPower != null
-                                    && pilotPrintedPower >= 4.0f;
 
                             if (simultaneousShip != null) {
                                 matchingPilot =
@@ -7574,15 +7591,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
 
+                            if (simultaneousShip != null) {
+                                final boolean exactObjectiveException =
+                                    plannedPilot && typedPilotObjectivePlan;
+                                SpaceDeploymentAllocationFactsReader
+                                    .readExactPilotAssignmentFacts(
+                                        action.getActionId(), context.getGame(),
+                                        card, simultaneousShip,
+                                        exactObjectiveException)
+                                    .ifPresent(facts -> applyDeployPilotPolicy(
+                                        action,
+                                        DeployPilotShipPolicy
+                                            .evaluateExactPilotAssignment(facts)));
+                            }
+
                             applyDeployPilotPolicy(action,
                                 DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(
                                     new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
                                         action.getActionId(), shipName, plannedPilot,
                                         pilotDeployCost, pilotAbility, matchingPilot,
-                                        reservedEopBunkerGarrison,
-                                        Boolean.TRUE.equals(
-                                                addsPowerWhenPiloting),
-                                        strongGroundBody)));
+                                        reservedEopBunkerGarrison)));
                             if (plannedPilot) {
                                 logger.info("   ✅ {} is the PLANNED pilot (+200)", title);
                             } else if (matchingPilot) {
@@ -10979,6 +11007,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         .advancesRequiredCardDeployPrerequisiteAt(
                             game, playerId, embarker,
                             target);
+            if (game != null && embarker != null && target != null) {
+                SpaceDeploymentAllocationFactsReader
+                    .readExactPilotAssignmentFacts(
+                        action.getActionId(), game, embarker, target,
+                        objectiveTarget)
+                    .ifPresent(facts -> applyDeployPilotPolicy(
+                        action,
+                        DeployPilotShipPolicy
+                            .evaluateExactPilotAssignment(facts)));
+            }
             applyCaptureMoveDestination(
                     context, action, embarker, target);
             if (objectiveTarget) {

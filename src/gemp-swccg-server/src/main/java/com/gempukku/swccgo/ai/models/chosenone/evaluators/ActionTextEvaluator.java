@@ -7,6 +7,7 @@ import com.gempukku.swccgo.ai.models.common.phase.BattleActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
@@ -39,6 +40,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFacts;
@@ -6505,6 +6507,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 return;
             }
             SwccgCardBlueprint embarkerBp = embarker.getBlueprint();
+            boolean embarkerStormtrooper =
+                SpaceDeploymentAllocationFactsReader
+                    .isStormtrooperFamily(embarkGame, embarker);
             boolean embarkerIsPilot =
                 embarkerBp.hasIcon(com.gempukku.swccgo.common.Icon.PILOT)
                 || embarkerBp.hasKeyword(com.gempukku.swccgo.common.Keyword.TROOPER);
@@ -6535,6 +6540,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
             String embarkPid = context.getPlayerId();
             String unmannedTitle = null;
             String objectiveEnablerTitle = null;
+            PhysicalCard blockedStarship = null;
+            boolean groundVehicleAlternative = false;
             for (com.gempukku.swccgo.game.PhysicalCard pc : embarkGs.getAllPermanentCards()) {
                 if (pc == null || !embarkPid.equals(pc.getOwner())) continue;
                 if (pc.getBlueprint() == null) continue;
@@ -6547,10 +6554,29 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         .getLocationThatCardIsAt(embarkGs, pc);
                 } catch (Exception ignore) { /* */ }
                 if (pcLoc != embarkLoc) continue;
+                if (embarkerStormtrooper
+                        && cat == com.gempukku.swccgo.common.CardCategory.VEHICLE) {
+                    try {
+                        groundVehicleAlternative = groundVehicleAlternative
+                            || Filters.or(
+                                Filters.hasAvailablePilotCapacity(embarker),
+                                Filters.hasAvailablePassengerCapacity(embarker))
+                                .accepts(embarkGs,
+                                    embarkGame.getModifiersQuerying(), pc);
+                    } catch (RuntimeException unavailable) {
+                        // Exact child choices remain the fail-open authority.
+                        groundVehicleAlternative = true;
+                    }
+                }
                 // Unmanned check via Filters.piloted.
                 boolean piloted = com.gempukku.swccgo.filters.Filters.piloted.accepts(
                     embarkGs, embarkGame.getModifiersQuerying(), pc);
                 if (!piloted) {
+                    if (embarkerStormtrooper
+                            && cat == com.gempukku.swccgo.common.CardCategory.STARSHIP) {
+                        if (blockedStarship == null) blockedStarship = pc;
+                        continue;
+                    }
                     if (unmannedTitle == null) {
                         unmannedTitle = pc.getTitle();
                     }
@@ -6573,6 +6599,23 @@ public class ActionTextEvaluator extends ActionEvaluator {
             } else {
                 applyEmbarkPolicy(action, true, true, true, embarkerPower,
                     true, false, false, embarker.getTitle(), null);
+                if (blockedStarship != null
+                        && !groundVehicleAlternative) {
+                    final PhysicalCard exactBlockedStarship = blockedStarship;
+                    final PhysicalCard exactEmbarker = embarker;
+                    SpaceDeploymentAllocationFactsReader
+                        .readExactPilotAssignmentFacts(
+                            action.getActionId(), embarkGame, exactEmbarker,
+                            exactBlockedStarship, false)
+                        .ifPresent(facts -> {
+                            PolicyContributionLedger ledger =
+                                new PolicyContributionLedger(
+                                    "embark-v299-" + action.getActionId());
+                            ledger.register(DeployPilotShipPolicy
+                                .evaluateExactPilotAssignment(facts));
+                            PolicyOperationAdapter.apply(action, ledger);
+                        });
+                }
             }
             if (objectiveEnablerTitle != null) {
                 addObjectiveContribution(action,

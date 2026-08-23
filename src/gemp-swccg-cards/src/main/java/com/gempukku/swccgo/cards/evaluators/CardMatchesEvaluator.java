@@ -63,4 +63,10 @@ public class CardMatchesEvaluator extends BaseEvaluator {
     public float evaluateExpression(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard self) {
         return Filters.and(_filters).accepts(gameState, modifiersQuerying, self) ? _matches.evaluateExpression(gameState, modifiersQuerying, self) : _default.evaluateExpression(gameState, modifiersQuerying, self);
     }
+
+    @Override
+    public boolean supportsProspectiveCardEvaluation() {
+        return _matches.supportsProspectiveCardEvaluation()
+                && _default.supportsProspectiveCardEvaluation();
+    }
 }

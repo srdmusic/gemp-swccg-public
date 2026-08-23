@@ -11390,3 +11390,70 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     jar, deployment, server start, restart, runtime mutation, game mutation,
     or push occurred. Proof stops at SOURCE_TESTED. Revert the local commit
     containing this entry to remove only V298.
+
+  ==== V299 (2026-08-23): exact pilot assignment and Stormtrooper ground duty ====
+
+    A row-level audit corrects V298's aggregate five-of-nine loss figure.
+    Seven of the nine boarding characters in the completed-loss matrix were
+    eventually forfeited, no boarded ship was lost, and the four affected
+    losses produced only four total space drains. Supplemental canceled DB
+    row 72314, recording 70jll8yaavkpyy8h, spent 17 Force on six characters
+    aboard permanent-piloted Devastator V without a space battle, move, or
+    loss. Rando also repeatedly offered zero-damage Tatooine-system drains
+    before flipping Imperial Entanglements, and Tarkin left an exact Jawa
+    Camp plan for Devastator. This is evidence for exact pilot allocation,
+    not a global prohibition on space.
+
+    The shared source reader projects each pilot's intrinsic power addition
+    against the exact ship or vehicle without attaching or moving either
+    card. Only evaluators that explicitly declare attachment-independent
+    prospective safety may run. Both always-on and while-in-play modifier
+    hooks are inspected. Actual source tests prove the following boundaries:
+    Luke 210_20 and Dooku 200_76 add 0; Solo 204_11, Thrawn 10_40, and TK-422
+    215_20 add 3; Chewbacca, Protector 10_3 adds 2 normally or 3 to Falcon;
+    Neimoidian Pilot 12_111 and Ket Maliss 601_17 add 2; Piett 215_22 adds 3
+    only to Executor; and Avarik 221_14 adds 3 only to a speeder bike.
+    Attachment-dependent Chewbacca 213_36, unsupported evaluators, missing
+    source, runtime failures, and non-finite results remain unknown and fail
+    open.
+
+    Proven added power scores +50 per point. A +2 pilot receives +100 and a
+    +3 pilot receives +150. Semantic Stormtrooper-family characters receive
+    categorical DEFER and -1000 from starships so they remain available for
+    ground vehicles. Once actual system ability 4 is satisfied, a proven
+    nonpositive, nonmatching, nonspecific pilot for an already-piloted Star
+    Destroyer receives categorical DEFER and -800. Before ability 4, an
+    actual ability buddy remains admissible. Exact matching and named-ship
+    relationships, objective routes, initial or orphan re-pilots, vehicle
+    assignments, terminal defenses, and mandatory fallback remain valid.
+    V299 retires only V298's coarse simultaneous strong-ground rule because
+    exact assignment now owns its exceptions; every other V298 boundary
+    remains.
+
+    The shared policy covers simultaneous packages, exact destination
+    children, planned parent assignments, both deploy planners, and legacy
+    embark parents. A parent embark action stays available when a legal
+    ground vehicle has pilot or passenger capacity, including an already-
+    piloted vehicle with spare capacity. Starship routes require a real pilot
+    and reject semantic Stormtroopers. Parent and child retain the same exact
+    destination. Rando and Chosen One are normalized mirrors.
+
+    The failure-first Ket Maliss regression failed before the reader fix and
+    passed afterward. The final 13-class focused and impacted ring passed
+    153/0/0/0. Independent current-snapshot verification passed 186/0/0/0
+    and returned PASS with no blockers. The intended 450-test broad ring had
+    one stale source-characterization failure that reproduced exactly on
+    untouched base 16ff65137770c77c295fefe637da7a7ee409e026. A separate
+    52-test Endor class had four failures that also reproduced 4/4 on that
+    base, so no unrelated production fix was added. Maven server compile,
+    compiled route and policy markers, exact mirror and ownership checks,
+    forbidden title-typing scan, diff check, and independent review passed.
+
+    Exact branch is codex/rando-space-ability-four-2026-08-22. Four shared
+    evaluator or modifier infrastructure files, ten AI production files,
+    five AI tests, the three required project records, and the verifier's
+    append-only history changed. No individual card blueprint, objective data,
+    deck data, database, package, jar, deployment, server start, restart,
+    runtime mutation, game mutation, or push occurred. Proof stops at
+    SOURCE_TESTED. Revert the local commit containing this entry to remove
+    only V299.

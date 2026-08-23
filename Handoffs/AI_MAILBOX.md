@@ -523,3 +523,17 @@ Scope and proof ceiling: the V298 path count remains eleven AI production files,
 Independent result: PASS with no blocker or warning. The bounded independent ring passed `31/0/0/0`; the final impacted report set remained `208/0/0/0`; pinned offline Corretto 21 reactor compile, exact mirror and source-ownership checks, card-source contracts, path scope, and `git diff --check` passed. Exactly eleven AI production files, six AI tests, and three required records are in scope.
 
 Proof ceiling: `SOURCE_TESTED`. No package, jar, deployment, server action, database action, game mutation, push, or replay firing occurred. The local commit containing these records is pending.
+
+## 2026-08-23 00:21 PT - Codex V299 exact pilot-assignment lane -> Alfred - RESOLVED
+
+Topic: exact ship-specific pilot power, semantic Stormtrooper ground duty, and post-ability-four Star Destroyer crew restraint are source-tested for Rando and Chosen One.
+
+Evidence correction: direct row audit supersedes V298's `5/9` aggregate. Seven of nine boarding characters in the completed-loss matrix were eventually forfeited, no boarded ship was lost, and the four affected losses produced four total space drains. Supplemental canceled DB row `72314`, recording `70jll8yaavkpyy8h`, spent 17 Force on six characters aboard permanent-piloted Devastator V without a space battle, move, or loss. Tarkin abandoned an exact Jawa Camp plan for Devastator.
+
+Decision: shared V299 reads intrinsic pilot power from actual card Java against the exact ship or vehicle, including disjoint always-on and while-in-play hooks. Unsafe, attachment-dependent, missing, non-finite, or failed reads remain unknown and fail open. Proven power adds `+50` per point. Semantic Stormtrooper-family characters categorically defer from starships with `-1000` but remain valid for vehicles. After actual ability 4, a proven zero-power, nonmatching, nonspecific pilot for an already-piloted Star Destroyer categorically defers with `-800`. Before 4, an actual ability buddy remains valid. Matching, named, objective, initial or orphan re-pilot, vehicle, terminal-defense, and mandatory-fallback routes remain valid. The exact policy replaces only V298's coarse simultaneous strong-ground rule.
+
+Routes: simultaneous, exact child, planned parent, both deploy planners, and legacy embark paths use the shared policy. Parent and child remain bound to the same destination. A legal ground vehicle with pilot or passenger capacity keeps the embark parent alive. Both bots are normalized mirrors.
+
+Verification: failure-first actual Ket Maliss `601_17` regression, final focused and impacted ring `153/0/0/0`, independent ring `186/0/0/0`, Maven compile, compiled markers, mirror and ownership checks, title-typing scan, diff check, and independent PASS all succeeded. The 450-test broad ring's lone stale source assertion reproduced on untouched base `16ff65137770c77c295fefe637da7a7ee409e026`; four extra Endor failures also reproduced `4/4` on that base. No unrelated fix was added.
+
+Scope: four shared evaluator or modifier infrastructure files, ten AI production files, five tests, the three required project records, and the verifier's append-only history. No individual card blueprint, objective or deck data, database, package, jar, deployment, server action, runtime mutation, game mutation, or push changed. Proof is `SOURCE_TESTED`; the local commit hash is pending.

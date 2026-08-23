@@ -1772,6 +1772,11 @@ public class DeployPhasePlanner {
                 }
             }
             for (CardInfo pilot : pilots) {
+                if (!SpaceDeploymentAllocationFactsReader
+                        .isPlannerPilotEligible(
+                                currentGame, pilot.card, ship.card)) {
+                    continue;
+                }
                 if (reservedBunkerGarrison != null
                         && isSamePhysicalCard(
                                 pilot.card, reservedBunkerGarrison.card)) {
@@ -1791,7 +1796,7 @@ public class DeployPhasePlanner {
                 EndorSystemPackage candidate = new EndorSystemPackage(
                         ship, pilot, pairCost,
                         shipAbility + pilotAbility,
-                        ship.power + pilot.power,
+                        ship.power + pilotAddedPower(pilot, ship.card),
                         pilotQualityTier(pilot, ship.card));
                 if (isBetterEndorSystemPackage(candidate, best)) {
                     best = candidate;
@@ -1818,6 +1823,8 @@ public class DeployPhasePlanner {
             pilotInstruction.setDeployCost(0);
             pilotInstruction.setAbilityContribution(
                     instructionAbilityContribution(best.pilot.card));
+            pilotInstruction.setPowerContribution(
+                    pilotAddedPower(best.pilot, best.ship.card));
             pilotInstruction.setAboardShipName(best.ship.name);
             pilotInstruction.setAboardShipBlueprintId(best.ship.blueprintId);
             pilotInstruction.setAboardShipCardId(
@@ -2051,11 +2058,17 @@ public class DeployPhasePlanner {
     private boolean isBetterEndorSystemPackage(
             EndorSystemPackage candidate,
             EndorSystemPackage current) {
+        int candidateCards = candidate.pilot == null ? 1 : 2;
+        int currentCards = current == null || current.pilot == null ? 1 : 2;
+        if (current != null && candidateCards == currentCards
+                && candidate.pilotQualityTier
+                        != current.pilotQualityTier) {
+            return candidate.pilotQualityTier
+                    > current.pilotQualityTier;
+        }
         if (current == null || candidate.cost != current.cost) {
             return current == null || candidate.cost < current.cost;
         }
-        int candidateCards = candidate.pilot == null ? 1 : 2;
-        int currentCards = current.pilot == null ? 1 : 2;
         if (candidateCards != currentCards) {
             return candidateCards < currentCards;
         }
@@ -2753,6 +2766,11 @@ public class DeployPhasePlanner {
         PilotPlanChoice best = null;
         for (CardInfo pilot : pilots) {
             if (!pilot.isPilot) continue;
+            if (!SpaceDeploymentAllocationFactsReader
+                    .isPlannerPilotEligible(
+                            currentGame, pilot.card, ship)) {
+                continue;
+            }
             Integer exactCost;
             if (simultaneousDeploy) {
                 if (simultaneousLocation == null
@@ -2786,6 +2804,13 @@ public class DeployPhasePlanner {
         return SpaceDeploymentAllocationFactsReader
                 .plannerPilotQualityTier(
                         currentGame, pilot.card, ship);
+    }
+
+    private int pilotAddedPower(CardInfo pilot, PhysicalCard ship) {
+        Float added = SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(currentGame, pilot.card, ship);
+        return added != null && Float.isFinite(added) && added > 0.0f
+                ? Math.round(added) : 0;
     }
 
     private boolean isBetterPilotPlanChoice(
@@ -2934,6 +2959,8 @@ public class DeployPhasePlanner {
             pilotInstruction.setDeployCost(0);
             pilotInstruction.setAbilityContribution(
                     instructionAbilityContribution(pilot.card));
+            pilotInstruction.setPowerContribution(
+                    pilotAddedPower(pilot, bestShip.card));
             pilotInstruction.setAboardShipName(bestShip.name);
             pilotInstruction.setAboardShipBlueprintId(
                     bestShip.blueprintId);
@@ -2984,7 +3011,8 @@ public class DeployPhasePlanner {
                 inst.setCardPermanentCardId(bestPilot.card.getPermanentCardId());
                 inst.setCardCurrentCardId(bestPilot.card.getCardId());
                 inst.setDeployCost(best.cost);
-                inst.setPowerContribution(bestPilot.power);
+                inst.setPowerContribution(
+                        pilotAddedPower(bestPilot, ship));
                 inst.setAbilityContribution(
                     instructionAbilityContribution(bestPilot.card));
                 inst.setAboardShipName(ship.getTitle());

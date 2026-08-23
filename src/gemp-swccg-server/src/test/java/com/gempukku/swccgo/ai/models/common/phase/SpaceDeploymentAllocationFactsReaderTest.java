@@ -4,6 +4,11 @@ import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.logic.evaluators.BaseEvaluator;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
+import com.gempukku.swccgo.game.state.GameState;
 import org.junit.Test;
 
 import java.lang.reflect.Constructor;
@@ -14,10 +19,11 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-/** Engine and actual-card-source contracts for V298 space allocation. */
+/** Engine and actual-card-source contracts for V298/V299 space allocation. */
 public class SpaceDeploymentAllocationFactsReaderTest {
 
     @Test
@@ -75,6 +81,9 @@ public class SpaceDeploymentAllocationFactsReaderTest {
         PhysicalCardImpl solo = scenario.GetLSCard("solo");
         PhysicalCardImpl chewie = scenario.GetLSCard("chewie");
         PhysicalCardImpl falcon = scenario.GetLSCard("falcon");
+        PhysicalCard chewieAttachment = chewie.getAttachedTo();
+        com.gempukku.swccgo.common.Zone chewieZone = chewie.getZone();
+        boolean chewieWasPilot = chewie.isPilotOf();
 
         assertFalse(SpaceDeploymentAllocationFactsReader
                 .readsAddsPowerWhenPiloting(scenario.game(), luke));
@@ -82,10 +91,46 @@ public class SpaceDeploymentAllocationFactsReaderTest {
                 .readsAddsPowerWhenPiloting(scenario.game(), solo));
         assertTrue(SpaceDeploymentAllocationFactsReader
                 .readsAddsPowerWhenPiloting(scenario.game(), chewie));
+        assertEquals(0.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(scenario.game(), luke, falcon), 0.0f);
+        assertEquals(3.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(scenario.game(), solo, falcon), 0.0f);
+        assertEquals(3.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(scenario.game(), chewie, falcon), 0.0f);
+        assertEquals(2.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(
+                        scenario.game(), chewie,
+                        scenario.GetDSCard("devastator")), 0.0f);
+        assertEquals(3.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(
+                        scenario.game(), scenario.GetLSCard("tk422"),
+                        falcon), 0.0f);
+        assertSame("Prospective reads must not attach the pilot",
+                chewieAttachment, chewie.getAttachedTo());
+        assertEquals(chewieZone, chewie.getZone());
+        assertEquals(chewieWasPilot, chewie.isPilotOf());
+        assertNull("Attachment-dependent evaluators must fail open",
+                SpaceDeploymentAllocationFactsReader.powerAddedIfPiloting(
+                        scenario.game(), scenario.GetLSCard("chewieDynamic"),
+                        falcon));
         assertFalse(SpaceDeploymentAllocationFactsReader.isMatchingPilot(
                 scenario.game(), luke, falcon));
         assertTrue(SpaceDeploymentAllocationFactsReader.isMatchingPilot(
                 scenario.game(), solo, falcon));
+        DeployPilotShipPolicy.ExactPilotAssignmentFacts lukeFalcon =
+                SpaceDeploymentAllocationFactsReader
+                        .readExactPilotAssignmentFacts(
+                                "luke-falcon", scenario.game(), luke,
+                                falcon, false)
+                        .orElseThrow();
+        assertTrue("An unpiloted Falcon preserves the initial-pilot fallback",
+                lukeFalcon.destinationNeedsPilot());
+        assertFalse(DeployPilotShipPolicy
+                .evaluateExactPilotAssignment(lukeFalcon)
+                .operations().stream().anyMatch(operation ->
+                        operation.kind()
+                                == com.gempukku.swccgo.ai.models.common.policy
+                                        .PolicyOperationKind.DEFER));
         assertTrue(SpaceDeploymentAllocationFactsReader
                 .plannerPilotQualityTier(
                         scenario.game(), solo, falcon)
@@ -102,6 +147,196 @@ public class SpaceDeploymentAllocationFactsReaderTest {
                 .findSimultaneousShip(
                         scenario.gameState(),
                         "The Falcon, Junkyard Garbage"));
+    }
+
+    /** Replay-shaped regression for supplemental DB 72314 at Tatooine. */
+    @Test
+    public void db72314DevastatorCrewUsesExactPowerAndKeepsScoutsGrounded() {
+        VirtualTableScenario scenario = scenario();
+        PhysicalCardImpl devastator = scenario.GetDSCard("devastator");
+        PhysicalCardImpl executor = scenario.GetDSCard("executor");
+        PhysicalCardImpl speederBike = scenario.GetDSCard("speederBike");
+        PhysicalCardImpl thrawn = scenario.GetDSCard("thrawn");
+        PhysicalCardImpl neimoidian = scenario.GetDSCard("neimoidian");
+        PhysicalCardImpl avarik = scenario.GetDSCard("avarik");
+        PhysicalCardImpl dooku = scenario.GetDSCard("dooku");
+        PhysicalCardImpl piett = scenario.GetDSCard("piett");
+        PhysicalCardImpl ozzel = scenario.GetDSCard("ozzel");
+        PhysicalCardImpl ket = scenario.GetDSCard("ket");
+        PhysicalCardImpl tk422 = scenario.GetLSCard("tk422");
+
+        assertEquals(3.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(scenario.game(), thrawn, devastator),
+                0.0f);
+        assertEquals(2.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(
+                        scenario.game(), neimoidian, devastator), 0.0f);
+        assertEquals(0.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(scenario.game(), dooku, devastator),
+                0.0f);
+        assertEquals(0.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(scenario.game(), avarik, devastator),
+                0.0f);
+        assertEquals(3.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(scenario.game(), avarik, speederBike),
+                0.0f);
+        assertEquals(0.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(scenario.game(), piett, devastator),
+                0.0f);
+        assertEquals(3.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(scenario.game(), piett, executor),
+                0.0f);
+        assertTrue("Ket's printed pilot bonus is always-on card source",
+                SpaceDeploymentAllocationFactsReader
+                        .readsAddsPowerWhenPiloting(scenario.game(), ket));
+        assertEquals(2.0f, SpaceDeploymentAllocationFactsReader
+                .powerAddedIfPiloting(scenario.game(), ket, devastator),
+                0.0f);
+
+        assertTrue(SpaceDeploymentAllocationFactsReader
+                .isStarDestroyer(scenario.game(), devastator));
+        assertTrue(SpaceDeploymentAllocationFactsReader
+                .isStormtrooperFamily(scenario.game(), avarik));
+        assertTrue(SpaceDeploymentAllocationFactsReader
+                .isStormtrooperFamily(scenario.game(), tk422));
+        assertFalse(SpaceDeploymentAllocationFactsReader
+                .isStormtrooperFamily(scenario.game(), thrawn));
+        assertEquals(300, SpaceDeploymentAllocationFactsReader
+                .plannerPilotQualityTier(
+                        scenario.game(), thrawn, devastator));
+        assertEquals(200, SpaceDeploymentAllocationFactsReader
+                .plannerPilotQualityTier(
+                        scenario.game(), neimoidian, devastator));
+        assertEquals(200, SpaceDeploymentAllocationFactsReader
+                .plannerPilotQualityTier(
+                        scenario.game(), ket, devastator));
+        assertEquals(Integer.MIN_VALUE,
+                SpaceDeploymentAllocationFactsReader
+                        .plannerPilotQualityTier(
+                                scenario.game(), avarik, devastator));
+        assertEquals(0,
+                SpaceDeploymentAllocationFactsReader
+                        .plannerPilotQualityTier(
+                                scenario.game(), dooku, devastator));
+        DeployPilotShipPolicy.ExactPilotAssignmentFacts dookuBeforeFour =
+                SpaceDeploymentAllocationFactsReader
+                        .readExactPilotAssignmentFacts(
+                                "dooku-before-four", scenario.game(), dooku,
+                                devastator, false)
+                        .orElseThrow();
+        assertTrue("Permanent-pilot ability 2 still needs a buddy",
+                dookuBeforeFour.abilityFourBuddyProgress());
+        assertFalse(DeployPilotShipPolicy
+                .evaluateExactPilotAssignment(dookuBeforeFour)
+                .operations().stream().anyMatch(operation ->
+                        operation.kind()
+                                == com.gempukku.swccgo.ai.models.common.policy
+                                        .PolicyOperationKind.DEFER));
+
+        DeployPilotShipPolicy.ExactPilotAssignmentFacts avarikSpace =
+                SpaceDeploymentAllocationFactsReader
+                        .readExactPilotAssignmentFacts(
+                                "avarik-space", scenario.game(), avarik,
+                                devastator, false)
+                        .orElseThrow();
+        assertFalse("Devastator's permanent pilot closes the orphan fallback",
+                avarikSpace.destinationNeedsPilot());
+        assertTrue(DeployPilotShipPolicy
+                .evaluateExactPilotAssignment(avarikSpace)
+                .operations().stream().anyMatch(operation ->
+                        operation.kind()
+                                == com.gempukku.swccgo.ai.models.common.policy
+                                        .PolicyOperationKind.DEFER));
+
+        DeployPilotShipPolicy.ExactPilotAssignmentFacts avarikGround =
+                SpaceDeploymentAllocationFactsReader
+                        .readExactPilotAssignmentFacts(
+                                "avarik-ground", scenario.game(), avarik,
+                                speederBike, false)
+                        .orElseThrow();
+        assertFalse(DeployPilotShipPolicy
+                .evaluateExactPilotAssignment(avarikGround)
+                .operations().stream().anyMatch(operation ->
+                        operation.kind()
+                                == com.gempukku.swccgo.ai.models.common.policy
+                                        .PolicyOperationKind.DEFER));
+
+        PhysicalCardImpl system = scenario.GetDSStartingLocation();
+        scenario.MoveCardsToLocation(system, devastator);
+        scenario.BoardAsPilot(devastator, ozzel);
+        assertEquals(4.0f, scenario.game().getModifiersQuerying()
+                .getTotalAbilityAtLocation(
+                        scenario.gameState(), VirtualTableScenario.DS,
+                        system), 0.0f);
+        DeployPilotShipPolicy.ExactPilotAssignmentFacts dookuAfterFour =
+                SpaceDeploymentAllocationFactsReader
+                        .readExactPilotAssignmentFacts(
+                                "dooku-after-four", scenario.game(), dooku,
+                                devastator, false)
+                        .orElseThrow();
+        assertFalse(dookuAfterFour.abilityFourBuddyProgress());
+        assertTrue(DeployPilotShipPolicy
+                .evaluateExactPilotAssignment(dookuAfterFour)
+                .operations().stream().anyMatch(operation ->
+                        operation.kind()
+                                == com.gempukku.swccgo.ai.models.common.policy
+                                        .PolicyOperationKind.DEFER));
+        assertEquals(Integer.MIN_VALUE,
+                SpaceDeploymentAllocationFactsReader
+                        .plannerPilotQualityTier(
+                                scenario.game(), dooku, devastator));
+    }
+
+    @Test
+    public void rejectingTargetFilterProvesZeroBeforeUnsupportedEvaluator() {
+        VirtualTableScenario scenario = scenario();
+        AddsPowerToPilotedBySelfModifier modifier =
+                new AddsPowerToPilotedBySelfModifier(
+                        scenario.GetDSCard("avarik"),
+                        new BaseEvaluator() {
+                            @Override
+                            public float evaluateExpression(
+                                    GameState gameState,
+                                    ModifiersQuerying modifiersQuerying,
+                                    PhysicalCard affected) {
+                                return 99.0f;
+                            }
+                        },
+                        Filters.speeder_bike);
+
+        assertEquals(0.0f,
+                modifier.getProspectiveIntrinsicPowerModifier(
+                        scenario.gameState(),
+                        scenario.game().getModifiersQuerying(),
+                        scenario.GetDSCard("devastator")),
+                0.0f);
+        assertNull(modifier.getProspectiveIntrinsicPowerModifier(
+                scenario.gameState(),
+                scenario.game().getModifiersQuerying(),
+                scenario.GetDSCard("speederBike")));
+
+        AddsPowerToPilotedBySelfModifier nonFinite =
+                new AddsPowerToPilotedBySelfModifier(
+                        scenario.GetDSCard("thrawn"),
+                        new BaseEvaluator() {
+                            @Override
+                            public float evaluateExpression(
+                                    GameState gameState,
+                                    ModifiersQuerying modifiersQuerying,
+                                    PhysicalCard affected) {
+                                return Float.POSITIVE_INFINITY;
+                            }
+
+                            @Override
+                            public boolean supportsProspectiveCardEvaluation() {
+                                return true;
+                            }
+                        });
+        assertNull("Non-finite source values remain unknown",
+                nonFinite.getProspectiveIntrinsicPowerModifier(
+                        scenario.gameState(),
+                        scenario.game().getModifiersQuerying(),
+                        scenario.GetDSCard("devastator")));
     }
 
     @Test
@@ -230,8 +465,21 @@ public class SpaceDeploymentAllocationFactsReaderTest {
                     put("leia", "1_17");
                     put("solo", "204_11");
                     put("chewie", "10_3");
+                    put("chewieDynamic", "213_36");
+                    put("tk422", "215_20");
                 }},
-                new HashMap<>(),
+                new HashMap<>() {{
+                    put("devastator", "216_8");
+                    put("executor", "4_167");
+                    put("speederBike", "8_169");
+                    put("thrawn", "10_40");
+                    put("neimoidian", "12_111");
+                    put("avarik", "221_14");
+                    put("dooku", "200_76");
+                    put("piett", "215_22");
+                    put("ozzel", "3_82");
+                    put("ket", "601_17");
+                }},
                 10, 10,
                 StartingSetup.DefaultLSSpaceSystem,
                 StartingSetup.DefaultDSSpaceSystem,

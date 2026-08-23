@@ -186,38 +186,32 @@ public class DeployPilotShipPolicyTest {
     }
 
     @Test
-    public void replayLukeCannotBeatRealFalconPilotsOnRawAbility() {
+    public void coarseSimultaneousChoiceDoesNotOverrideExactPilotFacts() {
         DeployPilotShipPolicy.SimultaneousPilotChoiceFacts luke =
                 new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
                         "luke", "The Falcon, Junkyard Garbage", true,
-                        5.0f, 7.0f, false, false,
-                        false, true);
+                        5.0f, 7.0f, false, false);
         List<PolicyOperation> lukeOperations =
                 DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(luke)
                         .operations();
-        assertTrue(lukeOperations.stream().anyMatch(operation ->
-                operation.kind() == PolicyOperationKind.DEFER
-                        && "V298-zero-power-pilot".equals(
-                                operation.ruleArmId().id())));
+        assertFalse("The exact target policy owns zero-power eligibility",
+                lukeOperations.stream().anyMatch(operation ->
+                        operation.kind() == PolicyOperationKind.DEFER));
 
         DeployPilotShipPolicy.SimultaneousPilotChoiceFacts solo =
                 new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
                         "solo", "The Falcon, Junkyard Garbage", false,
-                        4.0f, 3.0f, true, false,
-                        true, true);
+                        4.0f, 3.0f, true, false);
         List<PolicyOperation> soloOperations =
                 DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(solo)
                         .operations();
         assertFalse(soloOperations.stream().anyMatch(operation ->
                 operation.kind() == PolicyOperationKind.DEFER));
-        assertTrue(soloOperations.stream().anyMatch(operation ->
-                "V298-pilot-power".equals(operation.ruleArmId().id())));
 
         DeployPilotShipPolicy.SimultaneousPilotChoiceFacts chewbacca =
                 new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
                         "chewie", "The Falcon, Junkyard Garbage", false,
-                        5.0f, 2.0f, false, false,
-                        true, true);
+                        5.0f, 2.0f, false, false);
         assertFalse(DeployPilotShipPolicy
                 .evaluateSimultaneousPilotChoice(chewbacca)
                 .operations().stream().anyMatch(operation ->
@@ -226,8 +220,7 @@ public class DeployPilotShipPolicyTest {
         DeployPilotShipPolicy.SimultaneousPilotChoiceFacts plannedMatching =
                 new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
                         "planned-rey", "The Falcon, Junkyard Garbage", true,
-                        null, null, true, false,
-                        false, true);
+                        null, null, true, false);
         assertFalse("A real matching pilot remains valid when planned",
                 DeployPilotShipPolicy
                         .evaluateSimultaneousPilotChoice(plannedMatching)
@@ -240,16 +233,126 @@ public class DeployPilotShipPolicyTest {
     public void plannerPilotQualityRanksPowerSourceBeforeRawAbility() {
         int luke = DeployPilotShipPolicy.plannerPilotQualityTier(
                 new DeployPilotShipPolicy.PlannerPilotQualityFacts(
-                        false, false));
+                        false, 0.0f));
         int solo = DeployPilotShipPolicy.plannerPilotQualityTier(
                 new DeployPilotShipPolicy.PlannerPilotQualityFacts(
-                        true, true));
+                        true, 3.0f));
         int chewie = DeployPilotShipPolicy.plannerPilotQualityTier(
                 new DeployPilotShipPolicy.PlannerPilotQualityFacts(
-                        true, true));
+                        true, 3.0f));
 
         assertTrue(solo > luke);
         assertTrue(chewie > luke);
+    }
+
+    @Test
+    public void exactPilotPowerRanksThreeAboveTwoAboveZero() {
+        List<PolicyOperation> three = DeployPilotShipPolicy
+                .evaluateExactPilotAssignment(
+                        new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                                "thrawn", "Grand Admiral Thrawn", "Devastator",
+                                true, true, false, false, false, 3.0f))
+                .operations();
+        List<PolicyOperation> two = DeployPilotShipPolicy
+                .evaluateExactPilotAssignment(
+                        new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                                "neimoidian", "Neimoidian Pilot", "Devastator",
+                                true, true, false, false, false, 2.0f))
+                .operations();
+        List<PolicyOperation> zero = DeployPilotShipPolicy
+                .evaluateExactPilotAssignment(
+                        new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                                "dooku", "Count Dooku", "Devastator",
+                                true, true, false, false, false, 0.0f))
+                .operations();
+
+        assertRules(three, new String[]{"V299-pilot-power"},
+                new float[]{150.0f});
+        assertRules(two, new String[]{"V299-pilot-power"},
+                new float[]{100.0f});
+        assertTrue(zero.stream().anyMatch(operation ->
+                operation.kind() == PolicyOperationKind.DEFER
+                        && "V299-zero-power-star-destroyer".equals(
+                                operation.ruleArmId().id())));
+    }
+
+    @Test
+    public void stormtrooperFamilyIsDeferredFromStarshipsButNotVehicles() {
+        List<PolicyOperation> starship = DeployPilotShipPolicy
+                .evaluateExactPilotAssignment(
+                        new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                                "avarik-space", "Corporal Avarik", "Devastator",
+                                true, true, true, false, false, 0.0f))
+                .operations();
+        assertTrue(starship.stream().anyMatch(operation ->
+                operation.kind() == PolicyOperationKind.DEFER
+                        && "V299-stormtrooper-ground-duty".equals(
+                                operation.ruleArmId().id())));
+
+        assertRules(DeployPilotShipPolicy.evaluateExactPilotAssignment(
+                        new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                                "avarik-ground", "Corporal Avarik", "Speeder Bike",
+                                false, false, true, false, false, 3.0f))
+                        .operations(),
+                new String[]{"V299-pilot-power"}, new float[]{150.0f});
+    }
+
+    @Test
+    public void namedAndMatchingExceptionsPreserveUsefulStarDestroyerCrew() {
+        for (DeployPilotShipPolicy.ExactPilotAssignmentFacts facts : List.of(
+                new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                        "matching", "Matching Pilot", "Devastator",
+                        true, true, false, true, false, 0.0f),
+                new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                        "named", "Named Officer", "Devastator",
+                        true, true, false, false, true, 0.0f))) {
+            assertFalse(DeployPilotShipPolicy
+                    .evaluateExactPilotAssignment(facts)
+                    .operations().stream().anyMatch(operation ->
+                            operation.kind() == PolicyOperationKind.DEFER));
+        }
+
+        assertFalse("A zero-add pilot may still activate an unpiloted starfighter",
+                DeployPilotShipPolicy.evaluateExactPilotAssignment(
+                        new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                                "repilot", "Generic Pilot", "X-wing",
+                                true, false, false, false, false, 0.0f))
+                        .operations().stream().anyMatch(operation ->
+                                operation.kind() == PolicyOperationKind.DEFER));
+
+        assertFalse("A real orphan Star Destroyer repilot remains legal",
+                DeployPilotShipPolicy.evaluateExactPilotAssignment(
+                        new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                                "sd-repilot", "Generic Pilot", "Avenger",
+                                true, true, false, false, false,
+                                true, 0.0f))
+                        .operations().stream().anyMatch(operation ->
+                                operation.kind() == PolicyOperationKind.DEFER));
+    }
+
+    @Test
+    public void abilityFourBuddyProgressDominatesZeroPowerStarDestroyerRule() {
+        DeployPilotShipPolicy.ExactPilotAssignmentFacts neededBuddy =
+                new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                        "buddy", "Ability Pilot", "Devastator",
+                        true, true, false, false, false,
+                        false, true, 0.0f);
+        assertFalse(DeployPilotShipPolicy
+                .evaluateExactPilotAssignment(neededBuddy)
+                .operations().stream().anyMatch(operation ->
+                        operation.kind() == PolicyOperationKind.DEFER));
+
+        DeployPilotShipPolicy.ExactPilotAssignmentFacts unknownBuddyState =
+                new DeployPilotShipPolicy.ExactPilotAssignmentFacts(
+                        "unknown", "Ability Pilot", "Devastator",
+                        true, true, false, false, false,
+                        false, null, 0.0f);
+        assertFalse("Unreadable ability state must fail open",
+                DeployPilotShipPolicy
+                        .evaluateExactPilotAssignment(unknownBuddyState)
+                        .operations().stream().anyMatch(operation ->
+                                operation.kind()
+                                        == PolicyOperationKind.DEFER));
     }
 
     @Test

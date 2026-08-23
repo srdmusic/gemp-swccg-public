@@ -55,7 +55,8 @@ public class DeployPilotCandidateSourceParityTest {
     }
 
     @Test
-    public void genericPilotReadsRemainInLegacyOrder() throws IOException {
+    public void targetlessPilotSelectionDoesNotUsePrintedGroundPower()
+            throws IOException {
         String source = pilotSelectionSlice(evaluatorSource("rando"));
         int ability = source.indexOf("pilotAbility = blueprint.getAbility();");
         int power = source.indexOf("pilotPower = blueprint.getPower();");
@@ -63,14 +64,16 @@ public class DeployPilotCandidateSourceParityTest {
         int policy = source.indexOf(
                 "DeployPilotShipPolicy.evaluatePilotCandidate(");
 
-        assertTrue(ability >= 0 && power > ability && cost > power
-                && policy > cost);
+        assertEquals(-1, power);
+        assertTrue(ability >= 0 && cost > ability && policy > cost);
     }
 
     @Test
     public void simultaneousGuardShortCircuitsBeforePlanAndQualityReads()
             throws IOException {
         String source = simultaneousPilotSlice(evaluatorSource("rando"));
+        int exactStarDestroyerRead = source.indexOf(
+                "SpaceDeploymentAllocationFactsReader.isStarDestroyer(");
         int starDestroyerGuard = source.indexOf("if (isStarDestroyerDeploy) {");
         int imperialRead = source.indexOf("blueprint.hasIcon(Icon.IMPERIAL)");
         int firstOrderRead = source.indexOf("blueprint.hasIcon(Icon.FIRST_ORDER)");
@@ -84,28 +87,32 @@ public class DeployPilotCandidateSourceParityTest {
         int candidateContinue = source.indexOf("continue;", adapterStep);
         int plannedRead = source.indexOf(
                 "boolean plannedPilot = plannedPilotBlueprintId != null");
-        int powerSourceRead = source.indexOf(
-                ".readsAddsPowerWhenPiloting(", plannedRead);
         int matchingRead = source.indexOf(
-                ".isMatchingPilot(", powerSourceRead);
+                ".isMatchingPilot(", plannedRead);
         int qualityGuard = source.indexOf("if (!plannedPilot) {", plannedRead);
         int costRead = source.indexOf(
                 "pilotDeployCost = blueprint.getDeployCost();", qualityGuard);
         int abilityRead = source.indexOf(
                 "pilotAbility = blueprint.getAbility();", costRead);
+        int exactFactsRead = source.indexOf(
+                ".readExactPilotAssignmentFacts(", abilityRead);
+        int exactPolicy = source.indexOf(
+                ".evaluateExactPilotAssignment(facts)", exactFactsRead);
         int choicePolicy = source.indexOf(
                 "DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(", matchingRead);
 
-        assertTrue(starDestroyerGuard >= 0
+        assertTrue(exactStarDestroyerRead >= 0
+                && starDestroyerGuard > exactStarDestroyerRead
                 && imperialRead > starDestroyerGuard
                 && firstOrderRead > imperialRead
                 && guardPolicy > firstOrderRead);
         assertTrue(guardPolicy < reset && reset < apply && apply < adapterStep
                 && adapterStep < candidateContinue && candidateContinue < plannedRead);
-        assertTrue(plannedRead < powerSourceRead
-                && powerSourceRead < matchingRead
+        assertTrue(plannedRead < matchingRead
                 && matchingRead < qualityGuard && qualityGuard < costRead
-                && costRead < abilityRead && abilityRead < choicePolicy);
+                && costRead < abilityRead && abilityRead < exactFactsRead
+                && exactFactsRead < exactPolicy
+                && exactPolicy < choicePolicy);
     }
 
     @Test
