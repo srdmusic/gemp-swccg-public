@@ -46,6 +46,35 @@ public class Tatooine72314FormationCoherenceRegressionTest {
     }
 
     @Test
+    public void replayDevastatorStopsCollectingCrewAtActualAbilityFour() {
+        SpaceDeploymentAllocationPolicy.Evaluation quietDevastator =
+                SpaceDeploymentAllocationPolicy.evaluate(
+                        new SpaceDeploymentAllocationPolicy.Facts(
+                                "tarkin-aboard-devastator", true,
+                                4.0f, 7.0f,
+                                false, false, false, false, false));
+
+        assertEquals(
+                SpaceDeploymentAllocationPolicy.Outcome.GROUND_FIRST_AFTER_FOUR,
+                quietDevastator.outcome());
+        assertTrue(quietDevastator.result().operations().stream()
+                .anyMatch(operation ->
+                        operation.kind() == PolicyOperationKind.DEFER));
+
+        SpaceDeploymentAllocationPolicy.Evaluation neededBuddy =
+                SpaceDeploymentAllocationPolicy.evaluate(
+                        new SpaceDeploymentAllocationPolicy.Facts(
+                                "needed-buddy-aboard", true,
+                                2.0f, 4.0f,
+                                false, false, false, false, false));
+        assertEquals(SpaceDeploymentAllocationPolicy.Outcome.BUDDY_COMPLETE,
+                neededBuddy.outcome());
+        assertFalse(neededBuddy.result().operations().stream()
+                .anyMatch(operation ->
+                        operation.kind() == PolicyOperationKind.DEFER));
+    }
+
+    @Test
     public void dominantContactAlternativeStillEscapesExactPlanBinding() {
         List<PolicyOperation> dominantContact =
                 DeployPlanPolicy.evaluateDestinationTarget(

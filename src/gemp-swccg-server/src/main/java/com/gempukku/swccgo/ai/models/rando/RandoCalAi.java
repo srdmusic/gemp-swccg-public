@@ -25,6 +25,7 @@ import com.gempukku.swccgo.ai.models.common.phase.CaptureDeployBudgetFactsReader
 import com.gempukku.swccgo.ai.models.common.phase.ControlDrainAssessment;
 import com.gempukku.swccgo.ai.models.common.phase.CoordinatorPosturePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
@@ -2612,6 +2613,16 @@ public class RandoCalAi extends HeuristicAiBase {
                 score += DeployActionTextPolicy.scoreLegacyFallbackDomainMatch(
                         matchingDomain,
                         loc.status == ContestStatus.EMPTY && loc.ourForceIcons == 0);
+                if (isStarshipDeploy && loc.isSpace()) {
+                    SpaceDeploymentAllocationPolicy.Evaluation allocation =
+                            SpaceDeploymentAllocationPolicy
+                                    .evaluateLegacyUnknownProjection(
+                                            "legacy-space-"
+                                                    + loc.location.getCardId(),
+                                            loc.ourAbility);
+                    score += SpaceDeploymentAllocationPolicy
+                            .scoreLegacyFallback(allocation);
+                }
                 break;
             }
         }

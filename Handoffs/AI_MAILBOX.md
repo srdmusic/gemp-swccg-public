@@ -491,3 +491,35 @@ Runtime: authenticated Hall gates at `2026-08-23T05:09:45Z` and `05:11:19Z` each
 Verification and rollback: sealed, host, and container jar hashes match. Startup completed; operational mode plus aitables, privategames, stattracking, and newaccounts were restored; stable HTTP, authenticated login, and Hall checks passed; postdeploy Hall remained `0/0/0`; key class markers are live; and the post-start material log count is zero. Immediate rollback is `/Users/steve/gemp-deploy-backups/rando-tatooine-coherence-2026-08-22/predeploy-48bdb40d-88cde504/web.jar`, SHA-256 `88cde504592a754d1c45d4fca969c2ff995c753accd094f4e8555a0d2976c3e4`. Sealed candidate is `/Users/steve/gemp-deploy-artifacts/rando-tatooine-coherence-2026-08-22/48bdb40d-75468a5a/web.jar`.
 
 Proof ceiling and next boundary: `RUNTIME_LOADED`, not `REPLAY_FIRED`. Current code globally stops false permanent-pilot demand but does not yet enforce Steve's new ability-4 system-satisfaction doctrine. Next lane: count permanent pilots in actual total ability, keep buddies until ability 4, then route deployments to ground except for real enemy space pressure, a required favorable space battle, a space-centric objective, or terminal defense. K-2 received the exact doctrine in async mailbox `m01768`. Nothing was pushed.
+
+## 2026-08-22 22:54 PT - Codex V298 space allocation -> Alfred - RESOLVED
+
+Topic: global ability-four system satisfaction and Falcon pilot quality are source-tested for both bots.
+
+Evidence: supplemental DB `72314` showed six characters accumulating aboard permanent-piloted Devastator V while the Imperial Entanglements site formation remained incomplete. K-2's completed-loss pilot matrix found nine boarding deployments across four losses, 42 Force spent, five of nine boarders lost, only four space drains in one game, and three boarders that added no piloting power. Actual `Card210_020`, `Card204_011`, and `Card10_003` source proves Luke TLJ adds no piloting power, Solo adds 3, and Chewbacca, Protector adds 2 or 3 to Falcon. Async mailbox had no Claude-to-Codex reply newer than cursor 1766; V298's tested boundary was sent to K-2 as `m01772` for a non-duplicative audit.
+
+Decision: shared V298 reads actual engine total ability at each system or sector, including permanent pilots and aboard characters. Buddy progress remains admissible below 4; reaching 4 receives the completion preference. At actual ability 4 or more, quiet extra space deploy routes categorically defer so bodies and Force remain available for sites. Actual enemy presence may bolster only through projected ability 7. Larger reinforcement requires a favorable space-power projection based on engine current totals plus candidate printed power, exact typed space-objective need, genuine orphan re-pilot, or terminal defense. Non-space routes are unchanged.
+
+Pilot boundary: simultaneous pilot selection uses actual engine matching-pair facts and actual card-source power modifiers. A strong ground body that is neither matching nor power-adding defers even if an older plan named it. Re-pilot, objective-capital, and Endor planner packages use the same source-quality tier before raw ability. Planned companions require a legal paid route, available capacity, exact cost, and exact aboard-ship binding, keeping parent and child choices consistent. Luke therefore no longer wins the early Falcon seat on raw ability; Solo and Chewbacca retain real pilot value. The EOP Bunker garrison reservation remains earlier and dominant.
+
+Verification: failure-first policy and replay regressions passed. An unchanged-engine table proves three permanent-piloted X-wings total ability 3, the fourth reaches 4, and a fifth quiet space body defers. Actual-card-source pilot tests passed; the actual Falcon planner selects Solo rather than Luke and binds Solo to the exact ship in both bots. Focused ring `48/0/0/0`; final impacted planner, objective, replay, mirror, and source-ownership ring `205/0/0/0`; compile and diff check PASS. A one-run Ralltiir forfeiture failure passed on exact untouched base and passed in the final complete ring, so no unrelated fix was added.
+
+Scope and proof ceiling: exact base `2c3e940f684989296de06e0d610e8d8456123457`, branch `codex/rando-space-ability-four-2026-08-22`. Eleven AI production files, six AI tests, and these three required records changed. No card Java, engine Java, objective data, deck data, database, package, jar, deployment, server start, restart, runtime mutation, game mutation, or push occurred. Proof is `SOURCE_TESTED`, not replay firing. The local commit containing this entry is pending.
+
+## 2026-08-22 23:25 PT - Codex V298 final adversarial correction -> Alfred - RESOLVED
+
+Topic: the final independent audit found and closed two fallback leaks before the V298 source commit.
+
+Correction: a parent action saying `aboard` could infer orphan re-pilot for any character when the destination ship was unpiloted. The engine-backed adapter now requires the deploying card's actual pilot icon before inferring that exception. An unchanged-engine RED regression proved Leia Organa was incorrectly admitted aboard an unpiloted Falcon at an already-satisfied ability-4 system, while an actual pilot remained valid; it now defers Leia and preserves the real re-pilot route.
+
+Legacy boundary: legacy action text knows the system's current ability but not the candidate card's projected ability. It can no longer reuse current ability as a fictional projection and claim the bounded pressure exception. Both mirrors now call the shared unknown-projection fallback, which fails closed after ability 4. Exact typed parent and child routes still permit real enemy-pressure reinforcement only through projected ability 7.
+
+Verification: the focused policy, engine-reader, pilot, replay, and ownership ring passed `51/0/0/0`. The exact impacted planner, objective, replay, mirror, legacy, and ownership ring passed `208/0/0/0`. Maven server compile and `git diff --check` passed. Independent final verification is pending its bounded rerun after a harmless shared-target compile collision; no assertion failed in that collision.
+
+Scope and proof ceiling: the V298 path count remains eleven AI production files, six AI test files, and three required records. No package, jar, deployment, server action, database action, game mutation, or push occurred. Proof remains `SOURCE_TESTED`; the local commit is pending.
+
+## 2026-08-22 23:27 PT - Codex V298 independent verification -> Alfred - RESOLVED
+
+Independent result: PASS with no blocker or warning. The bounded independent ring passed `31/0/0/0`; the final impacted report set remained `208/0/0/0`; pinned offline Corretto 21 reactor compile, exact mirror and source-ownership checks, card-source contracts, path scope, and `git diff --check` passed. Exactly eleven AI production files, six AI tests, and three required records are in scope.
+
+Proof ceiling: `SOURCE_TESTED`. No package, jar, deployment, server action, database action, game mutation, push, or replay firing occurred. The local commit containing these records is pending.

@@ -9,6 +9,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class DeployPilotShipPolicyTest {
@@ -182,6 +183,73 @@ public class DeployPilotShipPolicyTest {
                                 "a", null, 2.0f, 8.0f)).operations();
         assertRules(zeroCostScore,
                 new String[]{"pilot-deploy-cost"}, new float[]{0.0f});
+    }
+
+    @Test
+    public void replayLukeCannotBeatRealFalconPilotsOnRawAbility() {
+        DeployPilotShipPolicy.SimultaneousPilotChoiceFacts luke =
+                new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
+                        "luke", "The Falcon, Junkyard Garbage", true,
+                        5.0f, 7.0f, false, false,
+                        false, true);
+        List<PolicyOperation> lukeOperations =
+                DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(luke)
+                        .operations();
+        assertTrue(lukeOperations.stream().anyMatch(operation ->
+                operation.kind() == PolicyOperationKind.DEFER
+                        && "V298-zero-power-pilot".equals(
+                                operation.ruleArmId().id())));
+
+        DeployPilotShipPolicy.SimultaneousPilotChoiceFacts solo =
+                new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
+                        "solo", "The Falcon, Junkyard Garbage", false,
+                        4.0f, 3.0f, true, false,
+                        true, true);
+        List<PolicyOperation> soloOperations =
+                DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(solo)
+                        .operations();
+        assertFalse(soloOperations.stream().anyMatch(operation ->
+                operation.kind() == PolicyOperationKind.DEFER));
+        assertTrue(soloOperations.stream().anyMatch(operation ->
+                "V298-pilot-power".equals(operation.ruleArmId().id())));
+
+        DeployPilotShipPolicy.SimultaneousPilotChoiceFacts chewbacca =
+                new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
+                        "chewie", "The Falcon, Junkyard Garbage", false,
+                        5.0f, 2.0f, false, false,
+                        true, true);
+        assertFalse(DeployPilotShipPolicy
+                .evaluateSimultaneousPilotChoice(chewbacca)
+                .operations().stream().anyMatch(operation ->
+                        operation.kind() == PolicyOperationKind.DEFER));
+
+        DeployPilotShipPolicy.SimultaneousPilotChoiceFacts plannedMatching =
+                new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
+                        "planned-rey", "The Falcon, Junkyard Garbage", true,
+                        null, null, true, false,
+                        false, true);
+        assertFalse("A real matching pilot remains valid when planned",
+                DeployPilotShipPolicy
+                        .evaluateSimultaneousPilotChoice(plannedMatching)
+                        .operations().stream().anyMatch(operation ->
+                                operation.kind()
+                                        == PolicyOperationKind.DEFER));
+    }
+
+    @Test
+    public void plannerPilotQualityRanksPowerSourceBeforeRawAbility() {
+        int luke = DeployPilotShipPolicy.plannerPilotQualityTier(
+                new DeployPilotShipPolicy.PlannerPilotQualityFacts(
+                        false, false));
+        int solo = DeployPilotShipPolicy.plannerPilotQualityTier(
+                new DeployPilotShipPolicy.PlannerPilotQualityFacts(
+                        true, true));
+        int chewie = DeployPilotShipPolicy.plannerPilotQualityTier(
+                new DeployPilotShipPolicy.PlannerPilotQualityFacts(
+                        true, true));
+
+        assertTrue(solo > luke);
+        assertTrue(chewie > luke);
     }
 
     @Test

@@ -46,6 +46,7 @@ import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SetupFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.TargetSelectionFacts;
@@ -62,6 +63,7 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
+import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -2661,6 +2663,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         boolean destinationIsAsset =
                                 destinationCategory == CardCategory.VEHICLE
                                 || destinationCategory == CardCategory.STARSHIP;
+                        PhysicalCard v298SpaceLocation =
+                                SpaceDeploymentAllocationFactsReader
+                                    .resolveSpaceLocation(
+                                        game, gameState, location);
+                        boolean v298TypedSpaceObjectiveNeed =
+                                v298SpaceLocation != null
+                                && plannedDeployInstruction != null
+                                && String.valueOf(location.getCardId()).equals(
+                                    plannedDeployInstruction
+                                        .getTargetLocationId())
+                                && deploymentPlanSnapshot != null
+                                && deploymentPlanSnapshot.getReason() != null
+                                && (deploymentPlanSnapshot.getReason()
+                                        .toLowerCase(Locale.ROOT)
+                                        .contains("objective")
+                                    || deploymentPlanSnapshot.getReason()
+                                        .startsWith("EOP:"));
                         boolean destinationHasOpenPilotSlot =
                                 destinationIsAsset
                                 && game != null
@@ -2715,6 +2734,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 objectiveProgress = objectiveProgressAnalyzer.assessDeployChild(
                                     game, playerId,
                                     objectiveProgressDeployingCard, location);
+                            v298TypedSpaceObjectiveNeed |= v298SpaceLocation != null
+                                    && (objectiveProgress.outcome()
+                                            == com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment.Outcome.COMPLETES_FLIP_NOW
+                                        || objectiveProgress.outcome()
+                                            == com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment.Outcome.ADVANCES_MISSING_REQUIREMENT
+                                        || objectiveProgress.outcome()
+                                            == com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment.Outcome.PROTECTS_FLIP_BACK);
                             logger.debug("V214 DEPLOY CHILD OBJECTIVE FACTS: outcome={} evidence={}",
                                 objectiveProgress.outcome(), objectiveProgress.evidence());
                             boolean actorLocationProgress =
@@ -2948,6 +2974,30 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 objectiveProgressDeployingCard,
                                                 location)));
                         }
+
+                        final boolean v298ObjectiveException =
+                                v298TypedSpaceObjectiveNeed;
+                        final String v298DeployingCardName =
+                                deployingCardName;
+                        SpaceDeploymentAllocationFactsReader
+                            .evaluateDestination(
+                                action.getActionId(), game, playerId,
+                                objectiveProgressDeployingCard,
+                                boardingDeployBlueprint, location,
+                                destinationNeedsPilot,
+                                v298ObjectiveException,
+                                context.getLifeForce(),
+                                RandoConfig.CRITICAL_LIFE_FORCE)
+                            .ifPresent(evaluation -> {
+                                applyDeploySitingPolicy(
+                                        action, evaluation.result());
+                                logger.info(
+                                    "V298 SPACE ALLOCATION: {} at {} -> {}",
+                                    v298DeployingCardName,
+                                    v298SpaceLocation != null
+                                        ? v298SpaceLocation.getTitle() : "?",
+                                    evaluation.outcome());
+                            });
 
                         // === V166 (Steve, 2026-06): CONTEST THE OPPONENT'S DRAIN by deploying to it ===
                         // When the opponent out-drains us by net >= 2 (bonus-aware; verified to fire ~half
@@ -7398,6 +7448,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         // Format: "Choose a pilot from hand to simultaneously deploy aboard •Ship Name"
         String shipName = extractShipNameFromText(decisionText);
         logger.info("🚀 Simultaneous pilot selection for {}", shipName != null ? shipName : "unknown ship");
+        PhysicalCard simultaneousShip =
+                SpaceDeploymentAllocationFactsReader
+                    .findSimultaneousShip(gameState, shipName);
 
         // Detect if the ship being piloted is a Star Destroyer (capital ship).
         // Only Imperial/First Order characters should pilot Star Destroyers.
@@ -7489,6 +7542,24 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             Float pilotDeployCost = null;
                             Float pilotAbility = null;
                             boolean matchingPilot = false;
+                            Boolean addsPowerWhenPiloting =
+                                    SpaceDeploymentAllocationFactsReader
+                                        .readsAddsPowerWhenPiloting(
+                                            context.getGame(), card);
+                            Float pilotPrintedPower = blueprint.hasPowerAttribute()
+                                    ? blueprint.getPower() : null;
+                            boolean strongGroundBody =
+                                    addsPowerWhenPiloting != null
+                                    && pilotPrintedPower != null
+                                    && pilotPrintedPower >= 4.0f;
+
+                            if (simultaneousShip != null) {
+                                matchingPilot =
+                                        SpaceDeploymentAllocationFactsReader
+                                            .isMatchingPilot(
+                                                context.getGame(), card,
+                                                simultaneousShip);
+                            }
 
                             if (!plannedPilot) {
                                 // V43: preserve the fail-open deploy-cost read.
@@ -7501,13 +7572,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 if (blueprint.hasAbilityAttribute()) {
                                     pilotAbility = blueprint.getAbility();
                                 }
-
-                                if (title != null && shipName != null) {
-                                    String titleLower = title.toLowerCase();
-                                    String shipNameLower = shipName.toLowerCase().replace("•", "").trim();
-                                    matchingPilot = titleLower.contains(shipNameLower)
-                                        || shipNameLower.contains(titleLower.replace(" ", ""));
-                                }
                             }
 
                             applyDeployPilotPolicy(action,
@@ -7515,7 +7579,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     new DeployPilotShipPolicy.SimultaneousPilotChoiceFacts(
                                         action.getActionId(), shipName, plannedPilot,
                                         pilotDeployCost, pilotAbility, matchingPilot,
-                                        reservedEopBunkerGarrison)));
+                                        reservedEopBunkerGarrison,
+                                        Boolean.TRUE.equals(
+                                                addsPowerWhenPiloting),
+                                        strongGroundBody)));
                             if (plannedPilot) {
                                 logger.info("   ✅ {} is the PLANNED pilot (+200)", title);
                             } else if (matchingPilot) {
@@ -7559,7 +7626,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
         return null;
     }
-
     /**
      * Evaluate move destination selection.
      * Ported from Python card_selection_evaluator.py _evaluate_move_destination

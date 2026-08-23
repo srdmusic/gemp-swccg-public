@@ -370,7 +370,7 @@ public final class DeployPilotShipPolicy {
     public static PolicyResult evaluateSimultaneousPilotChoice(
             SimultaneousPilotChoiceFacts facts) {
         Objects.requireNonNull(facts, "facts");
-        List<PolicyOperation> operations = new ArrayList<>(3);
+        List<PolicyOperation> operations = new ArrayList<>(4);
         if (facts.reservedEopBunkerGarrison()) {
             addObjective(operations, facts.actionId(),
                     "DEPLOY.EOP.BUNKER_GARRISON_RESERVE",
@@ -379,6 +379,18 @@ public final class DeployPilotShipPolicy {
             return new PolicyResult(
                     "DEPLOY_SIMULTANEOUS_PILOT_CHOICE_POLICY",
                     operations);
+        }
+        if (!facts.matchingPilot()
+                && !facts.addsPowerWhenPiloting()
+                && facts.strongGroundBody()) {
+            operations.add(PolicyOperation.defer(
+                    facts.actionId(),
+                    TraceRuleId.of("V298-zero-power-pilot"),
+                    TraceDomainId.DEPLOY_ATTACH,
+                    TraceOutputKind.VETO,
+                    -500.0f,
+                    "V298 PILOT QUALITY: strong ground character adds no power when piloting "
+                            + facts.shipName()));
         }
         if (facts.plannedPilot()) {
             addAttach(operations, facts.actionId(), "pilot-plan-match",
@@ -401,6 +413,11 @@ public final class DeployPilotShipPolicy {
                         TraceOutputKind.ORDERING, 50.0f,
                         "Matching pilot for " + facts.shipName() + "!");
             }
+        }
+        if (facts.addsPowerWhenPiloting()) {
+            addAttach(operations, facts.actionId(), "V298-pilot-power",
+                    TraceOutputKind.ORDERING, 100.0f,
+                    "V298 PILOT QUALITY: actual card source adds power when piloting");
         }
         return new PolicyResult("DEPLOY_SIMULTANEOUS_PILOT_CHOICE_POLICY", operations);
     }
@@ -547,6 +564,18 @@ public final class DeployPilotShipPolicy {
         }
     }
 
+    public record PlannerPilotQualityFacts(
+            boolean matchingPilot,
+            boolean addsPowerWhenPiloting) {
+    }
+
+    public static int plannerPilotQualityTier(
+            PlannerPilotQualityFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        return (facts.addsPowerWhenPiloting() ? 2 : 0)
+                + (facts.matchingPilot() ? 1 : 0);
+    }
+
     public record ExecutorDestinationFacts(String actionId,
                                            boolean bespinSystem,
                                            String destinationTitle) {
@@ -591,12 +620,23 @@ public final class DeployPilotShipPolicy {
     public record SimultaneousPilotChoiceFacts(
             String actionId, String shipName, boolean plannedPilot,
             Float deployCost, Float ability, boolean matchingPilot,
-            boolean reservedEopBunkerGarrison) {
+            boolean reservedEopBunkerGarrison,
+            boolean addsPowerWhenPiloting,
+            boolean strongGroundBody) {
         public SimultaneousPilotChoiceFacts(
                 String actionId, String shipName, boolean plannedPilot,
                 Float deployCost, Float ability, boolean matchingPilot) {
             this(actionId, shipName, plannedPilot, deployCost, ability,
-                    matchingPilot, false);
+                    matchingPilot, false, false, false);
+        }
+
+        public SimultaneousPilotChoiceFacts(
+                String actionId, String shipName, boolean plannedPilot,
+                Float deployCost, Float ability, boolean matchingPilot,
+                boolean reservedEopBunkerGarrison) {
+            this(actionId, shipName, plannedPilot, deployCost, ability,
+                    matchingPilot, reservedEopBunkerGarrison,
+                    false, false);
         }
 
         public SimultaneousPilotChoiceFacts {

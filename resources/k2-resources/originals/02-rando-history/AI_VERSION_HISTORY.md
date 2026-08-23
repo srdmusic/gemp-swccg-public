@@ -11316,3 +11316,77 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     buddy system until ability 4, then prioritize ground unless actual enemy
     space pressure, a required favorable space battle, a space-centric
     objective, or terminal defense requires more. Nothing was pushed.
+
+  ==== V298 (2026-08-22): ability-four space satisfaction and Falcon pilot quality ====
+
+    Supplemental DB72314 and K-2's completed-loss pilot matrix showed the
+    same allocation defect. Rando spent 42 Force on nine boarding deployments
+    across four losses; five boarders died, only one game produced any space
+    drains, and three boarders added no piloting power. The Rey/Falcon line
+    put Luke Skywalker, The Last Jedi aboard first, then Chewbacca and Han,
+    while the crew died and the ship produced no drains. Actual card source
+    confirms Luke 210_20 adds no power when piloting, Solo 204_11 adds 3, and
+    Chewbacca, Protector 10_3 adds 2 or 3 to Falcon.
+
+    A new shared SpaceDeploymentAllocationPolicy owns the global boundary.
+    It consumes the engine's actual total ability at the system or sector,
+    including permanent pilots and aboard characters exactly once. Below 4,
+    progress remains admissible at +100 and completing ability 4 receives
+    +300. At actual ability 4 or more, a quiet extra space route receives a
+    categorical DEFER and -800 mandatory-fallback delta. Deferral removes the
+    route while an admissible ground row or legal Pass exists, so old +3000,
+    +1000, +650, and smaller additive space rules cannot outvote V298.
+
+    Actual opponent presence may justify a small bolster only when projected
+    ability remains 7 or less. The RED boundary test proved that the earlier
+    current-only check leaked a 4-to-8 jump; V298 now defers that jump. A
+    favorable space-power projection based on engine current totals plus the
+    candidate starship's printed power, exact typed space-objective progress,
+    genuine orphan re-pilot, and terminal low-Life-Force defense remain
+    admissible. An inferred orphan re-pilot requires an actual pilot icon; a
+    non-pilot passenger cannot claim that exception.
+    Non-space routes, legality, formation safety, battle-destiny requirements,
+    unique and persona conflicts, blacklists, objective gates, spies,
+    deliberate solos, and terminal defenses retain their existing owners.
+
+    One shared policy covers parent, destination, physical, virtual, planner,
+    and legacy fallback paths. The engine-backed reader supplies parent,
+    destination, ability, and pilot-source facts. Planner lanes call the pure
+    policy with exact available facts. Legacy action text cannot identify the
+    candidate's projected ability, so its shared fallback fails closed after
+    ability 4 and cannot invent a pressure-bolster exception. Both bot mirrors
+    are exact.
+    Actual matching pilots are resolved through the engine's isMatchingPair
+    contract, not title fragments. Simultaneous pilot selection defers a
+    strong ground body that is neither a matching pilot nor an actual card-source
+    power-adding pilot, even if an older plan named it. Power-adding pilots
+    receive +100 and unplanned matching pilots keep their existing +50. The
+    exact EOP Bunker reservation still short-circuits first. Re-pilot,
+    objective-capital, and Endor planner packages now use the same source
+    quality tier before raw ability. Every planned companion requires a legal
+    paid route, available capacity, exact cost, and exact aboard-ship binding,
+    which keeps the parent plan and child selection consistent.
+
+    Failure-first replay and policy regressions passed. An unchanged-engine
+    scenario proves three permanent-piloted X-wings total ability 3, the
+    fourth reaches 4, and a further quiet space body is deferred. Actual card
+    tests prove Luke, Solo, Chewbacca, and Falcon source behavior. The actual
+    Falcon planner selects Solo rather than Luke and binds Solo to the exact
+    ship in both bots. Final adversarial regressions prove a non-pilot
+    passenger cannot become an orphan re-pilot and an unknown legacy
+    projection cannot bypass the post-four boundary under pressure. The
+    focused ring passed 51/0/0/0; the final impacted planner, objective,
+    replay, mirror, and ownership ring passed 208/0/0/0. The independent
+    bounded ring passed 31/0/0/0. Maven server compile, exact mirror and
+    ownership checks, independent final verification, and diff check passed.
+    One unrelated Ralltiir
+    forfeiture case failed once, passed on exact base
+    2c3e940f684989296de06e0d610e8d8456123457, and passed in the final complete
+    ring without a production change.
+
+    Exact branch is codex/rando-space-ability-four-2026-08-22. Eleven AI
+    production files, six AI tests, and the three required records changed.
+    No card Java, engine Java, objective data, deck data, database, package,
+    jar, deployment, server start, restart, runtime mutation, game mutation,
+    or push occurred. Proof stops at SOURCE_TESTED. Revert the local commit
+    containing this entry to remove only V298.

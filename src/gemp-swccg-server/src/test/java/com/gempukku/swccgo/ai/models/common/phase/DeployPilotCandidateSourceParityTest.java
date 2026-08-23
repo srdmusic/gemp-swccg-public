@@ -84,13 +84,15 @@ public class DeployPilotCandidateSourceParityTest {
         int candidateContinue = source.indexOf("continue;", adapterStep);
         int plannedRead = source.indexOf(
                 "boolean plannedPilot = plannedPilotBlueprintId != null");
+        int powerSourceRead = source.indexOf(
+                ".readsAddsPowerWhenPiloting(", plannedRead);
+        int matchingRead = source.indexOf(
+                ".isMatchingPilot(", powerSourceRead);
         int qualityGuard = source.indexOf("if (!plannedPilot) {", plannedRead);
         int costRead = source.indexOf(
                 "pilotDeployCost = blueprint.getDeployCost();", qualityGuard);
         int abilityRead = source.indexOf(
                 "pilotAbility = blueprint.getAbility();", costRead);
-        int matchingRead = source.indexOf(
-                "matchingPilot = titleLower.contains(shipNameLower)", abilityRead);
         int choicePolicy = source.indexOf(
                 "DeployPilotShipPolicy.evaluateSimultaneousPilotChoice(", matchingRead);
 
@@ -100,9 +102,10 @@ public class DeployPilotCandidateSourceParityTest {
                 && guardPolicy > firstOrderRead);
         assertTrue(guardPolicy < reset && reset < apply && apply < adapterStep
                 && adapterStep < candidateContinue && candidateContinue < plannedRead);
-        assertTrue(plannedRead < qualityGuard && qualityGuard < costRead
-                && costRead < abilityRead && abilityRead < matchingRead
-                && matchingRead < choicePolicy);
+        assertTrue(plannedRead < powerSourceRead
+                && powerSourceRead < matchingRead
+                && matchingRead < qualityGuard && qualityGuard < costRead
+                && costRead < abilityRead && abilityRead < choicePolicy);
     }
 
     @Test

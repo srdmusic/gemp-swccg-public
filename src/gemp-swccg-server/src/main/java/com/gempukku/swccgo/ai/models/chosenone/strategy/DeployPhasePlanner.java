@@ -3,6 +3,8 @@ package com.gempukku.swccgo.ai.models.chosenone.strategy;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.LateEstablishPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
@@ -1682,6 +1684,15 @@ public class DeployPhasePlanner {
         // Plan 3: Establish in space
         List<AiBoardAnalyzer.LocationAnalysis> spaceEstablish = categories.establishTargets.stream()
             .filter(AiBoardAnalyzer.LocationAnalysis::isSpace)
+            .filter(location -> !SpaceDeploymentAllocationPolicy.isDeferred(
+                    SpaceDeploymentAllocationPolicy.evaluate(
+                            new SpaceDeploymentAllocationPolicy.Facts(
+                                    "planner-space-establish-"
+                                            + location.location.getCardId(),
+                                    true, location.ourAbility,
+                                    location.ourAbility,
+                                    location.theirCardCount > 0,
+                                    false, false, false, false))))
             .collect(Collectors.toList());
 
         if (!spaceEstablish.isEmpty()) {
@@ -1752,10 +1763,10 @@ public class DeployPhasePlanner {
             if (soloCost != null
                     && soloCost <= forceAvailable
                     && shipAbility > 0.0f
-                    && canDeployDirectly(ship.card, endor.location)) {
+                    && canDeployPaidDirectly(ship.card, endor.location)) {
                 EndorSystemPackage candidate = new EndorSystemPackage(
                         ship, null, soloCost, shipAbility,
-                        ship.power);
+                        ship.power, 0);
                 if (isBetterEndorSystemPackage(candidate, best)) {
                     best = candidate;
                 }
@@ -1780,7 +1791,8 @@ public class DeployPhasePlanner {
                 EndorSystemPackage candidate = new EndorSystemPackage(
                         ship, pilot, pairCost,
                         shipAbility + pilotAbility,
-                        ship.power + pilot.power);
+                        ship.power + pilot.power,
+                        pilotQualityTier(pilot, ship.card));
                 if (isBetterEndorSystemPackage(candidate, best)) {
                     best = candidate;
                 }
@@ -1984,8 +1996,8 @@ public class DeployPhasePlanner {
                 return false;
             }
             return Filters.deployableToLocationSimultaneouslyWith(
-                    ship, pilot, true, 0.0f,
-                    Filters.sameCardId(location), true, 0.0f)
+                    ship, pilot, false, 0.0f,
+                    Filters.sameCardId(location), false, 0.0f)
                     .accepts(gameState,
                             currentGame.getModifiersQuerying(), ship);
         } catch (Exception e) {
@@ -2046,6 +2058,11 @@ public class DeployPhasePlanner {
         int currentCards = current.pilot == null ? 1 : 2;
         if (candidateCards != currentCards) {
             return candidateCards < currentCards;
+        }
+        if (candidate.pilotQualityTier
+                != current.pilotQualityTier) {
+            return candidate.pilotQualityTier
+                    > current.pilotQualityTier;
         }
         int abilityOrder = Float.compare(
                 candidate.combinedAbility, current.combinedAbility);
@@ -2116,18 +2133,21 @@ public class DeployPhasePlanner {
         private final int cost;
         private final float combinedAbility;
         private final int combinedPower;
+        private final int pilotQualityTier;
 
         private EndorSystemPackage(
                 CardInfo ship,
                 CardInfo pilot,
                 int cost,
                 float combinedAbility,
-                int combinedPower) {
+                int combinedPower,
+                int pilotQualityTier) {
             this.ship = ship;
             this.pilot = pilot;
             this.cost = cost;
             this.combinedAbility = combinedAbility;
             this.combinedPower = combinedPower;
+            this.pilotQualityTier = pilotQualityTier;
         }
     }
 
@@ -2177,11 +2197,35 @@ public class DeployPhasePlanner {
                 starships, remaining, spacePowerNeeded, true);
 
             // CRITICAL: Only add if we can actually beat them!
-            if (spaceCombo.achievesGoal && !spaceCombo.isEmpty()) {
+            float spacePlannedAbility = (float) spaceCombo.cards.stream()
+                    .mapToDouble(card -> exactAbility(card, true))
+                    .sum();
+            boolean spaceAllocationAdmissible =
+                    !SpaceDeploymentAllocationPolicy.isDeferred(
+                            SpaceDeploymentAllocationPolicy.evaluate(
+                                    new SpaceDeploymentAllocationPolicy.Facts(
+                                            "planner-combined-space-"
+                                                + bestSpaceTarget.location
+                                                    .getCardId(),
+                                            true,
+                                            bestSpaceTarget.ourAbility,
+                                            bestSpaceTarget.ourAbility
+                                                + (float) spacePlannedAbility,
+                                            bestSpaceTarget.theirCardCount > 0
+                                                || bestSpaceTarget.theirPower > 0,
+                                            spaceCombo.achievesGoal
+                                                && bestSpaceTarget.theirPower > 0,
+                                            false, false, false)));
+            if (spaceCombo.achievesGoal && !spaceCombo.isEmpty()
+                    && spaceAllocationAdmissible) {
                 for (PhysicalCard card : spaceCombo.cards) {
                     addCardToPlan(combinedPlan, card, bestSpaceTarget, 1,
                         "Combined: space attack");
                 }
+            } else if (!spaceAllocationAdmissible) {
+                LOG.info("V298 GROUND FIRST: combined plan omits quiet space leg at {} because actual ability is {}",
+                        bestSpaceTarget.location.getTitle(),
+                        bestSpaceTarget.ourAbility);
             }
 
             if (!combinedPlan.getInstructions().isEmpty()) {
@@ -2700,6 +2744,112 @@ public class DeployPhasePlanner {
         return plan;
     }
 
+    private PilotPlanChoice selectBestPilotForShip(
+            List<CardInfo> pilots,
+            PhysicalCard ship,
+            PhysicalCard simultaneousLocation,
+            int forceAvailable,
+            boolean simultaneousDeploy) {
+        PilotPlanChoice best = null;
+        for (CardInfo pilot : pilots) {
+            if (!pilot.isPilot) continue;
+            Integer exactCost;
+            if (simultaneousDeploy) {
+                if (simultaneousLocation == null
+                        || !canDeployShipAndPilotTogether(
+                                ship, pilot.card,
+                                simultaneousLocation)) {
+                    continue;
+                }
+                exactCost = exactSimultaneousDeployCost(
+                        ship, pilot.card, simultaneousLocation);
+            } else {
+                if (!canDeployPilotAboard(pilot.card, ship)) {
+                    continue;
+                }
+                exactCost = exactDeployCostAt(pilot.card, ship);
+            }
+            if (exactCost == null || exactCost > forceAvailable) {
+                continue;
+            }
+            PilotPlanChoice candidate = new PilotPlanChoice(
+                    pilot, exactCost,
+                    pilotQualityTier(pilot, ship));
+            if (isBetterPilotPlanChoice(candidate, best)) {
+                best = candidate;
+            }
+        }
+        return best;
+    }
+
+    private int pilotQualityTier(CardInfo pilot, PhysicalCard ship) {
+        return SpaceDeploymentAllocationFactsReader
+                .plannerPilotQualityTier(
+                        currentGame, pilot.card, ship);
+    }
+
+    private boolean isBetterPilotPlanChoice(
+            PilotPlanChoice candidate,
+            PilotPlanChoice current) {
+        if (current == null
+                || candidate.qualityTier != current.qualityTier) {
+            return current == null
+                    || candidate.qualityTier > current.qualityTier;
+        }
+        if (candidate.pilot.ability != current.pilot.ability) {
+            return candidate.pilot.ability > current.pilot.ability;
+        }
+        if (candidate.cost != current.cost) {
+            return candidate.cost < current.cost;
+        }
+        if (candidate.pilot.power != current.pilot.power) {
+            return candidate.pilot.power > current.pilot.power;
+        }
+        return candidate.pilot.card.getPermanentCardId()
+                < current.pilot.card.getPermanentCardId();
+    }
+
+    private boolean canDeployPilotAboard(
+            PhysicalCard pilot, PhysicalCard ship) {
+        if (currentGame == null || currentPlayerId == null
+                || pilot == null || ship == null
+                || ship.getBlueprint() == null) {
+            return false;
+        }
+        try {
+            GameState gameState = currentGame.getGameState();
+            return ship.getBlueprint()
+                        .getValidPilotFilter(
+                                currentPlayerId, currentGame,
+                                ship, true)
+                        .accepts(gameState,
+                                currentGame.getModifiersQuerying(), pilot)
+                    && Filters.hasAvailablePilotCapacity(pilot)
+                        .accepts(gameState,
+                                currentGame.getModifiersQuerying(), ship)
+                    && Filters.deployableToTarget(
+                                pilot, Filters.sameCardId(ship),
+                                false, 0.0f)
+                        .accepts(gameState,
+                                currentGame.getModifiersQuerying(), pilot);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static final class PilotPlanChoice {
+        private final CardInfo pilot;
+        private final int cost;
+        private final int qualityTier;
+
+        private PilotPlanChoice(
+                CardInfo pilot, int cost, int qualityTier) {
+            this.pilot = pilot;
+            this.cost = cost;
+            this.qualityTier = qualityTier;
+        }
+    }
+
     /**
      * V22: Generate plan to deploy a capital ship to the objective-relevant system (e.g., Bespin).
      * For TDIGWATT, getting the Executor to Bespin system is a top strategic priority.
@@ -2728,37 +2878,72 @@ public class DeployPhasePlanner {
             return plan;
         }
 
-        int remaining = forceAvailable;
-        final int budget = remaining;
-        List<CardInfo> affordable = starships.stream()
-            .filter(s -> s.cost <= budget)
+        List<CardInfo> preferredShips = starships.stream()
             .sorted(Comparator.comparingInt((CardInfo s) -> s.power).reversed())
             .collect(Collectors.toList());
 
-        if (affordable.isEmpty()) {
+        if (preferredShips.isEmpty()) {
             LOG.warn("📋 V22 CAPITAL: No affordable capital ships in hand");
             return plan;
         }
 
-        CardInfo bestShip = affordable.get(0);
+        CardInfo bestShip = null;
+        PilotPlanChoice bestPilot = null;
+        int packageCost = 0;
+        for (CardInfo ship : preferredShips) {
+            float shipAbility = exactAbility(ship.card, true);
+            PilotPlanChoice pilot = shipAbility < 4.0f
+                    ? selectBestPilotForShip(
+                            characters, ship.card,
+                            bespinSystem.location, forceAvailable, true)
+                    : null;
+            Integer soloCost = exactDeployCostAt(
+                    ship.card, bespinSystem.location);
+            boolean legalSolo = soloCost != null
+                    && soloCost <= forceAvailable
+                    && canDeployPaidDirectly(
+                            ship.card, bespinSystem.location);
+            if (pilot != null || legalSolo) {
+                bestShip = ship;
+                bestPilot = pilot;
+                packageCost = pilot != null ? pilot.cost : soloCost;
+                break;
+            }
+        }
+        if (bestShip == null) {
+            LOG.warn("📋 V22 CAPITAL: No legal affordable capital package for Bespin");
+            return plan;
+        }
+
         addCardToPlan(plan, bestShip.card, bespinSystem, 1,
             String.format("V22: Deploy %s to Bespin for objective (power %d)", bestShip.name, bestShip.power));
-        remaining -= bestShip.cost;
+        DeploymentInstruction shipInstruction =
+                plan.getInstructions().get(0);
+        shipInstruction.setDeployCost(packageCost);
+        shipInstruction.setAbilityContribution(
+                instructionAbilityContribution(bestShip.card));
 
-        // Try to add a pilot
-        final int pilotBudget = remaining;
-        List<CardInfo> affordablePilots = characters.stream()
-            .filter(c -> c.isPilot && c.cost <= pilotBudget)
-            .sorted(Comparator.comparingInt((CardInfo c) -> c.ability).reversed())
-            .collect(Collectors.toList());
-
-        if (!affordablePilots.isEmpty()) {
-            CardInfo pilot = affordablePilots.get(0);
-            addCardToPlan(plan, pilot.card, bespinSystem, 1,
-                String.format("V22: Deploy pilot %s for %s", pilot.name, bestShip.name));
-            LOG.warn("📋 V22 CAPITAL: Planning {} + pilot {} to Bespin", bestShip.name, pilot.name);
+        if (bestPilot != null) {
+            CardInfo pilot = bestPilot.pilot;
+            shipInstruction.setVerifiedCrewPackage(true);
+            addCardToPlan(plan, pilot.card, bespinSystem, 2,
+                String.format("V22: Deploy pilot %s for %s", pilot.name,
+                    bestShip.name));
+            DeploymentInstruction pilotInstruction =
+                    plan.getInstructions().get(1);
+            pilotInstruction.setDeployCost(0);
+            pilotInstruction.setAbilityContribution(
+                    instructionAbilityContribution(pilot.card));
+            pilotInstruction.setAboardShipName(bestShip.name);
+            pilotInstruction.setAboardShipBlueprintId(
+                    bestShip.blueprintId);
+            pilotInstruction.setAboardShipCardId(
+                    String.valueOf(bestShip.card.getCardId()));
+            LOG.warn("📋 V22 CAPITAL: Planning {} + legal power pilot {} to Bespin",
+                    bestShip.name, pilot.name);
         } else {
-            LOG.warn("📋 V22 CAPITAL: Planning {} to Bespin (no affordable pilot)", bestShip.name);
+            LOG.warn("📋 V22 CAPITAL: Planning {} to Bespin (no pilot needed or legal)",
+                    bestShip.name);
         }
 
         return plan;
@@ -2784,14 +2969,12 @@ public class DeployPhasePlanner {
         for (PhysicalCard ship : unpilotedShips) {
             if (remaining <= 0 || availablePilots.isEmpty()) break;
 
-            // Find best pilot for this ship
-            final int budget = remaining;  // Capture for lambda
-            CardInfo bestPilot = availablePilots.stream()
-                .filter(p -> p.cost <= budget)
-                .max(Comparator.comparingInt(p -> p.ability))
-                .orElse(null);
+            PilotPlanChoice best = selectBestPilotForShip(
+                    availablePilots, ship, null,
+                    remaining, false);
 
-            if (bestPilot != null) {
+            if (best != null) {
+                CardInfo bestPilot = best.pilot;
                 // Create instruction to deploy pilot to ship
                 DeploymentInstruction inst = new DeploymentInstruction(
                     bestPilot.blueprintId, bestPilot.name,
@@ -2800,13 +2983,18 @@ public class DeployPhasePlanner {
                 );
                 inst.setCardPermanentCardId(bestPilot.card.getPermanentCardId());
                 inst.setCardCurrentCardId(bestPilot.card.getCardId());
-                inst.setDeployCost(bestPilot.cost);
+                inst.setDeployCost(best.cost);
                 inst.setPowerContribution(bestPilot.power);
                 inst.setAbilityContribution(
                     instructionAbilityContribution(bestPilot.card));
+                inst.setAboardShipName(ship.getTitle());
+                inst.setAboardShipBlueprintId(
+                        ship.getBlueprintId(true));
+                inst.setAboardShipCardId(
+                        String.valueOf(ship.getCardId()));
                 plan.addInstruction(inst);
 
-                remaining -= bestPilot.cost;
+                remaining -= best.cost;
                 availablePilots.remove(bestPilot);
             }
         }

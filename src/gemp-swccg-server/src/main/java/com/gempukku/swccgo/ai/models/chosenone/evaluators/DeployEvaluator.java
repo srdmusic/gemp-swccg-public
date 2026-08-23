@@ -27,6 +27,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
@@ -1733,6 +1734,9 @@ public class DeployEvaluator extends ActionEvaluator {
                         ? plan.getInstructionForPhysicalCard(
                             card.getPermanentCardId(), card.getCardId(), blueprintId)
                         : null;
+                    applyV298ParentSpaceAllocation(
+                            context, action, actionText, card,
+                            plannedInstruction, plan);
                     boolean locationStrategy = plan != null
                         && plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS;
                     boolean tdigwattPlan = context.getObjectiveAnalyzer() != null
@@ -5510,6 +5514,38 @@ public class DeployEvaluator extends ActionEvaluator {
                 context, plan, actions, availableForce);
         LOG.info("[DeployEvaluator] Evaluated {} deploy actions", actions.size());
         return actions;
+    }
+
+    private void applyV298ParentSpaceAllocation(
+            DecisionContext context,
+            EvaluatedAction action,
+            String actionText,
+            PhysicalCard deployingCard,
+            DeploymentInstruction plannedInstruction,
+            DeploymentPlan plan) {
+        boolean typedObjective = plannedInstruction != null
+                && plan != null && plan.getReason() != null
+                && (plan.getReason().toLowerCase(Locale.ROOT)
+                        .contains("objective")
+                    || plan.getReason().startsWith("EOP:"));
+        boolean repilotPlan = plannedInstruction != null
+                && plan != null && plan.getReason() != null
+                && plan.getReason().startsWith("Re-pilot unpiloted ships");
+        String targetId = plannedInstruction != null
+                ? plannedInstruction.getTargetLocationId() : null;
+        SpaceDeploymentAllocationFactsReader.evaluateParent(
+                action.getActionId(), context.getGame(),
+                context.getPlayerId(), deployingCard, actionText,
+                targetId, typedObjective, repilotPlan,
+                context.getLifeForce(), RandoConfig.CRITICAL_LIFE_FORCE)
+            .ifPresent(evaluation -> {
+                PolicyContributionLedger ledger =
+                        new PolicyContributionLedger(
+                                "deploy-parent-v298-"
+                                        + action.getActionId());
+                ledger.register(evaluation.result());
+                PolicyOperationAdapter.apply(action, ledger);
+            });
     }
 
     /**
