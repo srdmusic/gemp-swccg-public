@@ -11152,3 +11152,34 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     Java, engine Java, deck, database, package, jar, deployment, restart,
     runtime mutation, game mutation, push, or candidate replay firing occurred.
     Revert the local commit containing this entry to remove this batch.
+
+  ==== CONDITIONAL TAXED-DRAIN RELEASE + TURN-FIVE GROUND SPREAD DEPLOYMENT (2026-08-22, runtime-loaded) ====
+
+    Steve authorized immediate deployment and GitHub delivery. Exact source
+    commit bea4b7aa0e623370ce66f6577cbc7370fb6bb69f produced a ZIP-valid
+    46,124,394-byte web.jar with 27,023 entries and SHA-256
+    88cde504592a754d1c45d4fca969c2ff995c753accd094f4e8555a0d2976c3e4.
+    Independent package verification found 22 changed and six added AI class
+    entries, no removals or unexpected entries, and 28/28 matching outputs
+    across target classes, server jar, and web.jar. Existing verification
+    remains 57/0/0/0 focused, 297/0/0/0 impacted, compile PASS, and exact
+    Rando/Chosen One mirror PASS. No extra test suite ran after Steve asked to
+    deploy immediately.
+
+    The authenticated Hall at 2026-08-23T00:05:42.192405Z contained zero
+    total, waiting, and playing tables. The server was frozen, and only the
+    app was recreated. Fresh app
+    1c04c423ac5a523387f77d238a83c82fe0afc66dcfbf85975ce721ad89cc9601
+    started at 2026-08-23T00:05:55.285379669Z with direct Java PID 1 and
+    restart count 0. Database container
+    46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6
+    retained its exact predeploy identity, start time, and restart count.
+
+    Sealed, host, and container hashes match. Startup completed; HTTP,
+    authenticated login, and Hall return 200; operational mode and gameplay
+    settings are enabled; and the postdeploy Hall remained empty. Immediate
+    rollback is /Users/steve/gemp-deploy-backups/rando-strategy-2026-08-22/
+    predeploy-bea4b7aa-ac062bbb/web.jar with SHA-256
+    ac062bbb7a1679bb84c058fbf446e51d3a14fbe64b28cf009e79a603cc7ba75c.
+    Proof is RUNTIME_LOADED. Drain-release, late-spread, and retained V106
+    shield semantic firing remain live-game evidence, not source claims.
