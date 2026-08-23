@@ -11457,3 +11457,44 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     runtime mutation, game mutation, or push occurred. Proof stops at
     SOURCE_TESTED. Revert the local commit containing this entry to remove
     only V299.
+
+  ==== V298/V299 deployment (2026-08-23): ability-four and exact pilot assignment loaded ====
+
+    Steve authorized deployment for immediate gameplay testing. Exact source
+    9b25edeff8de32a050437bfb99bf4a2404a6ac8e contains both V298 and V299 above
+    the previous live commit 48bdb40d00aec2dd93d51e15d693e69347b836d0.
+    Pinned offline Corretto Java 21 clean packaging produced a ZIP-valid
+    46,166,198-byte, 27,036-entry web.jar with SHA-256
+    4a0de56effd5d73defd02f3552c6554ee8187833e1baf3d97ede990d75dbd195.
+    Independent verification matched all 63 class outputs from 17 changed
+    production sources across target classes, owning module jars, and the fat
+    jar. Relative to the exact former live jar, 52 expected classes changed,
+    nine were added, none were removed, and no unexpected family or resource
+    changed.
+
+    Authenticated Hall checks at 2026-08-23T13:23:48Z showed zero total,
+    waiting, and playing tables before and after the shutdown freeze. The old
+    jar was backed up and the sealed candidate was atomically renamed into
+    place. Only the app was recreated using --no-deps, --no-build, and the
+    pinned direct-Java no-boot-flip override. Fresh app
+    8b6755b53b73b56389c1e886551b44eacf4f77b0c31db2fc5fbddab9c87cbd6e
+    started at 2026-08-23T13:23:49.828925669Z with direct Java PID 1,
+    restart count zero, and OOM false. Database container
+    46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6
+    retained its identity, start time, restart count, and OOM state.
+
+    Sealed, host, and container jar hashes match. V298 ability-four markers,
+    all three V299 policy markers, and both bots' exact reader and planner
+    call sites are present. Startup completed at 13:23:50.985Z. Three stable
+    HTTP probes returned 200. Operational mode, AI tables, private games,
+    statistics, new accounts, and the pre-existing enabled bonus-abilities
+    setting were restored. Post-start material log count was zero. Final
+    authenticated Hall at 13:24:53Z remained 0/0/0.
+
+    Sealed candidate is /Users/steve/gemp-deploy-artifacts/
+    rando-pilot-assignment-2026-08-23/9b25edeff-4a0de56e/web.jar. Immediate
+    rollback is /Users/steve/gemp-deploy-backups/
+    rando-pilot-assignment-2026-08-23/predeploy-9b25edeff-75468a5a/web.jar,
+    SHA-256 75468a5ae10543ec1459bef7fcc220ae50841a1ab68cf83caddc9797b0072fb9.
+    Proof is RUNTIME_LOADED, not REPLAY_FIRED. No schema, deck, game-data,
+    database-container, or GitHub push action occurred.

@@ -537,3 +537,17 @@ Routes: simultaneous, exact child, planned parent, both deploy planners, and leg
 Verification: failure-first actual Ket Maliss `601_17` regression, final focused and impacted ring `153/0/0/0`, independent ring `186/0/0/0`, Maven compile, compiled markers, mirror and ownership checks, title-typing scan, diff check, and independent PASS all succeeded. The 450-test broad ring's lone stale source assertion reproduced on untouched base `16ff65137770c77c295fefe637da7a7ee409e026`; four extra Endor failures also reproduced `4/4` on that base. No unrelated fix was added.
 
 Scope: four shared evaluator or modifier infrastructure files, ten AI production files, five tests, the three required project records, and the verifier's append-only history. No individual card blueprint, objective or deck data, database, package, jar, deployment, server action, runtime mutation, game mutation, or push changed. Proof is `SOURCE_TESTED`; the local commit hash is pending.
+
+## 2026-08-23 06:25 PT - Codex V298/V299 deployment -> Alfred - DEPLOYED / RESOLVED
+
+Topic: Steve authorized immediate delivery of the ability-four space allocation and exact pilot-assignment batches. Exact deployed source is `9b25edeff8de32a050437bfb99bf4a2404a6ac8e`, containing V298 and V299 above prior live `48bdb40d00aec2dd93d51e15d693e69347b836d0`.
+
+Package: pinned offline Corretto Java 21 clean package produced a ZIP-valid 46,166,198-byte, 27,036-entry jar, SHA-256 `4a0de56effd5d73defd02f3552c6554ee8187833e1baf3d97ede990d75dbd195`. Independent verification passed all 63 changed-source class outputs. Exact live-to-candidate delta is 52 changed classes, nine added, zero removed, zero resource changes, and zero unexpected families.
+
+Runtime: authenticated Hall immediately before and after freeze was `0/0/0`. Only the app was recreated with the pinned direct-Java override. Fresh app `8b6755b53b73b56389c1e886551b44eacf4f77b0c31db2fc5fbddab9c87cbd6e` started `2026-08-23T13:23:49.828925669Z`, direct Java PID 1, restart zero, OOM false. DB container `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6` retained exact identity, start time, restart count, and OOM state.
+
+Verification: sealed, host, and container hashes match. V298 and V299 markers plus both bot routes are loaded. Startup completed, three HTTP probes returned 200, all five predeploy gameplay settings remain enabled, final Hall at `13:24:53Z` remained `0/0/0`, and post-start material log count is zero.
+
+Rollback: `/Users/steve/gemp-deploy-backups/rando-pilot-assignment-2026-08-23/predeploy-9b25edeff-75468a5a/web.jar`, hash `75468a5ae10543ec1459bef7fcc220ae50841a1ab68cf83caddc9797b0072fb9`. Sealed candidate: `/Users/steve/gemp-deploy-artifacts/rando-pilot-assignment-2026-08-23/9b25edeff-4a0de56e/web.jar`.
+
+Proof is `RUNTIME_LOADED`, not `REPLAY_FIRED`. Steve may begin testing now. Nothing was pushed.

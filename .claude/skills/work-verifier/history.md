@@ -1907,3 +1907,32 @@ records; focused 153/0/0/0; independent 186/0/0/0; broad 450/1/0/0 with 1/1
 base reproduction; extra Endor 52/4/0/0 with 4/4 base reproduction; compile 0;
 diff-check 0; mirror mismatches 0; type-by-title violations 0; package 0;
 deployments 0; pushes 0. Proof ceiling SOURCE_TESTED.
+
+## 2026-08-23 06:25 PDT - V298/V299 package and runtime load -> PASS
+
+1. PACKAGE: PASS. Exact source 9b25edeff produced a pinned offline Java 21
+clean package with SHA-256 4a0de56effd5d73defd02f3552c6554ee8187833e1baf3d97ede990d75dbd195,
+46,166,198 bytes, and 27,036 unique ZIP entries. CRC and duplicate checks
+passed. All 63 outputs from 17 changed production source families matched
+target classes, owning module jars, and web.jar.
+
+2. DELTA: PASS. Against exact prior live jar hash 75468a5a, 52 expected
+classes changed, nine were added, none were removed, and there were no
+resource changes or unexpected families. V298 and V299 markers and both bot
+routes are present.
+
+3. SAFE REPLACEMENT: PASS. Authenticated Hall was 0/0/0 before and after
+freeze. Rollback was sealed. Only the app was force-recreated with no deps,
+no build, and the direct-Java pinned-image override. Database container
+identity, start time, restart count, and OOM state remained unchanged.
+
+4. RUNTIME: PASS. Sealed, host, and container hashes match. Fresh app
+8b6755b53b73b56389c1e886551b44eacf4f77b0c31db2fc5fbddab9c87cbd6e
+uses direct Java PID 1, restart zero, and OOM false. Startup completed, three
+HTTP probes returned 200, five gameplay settings are enabled, final Hall is
+0/0/0, and post-start material log count is zero.
+
+NUMBERS: source 9b25edeff; package 1; entries 27036; changed 52; added 9;
+removed 0; unexpected 0; class matches 63/63; Hall before 0/0/0; Hall after
+0/0/0; HTTP 3/3; material logs 0; DB restarts 0; app restarts 0; pushes 0.
+Proof ceiling RUNTIME_LOADED, not REPLAY_FIRED.
