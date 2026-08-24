@@ -47,7 +47,7 @@ public class Card501_037 extends AbstractObjective {
         setGameText("Deploy a Cloud City battleground site and [Cloud City] I'm Sorry. For remainder of game, you may not deploy Admiral's Orders, Endor Shield, [Death Star II] Executor or [Episode I] (or [Episode VII]) cards with ability. During your deploy phase, your Lando may make a regular move. Once during your turn, may [upload] Dark Deal, Vader's Bounty, or [Special Edition] Bespin. Flip this card if you control 3 Bespin locations and opponent controls fewer than 3 Bespin locations.");
         addIcons(Icon.CLOUD_CITY, Icon.PREMIUM, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
-        setTestingText("This Deal Is Getting Worse All The Time (v)");
+        setTestingText("This Deal Is Getting Worse All The Time (v) (ERRATA)");
     }
 
     @Override
