@@ -52,7 +52,7 @@ public class Card501_037_BACK extends AbstractObjective {
         setGameText("While this side up, Force drain bonuses at same site as your Lando or your Lobot may not be canceled. While Vader at a Bespin location, game text of Admiral's Orders is canceled and Alter may not be played. If your alien/Imperial pair in battle, your total battle destiny is +2. Once per battle involving your Lando (twice if any Lobot also there), may a subtract 1 from opponent's just drawn destiny. Flip this card if opponent controls more Bespin locations than you.");
         addIcons(Icon.CLOUD_CITY, Icon.PREMIUM, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
-        setTestingText("Pray I Don't Alter It Any Further (v)");
+        setTestingText("Pray I Don't Alter It Any Further (v) (ERRATA)");
     }
 
     @Override
