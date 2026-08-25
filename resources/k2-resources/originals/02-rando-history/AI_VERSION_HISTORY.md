@@ -11554,3 +11554,42 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     mutation, or GitHub push occurred in this source entry. Proof stops at
     SOURCE_TESTED. Revert the local commit containing this entry to remove
     only V300.
+
+  ==== V300 DEPLOYMENT (2026-08-24): Surprise Assault and saber sequencing live ====
+
+    Steve authorized immediate delivery after source and independent checks.
+    Exact source commit 780fb639bef851d517cd4415a239589b491050d1,
+    parent 9c299c16b23a6d0d8085fa009194bf1a50489e4b, produced a
+    ZIP-valid 46,173,423-byte, 27,039-entry web.jar under pinned offline
+    Corretto Java 21. Its SHA-256 is
+    b2969ba56c294be431692fb7ec062ab5ac6c23d090d7ad7f6ea063549351eb06.
+    All 18 outputs from the six changed production sources byte-match target
+    classes, the server jar, and web.jar. The exact prior-live delta is 15
+    expected changed classes, three added reader classes, zero removals, and
+    no resource or unexpected-family change.
+
+    Authenticated Hall gates before and after freeze were 0/0/0. The prior
+    jar was preserved and atomically replaced, then only gemp_swccg_app_1 was
+    recreated with the pinned direct-Java no-boot-flip override. Fresh app
+    41a79cf7f2c6e271bf65c03090c7dce1fa1774bb4c5e5fb0c6e6f9d8aa5836c1
+    started 2026-08-25T05:14:01.585393763Z with Java PID 1, restart zero,
+    and OOM false. Database container
+    46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6
+    retained exact identity, 2026-08-24T15:42:08.968029047Z start time,
+    restart zero, and OOM state.
+
+    Sealed, host, and container hashes match. V300 reader, policy, both bot
+    response routes, and both saber-parent routes are loaded. Startup
+    completed, three HTTP probes returned 200, operational mode and all five
+    gameplay settings are enabled, Hall remains 0/0/0, and no material
+    post-start log event occurred. The sole real pre-start warning is the
+    known multi-release-JAR location warning.
+
+    Sealed artifact:
+    /Users/steve/gemp-deploy-artifacts/rando-surprise-saber-2026-08-24/780fb639-b2969ba5/web.jar
+    Immediate rollback:
+    /Users/steve/gemp-deploy-backups/rando-surprise-saber-2026-08-24/predeploy-780fb639-4a0de56e/web.jar
+    Rollback SHA-256 is
+    4a0de56effd5d73defd02f3552c6554ee8187833e1baf3d97ede990d75dbd195.
+    Proof is RUNTIME_LOADED, not REPLAY_FIRED. No database, deck, card-source,
+    engine-source, or GitHub push action occurred.

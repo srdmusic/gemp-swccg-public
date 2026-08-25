@@ -563,3 +563,17 @@ Decision: shared V300 uses exact source blueprint `1_113`. Systems and sectors h
 Verification: the exact replay adapter regression caught and corrected an initially shadowed hook before release. Pinned offline Corretto Java `21.0.11` and Maven `3.9.6` impacted ring passed `146/0/0/0`. Server-reactor compile, compiled route markers, exact DeckOracle changed-hunk parity, normalized ActionText parity, forbidden title-typing scan, and `git diff --check` passed. Independent verification reran the impacted subset plus 41 adjacent tests for `187/0/0/0` total and returned PASS with zero blockers or warnings. Exact parent is `9c299c16b23a6d0d8085fa009194bf1a50489e4b`, branch `codex/rando-space-ability-four-2026-08-22`.
 
 Scope and proof ceiling: six AI production files, focused and impacted AI tests, these three required records, and verifier history. No card Java, engine Java, deck data, database, package, jar, runtime mutation, game mutation, or push has occurred in this source entry. Proof is `SOURCE_TESTED`. Steve has authorized deployment. The game is finished with zero waiting and zero playing tables, but runtime replacement still waits for GEMP's finished-table cleanup to produce the strict Hall `0/0/0` gate.
+
+## 2026-08-24 22:15 PT - Codex V300 deployment -> Alfred - DEPLOYED / RESOLVED
+
+Topic: Steve authorized immediate delivery of the Surprise Assault odds and lightsaber-parent sequencing correction. Exact deployed source is `780fb639bef851d517cd4415a239589b491050d1`, parent `9c299c16b23a6d0d8085fa009194bf1a50489e4b`.
+
+Package: pinned offline Corretto Java 21 clean packaging produced a ZIP-valid 46,173,423-byte, 27,039-entry jar, SHA-256 `b2969ba56c294be431692fb7ec062ab5ac6c23d090d7ad7f6ea063549351eb06`. All 18 outputs from the six changed production sources byte-match target classes, the server jar, and `web.jar`. Exact live-to-candidate delta is 15 expected changed classes, three added reader classes, zero removals, zero resource changes, and zero unexpected families.
+
+Runtime: authenticated Hall immediately before and after freeze was `0/0/0`. Only the app was recreated with the pinned direct-Java override. Fresh app `41a79cf7f2c6e271bf65c03090c7dce1fa1774bb4c5e5fb0c6e6f9d8aa5836c1` started `2026-08-25T05:14:01.585393763Z`, direct Java PID 1, restart zero, OOM false. DB container `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6` retained exact identity, `2026-08-24T15:42:08.968029047Z` start time, restart count, and OOM state.
+
+Verification: sealed, host, and container hashes match. V300 reader and policy markers, both bots' Surprise Assault routes, and both bots' saber-parent routes are loaded. Startup completed, three HTTP probes returned 200, operational mode and all five gameplay settings are enabled, final Hall remained `0/0/0`, and material post-start log count is zero. The sole real pre-start warning is the known multi-release-JAR location warning.
+
+Rollback: `/Users/steve/gemp-deploy-backups/rando-surprise-saber-2026-08-24/predeploy-780fb639-4a0de56e/web.jar`, hash `4a0de56effd5d73defd02f3552c6554ee8187833e1baf3d97ede990d75dbd195`. Sealed candidate: `/Users/steve/gemp-deploy-artifacts/rando-surprise-saber-2026-08-24/780fb639-b2969ba5/web.jar`.
+
+Proof is `RUNTIME_LOADED`, not `REPLAY_FIRED`. Steve may begin testing now. Nothing was pushed.
