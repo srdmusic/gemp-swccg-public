@@ -39,6 +39,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullSpecificActionPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.SurpriseAssaultFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.ShieldPolicy;
@@ -4309,6 +4310,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                      // V194: let the dedicated cancel-and-redraw branch score this action.
                      && !(textLower.contains("redraw") && textLower.contains("destiny"))) {
                 action.setActionType(ActionType.CANCEL);
+                if ("1_113".equals(exactSourceBlueprintId)) {
+                    applyResponsePolicy(action,
+                            ResponsePolicy.scoreSurpriseAssault(
+                                    SurpriseAssaultFactsReader.read(
+                                            actionId, game,
+                                            context.getPlayerId(),
+                                            actionSource)));
+                }
                 evaluateSenseCancel(action, context, actionText, controlLedger);
             }
 

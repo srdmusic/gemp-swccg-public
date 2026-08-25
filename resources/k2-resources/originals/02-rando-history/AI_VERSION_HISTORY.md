@@ -11498,3 +11498,59 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     SHA-256 75468a5ae10543ec1459bef7fcc220ae50841a1ab68cf83caddc9797b0072fb9.
     Proof is RUNTIME_LOADED, not REPLAY_FIRED. No schema, deck, game-data,
     database-container, or GitHub push action occurred.
+
+  ==== V300 (2026-08-24): Surprise Assault odds and lightsaber-parent coherence ====
+
+    Completed DB game 72318, Rando recording yuocbea3wm7gybn1, exposed two
+    separate parent-decision failures. Surprise Assault at Nal Hutta received
+    only the generic Force-drain-cancel +35, drew 2 + 6 + 1 = 9 against power
+    18, and cost Rando 9 Force. Earlier, General Leia already carried Leia's
+    Lightsaber while Ben Solo was planned and deployable from hand. Every
+    corridor was gone from Reserve, but A Cunning Warrior's mixed parent
+    scored 2305 over Ben's 930. Its mandatory only child was Anakin's
+    Lightsaber, so the engine attached a second physical weapon to Leia even
+    though V70 correctly scored that child -9999.
+
+    Shared SurpriseAssaultFactsReader reads the exact drain location, opponent
+    characters, starships, and vehicles present, engine total power, and the
+    current Reserve destiny of every card. Effective draws are capped by the
+    number of Reserve cards. Surprise Assault is categorically hard-vetoed at
+    a system or sector. At a site, it remains admissible only when effective
+    draws times current average Reserve destiny exceeds opponent power by at
+    least 2. Incomplete facts, a smaller projected margin, or an active Dark
+    Forces that can pay for its extra destiny categorically defer. The exact
+    rule runs in the live broad cancel branch before the generic +35, and the
+    sticky veto or defer cannot be washed out by that later score. Other
+    Force-drain cancellation cards are unchanged.
+
+    V185's DeckOracle fact now requires an exact matching, active, physically
+    unarmed holder before treating a Reserve weapon pull as useful. The scan
+    uses direct physical CardCategory.WEAPON attachments, matching V70, V158,
+    and destination-slot behavior without making permanent weapons consume
+    this strategic slot. Armed Leia therefore blocks A Cunning Warrior before
+    its mandatory child. Once unarmed ability-5 Skywalker Ben Solo is in play,
+    the parent becomes valid and the existing destination rule keeps the
+    second weapon off Leia. Real corridor targets, matching unarmed holders,
+    Filters.none weapons, direct legal weapon deployment, and unrelated mixed
+    pulls preserve their existing behavior.
+
+    Failure-first and exact adapter regressions cover replay 72318 space,
+    system and sector vetoes, site margin 1.99 and 2.0, the five-body average-
+    destiny example, Reserve exhaustion, incomplete state, Dark Forces
+    policy, both bot adapters, armed Leia, unarmed Leia, and armed Leia plus
+    unarmed Ben. The pinned offline Corretto Java 21.0.11 and Maven 3.9.6
+    impacted ring passed 146/0/0/0. Server-reactor compile, compiled markers,
+    exact changed-hunk mirrors, normalized ActionText parity, forbidden title-
+    typing scan, and diff check passed. Independent verification reran that
+    subset plus 41 adjacent tests for 187/0/0/0 total and returned PASS with
+    zero blockers or warnings; its exact evidence is recorded in the matching
+    mailbox and verifier entries.
+
+    Exact parent is 9c299c16b23a6d0d8085fa009194bf1a50489e4b on branch
+    codex/rando-space-ability-four-2026-08-22. Scope is six AI production
+    files, the focused and impacted AI tests, these three required project
+    records, and the verifier's append-only history. No card Java, engine Java,
+    deck data, database, package, jar, deployment, runtime mutation, game
+    mutation, or GitHub push occurred in this source entry. Proof stops at
+    SOURCE_TESTED. Revert the local commit containing this entry to remove
+    only V300.

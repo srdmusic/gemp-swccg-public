@@ -226,6 +226,64 @@ public final class ResponsePolicy {
                 "Cancel opponent's force drain"));
     }
 
+    public static PolicyResult scoreSurpriseAssault(
+            SurpriseAssaultFactsReader.Facts facts) {
+        String actionId = facts.actionId();
+        if (facts.locationKind()
+                == SurpriseAssaultFactsReader.LocationKind.SYSTEM
+                || facts.locationKind()
+                == SurpriseAssaultFactsReader.LocationKind.SECTOR) {
+            return result(List.of(PolicyOperation.hardVeto(
+                    actionId,
+                    TraceRuleId.of("V300-surprise-assault-space"),
+                    TraceDomainId.RESPONSE_ROUTING,
+                    TraceOutputKind.VETO,
+                    "V300 SURPRISE ASSAULT: never risk the card in space")));
+        }
+        if (!facts.complete()
+                || facts.locationKind()
+                != SurpriseAssaultFactsReader.LocationKind.SITE) {
+            return result(List.of(PolicyOperation.defer(
+                    actionId,
+                    TraceRuleId.of("V300-surprise-assault-unknown"),
+                    TraceDomainId.RESPONSE_ROUTING,
+                    TraceOutputKind.VETO,
+                    0.0f,
+                    "V300 SURPRISE ASSAULT: site projection is incomplete")));
+        }
+        if (facts.opponentCanUseDarkForces()) {
+            return result(List.of(PolicyOperation.defer(
+                    actionId,
+                    TraceRuleId.of("V300-surprise-assault-dark-forces"),
+                    TraceDomainId.RESPONSE_ROUTING,
+                    TraceOutputKind.VETO,
+                    0.0f,
+                    "V300 SURPRISE ASSAULT: Dark Forces can add an unprojected opponent destiny")));
+        }
+        if (facts.projectedMargin() < 2.0) {
+            return result(List.of(PolicyOperation.defer(
+                    actionId,
+                    TraceRuleId.of("V300-surprise-assault-margin"),
+                    TraceDomainId.RESPONSE_ROUTING,
+                    TraceOutputKind.VETO,
+                    0.0f,
+                    String.format(Locale.ROOT,
+                            "V300 SURPRISE ASSAULT: %d expected draws at %.2f versus power %.2f, projected margin %.2f is below 2",
+                            facts.effectiveDraws(), facts.averageDestiny(),
+                            facts.opponentPower(), facts.projectedMargin()))));
+        }
+        return result(List.of(PolicyOperation.add(
+                actionId,
+                TraceRuleId.of("V300-surprise-assault-site-edge"),
+                TraceDomainId.RESPONSE_ROUTING,
+                TraceOutputKind.ORDERING,
+                0.0f,
+                String.format(Locale.ROOT,
+                        "V300 SURPRISE ASSAULT: %d expected draws at %.2f versus power %.2f, projected margin %.2f meets 2",
+                        facts.effectiveDraws(), facts.averageDestiny(),
+                        facts.opponentPower(), facts.projectedMargin()))));
+    }
+
     public static PolicyResult scoreRemainingBattleDamageCancel(
             String actionId) {
         return one(actionId, "RESPONSE-houjix-ghhhk", 30.0f,

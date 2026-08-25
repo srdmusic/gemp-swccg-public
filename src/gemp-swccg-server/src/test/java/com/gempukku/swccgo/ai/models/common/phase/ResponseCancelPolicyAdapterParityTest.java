@@ -1,13 +1,18 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgCardBlueprint;
+import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import org.junit.Test;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -95,6 +100,46 @@ public class ResponseCancelPolicyAdapterParityTest {
         assertRando(rando.get(0), -300.0f,
                 "V37 DON'T REDRAW: Current destiny 6 is GOOD (avg 3.0) — keep it! (-300.0)",
                 "UNKNOWN");
+    }
+
+    @Test
+    public void replay72318ExactSurpriseAssaultIsHardVetoedInSpaceInBothBots() {
+        SwccgGame game = mock(SwccgGame.class);
+        GameState gameState = gameState("opponent");
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard source = mock(PhysicalCard.class);
+        PhysicalCard system = mock(PhysicalCard.class);
+        SwccgCardBlueprint systemBlueprint = mock(SwccgCardBlueprint.class);
+
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.findCardById(113)).thenReturn(source);
+        when(source.getBlueprintId(true)).thenReturn("1_113");
+        when(gameState.getForceDrainLocation()).thenReturn(system);
+        when(system.getBlueprint()).thenReturn(systemBlueprint);
+        when(systemBlueprint.getCardSubtype()).thenReturn(CardSubtype.SYSTEM);
+
+        var randoContext = randoContext(
+                gameState, List.of("space"), List.of("Cancel Force drain"));
+        randoContext.setCardIds(List.of("113"));
+        randoContext.setGame(game);
+        var chosenContext = chosenContext(
+                gameState, List.of("space"), List.of("Cancel Force drain"));
+        chosenContext.setCardIds(List.of("113"));
+        chosenContext.setGame(game);
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.ActionTextEvaluator()
+                .evaluate(randoContext).get(0);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionTextEvaluator()
+                .evaluate(chosenContext).get(0);
+
+        assertEquals(rando.getReasoning(), chosen.getReasoning());
+        assertTrue(rando.isHardVetoed());
+        assertTrue(chosen.isHardVetoed());
+        assertEquals("V300 SURPRISE ASSAULT: never risk the card in space",
+                rando.getVetoReason());
+        assertEquals(Float.floatToRawIntBits(35.0f),
+                Float.floatToRawIntBits(rando.getScore()));
     }
 
     private static GameState gameState(String currentPlayer) {

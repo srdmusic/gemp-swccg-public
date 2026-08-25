@@ -635,8 +635,8 @@ public class DeckOracle {
             // Filters.none = no matching-character filter set; those weapons deploy via game text,
             // which we cannot predict from Reserve — defer (don't block).
             if (matching == null || matching == com.gempukku.swccgo.filters.Filters.none) return false;
-            // This weapon HAS a legal in-play holder — don't block.
-            if (hasInPlayCharacterAccepting(game, playerId, matching)) return false;
+            // This weapon HAS a legal, unarmed in-play holder, so do not block.
+            if (hasInPlayUnarmedCharacterAccepting(game, playerId, matching)) return false;
             // else: real filter, no holder on table — keep scanning; only ALL-unattachable blocks.
             anyDeadWeaponMatched = true;  // V185 ADJUSTED 2026-07-11b
         }
@@ -644,14 +644,32 @@ public class DeckOracle {
         return anyDeadWeaponMatched;
     }
 
-    /** V185: does {@code playerId} have an in-play CHARACTER that this weapon's matching filter accepts? */
-    private boolean hasInPlayCharacterAccepting(
+    /** V185: does the player have an unarmed in-play character accepted by this weapon? */
+    private boolean hasInPlayUnarmedCharacterAccepting(
             com.gempukku.swccgo.game.SwccgGame game, String playerId, com.gempukku.swccgo.filters.Filter matching) {
-        return !com.gempukku.swccgo.filters.Filters.filterActive(game, null,
+        java.util.Collection<com.gempukku.swccgo.game.PhysicalCard> candidates =
+            com.gempukku.swccgo.filters.Filters.filterActive(game, null,
             com.gempukku.swccgo.filters.Filters.and(
                 com.gempukku.swccgo.filters.Filters.owner(playerId),
                 com.gempukku.swccgo.filters.Filters.character,
-                matching)).isEmpty();
+                matching));
+        for (com.gempukku.swccgo.game.PhysicalCard candidate : candidates) {
+            boolean armed = false;
+            java.util.List<com.gempukku.swccgo.game.PhysicalCard> attached =
+                game.getGameState().getAttachedCards(candidate);
+            if (attached != null) {
+                for (com.gempukku.swccgo.game.PhysicalCard card : attached) {
+                    if (card != null && card.getBlueprint() != null
+                            && card.getBlueprint().getCardCategory()
+                                == com.gempukku.swccgo.common.CardCategory.WEAPON) {
+                        armed = true;
+                        break;
+                    }
+                }
+            }
+            if (!armed) return true;
+        }
+        return false;
     }
 
     /**

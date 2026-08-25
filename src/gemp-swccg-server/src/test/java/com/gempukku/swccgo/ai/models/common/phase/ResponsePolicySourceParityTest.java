@@ -183,6 +183,9 @@ public class ResponsePolicySourceParityTest {
                 "// V194: let the dedicated cancel-and-redraw branch score this action.",
                 "&& !(textLower.contains(\"redraw\") && textLower.contains(\"destiny\"))",
                 "action.setActionType(ActionType.CANCEL)",
+                "\"1_113\".equals(exactSourceBlueprintId)",
+                "ResponsePolicy.scoreSurpriseAssault(",
+                "SurpriseAssaultFactsReader.read(",
                 "evaluateSenseCancel(action, context, actionText, controlLedger)");
         assertInOrder(source,
                 "// ========== Cancel Opponent's Interrupt",

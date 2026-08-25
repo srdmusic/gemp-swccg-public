@@ -1936,3 +1936,85 @@ NUMBERS: source 9b25edeff; package 1; entries 27036; changed 52; added 9;
 removed 0; unexpected 0; class matches 63/63; Hall before 0/0/0; Hall after
 0/0/0; HTTP 3/3; material logs 0; DB restarts 0; app restarts 0; pushes 0.
 Proof ceiling RUNTIME_LOADED, not REPLAY_FIRED.
+
+## 2026-08-24 22:09 PDT - V300 Surprise Assault and lightsaber-parent coherence (AI evaluator edit) -> PASS
+
+VERDICT: PASS. No blocker or warning. Independent review used only the clean
+worktree `/Users/steve/gemp-objective-score-cap-2026-08-15`, branch
+`codex/rando-space-ability-four-2026-08-22`, uncommitted parent
+`9c299c16b23a6d0d8085fa009194bf1a50489e4b`. The dirty canonical checkout was
+not inspected, compiled, edited, or built.
+
+1. SOURCE AND REPLAY ROUTE: PASS. Actual `Card1_113.java:41,49-77` offers the
+exact `Cancel Force drain` response and draws once per opponent character,
+starship, and vehicle present before comparing with engine total power. The
+ActionText adapters resolve the exact stripped source blueprint `1_113` and
+invoke V300 in the broad cancel branch before the existing generic drain
+cancel. Both replay-72318 adapter fixtures reach that exact route. Each space
+fixture retains the legacy score `35` but is hard-vetoed; each low-margin site
+fixture retains `35` but is deferred. Thus the non-additive state dominates
+the generic `+35` instead of retuning it. Other cancel sources miss the exact
+blueprint guard and remain unchanged.
+
+2. SURPRISE ASSAULT FACTS AND BOUNDARIES: PASS. The shared reader uses the
+current force-drain location subtype, typed present-card filters, engine total
+opponent power, every current Reserve card's
+`getDestinyForDestinyDraw` value, and the exact Dark Forces response gate.
+`DrawDestinyEffect.java:547-563` confirms drawing stops when Reserve empties,
+so `min(present count, Reserve size)` is source-correct. `Card102_006.java:43,
+54-67` confirms affordable active Dark Forces can add an unprojected opponent
+destiny. Systems and sectors hard-veto; sites require projected margin at
+least `2.0`; incomplete, lower-margin, empty-Reserve, and Dark Forces states
+defer. Boundary fixtures cover `1.99`, exact `2.0`, five bodies at average
+destiny `5`, Reserve capping, unknown state, and the replay's `3 * 3.25 - 18`.
+
+3. LIGHTSABER PARENT SEQUENCE: PASS. Actual A Cunning Warrior source offers
+Anakin's Lightsaber or a Cloud City corridor; Anakin's Lightsaber accepts a
+Skywalker of ability greater than 3; `Filters.Skywalker` includes Ben Solo;
+Ben is ability 5 and has the Lost-Pile lightsaber route. The V185 DeckOracle
+scan now accepts only an exact matching active character with no directly
+attached physical `CardCategory.WEAPON`. It deliberately does not count a
+permanent weapon. Real-blueprint fixtures prove armed Leia makes the parent
+unsafe, unarmed Leia preserves a valid pull, and armed Leia plus unarmed Ben
+makes the parent safe after Ben deploys. V185 then suppresses the observed
+parent's positive pull tier and applies `-9999` before its mandatory child;
+after Ben appears, existing V70/V158/destination policy scores armed Leia out
+and leaves unarmed Ben valid. Exact non-weapon corridor targets,
+`Filters.none` weapons, and matching unarmed holders retain the old exits.
+
+4. MIRRORS, BYTECODE, AND API DISCIPLINE: PASS. Full normalized Rando and
+Chosen One ActionTextEvaluator sources are exact. DeckOracle changed hunks are
+exact; the only whole-file difference is the same pre-existing comment-only
+drift present at the parent. Compiled bytecode contains one
+`scoreSurpriseAssault` call per ActionText adapter, two
+`hasInPlayUnarmedCharacterAccepting` references per DeckOracle, all five V300
+policy strings, and the reader calls for location, count, power, destiny, and
+force-use facts. New type-by-title violations: 0. Dead `if (false)` guards on
+the edited routes: 0. `git diff --check` exited 0.
+
+5. TESTS AND COMPILE: PASS. Three independent network-disabled runs used the
+pinned `gemp_app` image with Corretto 21.0.11 and Maven 3.9.6. The five changed
+fixture classes passed `26/0/0/0`; the adjacent pull, weapon, response, parser,
+and policy ring passed `113/0/0/0`; both bots' CombinedEvaluator dominance
+ring passed `48/0/0/0`. Total independent evidence is `187/0/0/0`, including
+an exact `146/0/0/0` reproduction of the recorded V300 impacted subset plus
+41 additional adjacent tests. A separate offline server-reactor compile
+exited 0. The network-disabled containers emitted only Log4j's known
+unresolvable-container-hostname diagnostic; Surefire reported zero failures,
+errors, or skips.
+
+6. SCOPE AND RECORDS: PASS. Before this verifier append, scope was exactly six
+AI production files, five AI test files, and the three required records:
+14 files, `+817/-12`. No card source, engine source, objective/deck data,
+database, package, runtime, or GitHub path is in the source diff. V300 entries
+in `resources/AI_CHANGELOG.md`, `AI_VERSION_HISTORY.md`, and
+`Handoffs/AI_MAILBOX.md` agree with the implementation, card source, replay
+numbers, tests, parent, and `SOURCE_TESTED` proof ceiling. Fabricated card,
+persona, objective, or acronym claims found: 0.
+
+NUMBERS: production 6; tests 5; required records 3; verifier history 1;
+independent tests 187/0/0/0; recorded impacted subset 146/0/0/0; compile 0;
+compiled adapter calls 1/1; compiled DeckOracle helper references 2/2;
+V300 compiled policy strings 5; mirror mismatches introduced 0;
+type-by-title violations 0; diff-check 0; blockers 0; warnings 0. Proof ceiling
+SOURCE_TESTED.
