@@ -81,8 +81,10 @@ import com.gempukku.swccgo.logic.GameUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 // V295 RETIRED: import java.util.Random;
 
 /**
@@ -7016,6 +7018,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         SwccgGame game = context.getGame();
         String playerId = context.getPlayerId();
         int attritionRemaining = 0;
+        float totalAttrition = 0.0f;
         int damageRemaining = 0;
         if (game != null && playerId != null) {
             try {
@@ -7023,12 +7026,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     .getBattleAttritionRemaining(game, playerId);
                 damageRemaining = (int) com.gempukku.swccgo.logic.timing.GuiUtils
                     .getBattleDamageRemaining(game, playerId);
+                if (gameState != null && gameState.getBattleState() != null) {
+                    totalAttrition = gameState.getBattleState()
+                        .getAttritionTotal(game, playerId);
+                }
             } catch (Exception e) {
                 logger.debug("Could not read battle damage from game state: {}", e.getMessage());
             }
         }
 
-        logger.info("🎯 Force loss OR forfeit (game state): attrition={}, damage={}", attritionRemaining, damageRemaining);
+        logger.info("🎯 Force loss OR forfeit (game state): attrition={}, totalAttrition={}, damage={}",
+            attritionRemaining, totalAttrition, damageRemaining);
 
         ForceLossFacts.DecisionFacts forceLossDecision = ForceLossFacts.readCombinedDecision(
                 gameState, playerId, context.getTurnNumber());
@@ -7046,65 +7054,60 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         ? "combined-battle-forfeit-after-decision"
                         : forceLossDecisionId + "-combined-battle-forfeit-after");
 
-        // Track if we have any hit cards or dead cards available for forfeit
-        boolean hasHitCards = false;
-        boolean hasDeadCards = false;
-        String bestHitActionId = null;
-        float bestHitForfeit = Float.MAX_VALUE;
-        int combinedForfeitOptionCount = 0;
-        boolean hasSelectableForceLossOption = false;
-        // Note: game and playerId already declared above for battle state queries
+        Map<String, PhysicalCard> combinedCardsById = new LinkedHashMap<>();
+        Map<String, BattleForfeitFacts.CandidateFacts> combinedFactsById =
+            new LinkedHashMap<>();
+        List<BattleForfeitFacts.CandidateFacts> selectableBattleCandidates =
+            new ArrayList<>();
 
-        // First pass: identify hit cards, dead cards, and legal forfeit options.
+        // First pass: normalize only selectable engine candidates, then choose
+        // the one legal loss tier exposed for this decision.
         for (int index = 0; index < context.getCardIds().size(); index++) {
             String cardId = context.getCardIds().get(index);
+            if (!isCardSelectable(context, index)) {
+                continue;
+            }
+            PhysicalCard card = null;
             if (gameState != null) {
                 try {
-                    PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
-                    if (card != null) {
-                        if (card.isHit()) {
-                            hasHitCards = true;
-                            SwccgCardBlueprint bp = card.getBlueprint();
-                            // CRITICAL: Check hasForfeitAttribute() first - weapons throw exception!
-                            float forfeit = bp != null && bp.hasForfeitAttribute() && bp.getForfeit() != null ? bp.getForfeit() : 0;
-                            if (forfeit < bestHitForfeit) {
-                                bestHitForfeit = forfeit;
-                                bestHitActionId = cardId;
-                            }
-                        }
-                        // Check for dead cards (persona already deployed)
-                        if (game != null && playerId != null &&
-                            AiCardHelper.isDeadCard(card, game, playerId)) {
-                            hasDeadCards = true;
-                        }
-                        if (isCardSelectable(context, index)) {
-                            if (ForceLossFacts.isForceLossZone(card)) {
-                                hasSelectableForceLossOption = true;
-                            } else {
-                                combinedForfeitOptionCount++;
-                            }
-                        }
-                    }
+                    card = gameState.findCardById(Integer.parseInt(cardId));
                 } catch (NumberFormatException e) {
-                    // Ignore
+                    // Preserve the unknown-card fallback in the damage tier.
                 }
             }
+            boolean forceLossOption = ForceLossFacts.isForceLossZone(card);
+            BattleForfeitFacts.CandidateFacts candidate =
+                BattleForfeitFacts.readCandidate(
+                    cardId, card, game, playerId, forceLossOption,
+                    attritionRemaining, damageRemaining, true);
+            combinedCardsById.put(cardId, card);
+            combinedFactsById.put(cardId, candidate);
+            selectableBattleCandidates.add(candidate);
         }
 
         BattleForfeitFacts.CandidateSetFacts battleCandidateSet =
-            new BattleForfeitFacts.CandidateSetFacts(
-                hasHitCards, hasDeadCards,
-                java.util.Optional.ofNullable(bestHitActionId), bestHitForfeit);
+            BattleForfeitFacts.readCandidateSet(selectableBattleCandidates);
+        BattleForfeitPolicy.ResolutionPlan resolutionPlan =
+            BattleForfeitPolicy.planCombinedResolution(
+                attritionRemaining, totalAttrition,
+                selectableBattleCandidates);
+        int scoringAttritionRemaining =
+            resolutionPlan.tier() == BattleForfeitPolicy.ResolutionTier.DAMAGE
+                ? 0 : attritionRemaining;
         BattleForfeitFacts.DecisionFacts battleForfeitDecision =
             new BattleForfeitFacts.DecisionFacts(
-                attritionRemaining, damageRemaining, battleCandidateSet);
+                scoringAttritionRemaining, damageRemaining,
+                battleCandidateSet);
+        logger.info("V301 BATTLE LOSS ORDER: tier={} active={}",
+            resolutionPlan.tier(), resolutionPlan.activeActionIds());
         BattleForfeitFacts.FlipGateFormationSelectionFacts
             flipGateFormationSelection =
                 BattleForfeitFacts.readFlipGateFormationSelection(
                     context.getCardIds(), context.getSelectable(),
                     gameState, game, playerId,
                     context.getObjectiveAnalyzer(), false,
-                    attritionRemaining);
+                    attritionRemaining,
+                    resolutionPlan.activeActionIds());
         PolicyContributionLedger flipGateFormationLedger =
             new PolicyContributionLedger(
                 forceLossDecisionId == null || forceLossDecisionId.isBlank()
@@ -7113,6 +7116,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         + "-combined-battle-forfeit-flip-gate-formation");
 
         for (String cardId : context.getCardIds()) {
+            if (!resolutionPlan.includes(cardId)) {
+                continue;
+            }
             EvaluatedAction action = new EvaluatedAction(
                 cardId,
                 ActionType.UNKNOWN,
@@ -7125,19 +7131,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     flipGateFormationSelection
                         .hasUnprotectedLegalAlternative()));
             PolicyOperationAdapter.apply(action, flipGateFormationLedger);
-            PhysicalCard battleCandidate = null;
-            if (gameState != null) {
-                try {
-                    battleCandidate = gameState.findCardById(Integer.parseInt(cardId));
-                } catch (NumberFormatException e) { /* ignore */ }
-            }
+            PhysicalCard battleCandidate = combinedCardsById.get(cardId);
             applyCaptureCriticalRetention(
                     context, action, battleCandidate);
-            boolean isForceLosSOption = ForceLossFacts.isForceLossZone(battleCandidate);
+            boolean isForceLosSOption =
+                combinedFactsById.get(cardId).forceLossOption();
             BattleForfeitFacts.CandidateFacts battleForfeitCandidate =
-                BattleForfeitFacts.readCandidate(
-                    cardId, battleCandidate, game, playerId,
-                    isForceLosSOption, attritionRemaining, damageRemaining, true);
+                combinedFactsById.get(cardId);
             BattleForfeitPolicy.Evaluation battleForfeitEvaluation =
                 BattleForfeitPolicy.evaluateCombined(
                     battleForfeitDecision, battleForfeitCandidate);
@@ -7240,14 +7240,10 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 BattleForfeitPolicy
                                     .scoreCombinedShipWithCrew(
                                         cardId, title, crewCount,
-                                        combinedForfeitOptionCount > 1
-                                            || (attritionRemaining <= 0
-                                                && hasSelectableForceLossOption)));
+                                        resolutionPlan.hasAlternativeTo(cardId)));
                         PolicyOperationAdapter.apply(action, v48Ledger);
                         if (crewCount > 0
-                                && (combinedForfeitOptionCount > 1
-                                    || (attritionRemaining <= 0
-                                        && hasSelectableForceLossOption))) {
+                                && resolutionPlan.hasAlternativeTo(cardId)) {
                             logger.warn(
                                     "V48 COMBINED SHIP FORFEIT BLOCK: {} has {} crew; forfeit another card first",
                                     title, crewCount);

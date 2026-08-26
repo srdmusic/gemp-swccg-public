@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
 import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -393,10 +394,325 @@ public class ForceLossCardSelectionPolicyParityTest {
         assertActionParity(rando, chosen);
         assertBits(2250.0f, action(rando, "11").getScore());
         assertReasons(action(rando, "11").getReasoning(),
-                "V154 WEAPON-LOSS: strip weapon first for extra coverage (host is HIT — lost anyway) — before hit chars (+2200.0)");
+                "V154 WEAPON-LOSS: strip battle weapon for extra damage coverage (host is HIT — lost anyway) (+2200.0)");
         assertBits(2050.0f, action(rando, "12").getScore());
         assertReasons(action(rando, "12").getReasoning(),
-                "V154 WEAPON-LOSS: strip weapon first for extra coverage — before hit chars (+2000.0)");
+                "V154 WEAPON-LOSS: strip battle weapon for extra damage coverage (+2000.0)");
+    }
+
+    @Test
+    public void combinedHitCharactersVehiclesAndStarshipsPrecedeEveryLaterLossStage() {
+        PhysicalCard hitCharacter = forfeitCard(
+                "Hit Character", Zone.AT_LOCATION, CardCategory.CHARACTER, 4.0f);
+        PhysicalCard hitVehicle = forfeitCard(
+                "Hit Vehicle", Zone.AT_LOCATION, CardCategory.VEHICLE, 6.0f);
+        PhysicalCard hitStarship = forfeitCard(
+                "Hit Starship", Zone.AT_LOCATION, CardCategory.STARSHIP, 8.0f);
+        PhysicalCard attachedWeapon = card(
+                "Attached Weapon", Zone.AT_LOCATION, CardCategory.WEAPON);
+        PhysicalCard nonHitCharacter = forfeitCard(
+                "Non-Hit Character", Zone.AT_LOCATION, CardCategory.CHARACTER, 3.0f);
+        PhysicalCard reserveEffect = card(
+                "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+        when(hitCharacter.isHit()).thenReturn(true);
+        when(hitVehicle.isHit()).thenReturn(true);
+        when(hitStarship.isHit()).thenReturn(true);
+        when(attachedWeapon.getAttachedTo()).thenReturn(hitCharacter);
+
+        Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
+        candidates.put(30, hitCharacter);
+        candidates.put(31, hitVehicle);
+        candidates.put(32, hitStarship);
+        candidates.put(33, attachedWeapon);
+        candidates.put(34, nonHitCharacter);
+        candidates.put(35, reserveEffect);
+        GameState gameState = battleGameState(
+                candidates, List.of(), List.of(), 20, 0, 4, 22, 11);
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("30", "31", "32", "33", "34", "35"),
+                        Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("30", "31", "32", "33", "34", "35"),
+                        Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertEquals(3, rando.size());
+        assertFalse(action(rando, "30").isDeferred());
+        assertFalse(action(rando, "31").isDeferred());
+        assertFalse(action(rando, "32").isDeferred());
+        assertFalse(hasAction(rando, "33"));
+        assertFalse(hasAction(rando, "34"));
+        assertFalse(hasAction(rando, "35"));
+    }
+
+    @Test
+    public void combinedAttritionForfeitsSoleVengeanceBeforeReserveWeapon() {
+        PhysicalCard vengeance = forfeitCard(
+                "Vengeance", Zone.AT_LOCATION, CardCategory.STARSHIP, 8.0f);
+        when(vengeance.getBlueprint().getCardSubtype())
+                .thenReturn(CardSubtype.CAPITAL);
+        PhysicalCard reserveWeapon = card(
+                "Reserve Weapon", Zone.RESERVE_DECK, CardCategory.WEAPON);
+        Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
+        candidates.put(36, vengeance);
+        candidates.put(37, reserveWeapon);
+        GameState gameState = battleGameState(
+                candidates, List.of(), List.of(), 20, 0, 4, 22, 11);
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("36", "37"), Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("36", "37"), Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertEquals(1, rando.size());
+        assertFalse(action(rando, "36").isDeferred());
+        assertFalse(action(rando, "36").isHardVetoed());
+        assertEquals("Forfeit Vengeance", action(rando, "36").getDisplayText());
+        assertFalse(hasAction(rando, "37"));
+    }
+
+    @Test
+    public void attritionStageUsesNonImmuneActorsBeforeWeaponsAndForce() {
+        PhysicalCard character = forfeitCard(
+                "Character", Zone.AT_LOCATION, CardCategory.CHARACTER, 4.0f);
+        PhysicalCard vehicle = forfeitCard(
+                "Vehicle", Zone.AT_LOCATION, CardCategory.VEHICLE, 6.0f);
+        PhysicalCard starship = forfeitCard(
+                "Starship", Zone.AT_LOCATION, CardCategory.STARSHIP, 8.0f);
+        PhysicalCard immuneCharacter = forfeitCard(
+                "Immune Character", Zone.AT_LOCATION, CardCategory.CHARACTER, 5.0f);
+        PhysicalCard cannotSatisfyVehicle = forfeitCard(
+                "Cannot Satisfy Vehicle", Zone.AT_LOCATION, CardCategory.VEHICLE, 5.0f);
+        PhysicalCard battleWeapon = card(
+                "Battle Weapon", Zone.AT_LOCATION, CardCategory.WEAPON);
+        PhysicalCard reserveEffect = card(
+                "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+        Map<Integer, PhysicalCard> candidates = new LinkedHashMap<>();
+        candidates.put(38, character);
+        candidates.put(39, vehicle);
+        candidates.put(40, starship);
+        candidates.put(41, immuneCharacter);
+        candidates.put(42, cannotSatisfyVehicle);
+        candidates.put(43, battleWeapon);
+        candidates.put(44, reserveEffect);
+        GameState gameState = battleGameState(
+                candidates, List.of(), List.of(), 20, 0, 4, 12, 5);
+        ModifiersQuerying modifiers = GAME_BY_STATE.get(gameState)
+                .getModifiersQuerying();
+        when(modifiers.getImmunityToAttritionLessThan(
+                gameState, immuneCharacter)).thenReturn(6.0f);
+        when(modifiers.cannotSatisfyAttrition(
+                gameState, cannotSatisfyVehicle)).thenReturn(true);
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("38", "39", "40", "41", "42", "43", "44"),
+                        Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("38", "39", "40", "41", "42", "43", "44"),
+                        Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertEquals(3, rando.size());
+        assertFalse(action(rando, "38").isDeferred());
+        assertFalse(action(rando, "39").isDeferred());
+        assertFalse(action(rando, "40").isDeferred());
+        assertFalse(hasAction(rando, "41"));
+        assertFalse(hasAction(rando, "42"));
+        assertFalse(hasAction(rando, "43"));
+        assertFalse(hasAction(rando, "44"));
+    }
+
+    @Test
+    public void allImmuneParticipantsMoveToRemainingDamageTier() {
+        PhysicalCard immuneCharacter = forfeitCard(
+                "Immune Character", Zone.AT_LOCATION, CardCategory.CHARACTER, 5.0f);
+        PhysicalCard reserveEffect = card(
+                "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+        GameState gameState = battleGameState(
+                Map.of(45, immuneCharacter, 46, reserveEffect),
+                List.of(), List.of(), 20, 0, 4, 10, 5);
+        ModifiersQuerying modifiers = GAME_BY_STATE.get(gameState)
+                .getModifiersQuerying();
+        when(modifiers.getImmunityToAttritionLessThan(
+                gameState, immuneCharacter)).thenReturn(6.0f);
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("45", "46"), Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("45", "46"), Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertEquals(2, rando.size());
+        assertTrue(hasAction(rando, "45"));
+        assertTrue(hasAction(rando, "46"));
+        assertTrue(hasReason(action(rando, "45"),
+                "V159 FORFEIT (attr=0 dmg=10 fv=5 hit=false)"));
+        assertFalse(hasReason(action(rando, "46"), "V150"));
+        assertTrue(hasReason(action(rando, "46"), "10 damage left"));
+    }
+
+    @Test
+    public void allCannotSatisfyParticipantsMoveToPureDamageScoring() {
+        PhysicalCard cannotSatisfyVehicle = forfeitCard(
+                "Cannot Satisfy Vehicle", Zone.AT_LOCATION,
+                CardCategory.VEHICLE, 5.0f);
+        PhysicalCard reserveEffect = card(
+                "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+        GameState gameState = battleGameState(
+                Map.of(54, cannotSatisfyVehicle, 55, reserveEffect),
+                List.of(), List.of(), 20, 0, 4, 10, 5);
+        ModifiersQuerying modifiers = GAME_BY_STATE.get(gameState)
+                .getModifiersQuerying();
+        when(modifiers.cannotSatisfyAttrition(
+                gameState, cannotSatisfyVehicle)).thenReturn(true);
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("54", "55"), Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("54", "55"), Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertEquals(2, rando.size());
+        assertTrue(hasReason(action(rando, "54"),
+                "V159 FORFEIT (attr=0 dmg=10 fv=5 hit=false)"));
+        assertFalse(hasReason(action(rando, "55"), "V150"));
+        assertTrue(hasReason(action(rando, "55"), "10 damage left"));
+    }
+
+    @Test
+    public void attritionImmunityUsesFrozenTotalRatherThanRemainingAmount() {
+        PhysicalCard character = forfeitCard(
+                "Character", Zone.AT_LOCATION, CardCategory.CHARACTER, 5.0f);
+        PhysicalCard reserveEffect = card(
+                "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+        GameState gameState = battleGameState(
+                Map.of(52, character, 53, reserveEffect),
+                List.of(), List.of(), 20, 0, 4, 14, 11);
+        gameState.getBattleState().increaseAttritionSatisfied("tester", 8.0f);
+        ModifiersQuerying modifiers = GAME_BY_STATE.get(gameState)
+                .getModifiersQuerying();
+        when(modifiers.getImmunityToAttritionLessThan(
+                gameState, character)).thenReturn(5.0f);
+        assertBits(3.0f, com.gempukku.swccgo.logic.timing.GuiUtils
+                .getBattleAttritionRemaining(GAME_BY_STATE.get(gameState), "tester"));
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("52", "53"), Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("52", "53"), Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertEquals(1, rando.size());
+        assertTrue(hasAction(rando, "52"));
+        assertFalse(hasAction(rando, "53"));
+    }
+
+    @Test
+    public void nonSelectableHitParticipantDoesNotControlTheLossTier() {
+        PhysicalCard unavailableHit = forfeitCard(
+                "Unavailable Hit", Zone.AT_LOCATION, CardCategory.CHARACTER, 5.0f);
+        when(unavailableHit.isHit()).thenReturn(true);
+        PhysicalCard reserveEffect = card(
+                "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+        GameState gameState = battleGameState(
+                Map.of(47, unavailableHit, 48, reserveEffect),
+                List.of(), List.of(), 20, 0, 4, 10, 5);
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+        var randoContext = randoContext(
+                gameState, prompt, List.of("47", "48"), Phase.BATTLE);
+        randoContext.setSelectable(List.of(false, true));
+        var chosenContext = chosenContext(
+                gameState, prompt, List.of("47", "48"), Phase.BATTLE);
+        chosenContext.setSelectable(List.of(false, true));
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext);
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext);
+
+        assertActionParity(rando, chosen);
+        assertEquals(1, rando.size());
+        assertFalse(hasAction(rando, "47"));
+        assertEquals("Lose Force from pile", action(rando, "48").getDisplayText());
+        assertFalse(hasReason(action(rando, "48"), "V150"));
+        assertTrue(hasReason(action(rando, "48"), "10 damage left"));
+    }
+
+    @Test
+    public void soleHitLoadedStarshipCannotBeBlockedByLaterLosses() {
+        PhysicalCard hitShip = forfeitCard(
+                "Hit Loaded Ship", Zone.AT_LOCATION, CardCategory.STARSHIP, 8.0f);
+        PhysicalCard passenger = forfeitCard(
+                "Passenger", Zone.AT_LOCATION, CardCategory.CHARACTER, 4.0f);
+        PhysicalCard reserveEffect = card(
+                "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+        when(hitShip.isHit()).thenReturn(true);
+        when(passenger.getAttachedTo()).thenReturn(hitShip);
+        when(passenger.isPassengerOf()).thenReturn(true);
+        GameState gameState = battleGameState(
+                Map.of(49, hitShip, 50, reserveEffect),
+                List.of(), List.of(), 20, 0, 4, 22, 11);
+        when(gameState.getAboardCards(hitShip, true)).thenReturn(List.of(passenger));
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("49", "50"), Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("49", "50"), Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertEquals(1, rando.size());
+        assertFalse(action(rando, "49").isHardVetoed());
+        assertFalse(hasReason(action(rando, "49"), "V48 SHIP WITH CREW"));
+    }
+
+    @Test
+    public void residualAttritionDisappearsWhenNoBattleParticipantRemains() {
+        PhysicalCard reserveWeapon = card(
+                "Reserve Weapon", Zone.RESERVE_DECK, CardCategory.WEAPON);
+        GameState gameState = battleGameState(
+                Map.of(51, reserveWeapon), List.of(), List.of(),
+                20, 0, 4, 14, 3);
+        SwccgGame game = GAME_BY_STATE.get(gameState);
+        assertBits(0.0f, com.gempukku.swccgo.logic.timing.GuiUtils
+                .getBattleAttritionRemaining(game, "tester"));
+        String prompt = "Choose Force to lose or a card from battle to forfeit";
+
+        var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                .evaluate(randoContext(gameState, prompt,
+                        List.of("51"), Phase.BATTLE));
+        var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                .evaluate(chosenContext(gameState, prompt,
+                        List.of("51"), Phase.BATTLE));
+
+        assertActionParity(rando, chosen);
+        assertFalse(action(rando, "51").isDeferred());
+        assertEquals("Lose Force from pile", action(rando, "51").getDisplayText());
+        assertFalse(hasReason(action(rando, "51"), "V150"));
+        assertFalse(hasReason(action(rando, "51"), "V154 WEAPON-LOSS"));
+        assertTrue(hasReason(action(rando, "51"), "14 damage left"));
     }
 
     @Test
@@ -658,6 +974,12 @@ public class ForceLossCardSelectionPolicyParityTest {
         return action.getReasoning().stream().anyMatch(reason -> reason.contains(text));
     }
 
+    private static boolean hasAction(
+            List<com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction> actions,
+            String actionId) {
+        return actions.stream().anyMatch(action -> actionId.equals(action.getActionId()));
+    }
+
     private static GameState gameState(Map<Integer, PhysicalCard> candidates,
                                        List<PhysicalCard> hand,
                                        List<PhysicalCard> usedPile,
@@ -778,6 +1100,10 @@ public class ForceLossCardSelectionPolicyParityTest {
                     chosen.get(i).isHardVetoed());
             assertEquals(rando.get(i).getVetoReason(),
                     chosen.get(i).getVetoReason());
+            assertEquals(rando.get(i).isDeferred(),
+                    chosen.get(i).isDeferred());
+            assertEquals(rando.get(i).getDeferReason(),
+                    chosen.get(i).getDeferReason());
         }
     }
 

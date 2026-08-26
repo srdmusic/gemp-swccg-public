@@ -156,8 +156,9 @@ public class CaptureCriticalRetentionSourceParityTest {
                     + "&& optionalDamageRemaining > 0)",
                 "continue;  // Skip normal scoring");
         assertOrdered(combined,
-                "battleCandidate = "
-                    + "gameState.findCardById(",
+                "card = gameState.findCardById(",
+                "combinedCardsById.put(",
+                "battleCandidate = combinedCardsById.get(",
                 "applyCaptureCriticalRetention(",
                 "BattleForfeitPolicy.evaluateCombined(",
                 "AdapterStep.CONTINUE_CANDIDATE",

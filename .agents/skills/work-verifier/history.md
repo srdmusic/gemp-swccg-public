@@ -420,3 +420,216 @@ is the clean check that the running process picked up the new build. The
 log4j "ignoreExceptions"/"alwaysWriteExceptions" attribute names are a
 recurring false-positive for exception greps; always filter to real
 stack-frame regex (`^\s+at .*\.java:[0-9]+\)`) when scanning startup tails.
+
+## 2026-08-25 16:49 PT - AI evaluator edit (V301 strict battle-loss order) -> FAIL
+
+Operation: independent source verification of the uncommitted V301 diff in
+`/Users/steve/gemp-objective-score-cap-2026-08-15`, branch
+`codex/rando-space-ability-four-2026-08-22`, exact base
+`095832d2b1b39fafb9ddc43f789249ef520cd79a`. No package, deploy, runtime,
+database, deck, card-source, engine-source, commit, or push action was run.
+
+FAIL blocker - DAMAGE tier retains stale positive attrition for scoring:
+
+- `BattleForfeitPolicy.planCombinedResolution` correctly transitions to
+  `ResolutionTier.DAMAGE` when no selectable HIT or attrition-capable
+  participant exists (`BattleForfeitPolicy.java:130-159`).
+- Both mirrored adapters nevertheless build `DecisionFacts` with the raw
+  `attritionRemaining` (`rando/.../CardSelectionEvaluator.java:7090-7092` and
+  `chosenone/.../CardSelectionEvaluator.java:7090-7092`) and pass that object
+  unchanged to `evaluateCombined` at lines 7137-7139.
+- The stale value activates V150 for Force loss
+  (`BattleForfeitPolicy.java:441-446`) and the attrition/immunity arms of V159
+  (`BattleForfeitPolicy.java:491-558`) even though the active category is now
+  remaining battle damage.
+- Independent compiled-policy probe: with effective DAMAGE facts of attrition
+  5 and damage 10, a Force-loss candidate receives `V150 -500`; the same facts
+  with effective attrition zero receive `V22.3 -80`. A nonimmune
+  `cannotSatisfyAttrition` vehicle with forfeit 1 receives
+  `V159-attrition +1800` under the stale facts, versus
+  `V159-pure-low-coverage -800` with effective attrition zero. This is a
+  2600-point ranking inversion inside tier 3, not a cosmetic reason string.
+- Actionable fix: after the plan is known, construct the scoring
+  `DecisionFacts` with effective attrition zero when
+  `resolutionPlan.tier() == DAMAGE` (or make the plan own that effective
+  value), while retaining raw/frozen attrition only for tier selection and
+  diagnostics. Add assertions that all-immune and all-cannot-satisfy DAMAGE
+  sets emit no V150 and use V159 pure-damage arms.
+
+Test-quality gap that allowed the blocker:
+
+- `allImmuneParticipantsMoveToRemainingDamageTier`
+  (`ForceLossCardSelectionPolicyParityTest.java:537-562`) asserts only that
+  both actions are present. It does not assert their scores, reasons, or the
+  absence of V150.
+- `residualAttritionDisappearsWhenNoBattleParticipantRemains` at lines
+  655-678 covers only the different case where `GuiUtils` already reports
+  zero because no participant remains. It does not cover DAMAGE selection
+  while immune or cannot-satisfy participants remain on table.
+
+Checks that passed on this snapshot:
+
+- Fresh server-reactor compile: PASS, Maven exit 0.
+- Independent bounded ring: PASS, 13 classes, 97 tests, 0 failures,
+  0 errors, 0 skipped.
+- Compiled V301 adapter marker: rando 1, chosenone 1.
+  Class sizes were 380867 and 381299 bytes, respectively.
+- Exact adapter mirror after package normalization: PASS, zero diff lines.
+- `git diff --check`: PASS, zero findings.
+- Type-by-API forbidden title-substring scan: PASS, zero findings. New typing
+  uses `CardCategory`, zone APIs, frozen immunity APIs, and
+  `cannotSatisfyAttrition`.
+- Scope before this required history append: PASS, 10 modified files,
+  624 insertions and 133 deletions. Breakdown: 4 production AI files,
+  3 tests, and 3 records. No card Java, engine Java, deck, or DB file changed.
+
+Claim-by-claim semantic audit:
+
+- Selectable HIT character/vehicle/starship tier: PASS. Only selectable facts
+  enter the plan at both adapters' lines 7065-7085; hit participants are
+  selected at `BattleForfeitPolicy.java:136-152`.
+- Attrition tier: PASS for exposure. It requires positive remaining attrition,
+  participant category, `canSatisfyAttrition`, and nonimmunity to frozen total
+  attrition (`BattleForfeitFacts.java:112-130`,
+  `BattleForfeitPolicy.java:144-157`). Mixed-immunity and nonselectable tests
+  passed.
+- Lower-tier omission and fallback isolation: PASS. The adapter emits only
+  `resolutionPlan.includes(cardId)` at lines 7114-7117. CombinedEvaluator can
+  merge and mandatory-fallback only emitted action IDs, so omitted lower tiers
+  cannot reappear through additive sums or the all-veto fallback. The engine's
+  combined prompt has minimum selection 1.
+- V48 and flip-gate same-tier alternatives: PASS. Both consume the active ID
+  set only. Sole loaded HIT and sole loaded attrition carriers remain legal;
+  peer alternatives still protect the carrier.
+- Off-table/Reserve weapon routing: PASS. Combined reads short-circuit
+  Force-loss-zone candidates before battle-weapon facts
+  (`BattleForfeitFacts.java:331-335`), and V154 requires
+  `battleWeapon()` (`BattleForfeitPolicy.java:401-411`). Focused tests confirm
+  no V154 on a Reserve weapon.
+- All-immune/cannot-satisfy DAMAGE scoring: FAIL for the stale-attrition reason
+  above. Exposure is correct, within-tier scoring is not.
+- Replay arithmetic: PASS against engine source. A table forfeit independently
+  satisfies `min(remaining, forfeit)` for battle damage and attrition
+  (`ForfeitCardsFromTableSimultaneouslyEffect.java:133-175`), so forfeit 8
+  against attrition 11 and damage 22 leaves attrition 3 and damage 14. Once no
+  forfeitable participant remains, `GuiUtils.java:125-130` reports effective
+  attrition zero.
+
+Records truthfulness: WARN under the blocker. `resources/AI_CHANGELOG.md:2700`
+labels V301 "source-tested" while line 2705 says proof remains below
+`SOURCE_TESTED`. Lines 2703-2705 and
+`AI_VERSION_HISTORY.md:11608-11639` also overstate completed tier-3 semantics
+until effective attrition is corrected and independently retested. The mailbox
+correctly says review pending, but its design claim is incomplete for scoring.
+
+Verdict: FAIL. The categorical action exposure works, but tier 3 still scores
+as attrition in all-immune/cannot-satisfy transitions. Fix both mirrored
+adapters through their shared effective facts, add the missing score/reason
+regressions, correct the records, and re-invoke the verifier.
+
+## 2026-08-25 16:54 PT - AI evaluator edit re-verification (V301 corrected) -> PASS
+
+Scope verified:
+
+- Base `095832d2b1b39fafb9ddc43f789249ef520cd79a`, branch
+  `codex/rando-space-ability-four-2026-08-22`.
+- Production scope excluding this required verifier-history append is exactly
+  four files: shared `BattleForfeitFacts.java`, shared
+  `BattleForfeitPolicy.java`, and the Rando and Chosen One
+  `CardSelectionEvaluator.java` adapters. The remaining six files are three
+  focused tests and three project records. Total: 10 files, 676 insertions,
+  135 deletions.
+- No card Java, engine Java, deck data, database, package, jar, deployment,
+  runtime, game mutation, commit, or push action occurred.
+
+Prior FAIL correction:
+
+- PASS. Both adapters now derive `scoringAttritionRemaining` from the selected
+  resolution tier and set it to zero for `DAMAGE`
+  (`rando/.../CardSelectionEvaluator.java:7090-7100` and the exact normalized
+  Chosen One mirror). The corrected `DecisionFacts` is passed unchanged to
+  `evaluateCombined` at lines 7141-7143. Raw remaining attrition is retained
+  only for tier selection and formation facts.
+- PASS. The all-immune regression asserts V159 receives `attr=0`, Force loss
+  receives no V150, and its reason reports 10 damage left
+  (`ForceLossCardSelectionPolicyParityTest.java:537-566`). The parallel
+  all-`cannotSatisfyAttrition` regression makes the same pure-damage assertions
+  at lines 569-597. The nonselectable HIT regression also pins no V150 and 10
+  damage left at lines 630-659.
+- PASS. V150 can now activate only when the effective scoring facts retain
+  positive attrition (`BattleForfeitPolicy.java:441-446`), while V159 reaches
+  its pure-damage arms after the categorical transition
+  (`BattleForfeitPolicy.java:477-565`). The 2600-point stale-attrition ranking
+  inversion identified by the first audit is closed.
+
+Independent checks:
+
+- Fresh server-reactor compile: PASS, Maven exit 0.
+- Independent bounded ring: PASS, 13 classes, 98 tests, 0 failures, 0 errors,
+  0 skipped. The focused `ForceLossCardSelectionPolicyParityTest`,
+  `BattleForfeitPolicyTest`, and `BattleForfeitFactsTest` subset accounts for
+  54 tests, also 0 failures, 0 errors, 0 skipped. The ring additionally covered
+  adapter parity, source ownership, capture retention, battle residuals,
+  Force-loss policy/action-text/facts, Tdigwatt behavior, and the battle-engine
+  contract.
+- Compiled V301 marker: PASS, exactly 1 occurrence in each adapter class.
+  Fresh class sizes are 381060 bytes for Rando and 381492 bytes for Chosen One.
+- Exact Rando/Chosen One mirror after package normalization: PASS, zero diff
+  lines.
+- `git diff --check`: PASS, zero findings.
+- Type-by-API discipline: PASS, zero forbidden title-substring matches. New
+  logic uses card categories, engine zones, frozen immunity APIs, selectability,
+  and `cannotSatisfyAttrition`.
+
+Claim-by-claim semantic audit:
+
+- Tier 1: PASS. Only selectable HIT character, vehicle, and starship facts can
+  establish the tier. Nonselectable and unavailable candidates never enter the
+  plan (`CardSelectionEvaluator.java:7063-7085`,
+  `BattleForfeitPolicy.java:136-152`).
+- Tier 2: PASS. Only selectable character, vehicle, and starship participants
+  that can satisfy attrition and are nonimmune to frozen total attrition can
+  establish the tier (`BattleForfeitPolicy.java:144-157` and the shared facts
+  reader). Mixed immunity, all immunity, all cannot-satisfy, and total-versus-
+  remaining immunity regressions pass.
+- Tier 3: PASS. When no earlier-tier action exists, every remaining selectable
+  legal damage action is exposed, with effective scoring attrition zero. The
+  all-immune, all-cannot-satisfy, and nonselectable boundaries are pinned by
+  score and reason, not merely action presence.
+- Lower-tier isolation: PASS. The adapters emit only IDs included by the active
+  `ResolutionPlan` (`CardSelectionEvaluator.java:7118-7120`). Additive scoring
+  and mandatory all-veto fallback operate only on that emitted map, so they
+  cannot restore a lower-tier choice. The engine combined prompt requires at
+  least one selection.
+- Same-tier protections: PASS. V48 loaded-carrier and flip-gate formation
+  alternatives consume the active-tier ID set only. Sole loaded HIT and sole
+  loaded attrition carriers remain legal; peer alternatives in the same tier
+  still protect them.
+- Weapon routing: PASS. Hand, Reserve Deck, and Force Pile weapons short-circuit
+  through Force-loss facts, while V154 requires a battlefield weapon
+  (`BattleForfeitFacts.java:331-335`,
+  `BattleForfeitPolicy.java:401-411`). The Reserve-weapon regression passes.
+- Replay arithmetic: PASS against engine source. A table forfeit independently
+  satisfies battle damage and attrition, so forfeit 8 against attrition 11 and
+  damage 22 leaves attrition 3 and damage 14. When no forfeitable participant
+  remains, the engine reports effective attrition zero.
+- Rando/Chosen parity: PASS in source normalization, compiled markers, and all
+  adapter parity assertions. No alternate selection or fallback path bypassing
+  the active tier was found.
+
+Records and proof:
+
+- PASS. `resources/AI_CHANGELOG.md:2700-2705` and
+  `AI_VERSION_HISTORY.md:11631-11652` accurately describe the corrected
+  DAMAGE-tier boundary, the first verifier failure, final 54/98 counts, exact
+  scope, and the pending independent gate. The mailbox entry at
+  `Handoffs/AI_MAILBOX.md:555-565` remains a truthful historical pending
+  snapshot and can be closed by a later append without rewriting history.
+- Test quality is sufficient for this source claim. The corrected tests assert
+  action exposure, exact scoring-path reasons, absence of stale V150, both-bot
+  parity, frozen-total immunity, selectability, same-tier alternatives, Reserve
+  routing, and the engine arithmetic contract.
+
+Verdict: PASS, 98 tests with 0 failures, 0 errors, and 0 skipped. No blockers or
+warnings remain for the V301 source gate. This supports `SOURCE_TESTED`; it is
+not package, runtime-loaded, or replay-fired proof.

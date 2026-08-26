@@ -11593,3 +11593,62 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     4a0de56effd5d73defd02f3552c6554ee8187833e1baf3d97ede990d75dbd195.
     Proof is RUNTIME_LOADED, not REPLAY_FIRED. No database, deck, card-source,
     engine-source, or GitHub push action occurred.
+
+  ==== V301 (2026-08-25): strict HIT, attrition, then battle-damage loss order ====
+
+    Canceled diagnostic game-history row 72320 and Rando recording
+    k45llyq3kb9cl8ub exposed a categorical battle-loss defect. Vengeance (V)
+    was Rando's only participant at Kessel, with power 8 and forfeit 8, while
+    Rando owed attrition 11 and battle damage 22. The old mixed-menu scores
+    preferred seven hand losses and fifteen Reserve losses before Vengeance.
+    Vengeance should be forfeited first, reducing both counters by 8. With no
+    participant left, the remaining attrition 3 disappears and only 14 battle
+    damage remains. The old sequence therefore wasted exactly 8 Force.
+
+    The engine does not expose three separate menus while battle damage is
+    positive. Shared BattleForfeitPolicy now creates one ResolutionPlan from
+    the selectable engine candidates and exposes only the earliest legal tier:
+
+      1. HIT characters, vehicles, and starships.
+      2. Nonimmune characters, vehicles, and starships that may satisfy
+         attrition.
+      3. Every remaining legal battle-damage choice, including participants,
+         battlefield weapons, and Force loss.
+
+    Immunity is compared against the battle segment's frozen total attrition,
+    not the smaller remaining amount. `cannotSatisfyAttrition`, unavailable,
+    nonselectable, off-table, and Force-loss candidates cannot support tier 2.
+    After each loss the engine issues a fresh decision, so the plan naturally
+    advances without persistent state. Lower tiers are omitted, not merely
+    penalized, which prevents score stacks and mandatory hard-veto fallback
+    from crossing the boundary.
+
+    V48 loaded-carrier protection and flip-gate formation retention now count
+    only alternatives inside the active tier. A sole HIT or sole attrition
+    carrier cannot be blocked by a weapon or Force card from a later tier;
+    peer choices in the same tier still preserve the carrier and objective
+    formation. A weapon in Hand, Reserve Deck, or Force Pile is now classified
+    as Force loss. V154 remains restricted to a battlefield weapon. Existing
+    scoring remains intact inside the current tier. Tier 3 supplies an
+    effective remaining attrition of zero to V118, V150, V159, and Force-loss
+    scoring, so a stale numeric attrition counter cannot revive attrition logic
+    after every eligible participant is immune or unable to satisfy attrition.
+
+    Failure-first regressions reproduced all four defects. Final focused tests
+    initially passed 53/0/0/0. The first independent audit then found the stale
+    tier-3 scoring boundary above. The correction added all-immune and all-
+    cannot-satisfy regressions; the final focused ring passed 54/0/0/0 and the
+    impacted battle, Force-loss, capture, mirror, source-ownership, and engine-
+    contract ring passed 98/0/0/0. Exact normalized Rando and Chosen One
+    CardSelection parity, server-reactor compile, compiled V301 markers, type
+    discipline, and diff check passed. Independent verification reran the
+    98-test ring and returned PASS with no blockers or warnings.
+
+    Exact base is 095832d2b1b39fafb9ddc43f789249ef520cd79a on branch
+    codex/rando-space-ability-four-2026-08-22. Production changes are limited
+    to BattleForfeitFacts, BattleForfeitPolicy, and the two mirrored
+    CardSelectionEvaluator adapters, plus focused tests and the three required
+    records. No card Java, engine Java, deck data, database, package, jar,
+    deployment, server action, runtime mutation, game mutation, commit, or push
+    occurred. Proof is SOURCE_TESTED, not packaged, runtime-loaded, or replay-
+    fired.

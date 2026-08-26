@@ -8,8 +8,11 @@ import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
 import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /** Pure ordered BATTLE-3 damage and forfeit policy shared by both bots. */
 public final class BattleForfeitPolicy {
@@ -28,6 +31,31 @@ public final class BattleForfeitPolicy {
 
         public boolean passLegal() {
             return passLegal;
+        }
+    }
+
+    public enum ResolutionTier {
+        HIT_PARTICIPANT,
+        ATTRITION_PARTICIPANT,
+        DAMAGE
+    }
+
+    /** The only selectable actions exposed for the current combined battle-loss decision. */
+    public record ResolutionPlan(ResolutionTier tier,
+                                 Set<String> activeActionIds) {
+        public ResolutionPlan {
+            Objects.requireNonNull(tier, "tier");
+            Objects.requireNonNull(activeActionIds, "activeActionIds");
+            activeActionIds = Collections.unmodifiableSet(
+                    new LinkedHashSet<>(activeActionIds));
+        }
+
+        public boolean includes(String actionId) {
+            return activeActionIds.contains(actionId);
+        }
+
+        public boolean hasAlternativeTo(String actionId) {
+            return includes(actionId) && activeActionIds.size() > 1;
         }
     }
 
@@ -92,6 +120,43 @@ public final class BattleForfeitPolicy {
     }
 
     private BattleForfeitPolicy() {
+    }
+
+    /**
+     * Enforces the SWCCG loss sequence over the engine's mixed prompt. Scores
+     * only rank choices within the returned tier; later tiers are not exposed
+     * until the engine asks again with fresh battle state.
+     */
+    public static ResolutionPlan planCombinedResolution(
+            int attritionRemaining,
+            float totalAttrition,
+            List<BattleForfeitFacts.CandidateFacts> selectableCandidates) {
+        Objects.requireNonNull(selectableCandidates, "selectableCandidates");
+
+        LinkedHashSet<String> hitParticipants = new LinkedHashSet<>();
+        LinkedHashSet<String> attritionParticipants = new LinkedHashSet<>();
+        LinkedHashSet<String> damageCandidates = new LinkedHashSet<>();
+        for (BattleForfeitFacts.CandidateFacts candidate : selectableCandidates) {
+            Objects.requireNonNull(candidate, "candidate");
+            damageCandidates.add(candidate.actionId());
+            if (candidate.hitBattleParticipant()) {
+                hitParticipants.add(candidate.actionId());
+            } else if (attritionRemaining > 0
+                    && candidate.attritionParticipant(totalAttrition)) {
+                attritionParticipants.add(candidate.actionId());
+            }
+        }
+
+        if (!hitParticipants.isEmpty()) {
+            return new ResolutionPlan(
+                    ResolutionTier.HIT_PARTICIPANT, hitParticipants);
+        }
+        if (!attritionParticipants.isEmpty()) {
+            return new ResolutionPlan(
+                    ResolutionTier.ATTRITION_PARTICIPANT,
+                    attritionParticipants);
+        }
+        return new ResolutionPlan(ResolutionTier.DAMAGE, damageCandidates);
     }
 
     /**
@@ -334,12 +399,11 @@ public final class BattleForfeitPolicy {
         Objects.requireNonNull(candidate, "candidate");
 
         List<PolicyOperation> beforeRoute = new ArrayList<>();
-        if (candidate.blueprintPresent() && candidate.weapon()) {
+        if (candidate.blueprintPresent() && candidate.battleWeapon()) {
             float boost = candidate.attachedHostHit() ? 2200.0f : 2000.0f;
-            String reason = "V154 WEAPON-LOSS: strip weapon first for extra coverage"
+            String reason = "V154 WEAPON-LOSS: strip battle weapon for extra damage coverage"
                     + (candidate.attachedHostHit()
-                        ? " (host is HIT \u2014 lost anyway)" : "")
-                    + " \u2014 before hit chars";
+                        ? " (host is HIT \u2014 lost anyway)" : "");
             add(beforeRoute, candidate.actionId(),
                     candidate.attachedHostHit() ? "V154-hit-host" : "V154-weapon",
                     TraceOutputKind.ORDERING, boost, reason);

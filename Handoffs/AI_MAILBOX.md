@@ -552,6 +552,18 @@ Rollback: `/Users/steve/gemp-deploy-backups/rando-pilot-assignment-2026-08-23/pr
 
 Proof is `RUNTIME_LOADED`, not `REPLAY_FIRED`. Steve may begin testing now. Nothing was pushed.
 
+## 2026-08-25 16:42 PT - Codex V301 strict battle-loss order -> Alfred / K-2 - SOURCE REVIEW PENDING
+
+Topic: game `72320` battle-loss regression and Steve's exact HIT, attrition, then remaining-damage order.
+
+Evidence: Rando recording `k45llyq3kb9cl8ub` reached Kessel with Vengeance (V), power 8 and forfeit 8, as the sole participant while owing attrition 11 and battle damage 22. The mixed decision scored Vengeance `-950`, then selected seven Hand and fifteen Reserve losses before finally forfeiting it. Engine source confirms a table forfeit reduces attrition and damage independently, Force loss reduces damage only, and residual numeric attrition disappears when no forfeitable participant remains. Correct play is Vengeance first, then 14 Force loss, saving exactly 8 Force.
+
+Decision: shared V301 exposes only the earliest tier from selectable candidates. Tier 1 is HIT characters, vehicles, and starships. Tier 2 is nonimmune, attrition-capable characters, vehicles, and starships, with immunity checked against frozen total attrition. Tier 3 is every remaining legal damage choice. Later tiers are omitted so additive scores, V48, objective protection, and mandatory fallback cannot cross the order. V48 and formation protection use same-tier alternatives. Reserve-deck weapons now follow Force-loss logic; V154 is battlefield-weapon only. Rando and Chosen One adapters remain normalized mirrors.
+
+Verification so far: failure-first replay and boundary tests passed `53/0/0/0`; the impacted battle, Force-loss, capture, mirror, source-ownership, and engine-contract ring passed `97/0/0/0`; server-reactor compile, exact mirror comparison, and `git diff --check` passed. Async K-2 breadcrumb is `m01785`; no inbound reply existed after cursor `1783`. Independent verifier is the remaining gate.
+
+Scope: exact base `095832d2b1b39fafb9ddc43f789249ef520cd79a`, branch `codex/rando-space-ability-four-2026-08-22`, clean isolated worktree `/Users/steve/gemp-objective-score-cap-2026-08-15`. No card or engine Java, deck data, database, package, jar, deployment, server action, runtime mutation, game mutation, commit, or push occurred. Proof remains below `SOURCE_TESTED` until independent verification closes this entry.
+
 ## 2026-08-24 22:04 PT - Codex V300 Surprise Assault and lightsaber parent lane -> Alfred - RESOLVED
 
 Topic: exact Surprise Assault odds and parent-before-child duplicate-lightsaber prevention are source-tested for Rando and Chosen One.
@@ -577,3 +589,13 @@ Verification: sealed, host, and container hashes match. V300 reader and policy m
 Rollback: `/Users/steve/gemp-deploy-backups/rando-surprise-saber-2026-08-24/predeploy-780fb639-4a0de56e/web.jar`, hash `4a0de56effd5d73defd02f3552c6554ee8187833e1baf3d97ede990d75dbd195`. Sealed candidate: `/Users/steve/gemp-deploy-artifacts/rando-surprise-saber-2026-08-24/780fb639-b2969ba5/web.jar`.
 
 Proof is `RUNTIME_LOADED`, not `REPLAY_FIRED`. Steve may begin testing now. Nothing was pushed.
+
+## 2026-08-25 16:55 PT - Codex V301 strict battle-loss order -> Alfred / K-2 - SOURCE_TESTED / RESOLVED
+
+Topic: the game `72320` HIT, attrition, then remaining-damage correction has cleared independent source verification.
+
+Correction after first review: categorical tier exposure was correct, but the first audit found that all-immune and all-`cannotSatisfyAttrition` transitions still supplied stale positive attrition to V150 and V159 inside tier 3. Both mirrored adapters now retain raw and frozen attrition only for tier selection, then supply effective attrition zero to damage-tier scoring. New regressions pin no V150 and pure-damage V159 behavior for those transitions and for a nonselectable HIT participant.
+
+Verification: the final focused ring passed `54/0/0/0`; the final impacted ring passed `98/0/0/0`; and independent verification reran all 98 tests with zero failures, errors, or skips. Reactor compile, exact normalized Rando and Chosen One mirror, compiled V301 markers, type-by-API discipline, and `git diff --check` passed. The verifier returned PASS with no blockers or warnings and appended its report to `.agents/skills/work-verifier/history.md`. Async K-2 closure is `m01786`; no inbound message existed after cursor `1783`.
+
+Scope and proof ceiling: exact base remains `095832d2b1b39fafb9ddc43f789249ef520cd79a` on branch `codex/rando-space-ability-four-2026-08-22` in the isolated worktree `/Users/steve/gemp-objective-score-cap-2026-08-15`. Proof is `SOURCE_TESTED`. No card or engine Java, deck data, database, package, jar, deployment, server action, runtime mutation, game mutation, commit, or push occurred.

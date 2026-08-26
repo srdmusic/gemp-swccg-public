@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /** Immutable physical-candidate facts consumed by the shared BATTLE-3 policy. */
 public final class BattleForfeitFacts {
@@ -27,7 +28,7 @@ public final class BattleForfeitFacts {
             return new ImmunityFacts(0.0f, 0.0f);
         }
 
-        public boolean immuneTo(int attrition) {
+        public boolean immuneTo(float attrition) {
             if (exactImmunity > 0.0f) {
                 return exactImmunity == attrition;
             }
@@ -66,7 +67,31 @@ public final class BattleForfeitFacts {
                                  Float power,
                                  Float ability,
                                  boolean capitalShip,
-                                 boolean priorityCard) {
+                                 boolean priorityCard,
+                                 boolean canSatisfyAttrition) {
+        public CandidateFacts(String actionId,
+                              boolean blueprintPresent,
+                              CardCategory category,
+                              float forfeitValue,
+                              boolean hit,
+                              boolean dead,
+                              boolean forceLossOption,
+                              boolean attachedHostHit,
+                              boolean armed,
+                              ImmunityFacts immunity,
+                              SoloPowerFacts soloPower,
+                              Float power,
+                              Float ability,
+                              boolean capitalShip,
+                              boolean priorityCard) {
+            this(actionId, blueprintPresent, category, forfeitValue, hit, dead,
+                    forceLossOption, attachedHostHit, armed, immunity, soloPower,
+                    power, ability, capitalShip, priorityCard,
+                    !forceLossOption && (category == CardCategory.CHARACTER
+                            || category == CardCategory.VEHICLE
+                            || category == CardCategory.STARSHIP));
+        }
+
         public CandidateFacts {
             Objects.requireNonNull(actionId, "actionId");
             Objects.requireNonNull(immunity, "immunity");
@@ -82,6 +107,26 @@ public final class BattleForfeitFacts {
 
         public boolean character() {
             return category == CardCategory.CHARACTER;
+        }
+
+        public boolean battleParticipant() {
+            return !forceLossOption
+                    && (category == CardCategory.CHARACTER
+                        || category == CardCategory.VEHICLE
+                        || category == CardCategory.STARSHIP);
+        }
+
+        public boolean hitBattleParticipant() {
+            return hit && battleParticipant();
+        }
+
+        public boolean battleWeapon() {
+            return !forceLossOption && weapon();
+        }
+
+        public boolean attritionParticipant(float totalAttrition) {
+            return battleParticipant() && canSatisfyAttrition
+                    && !immunity.immuneTo(totalAttrition);
         }
 
         public boolean gameWinner() {
@@ -196,6 +241,21 @@ public final class BattleForfeitFacts {
             ObjectiveAnalyzer objectiveAnalyzer,
             boolean passLegal,
             int attritionRemaining) {
+        return readFlipGateFormationSelection(
+                actionIds, selectable, gameState, game, playerId,
+                objectiveAnalyzer, passLegal, attritionRemaining, null);
+    }
+
+    public static FlipGateFormationSelectionFacts readFlipGateFormationSelection(
+            List<String> actionIds,
+            List<Boolean> selectable,
+            GameState gameState,
+            SwccgGame game,
+            String playerId,
+            ObjectiveAnalyzer objectiveAnalyzer,
+            boolean passLegal,
+            int attritionRemaining,
+            Set<String> eligibleAlternativeActionIds) {
         Map<String, ObjectiveAnalyzer.FlipGateFormationRole> roles =
                 new LinkedHashMap<>();
         boolean hasAlternative = passLegal;
@@ -211,6 +271,10 @@ public final class BattleForfeitFacts {
             }
             String actionId = actionIds.get(index);
             if (actionId == null || actionId.isBlank()) continue;
+            if (eligibleAlternativeActionIds != null
+                    && !eligibleAlternativeActionIds.contains(actionId)) {
+                continue;
+            }
             ObjectiveAnalyzer.FlipGateFormationRole role =
                     ObjectiveAnalyzer.FlipGateFormationRole.NONE;
             PhysicalCard card = null;
@@ -231,7 +295,8 @@ public final class BattleForfeitFacts {
 
             if (card != null
                     && role == ObjectiveAnalyzer.FlipGateFormationRole.NONE
-                    && (!ForceLossFacts.isForceLossZone(card)
+                    && (eligibleAlternativeActionIds != null
+                        || !ForceLossFacts.isForceLossZone(card)
                         || attritionRemaining <= 0)) {
                 hasAlternative = true;
             }
@@ -252,7 +317,7 @@ public final class BattleForfeitFacts {
             return new CandidateFacts(actionId, false, null, 0.0f,
                     false, false, forceLossOption, false, false,
                     ImmunityFacts.none(), SoloPowerFacts.unavailable(),
-                    null, null, false, false);
+                    null, null, false, false, false);
         }
 
         SwccgCardBlueprint blueprint = card.getBlueprint();
@@ -267,7 +332,7 @@ public final class BattleForfeitFacts {
             return new CandidateFacts(actionId, blueprint != null, category,
                     forfeitValue, hit, false, forceLossOption, attachedHostHit,
                     false, ImmunityFacts.none(), SoloPowerFacts.unavailable(),
-                    null, null, false, false);
+                    null, null, false, false, false);
         }
 
         boolean dead = false;
@@ -297,6 +362,9 @@ public final class BattleForfeitFacts {
         }
 
         ImmunityFacts immunity = ImmunityFacts.none();
+        boolean canSatisfyAttrition = category == CardCategory.CHARACTER
+                || category == CardCategory.VEHICLE
+                || category == CardCategory.STARSHIP;
         if (game != null) {
             try {
                 ModifiersQuerying modifiers = game.getModifiersQuerying();
@@ -305,6 +373,10 @@ public final class BattleForfeitFacts {
                     immunity = new ImmunityFacts(
                             modifiers.getImmunityToAttritionOfExactly(liveState, card),
                             modifiers.getImmunityToAttritionLessThan(liveState, card));
+                    if (canSatisfyAttrition) {
+                        canSatisfyAttrition =
+                                !modifiers.cannotSatisfyAttrition(liveState, card);
+                    }
                 }
             } catch (Exception ignored) {
                 // Preserve the legacy no-immunity fallback.
@@ -363,7 +435,7 @@ public final class BattleForfeitFacts {
         return new CandidateFacts(actionId, blueprint != null, category,
                 forfeitValue, hit, dead, forceLossOption, attachedHostHit,
                 armed, immunity, soloPower, power, ability, capitalShip,
-                priorityCard);
+                priorityCard, canSatisfyAttrition);
     }
 
     /**
@@ -379,7 +451,7 @@ public final class BattleForfeitFacts {
 
         for (CandidateFacts candidate : candidates) {
             Objects.requireNonNull(candidate, "candidate");
-            if (candidate.hit()) {
+            if (candidate.hitBattleParticipant()) {
                 hasHit = true;
                 float forfeit = candidate.blueprintPresent()
                         ? candidate.forfeitValue() : 0.0f;

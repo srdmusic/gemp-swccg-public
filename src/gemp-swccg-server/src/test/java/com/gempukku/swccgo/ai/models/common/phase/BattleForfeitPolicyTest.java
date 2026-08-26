@@ -309,9 +309,9 @@ public class BattleForfeitPolicyTest {
     }
 
     @Test
-    public void attachedWeaponRunsV154AndContinuesBeforeEveryOtherArm() {
+    public void attachedBattleWeaponRunsV154DuringDamageTier() {
         BattleForfeitFacts.CandidateFacts hitHostWeapon = new CandidateBuilder()
-                .category(CardCategory.WEAPON).attachedHostHit().forceLoss().build();
+                .category(CardCategory.WEAPON).attachedHostHit().build();
         BattleForfeitPolicy.Evaluation hitHost = BattleForfeitPolicy.evaluateCombined(
                 decision(0, 2, hitHostWeapon), hitHostWeapon);
 
@@ -320,8 +320,8 @@ public class BattleForfeitPolicyTest {
                 hitHost.adapterStep());
         assertOperations(hitHost.beforeRoute(),
                 op("V154-hit-host", 2200.0f,
-                        "V154 WEAPON-LOSS: strip weapon first for extra coverage"
-                                + " (host is HIT \u2014 lost anyway) \u2014 before hit chars"));
+                        "V154 WEAPON-LOSS: strip battle weapon for extra damage coverage"
+                                + " (host is HIT \u2014 lost anyway)"));
         assertOperations(hitHost.afterRoute());
 
         BattleForfeitFacts.CandidateFacts looseWeapon = new CandidateBuilder()
@@ -330,9 +330,19 @@ public class BattleForfeitPolicyTest {
                 decision(0, 2, looseWeapon), looseWeapon);
         assertOperations(loose.beforeRoute(),
                 op("V154-weapon", 2000.0f,
-                        "V154 WEAPON-LOSS: strip weapon first for extra coverage"
-                                + " \u2014 before hit chars"));
+                        "V154 WEAPON-LOSS: strip battle weapon for extra damage coverage"));
         assertOperations(loose.afterRoute());
+
+        BattleForfeitFacts.CandidateFacts reserveWeapon = new CandidateBuilder()
+                .category(CardCategory.WEAPON).forceLoss().build();
+        BattleForfeitPolicy.Evaluation reserve = BattleForfeitPolicy.evaluateCombined(
+                decision(0, 2, reserveWeapon), reserveWeapon);
+        assertEquals(BattleForfeitPolicy.AdapterStep.APPLY_FORCE_LOSS_THEN_AFTER_ROUTE,
+                reserve.adapterStep());
+        assertOperations(reserve.beforeRoute(),
+                op("V118-force-loss", 200.0f,
+                        "V118 SMALL DAMAGE: only 2 battle damage \u2014 lose from reserves instead of forfeiting a character",
+                        TraceOutputKind.BANDED));
     }
 
     @Test
