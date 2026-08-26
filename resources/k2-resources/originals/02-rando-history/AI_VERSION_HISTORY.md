@@ -11676,3 +11676,40 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     card source, engine source, deck data, database, runtime, or game changed.
     V301 production bytecode is unchanged. Proof remains SOURCE_TESTED until
     the authorized local deployment is installed and runtime-verified.
+
+  ==== V301 DEPLOYED (2026-08-25): battle-loss order and green GitHub checks ====
+
+    Test-only follow-up commit f4a29eaf777c5f82cbc4b15a65a038e184989125
+    reached srdmusic/gemp-swccg-public main. GitHub Actions run 32917096202
+    completed successfully through the Maven and container build steps. The
+    earlier red notification was therefore a post-upload test failure, not a
+    failed GitHub upload.
+
+    Pinned offline Corretto Java 21 packaging produced a ZIP-valid 46,178,145-
+    byte, 27,041-entry web.jar with SHA-256
+    21cf7275c96adb287b3ef156d9c9c28e52bb7237f0a466dbf0086c4ac4241d14.
+    Independent package verification found exactly 23 allowlisted production
+    outputs relative to V300: 21 changed, two added, zero removed, zero
+    resource changes, and zero unexpected entries. All outputs byte-match the
+    compiled classes, server jar, worktree jar, and sealed jar. The CI repair
+    did not change V301 production bytecode.
+
+    Authenticated Hall checks before and after shutdown freeze were empty. The
+    prior jar was preserved, the candidate was atomically installed, and only
+    the application container was recreated with the pinned direct-Java
+    override. Fresh app f26f625592d1024233b46a8699bc7d6d5e471155f370379e284a1a030c42a9bf
+    started at 2026-08-26T01:01:30.986587713Z with restart count zero and OOM
+    false. Database container
+    46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6
+    retained its exact identity, start time, restart count, and OOM state.
+
+    Sealed, host, and container hashes match. Both bot markers are present
+    exactly once. Three HTTP probes returned 200. Operational mode and all five
+    gameplay settings are enabled. Final authenticated Hall at 2026-08-26
+    01:02:46 remained empty, with no material startup log event. The sealed
+    candidate is /Users/steve/gemp-deploy-artifacts/rando-battle-loss-order-
+    2026-08-25/f4a29eaf-21cf7275/web.jar. Immediate rollback is
+    /Users/steve/gemp-deploy-backups/rando-battle-loss-order-2026-08-25/
+    predeploy-8dc24ba2-b2969ba5/web.jar, SHA-256
+    b2969ba56c294be431692fb7ec062ab5ac6c23d090d7ad7f6ea063549351eb06.
+    Proof is RUNTIME_LOADED, not REPLAY_FIRED.

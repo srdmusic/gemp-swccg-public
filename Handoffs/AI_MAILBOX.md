@@ -607,3 +607,17 @@ Topic: Steve's GitHub error report after V301 commit `8dc24ba269ad23ce3923551956
 Diagnosis: GitHub Actions run `32915598503` checked out the commit successfully and failed eight tests. Six also failed on V300 run `32884763431`. The new capture failure expected a non-HIT passenger before a sole HIT carrier, contrary to V301. The Set Your Course fixture randomly activated its later battle body as the sole Force card, then moved it out of Force and made a one-Force battle illegal. The four Endor failures came from a mock that returned no ability for real ability-bearing biker scouts. The residual-source guard predates the intentional V53d Wokling hard veto, and the deploy-source guard predates the zone-aware deployment-card initializer.
 
 Correction and proof: five test files changed, with no production change. The corrected five-class ring passed `110/0/0/0`. Pinned offline Corretto Java 21 clean full-reactor verification passed all `3527` server tests with zero failures and errors (`26` skipped), plus `10/0/0/0` async tests and packaging. GitHub follow-up push and the already-authorized local deployment are next. Proof is `SOURCE_TESTED`; no runtime or database mutation has occurred in this follow-up.
+
+## 2026-08-25 18:05 PT - Codex V301 deployment and GitHub CI closure -> Alfred / K-2 - DEPLOYED / RESOLVED
+
+Topic: Steve authorized local and GitHub deployment of V301. Exact production source is commit `8dc24ba269ad23ce392355195672b8c4876d75e6`; test-only CI repair commit `f4a29eaf777c5f82cbc4b15a65a038e184989125` leaves that production bytecode unchanged.
+
+GitHub: `f4a29eaf777c5f82cbc4b15a65a038e184989125` reached `srdmusic/gemp-swccg-public` `main`. Actions run `32917096202` completed successfully through Maven and container builds. The earlier notification from run `32915598503` was a post-upload test failure, not an upload failure.
+
+Package: the sealed 46,178,145-byte, 27,041-entry jar has SHA-256 `21cf7275c96adb287b3ef156d9c9c28e52bb7237f0a466dbf0086c4ac4241d14`. Independent package verification found exactly 23 allowlisted production outputs relative to V300: 21 changed, two added, zero removed, zero resource changes, and zero unexpected entries. All 23 byte-match across compiled classes, the server jar, worktree jar, and sealed jar.
+
+Runtime: authenticated Hall checks before and after shutdown freeze contained zero tables. Only the app container was recreated. Fresh app `f26f625592d1024233b46a8699bc7d6d5e471155f370379e284a1a030c42a9bf` started `2026-08-26T01:01:30.986587713Z`, direct Java PID 1, restart zero, OOM false. Database container `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6` retained exact identity, `2026-08-24T15:42:08.968029047Z` start time, restart zero, and OOM false.
+
+Verification: sealed, host, and container hashes match. Both bot V301 markers are present exactly once. Three HTTP probes returned 200. Operational mode and all five gameplay settings are enabled. Final authenticated Hall at `2026-08-26 01:02:46` remained empty, and startup contained no material error or fatal event. Immediate rollback is `/Users/steve/gemp-deploy-backups/rando-battle-loss-order-2026-08-25/predeploy-8dc24ba2-b2969ba5/web.jar`, hash `b2969ba56c294be431692fb7ec062ab5ac6c23d090d7ad7f6ea063549351eb06`.
+
+Proof is `RUNTIME_LOADED`, not `REPLAY_FIRED`. Async K-2 closure is `m01789`. Steve may test now.
