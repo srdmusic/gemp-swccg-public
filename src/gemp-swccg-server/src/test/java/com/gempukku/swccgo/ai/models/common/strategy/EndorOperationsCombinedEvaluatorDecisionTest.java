@@ -5806,6 +5806,13 @@ public class EndorOperationsCombinedEvaluatorDecisionTest {
         private void place(
                 PhysicalCard card, PhysicalCard location) {
             addActivePermanent(card);
+            SwccgCardBlueprint blueprint = card.getBlueprint();
+            if (blueprint != null && blueprint.hasAbilityAttribute()
+                    && blueprint.getAbility() != null
+                    && blueprint.getAbility() >= 1.0f) {
+                when(modifiers.hasAbility(
+                        gameState, card, true)).thenReturn(true);
+            }
             when(card.getAtLocation()).thenReturn(location);
             when(modifiers.getLocationThatCardIsPresentAt(
                     gameState, card)).thenReturn(location);

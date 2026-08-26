@@ -11652,3 +11652,27 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     deployment, server action, runtime mutation, game mutation, commit, or push
     occurred. Proof is SOURCE_TESTED, not packaged, runtime-loaded, or replay-
     fired.
+
+  ==== V301 CI FOLLOW-UP (2026-08-25): GitHub test repair only ====
+
+    Commit 8dc24ba269ad23ce392355195672b8c4876d75e6 reached the srdmusic
+    gemp-swccg-public main branch successfully. GitHub Actions run 32915598503
+    failed eight tests after checkout. Six failures were already present in
+    V300 run 32884763431. The other two were stale or nondeterministic test
+    assumptions, not an upload error and not a production regression.
+
+    Five test-only corrections now align the suite with current source law.
+    The capture harness requires the sole HIT loaded carrier before its
+    non-HIT passenger. Set Your Course keeps its battle body out of the single
+    retained Force slot. The Endor Mockito fixture gives actual ability-bearing
+    characters the ability result supplied by their card blueprints. The
+    residual ownership test permits only the exact existing V53d Wokling hard
+    veto, and the deploy-source mirror test anchors to the current zone-aware
+    v136 deployment-card initializer.
+
+    The corrected five-class ring passed 110/0/0/0. A clean full-reactor
+    offline verify passed 3527 server tests with zero failures and errors, 26
+    skips, plus 10/0/0/0 async tests and packaging. No production source,
+    card source, engine source, deck data, database, runtime, or game changed.
+    V301 production bytecode is unchanged. Proof remains SOURCE_TESTED until
+    the authorized local deployment is installed and runtime-verified.

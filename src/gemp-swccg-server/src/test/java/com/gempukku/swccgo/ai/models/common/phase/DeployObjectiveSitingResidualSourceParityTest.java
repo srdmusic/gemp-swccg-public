@@ -108,10 +108,10 @@ public class DeployObjectiveSitingResidualSourceParityTest {
         String rando = source("rando");
         String chosenOne = source("chosenone");
         String randoBlock = slice(rando, new String[]{
-                "PhysicalCard v136DeployingCard = null;",
+                "PhysicalCard v136DeployingCard =",
                 "logger.debug(\"V136 CS error: {}\", e.getMessage());"});
         String chosenBlock = slice(chosenOne, new String[]{
-                "PhysicalCard v136DeployingCard = null;",
+                "PhysicalCard v136DeployingCard =",
                 "logger.debug(\"V136 CS error: {}\", e.getMessage());"});
         String policy = Files.readString(mainJavaRoot().resolve(
                 "com/gempukku/swccgo/ai/models/common/phase/DeployObjectiveSitingPolicy.java"));

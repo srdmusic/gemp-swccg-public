@@ -2605,9 +2605,8 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
     }
 
     @Test
-    public void formationSafetyStillRejectsLoadedCarrierBeforeBoundedVaderHold() {
+    public void hitLoadedCarrierResolvesBeforeBoundedVaderHold() {
         List<Outcome> carriers = new ArrayList<>();
-        List<Outcome> vaders = new ArrayList<>();
         List<Outcome> winners = new ArrayList<>();
         for (Bot bot : Bot.values()) {
             Fixture fixture = stableBhbmCarrierFixture(
@@ -2642,33 +2641,27 @@ public class CaptureObjectiveMirroredEvaluatorBehaviorHarnessTest {
             List<Outcome> actions =
                     cardSelectionAdapter(
                         fixture, forfeit);
-            Outcome heldCarrier = only(
+            assertEquals(1, actions.size());
+            Outcome hitCarrier = only(
                     actions,
                     String.valueOf(CARRIER_ID));
-            Outcome heldVader = only(
-                    actions,
-                    String.valueOf(VADER_ID));
+            assertFalse(actions.stream().anyMatch(
+                    outcome -> String.valueOf(VADER_ID)
+                            .equals(outcome.actionId())));
             Outcome winner =
                     combined(fixture, forfeit);
 
-            assertTrue(heldCarrier.hardVeto());
-            assertFalse(heldVader.hardVeto());
-            assertContains(heldCarrier,
+            assertFalse(hitCarrier.hardVeto());
+            assertNotContains(hitCarrier,
                     "V48 SHIP WITH CREW");
-            assertContains(heldCarrier,
+            assertContains(hitCarrier,
                     "BHBM CRITICAL");
-            assertContains(heldVader,
-                    "BHBM CRITICAL");
-            assertTrue(heldCarrier.score()
-                    < heldVader.score());
-            assertEquals(String.valueOf(VADER_ID),
+            assertEquals(String.valueOf(CARRIER_ID),
                     winner.actionId());
-            carriers.add(heldCarrier);
-            vaders.add(heldVader);
+            carriers.add(hitCarrier);
             winners.add(winner);
         }
         assertParity(carriers);
-        assertParity(vaders);
         assertParity(winners);
     }
 

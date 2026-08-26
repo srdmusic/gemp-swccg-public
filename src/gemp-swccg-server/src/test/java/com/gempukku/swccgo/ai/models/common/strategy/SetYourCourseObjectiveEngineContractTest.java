@@ -509,6 +509,7 @@ public class SetYourCourseObjectiveEngineContractTest {
             scn.MoveCardsToTopOfDSUsedPile(
                     scn.GetTopOfDSForcePile());
         }
+        scn.MoveCardsToBottomOfDSReserveDeck(battleBody);
         scn.DSActivateForceCheat(1);
         // Put the preferred route card on top only after activation. Native
         // search decisions expose that card as TOP_OF_RESERVE_DECK, and the

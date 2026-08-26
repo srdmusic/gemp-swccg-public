@@ -181,7 +181,10 @@ public class ForceUtilityResidualSourceOwnershipTest {
                 "public static PolicyResult scoreTakeIntoHand(",
                 "public static Evaluation evaluateParent(")
                 + phase("PullSpecificActionPolicy.java");
-        assertFalse(residualOwners.contains("PolicyOperation.hardVeto("));
+        assertEquals(1, occurrences(
+                residualOwners, "PolicyOperation.hardVeto("));
+        assertTrue(residualOwners.contains(
+                "TraceRuleId.of(\"V53d-wokling-location-ramp\")"));
         assertFalse(residualOwners.contains("PolicyOperation.defer("));
     }
 
