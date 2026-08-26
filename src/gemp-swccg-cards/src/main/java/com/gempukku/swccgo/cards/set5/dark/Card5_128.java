@@ -101,7 +101,7 @@ public class Card5_128 extends AbstractUtinniEffect {
             if (GameConditions.isOnceDuringOpponentsPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)) {
                 int amountOfForce = Filters.frozenCaptive.accepts(game, self.getAttachedTo()) ? 3 : 2;
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
                 action.setText("Make " + opponent + " lose " + amountOfForce + " Force");
                 // Update usage limit(s)
                 action.appendUsage(
