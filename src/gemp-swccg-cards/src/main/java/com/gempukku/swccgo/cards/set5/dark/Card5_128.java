@@ -91,7 +91,7 @@ public class Card5_128 extends AbstractUtinniEffect {
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActionsWhenInactiveInPlay(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         // Check inactive condition
-        if (!GameConditions.isOnlyCaptured(game, self)) {
+        if (GameConditions.isOnlyCaptured(game, self)) {
 
             String opponent = game.getOpponent(playerId);
 
