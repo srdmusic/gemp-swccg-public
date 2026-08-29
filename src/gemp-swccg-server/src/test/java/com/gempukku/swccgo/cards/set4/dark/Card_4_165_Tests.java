@@ -279,12 +279,12 @@ public class Card_4_165_Tests {
         assertTrue(scn.DSCardActionAvailable(zimh, "hyperspeed")); //test4
     }
 
-    @Test @Ignore
+    @Test
     public void StarDestroyerLaunchBayDSCanTakeOffTest() {
         //test1: DS can take starfighter off (disembark) from launch bay to a system (where the related star destroyer is)
         //test2: starfighter takes off (disembarks) to system
         //test3: movement was free
-        //test4: (FAILS) unlimited move was used (able to take another regular move action, this turn)
+        //test4: unlimited move was used (able to take another regular move action, this turn)
         var scn = GetScenario();
 
         var bay = scn.GetDSCard("bay");
@@ -319,7 +319,6 @@ public class Card_4_165_Tests {
         scn.LSPass();
 
         assertTrue(scn.AwaitingDSMovePhaseActions());
-            ///FAILS HERE (regular action used up because getTakeOffAction uses 'false' for asUnlimitedMove?)
         assertTrue(scn.DSCardActionAvailable(tiescout, "hyperspeed")); //test4
     }
 
