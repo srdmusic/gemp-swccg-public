@@ -32,7 +32,8 @@ public class Card_4_165_Tests {
                     put("bay", "4_165"); //Star Destroyer: Launch Bay
                     put("vcsd", "2_155"); //Victory-Class Star Destroyer
                     put("tiescout","1_305"); //tie scout
-				}},
+                    put("zimh", "110_012"); //zuckuss in mist hunter (non-tie starfighter)
+                }},
 				10,
 				10,
 				StartingSetup.DefaultLSSpaceSystem,
@@ -181,11 +182,11 @@ public class Card_4_165_Tests {
     }
 
     @Test @Ignore
-    public void StarDestroyerLaunchBayDSCanLandTest() {
-        //test1: (FAILS) DS can land (embark) starfighter from a system (where the related star destroyer is) to the launch bay
-        //test2: starfighter lands (embarks) at the bay
+    public void StarDestroyerLaunchBayDSCanLandTieTest() {
+        //test1: DS can land (embark) Tie starfighter from a system (where the related star destroyer is) to the launch bay
+        //test2: Tie lands (embarks) at the bay
         //test3: movement was free
-        //test4: unlimited move (able to take another regular move action, this turn)
+        //test4: (FAILS) unlimited move (able to take another regular move action, this turn)
         var scn = GetScenario();
 
         var bay = scn.GetDSCard("bay");
@@ -207,9 +208,6 @@ public class Card_4_165_Tests {
 
         scn.SkipToPhase(Phase.MOVE);
         assertEquals(0, scn.GetDSUsedPileCount());
-            ///FAILS HERE (only Embark and Ship Dock are available
-            //should be able to either Land or Embark directly to this site
-            //current workaround is to embark to cargo hold and then transfer to bay?
         assertTrue(scn.DSCardActionAvailable(tiescout,"Land")); //test1
         scn.DSUseCardAction(tiescout,"Land");
         scn.DSChooseCard(bay);
@@ -221,6 +219,7 @@ public class Card_4_165_Tests {
         scn.LSPass();
 
         assertTrue(scn.AwaitingDSMovePhaseActions());
+            ///FAILS HERE (regular action used up because getLandAction uses 'false' for asUnlimitedMove?)
         assertTrue(scn.DSCardActionAvailable(tiescout, "Take off"));
         scn.DSUseCardAction(tiescout,"Take off");
         scn.DSChooseCard(system);
@@ -229,6 +228,55 @@ public class Card_4_165_Tests {
 
         assertTrue(scn.AwaitingDSMovePhaseActions());
         assertTrue(scn.DSCardActionAvailable(tiescout, "hyperspeed")); //test4
+    }
+
+    @Test @Ignore
+    public void StarDestroyerLaunchBayDSCanLandNonTieStarfighterTest() {
+        //test1: DS can land (embark) non-Tie starfighter from a system (where the related star destroyer is) to the launch bay
+        //test2: starfighter lands (embarks) at the bay
+        //test3: movement was free
+        //test4: (FAILS) unlimited move (able to take another regular move action, this turn)
+        var scn = GetScenario();
+
+        var bay = scn.GetDSCard("bay");
+        var vcsd = scn.GetDSCard("vcsd");
+        var zimh = scn.GetDSCard("zimh");
+
+        var system = scn.GetDSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToDSHand(bay);
+
+        scn.MoveCardsToLocation(system, vcsd, zimh);
+
+        scn.SkipToPhase(Phase.DEPLOY);
+        scn.DSDeployCard(bay);
+        //scn.DSChooseCard(vcsd); //only card is auto-selected
+        scn.PassAllResponses();
+
+        scn.SkipToPhase(Phase.MOVE);
+        assertEquals(0, scn.GetDSUsedPileCount());
+        assertTrue(scn.DSCardActionAvailable(zimh,"Land")); //test1
+        scn.DSUseCardAction(zimh,"Land");
+        scn.DSChooseCard(bay);
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingLSMovePhaseActions());
+        assertTrue(scn.CardsAtLocation(bay, zimh)); //test2
+        assertEquals(0, scn.GetDSUsedPileCount()); //test3
+        scn.LSPass();
+
+        assertTrue(scn.AwaitingDSMovePhaseActions());
+            ///FAILS HERE (regular action used up because getLandAction uses 'false' for asUnlimitedMove?)
+        assertTrue(scn.DSCardActionAvailable(zimh, "Take off"));
+        scn.DSUseCardAction(zimh,"Take off");
+        scn.DSChooseCard(system);
+        scn.PassAllResponses();
+        scn.LSPass();
+
+        assertTrue(scn.AwaitingDSMovePhaseActions());
+        assertTrue(scn.DSCardActionAvailable(zimh, "hyperspeed")); //test4
     }
 
     @Test @Ignore
@@ -271,7 +319,7 @@ public class Card_4_165_Tests {
         scn.LSPass();
 
         assertTrue(scn.AwaitingDSMovePhaseActions());
-            ///FAILS HERE - taking off used up regular movement for the turn? Take off / disembark should have been treated as unlimited...
+            ///FAILS HERE (regular action used up because getTakeOffAction uses 'false' for asUnlimitedMove?)
         assertTrue(scn.DSCardActionAvailable(tiescout, "hyperspeed")); //test4
     }
 
