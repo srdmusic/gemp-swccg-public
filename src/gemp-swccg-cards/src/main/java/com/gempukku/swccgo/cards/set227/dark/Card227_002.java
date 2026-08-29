@@ -102,7 +102,7 @@ public class Card227_002 extends AbstractNormalEffect {
                 action.appendUsage(new OncePerBattleEffect(action));
                 // Perform result(s)
                 action.appendEffect(
-                    new ActivateForceEffect(action, playerId, 1));                   
+                    new ActivateForceEffect(action, playerId, 1));
                 actions.add(action);
             }
             else if (opponentCanActivate) {
