@@ -219,7 +219,6 @@ public class Card_4_165_Tests {
         scn.LSPass();
 
         assertTrue(scn.AwaitingDSMovePhaseActions());
-            ///FAILS HERE (regular action used up because getLandAction uses 'false' for asUnlimitedMove?)
         assertTrue(scn.DSCardActionAvailable(tiescout, "Take off"));
         scn.DSUseCardAction(tiescout,"Take off");
         scn.DSChooseCard(system);
@@ -227,6 +226,7 @@ public class Card_4_165_Tests {
         scn.LSPass();
 
         assertTrue(scn.AwaitingDSMovePhaseActions());
+        ///FAILS HERE (regular action used up because getLandAction uses 'false' for asUnlimitedMove?)
         assertTrue(scn.DSCardActionAvailable(tiescout, "hyperspeed")); //test4
     }
 
@@ -268,7 +268,6 @@ public class Card_4_165_Tests {
         scn.LSPass();
 
         assertTrue(scn.AwaitingDSMovePhaseActions());
-            ///FAILS HERE (regular action used up because getLandAction uses 'false' for asUnlimitedMove?)
         assertTrue(scn.DSCardActionAvailable(zimh, "Take off"));
         scn.DSUseCardAction(zimh,"Take off");
         scn.DSChooseCard(system);
@@ -276,6 +275,7 @@ public class Card_4_165_Tests {
         scn.LSPass();
 
         assertTrue(scn.AwaitingDSMovePhaseActions());
+        ///FAILS HERE (regular action used up because getLandAction uses 'false' for asUnlimitedMove?)
         assertTrue(scn.DSCardActionAvailable(zimh, "hyperspeed")); //test4
     }
 
