@@ -11713,3 +11713,46 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     predeploy-8dc24ba2-b2969ba5/web.jar, SHA-256
     b2969ba56c294be431692fb7ec062ab5ac6c23d090d7ad7f6ea063549351eb06.
     Proof is RUNTIME_LOADED, not REPLAY_FIRED.
+
+  ==== V302 (2026-08-29): FIRST ORDER ROUTE AND KYLO CRAIT CONVERGENCE ====
+
+    Completed game 72322 exposed two objective failures. Supremacy wandered
+    from Crait through Tatooine, D'Qar, and Alderaan while Tracked Fleet moved
+    to Crait. Kylo deployed to Tatooine instead of establishing the useful
+    pre-flip Crait drain position. The later Alderaan losses were downstream.
+
+    V302 gives the exact current Tracked Fleet host the first structural route
+    tier, then the shortest admissible bridge. Lower route tiers defer. A
+    bridge rejected by V41 remains rejected and cannot displace a live contest.
+    Only the exact current host is exempt from V41 wrong-direction scoring. A
+    ship remains at a safe unresolved host, but real retreatable danger releases
+    that hold.
+
+    Pre-flip Kylo may deploy or move to Crait: Outpost Entrance Cavern only
+    when a different on-table chase ship stays independently piloted and exact
+    Kylo plus movement reserves remain funded. That route stays available after
+    host control while the mandatory start-of-turn trigger is pending. The sole
+    host controller receives categorical move and battle-forfeit holds until
+    the trigger resolves. Existing post-flip Salt Plateau behavior is unchanged.
+
+    Rando and Chosen One use normalized mirrored adapters. Shared policy owns
+    the bounded route and Kylo deployment contributions, while categorical
+    defer and hard-veto operations preserve old scores without letting them
+    overturn the required ordering.
+
+    Failure-first replay-shaped regressions covered the two original defects
+    plus V41 bridge rejection, safe-host retention, danger release, funded Kylo
+    sequencing, independent piloting, and pending-trigger retention. The final
+    nine-suite ring passed 165/0/0/0. A clean isolated full reactor passed 3535
+    server tests with zero failures and errors, 26 skipped, plus 10/0/0/0 async
+    tests, compilation, and packaging. Independent implementation review,
+    normalized both-bot parity, source ownership, JSON validation, and diff
+    checks passed.
+
+    Exact base is b9d607b973a264f46ddc5e6801f2f47fe61d8789 on branch
+    codex/first-order-route-2026-08-29. Production scope is eight AI files and
+    four focused tests, plus the two objective records, gap matrix, and
+    append-only history. No card source, engine source, deck data, database,
+    live runtime, game state, or GitHub push changed in this source commit.
+    The build produced an unsealed candidate only. Proof remains SOURCE_TESTED
+    until independent package and runtime gates pass.

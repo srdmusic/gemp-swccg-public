@@ -92,11 +92,12 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
     private static final int NAVY_ID = 213;
     private static final int HUX_ID = 214;
     private static final int THRONE_ROOM_ID = 215;
+    private static final int V41_CONTESTER_ID = 216;
 
     private static final String MOVE_START_RULE =
             "MOVE.OBJECTIVE.ACTOR_LOCATION_START";
     private static final String MOVE_DESTINATION_RULE =
-            "MOVE.OBJECTIVE.ACTOR_LOCATION_DESTINATION";
+            "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_DESTINATION_SCORE";
     private static final String FORCE_LOSS_RULE =
             "OBJECTIVE CRITICAL";
     private static final String TERMINAL_FORFEIT_RULE =
@@ -157,6 +158,16 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_CANDIDATE";
     private static final String NAVY_DESTINATION_RULE =
             "DEPLOY.OBJECTIVE.FIRST_ORDER_NAVY_ROUTE_DESTINATION";
+    private static final String CURRENT_HOST_ROUTE_RULE =
+            "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_CURRENT_HOST";
+    private static final String SHORTEST_BRIDGE_ROUTE_RULE =
+            "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_SHORTEST_SAFE_BRIDGE";
+    private static final String LOWER_ROUTE_TIER_REASON =
+            "lower than the best safe Tracked Fleet route tier";
+    private static final String PRE_FLIP_KYLO_OUTPOST_RULE =
+            "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_OUTPOST";
+    private static final String CURRENT_HOST_HOLD_RULE =
+            "MOVE.OBJECTIVE.FIRST_ORDER_CURRENT_HOST_HOLD";
 
     @Test
     public void routeDownloadRequiresADeployableCandidateAtForceBoundary() {
@@ -947,10 +958,327 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     id(fixture.illegal));
 
             assertContains(closer, MOVE_DESTINATION_RULE);
+            assertContains(closer, SHORTEST_BRIDGE_ROUTE_RULE);
             assertNotContains(sameDistance, MOVE_DESTINATION_RULE);
             assertNotContains(farther, MOVE_DESTINATION_RULE);
             assertNotContains(illegal, MOVE_DESTINATION_RULE);
+            assertContains(sameDistance, LOWER_ROUTE_TIER_REASON);
+            assertContains(farther, LOWER_ROUTE_TIER_REASON);
+            assertContains(illegal, LOWER_ROUTE_TIER_REASON);
             assertEquals(id(fixture.closer),
+                    combined(fixture, destinations).actionId());
+        }
+    }
+
+    @Test
+    public void exactFleetHostTierBeatsV41ContestAndWrongDirection() {
+        for (Variant variant : variants()) {
+            Fixture fixture = fixture(variant, false);
+            PhysicalCard contester = card(
+                    "Poe Dameron", "test_v41_contester",
+                    OPPONENT, Zone.AT_LOCATION,
+                    CardCategory.CHARACTER,
+                    null, V41_CONTESTER_ID);
+            register(fixture.cards, contester);
+            fixture.locations.add(fixture.origin);
+            fixture.locations.add(fixture.closer);
+            fixture.locations.add(fixture.farther);
+            fixture.permanents.add(fixture.supremacy);
+            fixture.permanents.add(contester);
+            place(fixture, fixture.supremacy, fixture.origin);
+            place(fixture, contester, fixture.closer);
+            setActive(fixture.gameState, contester, true);
+            when(contester.getBlueprint().hasPowerAttribute())
+                    .thenReturn(true);
+            when(contester.getBlueprint().getPower())
+                    .thenReturn(4.0f);
+            when(fixture.modifiers.getTotalPowerAtLocation(
+                    fixture.gameState, fixture.closer,
+                    OPPONENT, false, false))
+                    .thenReturn(4.0f);
+            configureHyperspace(fixture, 10.0f);
+
+            Decision destinations = Decision.moveDestinations(
+                    fixture.supremacy,
+                    fixture.host,
+                    fixture.closer,
+                    fixture.farther);
+            List<Outcome> candidates =
+                    cardSelectionAdapter(fixture, destinations);
+            Outcome exactHost = only(
+                    candidates, id(fixture.host));
+            Outcome contestedCloser = only(
+                    candidates, id(fixture.closer));
+
+            assertContains(exactHost, CURRENT_HOST_ROUTE_RULE);
+            assertContains(
+                    exactHost,
+                    "FIRST_ORDER_CURRENT_HOST_V41_EXEMPT");
+            assertContains(
+                    contestedCloser,
+                    "V41 CONTEST DEST");
+            assertContains(
+                    contestedCloser,
+                    LOWER_ROUTE_TIER_REASON);
+            assertEquals(
+                    id(fixture.host),
+                    combined(fixture, destinations)
+                            .actionId());
+        }
+    }
+
+    @Test
+    public void v41RejectedBridgeDoesNotDeferTheLiveContest() {
+        for (Variant variant : variants()) {
+            Fixture fixture = fixture(variant, false);
+            configurePaidRoute(fixture);
+            PhysicalCard contester = card(
+                    "Poe Dameron", "test_v41_contester",
+                    OPPONENT, Zone.AT_LOCATION,
+                    CardCategory.CHARACTER,
+                    null, V41_CONTESTER_ID);
+            register(fixture.cards, contester);
+            fixture.permanents.add(contester);
+            place(fixture, contester,
+                    fixture.sameDistance);
+            setActive(fixture.gameState, contester, true);
+            when(fixture.modifiers.getTotalPowerAtLocation(
+                    fixture.gameState,
+                    fixture.sameDistance,
+                    OPPONENT, false, false))
+                    .thenReturn(4.0f);
+
+            Decision destinations = Decision.moveDestinations(
+                    fixture.supremacy,
+                    fixture.closer,
+                    fixture.sameDistance);
+            List<Outcome> candidates =
+                    cardSelectionAdapter(fixture, destinations);
+            Outcome rejectedBridge = only(
+                    candidates, id(fixture.closer));
+            Outcome liveContest = only(
+                    candidates, id(fixture.sameDistance));
+
+            assertContains(
+                    rejectedBridge,
+                    "V41 WRONG DIRECTION");
+            assertNotContains(
+                    liveContest,
+                    LOWER_ROUTE_TIER_REASON);
+            assertEquals(
+                    id(fixture.sameDistance),
+                    combined(fixture, destinations)
+                            .actionId());
+        }
+    }
+
+    @Test
+    public void fundedIndependentChaseReleasesKyloToCraitOutpost() {
+        for (Variant variant : variants()) {
+            Fixture fixture = fixture(variant, false);
+            PhysicalCard cavern = craitCavern(fixture);
+            fixture.locations.add(fixture.origin);
+            fixture.locations.add(fixture.closer);
+            fixture.locations.add(fixture.salt);
+            fixture.locations.add(cavern);
+            fixture.locations.add(fixture.battleSite);
+            fixture.permanents.add(fixture.supremacy);
+            fixture.hand.add(fixture.kylo);
+            place(fixture, fixture.supremacy, fixture.origin);
+            when(fixture.kylo.getZone())
+                    .thenReturn(Zone.HAND);
+            when(fixture.modifiers.getDeployCost(
+                    fixture.gameState, fixture.kylo))
+                    .thenReturn(5.0f);
+            when(fixture.modifiers.getDeployCost(
+                    fixture.gameState,
+                    fixture.kylo, fixture.kylo,
+                    cavern, false, null, false,
+                    0.0f, null, true))
+                    .thenReturn(5.0f);
+            configureHyperspace(fixture, 10.0f);
+            when(fixture.modifiers.getMoveUsingHyperspeedCost(
+                    fixture.gameState, fixture.supremacy,
+                    fixture.origin, fixture.closer,
+                    false, 0.0f)).thenReturn(1.0f);
+            when(fixture.modifiers.getMoveUsingHyperspeedCost(
+                    fixture.gameState, fixture.supremacy,
+                    fixture.origin, fixture.host,
+                    false, 0.0f)).thenReturn(1.0f);
+
+            Decision destinations = Decision.deployKylo(
+                    cavern,
+                    fixture.salt,
+                    fixture.battleSite);
+            List<Outcome> candidates =
+                    cardSelectionAdapter(fixture, destinations);
+            Outcome outpost = only(
+                    candidates, id(cavern));
+            Outcome salt = only(
+                    candidates, id(fixture.salt));
+            Outcome tatooine = only(
+                    candidates, id(fixture.battleSite));
+
+            assertContains(outpost, PRE_FLIP_KYLO_OUTPOST_RULE);
+            assertNotContains(outpost, PREMATURE_CRAIT_RULE);
+            assertContains(salt, PREMATURE_CRAIT_RULE);
+            assertContains(tatooine, PREMATURE_CRAIT_RULE);
+            assertContains(salt, LOWER_ROUTE_TIER_REASON);
+            assertContains(tatooine, LOWER_ROUTE_TIER_REASON);
+            assertEquals(
+                    id(cavern),
+                    combined(fixture, destinations)
+                            .actionId());
+
+            when(fixture.modifiers.getForceAvailableToUse(
+                    fixture.gameState, PLAYER))
+                    .thenReturn(5);
+            List<Outcome> unfunded = cardSelectionAdapter(
+                    fixture,
+                    Decision.deployKylo(
+                            cavern, fixture.salt));
+            assertContains(
+                    only(unfunded, id(cavern)),
+                    PREMATURE_CRAIT_RULE);
+            assertContains(
+                    only(unfunded, id(fixture.salt)),
+                    PREMATURE_CRAIT_RULE);
+            assertNotContains(
+                    only(unfunded, id(cavern)),
+                    PRE_FLIP_KYLO_OUTPOST_RULE);
+        }
+    }
+
+    @Test
+    public void securedPendingHostStillReleasesKyloToOutpost() {
+        for (Variant variant : variants()) {
+            Fixture fixture = fixture(variant, false);
+            PhysicalCard cavern = craitCavern(fixture);
+            fixture.locations.add(fixture.origin);
+            fixture.locations.add(fixture.closer);
+            fixture.locations.add(fixture.salt);
+            fixture.locations.add(cavern);
+            fixture.locations.add(fixture.battleSite);
+            fixture.permanents.add(fixture.supremacy);
+            fixture.hand.add(fixture.kylo);
+            place(fixture, fixture.supremacy, fixture.host);
+            when(fixture.kylo.getZone()).thenReturn(Zone.HAND);
+            when(fixture.modifiers.controlsLocation(
+                    fixture.gameState, fixture.host, PLAYER))
+                    .thenReturn(true);
+            when(fixture.modifiers.getDeployCost(
+                    fixture.gameState, fixture.kylo,
+                    fixture.kylo, cavern,
+                    false, null, false,
+                    0.0f, null, true))
+                    .thenReturn(5.0f);
+            configureHyperspace(fixture, 10.0f);
+
+            Decision destinations = Decision.deployKylo(
+                    cavern, fixture.salt,
+                    fixture.battleSite);
+            List<Outcome> candidates =
+                    cardSelectionAdapter(fixture, destinations);
+
+            assertContains(
+                    only(candidates, id(cavern)),
+                    PRE_FLIP_KYLO_OUTPOST_RULE);
+            assertContains(
+                    only(candidates, id(fixture.salt)),
+                    LOWER_ROUTE_TIER_REASON);
+            assertEquals(
+                    id(cavern),
+                    combined(fixture, destinations).actionId());
+        }
+    }
+
+    @Test
+    public void safeUnresolvedFleetHostDefersVoluntaryDeparture() {
+        for (Variant variant : variants()) {
+            Fixture fixture = fixture(variant, false);
+            fixture.locations.add(fixture.closer);
+            fixture.permanents.add(fixture.supremacy);
+            place(fixture, fixture.supremacy, fixture.host);
+            configureHyperspace(fixture, 10.0f);
+            when(fixture.modifiers.getTotalPowerAtLocation(
+                    fixture.gameState, fixture.host,
+                    PLAYER, false, false)).thenReturn(8.0f);
+            when(fixture.modifiers.getTotalPowerAtLocation(
+                    fixture.gameState, fixture.host,
+                    OPPONENT, false, false)).thenReturn(8.0f);
+
+            Decision parent = Decision.topLevelHyperspace(
+                    fixture.supremacy);
+            Outcome safeMove = only(
+                    moveAdapter(fixture, parent),
+                    "move-" + SUPREMACY_ID);
+            assertContains(safeMove, CURRENT_HOST_HOLD_RULE);
+            assertEquals("pass",
+                    combined(fixture, parent).actionId());
+
+            when(fixture.modifiers.getTotalPowerAtLocation(
+                    fixture.gameState, fixture.host,
+                    OPPONENT, false, false)).thenReturn(20.0f);
+            Outcome retreatMove = only(
+                    moveAdapter(fixture, parent),
+                    "move-" + SUPREMACY_ID);
+            assertNotContains(
+                    retreatMove, CURRENT_HOST_HOLD_RULE);
+        }
+    }
+
+    @Test
+    public void kyloOutpostReleaseRequiresAnotherAssignedPilot() {
+        for (Variant variant : variants()) {
+            Fixture fixture = fixture(variant, false);
+            PhysicalCard cavern = craitCavern(fixture);
+            PhysicalCard secondPilot = card(
+                    "First Order Pilot", "test_second_pilot",
+                    PLAYER, Zone.AT_LOCATION,
+                    CardCategory.CHARACTER,
+                    null, V41_CONTESTER_ID);
+            register(fixture.cards, secondPilot);
+            fixture.locations.add(fixture.origin);
+            fixture.locations.add(fixture.closer);
+            fixture.locations.add(fixture.salt);
+            fixture.locations.add(cavern);
+            fixture.permanents.add(fixture.supremacy);
+            fixture.permanents.add(fixture.kylo);
+            place(fixture, fixture.supremacy, fixture.origin);
+            place(fixture, fixture.kylo, fixture.origin);
+            configureHyperspace(fixture, 10.0f);
+            when(fixture.modifiers.getIsPilotOf(
+                    fixture.gameState, fixture.kylo))
+                    .thenReturn(fixture.supremacy);
+            when(fixture.modifiers.hasPermanentPilot(
+                    fixture.gameState, fixture.supremacy))
+                    .thenReturn(false);
+
+            Decision destinations = Decision.moveDestinations(
+                    fixture.kylo, cavern, fixture.salt);
+            List<Outcome> solePilot =
+                    cardSelectionAdapter(fixture, destinations);
+            assertNotContains(
+                    only(solePilot, id(cavern)),
+                    "MOVE.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_OUTPOST");
+
+            fixture.permanents.add(secondPilot);
+            place(fixture, secondPilot, fixture.origin);
+            setActive(fixture.gameState, secondPilot, true);
+            when(fixture.modifiers.getIsPilotOf(
+                    fixture.gameState, secondPilot))
+                    .thenReturn(fixture.supremacy);
+
+            List<Outcome> independentlyPiloted =
+                    cardSelectionAdapter(fixture, destinations);
+            assertContains(
+                    only(independentlyPiloted, id(cavern)),
+                    "MOVE.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_OUTPOST");
+            assertContains(
+                    only(independentlyPiloted, id(fixture.salt)),
+                    LOWER_ROUTE_TIER_REASON);
+            assertEquals(
+                    id(cavern),
                     combined(fixture, destinations).actionId());
         }
     }
@@ -2755,11 +3083,19 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
                     id(supremacyFixture.supremacy));
             assertContains(
                     soleSupremacy, PENDING_FORFEIT_RULE);
+            assertTrue(soleSupremacy.hardVeto());
             assertEquals(
                     id(supremacyFixture.alternative),
                     combined(
                             supremacyFixture,
                             supremacyForfeit).actionId());
+            Outcome soleSupremacyMove = only(
+                    moveAdapter(
+                            supremacyFixture,
+                            Decision.topLevelHyperspace(
+                                    supremacyFixture.supremacy)),
+                    "move-" + SUPREMACY_ID);
+            assertTrue(soleSupremacyMove.hardVeto());
 
             Fixture ordinaryFixture =
                     fixture(variant, false);
@@ -2777,6 +3113,7 @@ public class FirstOrderReignsEvaluatorBehaviorTest {
             assertContains(
                     soleOrdinaryController,
                     PENDING_FORFEIT_RULE);
+            assertTrue(soleOrdinaryController.hardVeto());
             assertEquals(
                     id(ordinaryFixture.alternative),
                     combined(

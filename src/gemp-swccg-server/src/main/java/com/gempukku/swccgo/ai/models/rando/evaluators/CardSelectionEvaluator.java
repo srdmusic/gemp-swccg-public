@@ -2954,6 +2954,15 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 location)));
                             applyDeploySitingPolicy(action,
                                 DeployObjectiveSitingPolicy
+                                    .scoreFirstOrderReignsPreFlipKyloOutpostSetup(
+                                        action.getActionId(),
+                                        objectiveProgressAnalyzer
+                                            .isFirstOrderReignsFundedPreFlipKyloOutpostSetupAt(
+                                                game, playerId,
+                                                objectiveProgressDeployingCard,
+                                                location)));
+                            applyDeploySitingPolicy(action,
+                                DeployObjectiveSitingPolicy
                                     .blockFirstOrderReignsPreFlipGround(
                                         action.getActionId(),
                                         objectiveProgressAnalyzer
@@ -6352,7 +6361,64 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             actions.add(action);
         }
 
+        applyFirstOrderReignsPreFlipKyloOutpostTier(
+                context, actions,
+                objectiveProgressDeployingCard);
         return actions;
+    }
+
+    private void applyFirstOrderReignsPreFlipKyloOutpostTier(
+            DecisionContext context,
+            List<EvaluatedAction> actions,
+            PhysicalCard deployingCard) {
+        if (context == null || actions == null
+                || deployingCard == null
+                || context.getGameState() == null
+                || context.getGame() == null
+                || context.getObjectiveAnalyzer() == null) {
+            return;
+        }
+        boolean safeOutpostOffered = false;
+        for (EvaluatedAction action : actions) {
+            if (action == null || action.isHardVetoed()
+                    || action.isDeferred()) continue;
+            try {
+                PhysicalCard destination =
+                        context.getGameState().findCardById(
+                            Integer.parseInt(action.getActionId()));
+                if (context.getObjectiveAnalyzer()
+                        .isFirstOrderReignsFundedPreFlipKyloOutpostSetupAt(
+                            context.getGame(),
+                            context.getPlayerId(),
+                            deployingCard, destination)) {
+                    safeOutpostOffered = true;
+                    break;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        if (!safeOutpostOffered) return;
+        for (EvaluatedAction action : actions) {
+            if (action == null || action.isHardVetoed()
+                    || action.isDeferred()) continue;
+            boolean preferred = false;
+            try {
+                PhysicalCard destination =
+                        context.getGameState().findCardById(
+                            Integer.parseInt(action.getActionId()));
+                preferred = context.getObjectiveAnalyzer()
+                        .isFirstOrderReignsFundedPreFlipKyloOutpostSetupAt(
+                            context.getGame(),
+                            context.getPlayerId(),
+                            deployingCard, destination);
+            } catch (Exception ignored) {
+            }
+            applyDeploySitingPolicy(
+                    action,
+                    DeployObjectiveSitingPolicy
+                        .orderFirstOrderReignsPreFlipKyloOutpostTier(
+                            action.getActionId(), !preferred));
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -9449,6 +9515,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         boolean objectiveFirstOrderDrainPairDestination =
                                 false;
                         boolean objectiveFirstOrderDrainPairBreak = false;
+                        boolean firstOrderReignsRouteMover = false;
+                        boolean firstOrderCurrentHostDestination = false;
                         boolean objectiveTerminalEscapeDestination =
                                 false;
                         boolean objectiveOldAlliesFalconDestination =
@@ -9458,6 +9526,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             try {
                                 var routeAnalyzer =
                                     context.getObjectiveAnalyzer();
+                                firstOrderReignsRouteMover =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    && routeAnalyzer
+                                        .isFirstOrderReignsRouteShipCandidate(
+                                            game, playerId,
+                                            fsMover);
+                                firstOrderCurrentHostDestination =
+                                    firstOrderReignsRouteMover
+                                    && routeAnalyzer
+                                        .isFirstOrderReignsCurrentHostRouteDestination(
+                                            game, playerId,
+                                            fsMover, location);
                                 objectiveActorRouteDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -9472,6 +9553,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 objectiveActorLocationDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
+                                    && !firstOrderReignsRouteMover
                                     && (routeAnalyzer
                                         .advancesPreFlipActorAtRuntimeLocation(
                                             game, playerId, fsMover,
@@ -10847,7 +10929,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 opponentsElsewhere, title, worstDrainLoc,
                                                 MoveDestinationPolicy.retreatExemptsWrongDirection(v169Retreat),
                                                 v156JoinMode && v156DestFriendlyChars > 0,
-                                                objectiveTerminalEscapeDestination);
+                                                objectiveTerminalEscapeDestination,
+                                                firstOrderCurrentHostDestination);
                                         if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.RETREAT_EXEMPT) {
                                             logger.warn("V169 RETREAT EXEMPT: {} — V41 wrong-direction skipped (mover fleeing {})",
@@ -10861,10 +10944,30 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                             logger.warn("OBJECTIVE TERMINAL ESCAPE: {} avoids source-proven objective loss; V41 wrong-direction skipped",
                                                 title);
                                         } else if (v41Direction.disposition()
+                                                == MoveDestinationPolicy.WrongDirectionDisposition.FIRST_ORDER_CURRENT_HOST_EXEMPT) {
+                                            action.addReasoning(
+                                                "MOVE.OBJECTIVE.FIRST_ORDER_CURRENT_HOST_V41_EXEMPT: the physical Tracked Fleet host outranks an unrelated drain chase",
+                                                0.0f,
+                                                TraceRuleId.of(
+                                                    "MOVE.OBJECTIVE.FIRST_ORDER_CURRENT_HOST_V41_EXEMPT"),
+                                                TraceDomainId.OBJECTIVE_INTENT,
+                                                TraceOutputKind.ORDERING);
+                                            logger.warn("OBJECTIVE FIRST ORDER CURRENT HOST: {} is the physical Tracked Fleet host; V41 wrong-direction skipped",
+                                                title);
+                                        } else if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.VETO) {
                                             action.addReasoning(
                                                 v41Direction.contribution().reason(),
                                                 v41Direction.contribution().delta());
+                                            if (firstOrderReignsRouteMover) {
+                                                action.defer(
+                                                    "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_V41_HOLD: a bridge rejected by V41 is not a safe Tracked Fleet route tier",
+                                                    0.0f,
+                                                    TraceRuleId.of(
+                                                        "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_V41_HOLD"),
+                                                    TraceDomainId.OBJECTIVE_INTENT,
+                                                    TraceOutputKind.ORDERING);
+                                            }
                                             logger.warn("V41 WRONG DIRECTION: {} is empty, opponents at {} — BLOCKED", title, worstDrainLoc);
                                         }
                                     }
@@ -10952,7 +11055,166 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             actions.add(action);
         }
 
+        applyFirstOrderReignsMoveStructuralTier(
+                context, actions, fsMover);
         return actions;
+    }
+
+    private void applyFirstOrderReignsMoveStructuralTier(
+            DecisionContext context,
+            List<EvaluatedAction> actions,
+            PhysicalCard mover) {
+        if (context == null || actions == null
+                || mover == null
+                || context.getGameState() == null
+                || context.getGame() == null
+                || context.getObjectiveAnalyzer() == null) {
+            return;
+        }
+        List<PhysicalCard> safeDestinations =
+                new ArrayList<>();
+        for (EvaluatedAction action : actions) {
+            if (action == null || action.isHardVetoed()
+                    || action.isDeferred()) continue;
+            try {
+                PhysicalCard destination =
+                        context.getGameState().findCardById(
+                            Integer.parseInt(action.getActionId()));
+                if (destination != null) {
+                    safeDestinations.add(destination);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        var analyzer = context.getObjectiveAnalyzer();
+        if (analyzer.isFirstOrderReignsRouteShipCandidate(
+                context.getGame(), context.getPlayerId(), mover)) {
+            int bestRank = 0;
+            for (EvaluatedAction action : actions) {
+                if (action == null || action.isHardVetoed()
+                        || action.isDeferred()) continue;
+                PhysicalCard destination = null;
+                try {
+                    destination = context.getGameState().findCardById(
+                            Integer.parseInt(action.getActionId()));
+                } catch (Exception ignored) {
+                }
+                var role = analyzer
+                        .classifyFirstOrderReignsRouteDestination(
+                            context.getGame(),
+                            context.getPlayerId(), mover,
+                            destination, safeDestinations);
+                int rank = firstOrderReignsRouteRank(role);
+                bestRank = Math.max(bestRank, rank);
+                if (rank > 0 && destination != null) {
+                    MoveDestinationPolicy.Contribution contribution =
+                            MoveDestinationPolicy
+                                .firstOrderReignsRouteDestination(
+                                    true, mover.getTitle(),
+                                    destination.getTitle());
+                    addObjectiveContribution(
+                            action, contribution.reason(),
+                            contribution.delta(),
+                            "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_DESTINATION_SCORE");
+                    String ruleId = role
+                            == com.gempukku.swccgo.ai.models.common
+                                .strategy.ObjectiveAnalyzer
+                                .FirstOrderReignsRouteRole.CURRENT_HOST
+                            ? "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_CURRENT_HOST"
+                            : "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_SHORTEST_SAFE_BRIDGE";
+                    action.addReasoning(
+                            ruleId + ": "
+                                + destination.getTitle()
+                                + " is the best safe structural route toward the physical Tracked Fleet host",
+                            0.0f,
+                            TraceRuleId.of(ruleId),
+                            TraceDomainId.OBJECTIVE_INTENT,
+                            TraceOutputKind.ORDERING);
+                }
+            }
+            if (bestRank == 0) return;
+            for (EvaluatedAction action : actions) {
+                if (action == null || action.isHardVetoed()
+                        || action.isDeferred()) continue;
+                PhysicalCard destination = null;
+                try {
+                    destination = context.getGameState().findCardById(
+                            Integer.parseInt(action.getActionId()));
+                } catch (Exception ignored) {
+                }
+                var role = analyzer
+                        .classifyFirstOrderReignsRouteDestination(
+                            context.getGame(),
+                            context.getPlayerId(), mover,
+                            destination, safeDestinations);
+                if (firstOrderReignsRouteRank(role) < bestRank) {
+                    action.defer(
+                            "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_TIER: destination is lower than the best safe Tracked Fleet route tier",
+                            0.0f,
+                            TraceRuleId.of(
+                                "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_TIER"),
+                            TraceDomainId.OBJECTIVE_INTENT,
+                            TraceOutputKind.ORDERING);
+                }
+            }
+            return;
+        }
+
+        boolean safeKyloOutpostOffered = false;
+        for (PhysicalCard destination : safeDestinations) {
+            if (analyzer
+                    .isFirstOrderReignsFundedPreFlipKyloOutpostSetupAt(
+                        context.getGame(), context.getPlayerId(),
+                        mover, destination)) {
+                safeKyloOutpostOffered = true;
+                break;
+            }
+        }
+        if (!safeKyloOutpostOffered) return;
+        for (EvaluatedAction action : actions) {
+            if (action == null || action.isHardVetoed()
+                    || action.isDeferred()) continue;
+            PhysicalCard destination = null;
+            try {
+                destination = context.getGameState().findCardById(
+                        Integer.parseInt(action.getActionId()));
+            } catch (Exception ignored) {
+            }
+            boolean preferred = analyzer
+                    .isFirstOrderReignsFundedPreFlipKyloOutpostSetupAt(
+                        context.getGame(), context.getPlayerId(),
+                        mover, destination);
+            if (preferred) {
+                action.addReasoning(
+                        "MOVE.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_OUTPOST: move Kylo to the pre-flip Crait drain setup after the separate chase is funded",
+                        0.0f,
+                        TraceRuleId.of(
+                            "MOVE.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_OUTPOST"),
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.ORDERING);
+            } else {
+                action.defer(
+                        "MOVE.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_TIER: destination is lower than the best safe Tracked Fleet route tier",
+                        0.0f,
+                        TraceRuleId.of(
+                            "MOVE.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_TIER"),
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.ORDERING);
+            }
+        }
+    }
+
+    private static int firstOrderReignsRouteRank(
+            com.gempukku.swccgo.ai.models.common.strategy
+                .ObjectiveAnalyzer.FirstOrderReignsRouteRole role) {
+        if (role == com.gempukku.swccgo.ai.models.common.strategy
+                .ObjectiveAnalyzer.FirstOrderReignsRouteRole
+                .CURRENT_HOST) {
+            return 2;
+        }
+        return role == com.gempukku.swccgo.ai.models.common.strategy
+                .ObjectiveAnalyzer.FirstOrderReignsRouteRole
+                .SHORTEST_SAFE_BRIDGE ? 1 : 0;
     }
 
     private List<EvaluatedAction>

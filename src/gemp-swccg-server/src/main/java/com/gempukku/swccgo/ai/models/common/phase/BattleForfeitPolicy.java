@@ -215,6 +215,7 @@ public final class BattleForfeitPolicy {
                 reason = "BATTLE.OBJECTIVE.TERMINAL_ACTOR_HOLD: do not forfeit the actor whose loss would place the objective out of play while another legal loss exists";
                 break;
             case LAST_PENDING_TRIGGER_CONTROL_SOURCE:
+                terminalProtection = true;
                 ruleId =
                         "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD";
                 reason = "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD: preserve the sole control source until the mandatory objective trigger resolves";
@@ -227,7 +228,14 @@ public final class BattleForfeitPolicy {
             default:
                 return result(operations);
         }
-        if (terminalProtection) {
+        if (role
+                == ObjectiveAnalyzer.FlipGateFormationRole
+                    .LAST_PENDING_TRIGGER_CONTROL_SOURCE) {
+            operations.add(PolicyOperation.hardVeto(
+                    actionId, TraceRuleId.of(ruleId),
+                    TraceDomainId.OBJECTIVE_INTENT,
+                    TraceOutputKind.VETO, reason));
+        } else if (terminalProtection) {
             add(operations, actionId, ruleId,
                     TraceOutputKind.VETO, -9999.0f, reason);
         } else {

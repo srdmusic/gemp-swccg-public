@@ -469,6 +469,47 @@ public final class DeployObjectiveSitingPolicy {
                         "Do not spend the Tracked Fleet chase budget on ground forces before the objective flips"));
     }
 
+    public static PolicyResult
+            scoreFirstOrderReignsPreFlipKyloOutpostSetup(
+                    String actionId,
+                    boolean fundedOutpostSetup) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!fundedOutpostSetup) {
+            return new PolicyResult(
+                    "DEPLOY_FIRST_ORDER_PRE_FLIP_KYLO_OUTPOST_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_FIRST_ORDER_PRE_FLIP_KYLO_OUTPOST_POLICY",
+                add(actionId,
+                        "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_OUTPOST",
+                        TraceOutputKind.BANDED,
+                        300.0f,
+                        "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_OUTPOST: deploy Kylo to Crait: Outpost Entrance Cavern after a separate funded Tracked Fleet chase is secured"));
+    }
+
+    public static PolicyResult
+            orderFirstOrderReignsPreFlipKyloOutpostTier(
+                    String actionId,
+                    boolean lowerTier) {
+        Objects.requireNonNull(actionId, "actionId");
+        if (!lowerTier) {
+            return new PolicyResult(
+                    "DEPLOY_FIRST_ORDER_PRE_FLIP_KYLO_OUTPOST_TIER_POLICY",
+                    List.of());
+        }
+        return single(
+                "DEPLOY_FIRST_ORDER_PRE_FLIP_KYLO_OUTPOST_TIER_POLICY",
+                PolicyOperation.defer(
+                        actionId,
+                        TraceRuleId.of(
+                                "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_TIER"),
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.ORDERING,
+                        0.0f,
+                        "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_TIER: destination is lower than the best safe Tracked Fleet route tier"));
+    }
+
     public static PolicyResult blockFirstOrderReignsPreFlipCraitGround(
             String actionId, boolean prematureCraitGround) {
         return blockFirstOrderReignsPreFlipGround(

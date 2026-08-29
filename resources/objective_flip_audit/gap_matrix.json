@@ -747,15 +747,15 @@
    "frontBp": "225_32",
    "title": "The First Order Reigns",
    "side": "DARK",
-   "classification": "ABSENT",
-   "subclass": "DISABLED",
-   "why": "profile exists but loaderEnabled=false: fully inert, never hydrated",
+   "classification": "COMPLETE",
+   "subclass": "ENABLED",
+   "why": "Loader-enabled four-printing profile plus typed dynamic Fleet-host routing, structural current-host and shortest-safe-bridge order, exact V41 boundary, funded pre-flip Kylo Outpost setup, and pending-trigger retention in both bots.",
    "flipLaw": "Flip if Tracked Fleet is 'annihilated' - coded as the blown-away state of Filters.Tracked_Fleet. DRIVER (one level up, the actionable flip plan): Tracked Fleet's own REQUIRED trigger annihilates it at",
    "flipBackLaw": "The back (The Resistance Is Doomed) has no flip-back trigger; verified no FlipCardEffect anywhere in Card225_032_BACK.java. Instead the back carries a place-out-of-play hazard: if Kylo was just forfei",
-   "profileGaps": 5,
+   "profileGaps": 0,
    "seedMismatches": 0,
-   "engineClass": "NEW_PRIMITIVE",
-   "engineClassNote": "dynamic fleet-host fact; Salt Plateau hard-loss PROFILE_ONLY per m01306"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Proven by native released and playtest engine contracts plus V302 evaluator, policy, source-ownership, and both-bot parity regressions. The engine still owns annihilation and the actual flip."
   },
   {
    "frontBp": "225_53",
@@ -859,15 +859,15 @@
    "frontBp": "501_60",
    "title": "The First Order Reigns",
    "side": "DARK",
-   "classification": "ABSENT",
-   "subclass": "NO_PROFILE",
-   "why": "no profile exists",
+   "classification": "COMPLETE",
+   "subclass": "ENABLED",
+   "why": "The playtest twin is loaded by the shared four-printing First Order Reigns profile and uses the same typed dynamic Fleet-host, route-tier, Kylo Outpost, and pending-trigger behavior as 225_32.",
    "flipLaw": "Flip if Tracked Fleet is 'blown away' ('annihilated' in card text; engine models it as blown-away state). Playtest card (ExpansionSet.PLAYTESTING, setTestingText). DRIVER (one level up, the actionable",
    "flipBackLaw": "The back NEVER flips back to front: Card501_060_BACK.java contains no FlipCardEffect and no flip trigger. Instead the back carries a hard-lose: place Objective out of play if Kylo was just forfeited t",
-   "profileGaps": 2,
+   "profileGaps": 0,
    "seedMismatches": 0,
-   "engineClass": "NEW_PRIMITIVE",
-   "engineClassNote": "twin of 225_32 (dynamic fleet-host fact); no profile, playtest-only, non-canonical"
+   "engineClass": "PROVEN_BY_CODEX",
+   "engineClassNote": "Playtest twin of 225_32, proven by the same native engine contracts and V302 both-bot evaluator and policy regressions."
   },
   {
    "frontBp": "501_91",

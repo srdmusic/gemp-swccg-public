@@ -1349,7 +1349,73 @@ public class MoveEvaluator extends ActionEvaluator {
                                     "OLD ALLIES: prefer keeping the setup Falcon at Niima unless it is the selected route to empty Jakku space",
                                     -300.0f,
                                     "MOVE.OBJECTIVE.OLD_ALLIES_FALCON_HOLD",
-                                    TraceOutputKind.BANDED);
+                                TraceOutputKind.BANDED);
+                            }
+                        }
+                        boolean firstOrderPendingTriggerHold =
+                                gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && gateAnalyzer
+                                    .isFirstOrderReignsSolePendingTriggerControlSource(
+                                        game, playerId,
+                                        cardToMove);
+                        if (firstOrderPendingTriggerHold) {
+                            action.hardVeto(
+                                "MOVE.OBJECTIVE.FIRST_ORDER_PENDING_TRIGGER_HOLD: preserve the sole Tracked Fleet host control source until the mandatory turn-start trigger resolves",
+                                TraceRuleId.of(
+                                    "MOVE.OBJECTIVE.FIRST_ORDER_PENDING_TRIGGER_HOLD"),
+                                TraceDomainId.OBJECTIVE_INTENT,
+                                TraceOutputKind.VETO);
+                            logger.warn(
+                                "OBJECTIVE FIRST ORDER PENDING TRIGGER HOLD: {} cannot leave {} before the turn-start trigger",
+                                cardToMove.getTitle(),
+                                currentLocation.getTitle());
+                        }
+                        boolean firstOrderUnresolvedHostHold =
+                                gateAnalyzer != null
+                                && gateAnalyzer.isAnalyzed()
+                                && gateAnalyzer
+                                    .isFirstOrderReignsUnresolvedHostChaseShip(
+                                        game, playerId,
+                                        cardToMove);
+                        if (firstOrderUnresolvedHostHold) {
+                            String opponent =
+                                    gameState.getOpponent(playerId);
+                            float friendlyPower =
+                                    game.getModifiersQuerying()
+                                        .getTotalPowerAtLocation(
+                                            gameState,
+                                            currentLocation,
+                                            playerId,
+                                            false, false);
+                            float opponentPower = opponent == null
+                                    ? 0.0f
+                                    : game.getModifiersQuerying()
+                                        .getTotalPowerAtLocation(
+                                            gameState,
+                                            currentLocation,
+                                            opponent,
+                                            false, false)
+                                        + oppWeaponBonusAt(
+                                            gameState,
+                                            currentLocation,
+                                            opponent);
+                            boolean retreatable = opponentPower
+                                    > friendlyPower
+                                        + MoveObjectiveGateHoldPolicy
+                                            .RETREATABLE_POWER_GAP;
+                            if (!retreatable) {
+                                action.defer(
+                                    "MOVE.OBJECTIVE.FIRST_ORDER_CURRENT_HOST_HOLD: remain at the unresolved physical Tracked Fleet host unless retreat safety requires leaving",
+                                    0.0f,
+                                    TraceRuleId.of(
+                                        "MOVE.OBJECTIVE.FIRST_ORDER_CURRENT_HOST_HOLD"),
+                                    TraceDomainId.OBJECTIVE_INTENT,
+                                    TraceOutputKind.ORDERING);
+                                logger.warn(
+                                    "OBJECTIVE FIRST ORDER CURRENT HOST HOLD: {} remains at {} while the host contest is survivable",
+                                    cardToMove.getTitle(),
+                                    currentLocation.getTitle());
                             }
                         }
                         boolean activeRequiredControl =

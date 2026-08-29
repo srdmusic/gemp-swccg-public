@@ -637,6 +637,28 @@ public class MoveDestinationPolicyTest {
     }
 
     @Test
+    public void firstOrderCurrentHostAloneBypassesWrongDirection() {
+        MoveDestinationPolicy.WrongDirectionEvaluation currentHost =
+                MoveDestinationPolicy.wrongDirection(
+                        true, "D'Qar", "Crait",
+                        false, false, false, true);
+        MoveDestinationPolicy.WrongDirectionEvaluation bridge =
+                MoveDestinationPolicy.wrongDirection(
+                        true, "Tatooine", "Crait",
+                        false, false, false, false);
+
+        assertEquals(
+                MoveDestinationPolicy.WrongDirectionDisposition
+                    .FIRST_ORDER_CURRENT_HOST_EXEMPT,
+                currentHost.disposition());
+        assertFalse(currentHost.contribution().applies());
+        assertEquals(
+                MoveDestinationPolicy.WrongDirectionDisposition.VETO,
+                bridge.disposition());
+        assertFloat(-9999.0f, bridge.contribution().delta());
+    }
+
+    @Test
     public void objectiveActorRouteHasBoundedParentAndDestinationScores() {
         MoveDestinationPolicy.Contribution parent =
                 MoveDestinationPolicy.objectiveActorRouteStart(
@@ -659,6 +681,19 @@ public class MoveDestinationPolicyTest {
         assertTrue(destination.reason().startsWith(
                 "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION:"));
         assertFalse(none.applies());
+
+        MoveDestinationPolicy.Contribution firstOrder =
+                MoveDestinationPolicy
+                    .firstOrderReignsRouteDestination(
+                        true, "Supremacy", "D'Qar");
+        assertTrue(firstOrder.applies());
+        assertFloat(300.0f, firstOrder.delta());
+        assertTrue(firstOrder.reason().startsWith(
+                "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_DESTINATION_SCORE:"));
+        assertFalse(MoveDestinationPolicy
+                .firstOrderReignsRouteDestination(
+                    false, "Supremacy", "D'Qar")
+                .applies());
     }
 
     @Test

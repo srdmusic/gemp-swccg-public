@@ -336,6 +336,54 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
+    public void firstOrderKyloOutpostScoresOnlyTheFundedSetup() {
+        PolicyResult funded =
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsPreFlipKyloOutpostSetup(
+                        "a", true);
+        PolicyResult unfunded =
+                DeployObjectiveSitingPolicy
+                    .scoreFirstOrderReignsPreFlipKyloOutpostSetup(
+                        "a", false);
+
+        assertEquals(
+                "DEPLOY_FIRST_ORDER_PRE_FLIP_KYLO_OUTPOST_POLICY",
+                funded.producerId());
+        assertOperation(
+                funded.operations().get(0),
+                "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_OUTPOST",
+                300.0f);
+        assertTrue(funded.operations().get(0).reason().startsWith(
+                "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_OUTPOST:"));
+        assertEquals(
+                "DEPLOY_FIRST_ORDER_PRE_FLIP_KYLO_OUTPOST_POLICY",
+                unfunded.producerId());
+        assertTrue(unfunded.operations().isEmpty());
+
+        PolicyResult lowerTier =
+                DeployObjectiveSitingPolicy
+                    .orderFirstOrderReignsPreFlipKyloOutpostTier(
+                        "b", true);
+        PolicyResult preferredTier =
+                DeployObjectiveSitingPolicy
+                    .orderFirstOrderReignsPreFlipKyloOutpostTier(
+                        "b", false);
+        PolicyOperation defer =
+                lowerTier.operations().get(0);
+        assertEquals(
+                "DEPLOY.OBJECTIVE.FIRST_ORDER_PRE_FLIP_KYLO_CRAIT_TIER",
+                defer.ruleArmId().id());
+        assertEquals(PolicyOperationKind.DEFER,
+                defer.kind());
+        assertEquals(TraceDomainId.OBJECTIVE_INTENT,
+                defer.domainId());
+        assertEquals(TraceOutputKind.ORDERING,
+                defer.outputKind());
+        assertEquals(0.0f, defer.delta(), 0.0f);
+        assertTrue(preferredTier.operations().isEmpty());
+    }
+
+    @Test
     public void firstOrderNavyRouteScoresOnlyTheExecutableChain() {
         PolicyResult parent =
                 DeployObjectiveSitingPolicy

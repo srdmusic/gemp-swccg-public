@@ -110,10 +110,10 @@ public class BattleForfeitPolicyTest {
                     "BATTLE.OBJECTIVE.REQUIRED_CARD_RETENTION_HOLD: preserve the sole defender preventing an active required card from removing itself while another legal loss exists",
                     TraceOutputKind.BANDED));
         assertOperations(pendingTrigger,
-                objectiveOp("BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD",
-                    -300.0f,
+                objectiveHardVeto(
+                    "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD",
                     "BATTLE.OBJECTIVE.PENDING_TRIGGER_HOLD: preserve the sole control source until the mandatory objective trigger resolves",
-                    TraceOutputKind.BANDED));
+                    TraceOutputKind.VETO));
         assertOperations(attackRunEnabler,
                 objectiveOp("BATTLE.OBJECTIVE.MASSASSI_ATTACK_RUN_HOLD",
                     -300.0f,
@@ -567,6 +567,14 @@ public class BattleForfeitPolicyTest {
     private static Expected hardVeto(String ruleArmId, String reason) {
         return new Expected(ruleArmId, 0.0f, reason,
                 TraceOutputKind.VETO, TraceDomainId.BATTLE_FORFEIT,
+                PolicyOperationKind.HARD_VETO);
+    }
+
+    private static Expected objectiveHardVeto(
+            String ruleArmId, String reason,
+            TraceOutputKind outputKind) {
+        return new Expected(ruleArmId, 0.0f, reason,
+                outputKind, TraceDomainId.OBJECTIVE_INTENT,
                 PolicyOperationKind.HARD_VETO);
     }
 

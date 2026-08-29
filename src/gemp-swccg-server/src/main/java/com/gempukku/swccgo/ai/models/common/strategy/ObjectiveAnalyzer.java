@@ -79,6 +79,8 @@ public class ObjectiveAnalyzer {
             "Choose card from hand, or click 'Done' to cancel";
     private static final String FIRST_ORDER_NAVY_RESERVE_PROMPT =
             "choose card to deploy from reserve deck simultaneously with";
+    private static final String FIRST_ORDER_CRAIT_OUTPOST_BLUEPRINT_ID =
+            "225_16";
     private static final Pattern CARD_HINT_BLUEPRINT_PATTERN =
             Pattern.compile("value=['\"]([^'\"]+)['\"]");
     private final Logger LOG;
@@ -265,6 +267,13 @@ public class ObjectiveAnalyzer {
     public enum ObjectivePostFlipPayoffRole {
         PRIMARY,
         SECONDARY,
+        NONE
+    }
+
+    /** Non-additive destination order for the live Tracked Fleet chase. */
+    public enum FirstOrderReignsRouteRole {
+        CURRENT_HOST,
+        SHORTEST_SAFE_BRIDGE,
         NONE
     }
 
@@ -3433,6 +3442,10 @@ public class ObjectiveAnalyzer {
                     ? iWantThatMapRouteLocation(game, location)
                     : location;
         if (routeLocation == null) return false;
+        if (isFirstOrderReignsFundedPreFlipKyloOutpostSetupAt(
+                game, playerId, candidate, routeLocation)) {
+            return true;
+        }
         if (advancesFirstOrderReignsChaseShipRouteAt(
                 game, playerId, candidate, location)) {
             return true;
@@ -5988,6 +6001,121 @@ public class ObjectiveAnalyzer {
                     game, playerId);
     }
 
+    public boolean isFirstOrderReignsUnresolvedHostChaseShip(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate) {
+        if (!isFirstOrderReignsRouteOpen(game, playerId)
+                || candidate == null
+                || candidate.getZone() == null
+                || !candidate.getZone().isInPlay()
+                || !isFirstOrderReignsChaseShipCandidate(
+                    game, playerId, candidate)
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        PhysicalCard host =
+                getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId);
+        PhysicalCard current =
+                game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), candidate);
+        return samePhysicalLocation(current, host);
+    }
+
+    public FirstOrderReignsRouteRole
+            classifyFirstOrderReignsRouteDestination(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate,
+                    PhysicalCard destination,
+                    Iterable<PhysicalCard> safeDestinations) {
+        if (!isFirstOrderReignsRouteOpen(game, playerId)
+                || candidate == null || destination == null
+                || safeDestinations == null
+                || !isFirstOrderReignsChaseShipCandidate(
+                    game, playerId, candidate)
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return FirstOrderReignsRouteRole.NONE;
+        }
+        try {
+            PhysicalCard host =
+                    getFirstOrderReignsTrackedFleetHostSystem(
+                        game, playerId);
+            PhysicalCard origin =
+                    game.getModifiersQuerying()
+                        .getLocationThatCardIsAt(
+                            game.getGameState(), candidate);
+            if (host == null || origin == null) {
+                return FirstOrderReignsRouteRole.NONE;
+            }
+            com.gempukku.swccgo.filters.Filter legalMove =
+                    Filters.canMoveToUsingHyperspeed(
+                        playerId, candidate,
+                        false, false, 0.0f);
+            if (!legalMove.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    destination)) {
+                return FirstOrderReignsRouteRole.NONE;
+            }
+            if (samePhysicalLocation(destination, host)) {
+                return FirstOrderReignsRouteRole.CURRENT_HOST;
+            }
+            int originDistance = Math.abs(
+                    origin.getParsec() - host.getParsec());
+            int destinationDistance = Math.abs(
+                    destination.getParsec() - host.getParsec());
+            if (destinationDistance >= originDistance) {
+                return FirstOrderReignsRouteRole.NONE;
+            }
+            int shortestSafeDistance = Integer.MAX_VALUE;
+            boolean destinationIsSafe = false;
+            for (PhysicalCard offered : safeDestinations) {
+                if (offered == null
+                        || !legalMove.accepts(
+                            game.getGameState(),
+                            game.getModifiersQuerying(),
+                            offered)) {
+                    continue;
+                }
+                destinationIsSafe |= samePhysicalLocation(
+                        offered, destination);
+                int offeredDistance = samePhysicalLocation(
+                        offered, host)
+                        ? 0 : Math.abs(
+                            offered.getParsec()
+                                - host.getParsec());
+                if (offeredDistance < originDistance) {
+                    shortestSafeDistance = Math.min(
+                            shortestSafeDistance,
+                            offeredDistance);
+                }
+            }
+            return destinationIsSafe
+                    && destinationDistance == shortestSafeDistance
+                    ? FirstOrderReignsRouteRole
+                        .SHORTEST_SAFE_BRIDGE
+                    : FirstOrderReignsRouteRole.NONE;
+        } catch (Exception e) {
+            LOG.debug(
+                    "First Order Reigns route-role assessment failed: {}",
+                    e.getMessage());
+            return FirstOrderReignsRouteRole.NONE;
+        }
+    }
+
+    public boolean isFirstOrderReignsCurrentHostRouteDestination(
+            SwccgGame game, String playerId,
+            PhysicalCard candidate,
+            PhysicalCard destination) {
+        return classifyFirstOrderReignsRouteDestination(
+                    game, playerId, candidate, destination,
+                    List.of(destination))
+                == FirstOrderReignsRouteRole.CURRENT_HOST;
+    }
+
     public boolean isFirstOrderReignsNavyRouteAction(
             SwccgGame game, String playerId,
             PhysicalCard sourceCard, String actionText) {
@@ -7296,6 +7424,108 @@ public class ObjectiveAnalyzer {
     }
 
     public boolean
+            isFirstOrderReignsFundedPreFlipKyloOutpostSetupAt(
+                    SwccgGame game, String playerId,
+                    PhysicalCard candidate,
+                    PhysicalCard destination) {
+        if (!analyzed || !isFirstOrderReigns || isFlipped
+                || getFirstOrderReignsTrackedFleetHostSystem(
+                    game, playerId) == null
+                || candidate == null || destination == null
+                || !playerId.equals(candidate.getOwner())
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !Filters.Kylo.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(),
+                    candidate)
+                || !FIRST_ORDER_CRAIT_OUTPOST_BLUEPRINT_ID
+                    .equals(destination.getBlueprintId(true))) {
+            return false;
+        }
+        try {
+            int candidatePayment = 0;
+            if (candidate.getZone() == null
+                    || !candidate.getZone().isInPlay()) {
+                Integer exactPayment =
+                        requiredCardDeployCostAt(
+                            game, candidate, destination);
+                if (exactPayment == null) return false;
+                candidatePayment = exactPayment;
+            }
+            float forceAfterCandidate =
+                    game.getModifiersQuerying()
+                        .getForceAvailableToUse(
+                            game.getGameState(), playerId)
+                    - candidatePayment;
+            if (forceAfterCandidate < 0.0f) return false;
+            PhysicalCard host =
+                    getFirstOrderReignsTrackedFleetHostSystem(
+                        game, playerId);
+            for (PhysicalCard chaseShip
+                    : getFirstOrderReignsAdvancingChaseShipsOnTable(
+                        game, playerId, host)) {
+                if (!firstOrderReignsChaseShipIndependentOfActor(
+                        game, playerId,
+                        chaseShip, candidate)) {
+                    continue;
+                }
+                int moveReserve =
+                        getFirstOrderReignsNextMoveForceReserve(
+                            game, playerId,
+                            chaseShip, host);
+                if (moveReserve >= 0
+                        && forceAfterCandidate >= moveReserve) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug(
+                    "First Order Reigns Kylo Outpost setup assessment failed: {}",
+                    e.getMessage());
+        }
+        return false;
+    }
+
+    private boolean firstOrderReignsChaseShipIndependentOfActor(
+            SwccgGame game, String playerId,
+            PhysicalCard chaseShip,
+            PhysicalCard actor) {
+        if (actor == null || chaseShip == null) {
+            return true;
+        }
+        PhysicalCard actorPilotHost =
+                game.getModifiersQuerying().getIsPilotOf(
+                        game.getGameState(), actor);
+        if (!samePhysicalLocation(actorPilotHost, chaseShip)) {
+            return true;
+        }
+        if (game.getModifiersQuerying()
+                .hasPermanentPilot(
+                    game.getGameState(), chaseShip)) {
+            return true;
+        }
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return false;
+        for (PhysicalCard card : permanents) {
+            if (card == null || card == actor
+                    || !playerId.equals(card.getOwner())
+                    || !isActiveForSpot(game, card, true)) {
+                continue;
+            }
+            PhysicalCard otherPilotHost =
+                    game.getModifiersQuerying().getIsPilotOf(
+                            game.getGameState(), card);
+            if (samePhysicalLocation(
+                    otherPilotHost, chaseShip)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean
             isFirstOrderReignsPrematureGroundDeploymentAt(
                     SwccgGame game, String playerId,
                     PhysicalCard candidate,
@@ -7319,6 +7549,10 @@ public class ObjectiveAnalyzer {
                 || advancesFirstOrderReignsRouteCrewAt(
                     game, playerId,
                     candidate, destination)) {
+            return false;
+        }
+        if (isFirstOrderReignsFundedPreFlipKyloOutpostSetupAt(
+                game, playerId, candidate, destination)) {
             return false;
         }
         PhysicalCard host =

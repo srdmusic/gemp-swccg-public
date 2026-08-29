@@ -63,6 +63,7 @@ public final class MoveDestinationPolicy {
         RETREAT_EXEMPT,
         JOIN_GROUP_EXEMPT,
         TERMINAL_ESCAPE_EXEMPT,
+        FIRST_ORDER_CURRENT_HOST_EXEMPT,
         VETO
     }
 
@@ -341,6 +342,22 @@ public final class MoveDestinationPolicy {
                         + " advances toward the flip gate via "
                         + (destinationTitle != null
                                 ? destinationTitle : "this site"),
+                300.0f);
+    }
+
+    public static Contribution firstOrderReignsRouteDestination(
+            boolean advancesRoute,
+            String actorTitle,
+            String destinationTitle) {
+        if (!advancesRoute) return Contribution.none();
+        return new Contribution(
+                true,
+                "MOVE.OBJECTIVE.FIRST_ORDER_ROUTE_DESTINATION_SCORE: "
+                        + (actorTitle != null
+                            ? actorTitle : "First Order chase ship")
+                        + " advances toward the physical Tracked Fleet host via "
+                        + (destinationTitle != null
+                            ? destinationTitle : "this system"),
                 300.0f);
     }
 
@@ -760,6 +777,24 @@ public final class MoveDestinationPolicy {
             boolean retreatExempt,
             boolean joinGroupExempt,
             boolean terminalEscapeExempt) {
+        return wrongDirection(
+                opponentsElsewhere,
+                destinationTitle,
+                opponentLocation,
+                retreatExempt,
+                joinGroupExempt,
+                terminalEscapeExempt,
+                false);
+    }
+
+    public static WrongDirectionEvaluation wrongDirection(
+            boolean opponentsElsewhere,
+            String destinationTitle,
+            String opponentLocation,
+            boolean retreatExempt,
+            boolean joinGroupExempt,
+            boolean terminalEscapeExempt,
+            boolean firstOrderCurrentHostExempt) {
         if (!opponentsElsewhere) {
             return new WrongDirectionEvaluation(
                     WrongDirectionDisposition.NONE,
@@ -778,6 +813,12 @@ public final class MoveDestinationPolicy {
         if (terminalEscapeExempt) {
             return new WrongDirectionEvaluation(
                     WrongDirectionDisposition.TERMINAL_ESCAPE_EXEMPT,
+                    Contribution.none());
+        }
+        if (firstOrderCurrentHostExempt) {
+            return new WrongDirectionEvaluation(
+                    WrongDirectionDisposition
+                        .FIRST_ORDER_CURRENT_HOST_EXEMPT,
                     Contribution.none());
         }
         return new WrongDirectionEvaluation(
