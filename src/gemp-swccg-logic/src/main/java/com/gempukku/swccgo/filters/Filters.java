@@ -1669,6 +1669,21 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that have a printed deploy cost <= X.
+     *
+     * @param cost the value of X
+     * @return Filter
+     */
+    public static Filter printedDeployCostLessThanOrEqualTo(final float cost) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                return physicalCard.getBlueprint().getDeployCost() <= cost;
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that have a printed deploy cost >= X.
      *
      * @param cost the value of X
@@ -17772,6 +17787,7 @@ public class Filters {
     public static final Filter AhchTo_location = Filters.partOfSystem(Title.Ahch_To);
     public static final Filter Ahsoka = Filters.persona(Persona.AHSOKA);
     public static final Filter Aiiii_Aaa_Agggggggggg = Filters.title(Title.Aiiii_Aaa_Agggggggggg);
+    public static final Filter Alderaan_location = Filters.partOfSystem(Title.Alderaan);
     public static final Filter Alderaan_site = Filters.and(Filters.partOfSystem(Title.Alderaan), CardSubtype.SITE);
     public static final Filter Alderaan_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Alderaan));
     public static final Filter Alderaanian = Filters.species(Species.ALDERAANIAN);
@@ -17846,6 +17862,7 @@ public class Filters {
     public static final Filter Back_Door = Filters.title(Title.Back_Door);
     public static final Filter Bacta_Tank = Filters.title(Title.Bacta_Tank);
     public static final Filter Bad_Feeling_Have_I = Filters.title(Title.Bad_Feeling_Have_I);
+    public static final Filter Bail = Filters.persona(Persona.BAIL);
     public static final Filter bantha = Filters.keyword(Keyword.BANTHA);
     public static final Filter Barada = Filters.title(Title.Barada);
     public static final Filter barge = Filters.keyword(Keyword.BARGE);
@@ -17988,6 +18005,7 @@ public class Filters {
     public static final Filter character_with_permanent_character_weapon = Filters.and(Filters.character, Filters.hasPermanentWeapon());
     public static final Filter character_weapon_or_character_with_permanent_character_weapon = Filters.or(Filters.character_weapon(), Filters.and(Filters.character, Filters.hasPermanentWeapon()));
     public static final Filter Chasm_Walkway = Filters.title(Title.Chasm_Walkway);
+    public static final Filter Chewbaccas_Bowcaster = Filters.persona(Persona.CHEWBACCAS_BOWCASTER);
     public static final Filter Chewie = Filters.persona(Persona.CHEWIE);
     public static final Filter Chief_Bast = Filters.title(Title.Chief_Bast);
     public static final Filter Chief_Chirpa = Filters.title(Title.Chief_Chirpa);
@@ -18887,6 +18905,7 @@ public class Filters {
     public static final Filter ObiWan = Filters.persona(Persona.OBIWAN);
     public static final Filter ObiWans_Journal = Filters.title(Title.ObiWans_Journal);
     public static final Filter Objective = Filters.type(CardType.OBJECTIVE);
+    public static final Filter Observation_Platform = Filters.title(Title.Observation_Platform);
     public static final Filter Obsidian_10 = Filters.title(Title.Obsidian_10);
     public static final Filter Ochi = Filters.persona(Persona.OCHI);
     public static final Filter Odin_Nesloor = Filters.title(Title.Odin_Nesloor);
@@ -18896,6 +18915,7 @@ public class Filters {
     public static final Filter Ominous_Rumors = Filters.title(Title.Ominous_Rumors);
     public static final Filter Ommni_Box = Filters.title(Title.Ommni_Box);
     public static final Filter on_Cloud_City = Filters.locationAndCardsAtLocation(Filters.Cloud_City_site);
+    public static final Filter On_Coruscant = Filters.on(Title.Coruscant);
     public static final Filter On_Dagobah = Filters.on(Title.Dagobah);
     public static final Filter On_Endor = Filters.on(Title.Endor);
     public static final Filter On_Hoth = Filters.on(Title.Hoth);

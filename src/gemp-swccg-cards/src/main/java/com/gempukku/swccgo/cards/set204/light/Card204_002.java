@@ -8,6 +8,7 @@ import com.gempukku.swccgo.common.Agenda;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
@@ -41,6 +42,7 @@ public class Card204_002 extends AbstractRebelRepublic {
         setGameText("Agenda: rebellion. While in a senate majority (or Stolen Data Tapes on table), your Force drains at battlegrounds with your Alderaanian of ability < 4 are +1. While aboard a corvette, adds one battle destiny and it may not be targeted by weapons.");
         addIcons(Icon.VIRTUAL_SET_4);
         addKeywords(Keyword.SENATOR, Keyword.LEADER);
+        addPersona(Persona.BAIL);
         setSpecies(Species.ALDERAANIAN);
     }
 
