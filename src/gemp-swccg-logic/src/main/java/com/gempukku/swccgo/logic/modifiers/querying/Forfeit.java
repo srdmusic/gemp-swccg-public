@@ -40,7 +40,7 @@ public interface Forfeit extends BaseQuery, Attributes, Destiny, Flags, Keywords
 
     default boolean mayBeForfeitedInBattle(GameState gameState, PhysicalCard physicalCard) {
         return (physicalCard.getBlueprint().hasForfeitAttribute() || physicalCard.isDejarikHologramAtHolosite())
-                && !hasKeyword(gameState, physicalCard, Keyword.MAY_NOT_BE_FORFEITED_IN_BATTLE);
+            && !hasKeyword(gameState, physicalCard, Keyword.MAY_NOT_BE_FORFEITED_IN_BATTLE);
     }
 
     default boolean mayNotBeForfeitedInBattle(GameState gameState, PhysicalCard physicalCard) {
@@ -100,7 +100,7 @@ public interface Forfeit extends BaseQuery, Attributes, Destiny, Flags, Keywords
 
         // If card is a character and it is "doubled", then double the printed number
         if (physicalCard.getBlueprint().getCardCategory()== CardCategory.CHARACTER
-                && isDoubled(gameState, physicalCard, modifierCollector)) {
+            && isDoubled(gameState, physicalCard, modifierCollector)) {
             result *= 2;
         }
 
