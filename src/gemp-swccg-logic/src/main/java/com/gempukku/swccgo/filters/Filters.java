@@ -6779,10 +6779,10 @@ public class Filters {
                     List<PhysicalCard> sectorsBetween = modifiersQuerying.getSectorsBetween(gameState, currentAtLocation, physicalCard);
                     validDestination = (sectorsBetween != null && sectorsBetween.isEmpty());
                 }
-                // Check if card to move is at a system and there is a starship docking bay related to a starship that is at that system
+                // Check if card to move is at a system and there is a starship docking bay or launch bay related to a starship that is at that system
                 else if (currentAtLocation.getBlueprint().getCardSubtype() == CardSubtype.SYSTEM
                         && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)
-                        && Filters.and(Filters.starship_site, Filters.docking_bay, Filters.relatedSiteTo(null, Filters.and(Filters.starship, Filters.present(currentAtLocation)))).accepts(gameState, modifiersQuerying, physicalCard)) {
+                        && Filters.and(Filters.starship_site, Filters.or(Filters.docking_bay, Filters.launch_bay), Filters.relatedSiteTo(null, Filters.and(Filters.starship, Filters.present(currentAtLocation)))).accepts(gameState, modifiersQuerying, physicalCard)) {
                     validDestination = true;
                 }
                 // Check if card to move is at a Big One and the location to move to is the related site.
@@ -6875,10 +6875,10 @@ public class Filters {
                     // Check if no sectors in between
                     validDestination = modifiersQuerying.getSectorsBetween(gameState, currentAtLocation, physicalCard).isEmpty();
                 }
-                // Check if the location is a system and card to move is at a starship docking bay related to a starship at that system
+                // Check if the location is a system and card to move is at a starship docking bay or launch bay related to a starship at that system
                 else if (physicalCard.getBlueprint().getCardSubtype() == CardSubtype.SYSTEM
                         && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)
-                        && Filters.and(Filters.starship_site, Filters.docking_bay, Filters.relatedSiteTo(null, Filters.and(Filters.starship, Filters.present(physicalCard)))).accepts(gameState, modifiersQuerying, currentAtLocation)) {
+                        && Filters.and(Filters.starship_site, Filters.or(Filters.docking_bay, Filters.launch_bay), Filters.relatedSiteTo(null, Filters.and(Filters.starship, Filters.present(physicalCard)))).accepts(gameState, modifiersQuerying, currentAtLocation)) {
                     validDestination = true;
                 }
                 // Check if card to move is at a Big One site and the location to move to is the related Big One.
@@ -17809,6 +17809,7 @@ public class Filters {
     public static final Filter AhchTo_location = Filters.partOfSystem(Title.Ahch_To);
     public static final Filter Ahsoka = Filters.persona(Persona.AHSOKA);
     public static final Filter Aiiii_Aaa_Agggggggggg = Filters.title(Title.Aiiii_Aaa_Agggggggggg);
+    public static final Filter Alderaan_location = Filters.partOfSystem(Title.Alderaan);
     public static final Filter Alderaan_site = Filters.and(Filters.partOfSystem(Title.Alderaan), CardSubtype.SITE);
     public static final Filter Alderaan_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Alderaan));
     public static final Filter Alderaanian = Filters.species(Species.ALDERAANIAN);
@@ -18026,6 +18027,7 @@ public class Filters {
     public static final Filter character_with_permanent_character_weapon = Filters.and(Filters.character, Filters.hasPermanentWeapon());
     public static final Filter character_weapon_or_character_with_permanent_character_weapon = Filters.or(Filters.character_weapon(), Filters.and(Filters.character, Filters.hasPermanentWeapon()));
     public static final Filter Chasm_Walkway = Filters.title(Title.Chasm_Walkway);
+    public static final Filter Chewbaccas_Bowcaster = Filters.persona(Persona.CHEWBACCAS_BOWCASTER);
     public static final Filter Chewie = Filters.persona(Persona.CHEWIE);
     public static final Filter Chief_Bast = Filters.title(Title.Chief_Bast);
     public static final Filter Chief_Chirpa = Filters.title(Title.Chief_Chirpa);
@@ -18936,6 +18938,7 @@ public class Filters {
     public static final Filter Ominous_Rumors = Filters.title(Title.Ominous_Rumors);
     public static final Filter Ommni_Box = Filters.title(Title.Ommni_Box);
     public static final Filter on_Cloud_City = Filters.locationAndCardsAtLocation(Filters.Cloud_City_site);
+    public static final Filter On_Coruscant = Filters.on(Title.Coruscant);
     public static final Filter On_Dagobah = Filters.on(Title.Dagobah);
     public static final Filter On_Endor = Filters.on(Title.Endor);
     public static final Filter On_Hoth = Filters.on(Title.Hoth);
