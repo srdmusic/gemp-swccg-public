@@ -1,3 +1,17 @@
+  ==== LOCAL OFFLINE IMAGE LIBRARY (2026-08-30, V301 + V302 + SET 27) ====
+Localhost GEMP and Epic Duel now route every gameplay and UI image through a dedicated disk-backed
+`/gemp-swccg/localimage/` handler rather than the CDN or the online proxy. The handler stays outside
+the unbounded static-file cache, rejects path escape, detects actual image MIME from bytes, uses
+ETag revalidation, and sandboxes SVG. Epic preserves its 18 existing map differences while the
+standard map fills missing cards, including 227_1 through 227_6. The installer inventories both
+clients and Java HTML producers, installs files atomically, locks concurrent writers, restarts
+individual partials from byte zero, and writes a full SHA-256 manifest. The verified mirror has
+4,381 unique images and 893,900,865 bytes with zero missing URLs, collisions, hash mismatches, or
+partials. Candidate web.jar SHA-256 is b310ef39bb5014acbae4d8b1c09ee0d1cfc1d23ee569886ca20717033bf02c54.
+All eight V301/V302 production classes byte-match the prior live jar, marker counts remain 2/4/6,
+and all six Set 27 classes are present. Live installation and browser-offline proof remain pending
+the authenticated zero-table gate. See AI_CHANGELOG 2026-08-30.
+
   ==== BATCH 3 BATTLE-RETENTION TELEMETRY BOUNDARY (2026-08-12, both bots) ====
 The replay audit proposed post-battle survivor awareness, but current prebattle AI source cannot
 produce exact attrition, forfeiture, immunity, dependency, weapon, response, or lethal facts. Both
