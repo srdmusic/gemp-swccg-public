@@ -13,33 +13,33 @@ import static org.junit.Assert.assertEquals;
 public class ForfeitModifierTests {
     protected VirtualTableScenario GetScenario() {
         return new VirtualTableScenario(
-            new HashMap<>()
-            {{
-                put("cantina", "1_128"); //Tatooine: Cantina - (dark text) aliens here are each forfeit +1
-                put("tallie", "211_035"); //Tallie Lintra In Blue 1 - characters here may not have their forfeit increased above their printed value
-                put("techs", "221_072"); //Scanner Techs (V) - forfeit values may not be increased here
-                put("sic","6_040"); //Sic-Six - subtracts 2 from forfeit of opponent's pilot at same site
-                put("lando","5_005"); //Lando Calrissian - (use with below)
-                put("man","13_028"); //Lando's Not A System, He's A Man - target a character present with (CC) Lando. For remainder of turn, target is forfeit = 0
-                put("ord","3_064"); //Ord Mantell - (light text) if you control, each of opponent's bounty hunters is forfeit -2
-            }},
-            new HashMap<>()
-            {{
-                put("zuck", "4_107"); //Zuckuss - unique, dagobah, bounty hunter, pilot, alien with printed forfeit value 3
-                put("wrapped", "224_001"); //All Wrapped Up (V) - dag and cc bounty hunters are forfeit +2
-                put("sorry", "226_006"); //I'm Sorry (V) - unique characters with printed forfeit < 5 are forfeit +2 (limit +2)
-                put("chokk","12_099"); //Chokk - your characters present may not have their forfeit value reduced
-                put("vcsd","2_155"); //Victory-Class Star Destroyer (ship with capacity for characters)
-            }},
-            10,
-            10,
-            StartingSetup.DefaultLSGroundLocation, //Cloud City: Chasm Walkway (no forfeit-related text)
-            StartingSetup.DefaultDSSpaceSystem, //Dantooine (no forfeit-related text)
-            StartingSetup.NoLSStartingInterrupts,
-            StartingSetup.NoDSStartingInterrupts,
-            StartingSetup.NoLSShields,
-            StartingSetup.NoDSShields,
-            VirtualTableScenario.Open
+                new HashMap<>()
+                {{
+                    put("cantina", "1_128"); //Tatooine: Cantina - (dark text) aliens here are each forfeit +1
+                    put("tallie", "211_035"); //Tallie Lintra In Blue 1 - characters here may not have their forfeit increased above their printed value
+                    put("techs", "221_072"); //Scanner Techs (V) - forfeit values may not be increased here
+                    put("sic","6_040"); //Sic-Six - subtracts 2 from forfeit of opponent's pilot at same site
+                    put("lando","5_005"); //Lando Calrissian - (use with below)
+                    put("man","13_028"); //Lando's Not A System, He's A Man - target a character present with (CC) Lando. For remainder of turn, target is forfeit = 0
+                    put("ord","3_064"); //Ord Mantell - (light text) if you control, each of opponent's bounty hunters is forfeit -2
+                }},
+                new HashMap<>()
+                {{
+                    put("zuck", "4_107"); //Zuckuss - unique, dagobah, bounty hunter, pilot, alien with printed forfeit value 3
+                    put("wrapped", "224_001"); //All Wrapped Up (V) - dag and cc bounty hunters are forfeit +2
+                    put("sorry", "226_006"); //I'm Sorry (V) - unique characters with printed forfeit < 5 are forfeit +2 (limit +2)
+                    put("chokk","12_099"); //Chokk - your characters present may not have their forfeit value reduced
+                    put("vcsd","2_155"); //Victory-Class Star Destroyer (ship with capacity for characters)
+                }},
+                10,
+                10,
+                StartingSetup.DefaultLSGroundLocation, //Cloud City: Chasm Walkway (no forfeit-related text)
+                StartingSetup.DefaultDSSpaceSystem, //Dantooine (no forfeit-related text)
+                StartingSetup.NoLSStartingInterrupts,
+                StartingSetup.NoDSStartingInterrupts,
+                StartingSetup.NoLSShields,
+                StartingSetup.NoDSShields,
+                VirtualTableScenario.Open
         );
     }
 
