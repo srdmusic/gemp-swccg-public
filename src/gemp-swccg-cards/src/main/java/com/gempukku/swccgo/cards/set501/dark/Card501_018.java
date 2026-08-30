@@ -37,7 +37,7 @@ public class Card501_018 extends AbstractNormalEffect {
     public Card501_018() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Behind Everything", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Mysterious Sith Master who is manipulating the Trade Federation for his own nefarious ends. Shrouded in mystery, his identity and agenda remain unclear.");
-        setGameText("If Revenge Of The Sith on table, deploy on table. While Sidious alone on Coruscant, he adds one [Dark Side] icon and one [Light Side] icon there. If your apprentice in battle, Blast The Door, Kid! and It's A Trap! may not be played and you may choose a player to activate 1 Force. [Immune to Alter.]");
+        setGameText("If Revenge Of The Sith on table, deploy on table. While Sidious alone on Coruscant, he adds one [Dark Side] icon and one [Light Side] icon there. While your apprentice in battle, Blast The Door, Kid! and It's A Trap! may not be played and, once per battle, may choose a player to activate 1 Force. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.SIDIOUS, Icon.VIRTUAL_SET_27);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Behind Everything");
