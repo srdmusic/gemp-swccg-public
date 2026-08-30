@@ -3161,7 +3161,7 @@ public class GameState implements Snapshotable<GameState> {
         if (modifiersQuerying.getPilotCapacity(this, card)==Integer.MAX_VALUE || blueprint.getPilotOrPassengerCapacity()==Integer.MAX_VALUE)
             return Integer.MAX_VALUE;
 
-        if(cardToCheckFor.getBlueprint().isMovesLikeCharacter()) {
+        if(cardToCheckFor != null && cardToCheckFor.getBlueprint().isMovesLikeCharacter()) {
             return 0; // Cards that only "move like characters" are never pilots
         }
 
