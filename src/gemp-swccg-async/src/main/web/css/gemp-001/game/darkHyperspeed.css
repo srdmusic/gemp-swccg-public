@@ -5,7 +5,7 @@
 }
 
 div#main {
-    background: #000000 url(https://res.starwarsccg.org/wp/wp-content/uploads/2019/04/bg.jpg) 100% center;
+    background: #000000 url(/gemp-swccg/localimage/wp/wp-content/uploads/2019/04/bg.jpg) 100% center;
 }
 
 div#bottomLeftTabs, div.ui-draggable { background: #000000; }

@@ -82,7 +82,8 @@ public class DeckRenderer {
                 var bpid = el.getAttribute('data-bpid');
                 var img = el.querySelector('.ttimage');
                 if (img && fixedImages[bpid]) {
-                    img.src = fixedImages[bpid];
+                    img.src = fixedImages[bpid].replace(
+                        'https://res.starwarsccg.org/', '/gemp-swccg/localimage/');
                     img.onload = function() {
                         if (this.naturalWidth >= this.naturalHeight) {
                             this.style.width = '700px';

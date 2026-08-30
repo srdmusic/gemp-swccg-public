@@ -5,7 +5,7 @@
 }
 
 div#main {
-    background: #000000 url(https://res.starwarsccg.org/parsecs/hyperroute_background_top.png);
+    background: #000000 url(/gemp-swccg/localimage/parsecs/hyperroute_background_top.png);
 }
 
 div#bottomLeftTabs, div.ui-draggable { background: #000000; }

@@ -517,19 +517,19 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
             if (expansionSet != null) {
                 String setName = expansionSet.getHumanReadable();
                 setIconsLi.append("<li>"+setName+"</li>");
-                if      (setId ==  2) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/anewhope.gif\" />"); }
-                else if (setId ==  3) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/hoth.gif\" />"); }
-                else if (setId ==  4) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/dagobah.gif\" />"); }
-                else if (setId ==  5) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/cloudcity.gif\" />"); }
-                else if (setId ==  6) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/jabbaspalace.gif\" />"); }
-                else if (setId ==  8) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/endor.gif\" />"); }
-                else if (setId ==  9) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/deathstarii.gif\" />"); }
-                else if (setId == 10) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/reflectionsii.gif\" />"); }
-                else if (setId == 11) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/tatooine.gif\" />"); }
-                else if (setId == 12) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/coruscant.gif\" />"); }
-                else if (setId == 13) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/reflectionsiii.gif\" />"); }
-                else if (setId == 14) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/theedpalace.gif\" />"); }
-                else                  { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"https://res.starwarsccg.org/rules/premium.gif\" />"); }
+                if      (setId ==  2) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/anewhope.gif\" />"); }
+                else if (setId ==  3) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/hoth.gif\" />"); }
+                else if (setId ==  4) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/dagobah.gif\" />"); }
+                else if (setId ==  5) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/cloudcity.gif\" />"); }
+                else if (setId ==  6) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/jabbaspalace.gif\" />"); }
+                else if (setId ==  8) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/endor.gif\" />"); }
+                else if (setId ==  9) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/deathstarii.gif\" />"); }
+                else if (setId == 10) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/reflectionsii.gif\" />"); }
+                else if (setId == 11) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/tatooine.gif\" />"); }
+                else if (setId == 12) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/coruscant.gif\" />"); }
+                else if (setId == 13) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/reflectionsiii.gif\" />"); }
+                else if (setId == 14) { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/theedpalace.gif\" />"); }
+                else                  { setIcons.append("<img alt=\""+setName+"\" name=\""+setName+"\" src=\"/gemp-swccg/localimage/rules/premium.gif\" />"); }
             }
         }
         result.append(setIcons.toString());

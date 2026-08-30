@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 public class RootUriRequestHandler implements UriRequestHandler {
     private final String _serverContextPath ="/gemp-swccg-server/";
     private final String _webContextPath="/gemp-swccg/";
+    private final String _localImageContextPath="/gemp-swccg/localimage/";
     private final HallRequestHandler _hallRequestHandler;
     private final WebRequestHandler _webRequestHandler;
     private final LoginRequestHandler _loginRequestHandler;
@@ -34,6 +35,7 @@ public class RootUriRequestHandler implements UriRequestHandler {
     private final TournamentRequestHandler _tournamentRequestHandler;
     private SoloDraftRequestHandler _soloDraftRequestHandler;
     private final ImageProxyRequestHandler _imageProxyRequestHandler;
+    private final LocalImageRequestHandler _localImageRequestHandler;
 
     private final Pattern originPattern;
 
@@ -61,11 +63,16 @@ public class RootUriRequestHandler implements UriRequestHandler {
         _tournamentRequestHandler = new TournamentRequestHandler(context);
         _soloDraftRequestHandler = new SoloDraftRequestHandler(context);
         _imageProxyRequestHandler = new ImageProxyRequestHandler();
+        _localImageRequestHandler = new LocalImageRequestHandler(
+                ApplicationConfiguration.getProperty("offline.images.path"));
     }
 
     @Override
     public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
-        if (uri.startsWith(_webContextPath + "imageproxy")) {
+        if (uri.startsWith(_localImageContextPath)) {
+            _localImageRequestHandler.handleRequest(
+                    uri.substring(_localImageContextPath.length()), request, context, responseWriter, remoteIp);
+        } else if (uri.startsWith(_webContextPath + "imageproxy")) {
             // Card-image CORS proxy for the Unity (Epic Duel) client.
             _imageProxyRequestHandler.handleRequest(uri, request, context, responseWriter, remoteIp);
         } else if (uri.startsWith(_webContextPath)) {

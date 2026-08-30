@@ -22,33 +22,40 @@
       </div>
     </div>
     <div id="unity-fullscreen-button" style="display: none;"></div>
+    <script src="../js/gemp-016/cards/CardImages.js"></script>
     <script>
       // =====================================================================
       // CARD IMAGE INTERCEPTOR
-      // The Unity client fetches card images from res.starwarsccg.org, which
-      // CORS-blocks cross-origin fetches. Intercept fetch/XHR and reroute those
-      // through /gemp-swccg/imageproxy (server fetches server-to-server, no Origin).
+      // Keep every Unity card-image request on localhost so Epic Duel works
+      // without internet access. The standard image map supplies newer cards
+      // that have not reached Epic Duel's bundled map yet.
       // =====================================================================
       (function installCardImageInterceptor() {
-        var _cardImageMap = null;
+        var _cardImageMap = (typeof fixedImages === 'undefined') ? {} : fixedImages;
         fetch('StreamingAssets/cardImages.json')
           .then(function(r) { return r.json(); })
           .then(function(map) {
-            _cardImageMap = map;
-            console.log('[GEMP] Card image map loaded: ' + Object.keys(map).length + ' entries');
+            _cardImageMap = Object.assign({}, _cardImageMap, map);
+            console.log('[GEMP] Card image map loaded: ' + Object.keys(_cardImageMap).length + ' entries');
           })
           .catch(function(e) { console.error('[GEMP] Failed to load card image map:', e); });
+        function localImageUrl(url) {
+          var marker = 'res.starwarsccg.org/';
+          var markerIndex = url.indexOf(marker);
+          if (markerIndex < 0) return null;
+          return '/gemp-swccg/localimage/' + url.substring(markerIndex + marker.length);
+        }
         function remap(url) {
           if (typeof url !== 'string') return null;
           if (url.indexOf('res.starwarsccg.org/') >= 0) {
-            return '/gemp-swccg/imageproxy?url=' + encodeURIComponent(url);
+            return localImageUrl(url);
           }
           if (_cardImageMap) {
             var m = url.match(/\/gemp-swccg\/i_(.+?)(?:\?.*)?$/);
             if (m) {
               var cdnUrl = _cardImageMap[m[1]];
               if (cdnUrl) {
-                return '/gemp-swccg/imageproxy?url=' + encodeURIComponent(cdnUrl);
+                return localImageUrl(cdnUrl);
               }
             }
           }
