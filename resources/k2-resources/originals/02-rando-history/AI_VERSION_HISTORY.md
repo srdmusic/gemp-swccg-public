@@ -11756,3 +11756,44 @@ Verification: independent review PASS; expanded focused gate `93/0/0/0`; sealed 
     live runtime, game state, or GitHub push changed in this source commit.
     The build produced an unsealed candidate only. Proof remains SOURCE_TESTED
     until independent package and runtime gates pass.
+
+  ==== V301 + V302 + SET 27 DEPLOYED (2026-08-29) ====
+
+    Steve explicitly selected the combined deployment after verification found
+    that the live Set 27 rebuild had rolled back V301 bytecode. Exact integrated
+    source is b1f74cf61ff132b6c02e54e363f1c4cdd3ac5ec3. It contains V302
+    8be676df32daacf4fefe3be29b6555cb7567614c and the three Set 27 commits.
+    All 572 Set 27 outputs match the prior live jar, all 412 restored non-V302
+    outputs match the sealed V301 baseline, and the candidate deletes no prior
+    live entry.
+
+    The focused ring passed 165/0/0/0. A clean full reactor passed 3535 server
+    tests with zero failures and errors, 26 skipped, plus 10/0/0/0 async tests.
+    The sealed ZIP-valid package is 46,208,218 bytes with 27,053 unique entries
+    and SHA-256
+    947ee96c3f3e3b6b5813dbb0ab784ec17ebe1052d36d97c49276a7e1f89cbbdb.
+    All 696 outputs from the 22 V302 and Set 27 production sources byte-match
+    target classes, module jars, and the sealed web jar.
+
+    Authenticated Hall checks before and after shutdown freeze were empty. The
+    exact prior live Set 27 jar was sealed, the candidate was atomically
+    installed, and only the app container was recreated with the direct-Java
+    override and --no-deps --no-build. Fresh app d4d4fb2ebfb7 started at
+    2026-08-30T03:25:19.011669461Z after the jar mtime, with restart count zero
+    and OOM false. Database container
+    46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6
+    retained its exact identity and 2026-08-29T20:44:46.847479292Z start time,
+    with restart count zero and OOM false.
+
+    Sealed, host, and container hashes match. V301 markers, both V302 bot route
+    markers, the shared Kylo marker, and Set 27 classes are present. Three HTTP
+    probes returned 200. Operational mode and all five gameplay settings are
+    enabled. Final authenticated Hall remained 0/0/0/0, and refined post-start
+    logs contained zero material non-debug findings. An independent read-only
+    post-deployment verifier repeated the artifact, process, database, HTTP,
+    settings, Hall, marker, and log checks and returned PASS. Immediate rollback is
+    /Users/steve/gemp-deploy-backups/first-order-route-set27-2026-08-29/
+    predeploy-b1f74cf6-cf36a592/web.jar, SHA-256
+    cf36a592d6ef280ed1b9a1e386864949e96f52e156eb5e95b4565dd8eb239a23,
+    with its copied direct-Java override. Proof is RUNTIME_LOADED, not
+    REPLAY_FIRED. Nothing was pushed.

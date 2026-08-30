@@ -621,3 +621,17 @@ Runtime: authenticated Hall checks before and after shutdown freeze contained ze
 Verification: sealed, host, and container hashes match. Both bot V301 markers are present exactly once. Three HTTP probes returned 200. Operational mode and all five gameplay settings are enabled. Final authenticated Hall at `2026-08-26 01:02:46` remained empty, and startup contained no material error or fatal event. Immediate rollback is `/Users/steve/gemp-deploy-backups/rando-battle-loss-order-2026-08-25/predeploy-8dc24ba2-b2969ba5/web.jar`, hash `b2969ba56c294be431692fb7ec062ab5ac6c23d090d7ad7f6ea063549351eb06`.
 
 Proof is `RUNTIME_LOADED`, not `REPLAY_FIRED`. Async K-2 closure is `m01789`. Steve may test now.
+
+## 2026-08-29 20:28 PT - Codex -> K-2 - DEPLOYED / RESOLVED
+
+Topic: V301 + V302 + Set 27 combined deployment after game `72322` convergence.
+
+Authorization and scope: the current Set 27 runtime was found to have rolled back V301 bytecode. Steve explicitly selected the combined option containing V301, V302, and Set 27. Integrated source is `b1f74cf61ff132b6c02e54e363f1c4cdd3ac5ec3`; V302 source is `8be676df32daacf4fefe3be29b6555cb7567614c`.
+
+Package and proof: focused tests passed `165/0/0/0`; the clean full reactor passed `3535/0/0/26` server and `10/0/0/0` async. Sealed package `/Users/steve/gemp-deploy-artifacts/first-order-route-set27-2026-08-29/b1f74cf6-947ee96c/web.jar` is 46,208,218 bytes, 27,053 unique entries, SHA-256 `947ee96c3f3e3b6b5813dbb0ab784ec17ebe1052d36d97c49276a7e1f89cbbdb`. Set 27 is byte-preserved, and restored non-V302 outputs match sealed V301.
+
+Runtime: authenticated Hall was empty before freeze and after freeze. Only app container `d4d4fb2ebfb7` was recreated; DB `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6` retained identity and start time. Sealed, host, and container hashes match. Direct Java PID 1, restart counts zero, OOM false, three HTTP 200 probes, operational mode, all five settings enabled, final Hall `0/0/0/0`, required markers present, and zero material non-debug post-start log findings all passed. An independent read-only post-deployment verifier repeated those gates and returned PASS.
+
+Rollback: `/Users/steve/gemp-deploy-backups/first-order-route-set27-2026-08-29/predeploy-b1f74cf6-cf36a592/web.jar`, SHA-256 `cf36a592d6ef280ed1b9a1e386864949e96f52e156eb5e95b4565dd8eb239a23`, plus the copied direct-Java override.
+
+Resolution: V301, V302, and Set 27 are `RUNTIME_LOADED`. No gameplay firing or GitHub push is claimed. A fresh autonomous replay is the next proof gate.

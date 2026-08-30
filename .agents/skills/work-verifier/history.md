@@ -633,3 +633,139 @@ Records and proof:
 Verdict: PASS, 98 tests with 0 failures, 0 errors, and 0 skipped. No blockers or
 warnings remain for the V301 source gate. This supports `SOURCE_TESTED`; it is
 not package, runtime-loaded, or replay-fired proof.
+
+## 2026-08-29 15:22 PDT: V302 plus Set 27 integration candidate -> FAIL
+
+Operation: independent source and package verification of exact commit
+`b1f74cf61ff132b6c02e54e363f1c4cdd3ac5ec3` in clean worktree
+`/Users/steve/gemp-v302-set27-integration-2026-08-29`. The candidate combines
+V302 commit `8be676df32daacf4fefe3be29b6555cb7567614c` with the three Set 27
+commits `088416ab1c62fd26f0070499a9810ffc6cc8e999`,
+`23b72e9ad78eb31e9eadc62eb039011c4b0e878f`, and
+`b1f74cf61ff132b6c02e54e363f1c4cdd3ac5ec3`. No live-server, database,
+game-state, source-edit, deploy, restart, or push action was performed.
+
+FAIL blocker: the sealed candidate is not a V302-only byte delta from the
+stated current-live artifact
+`cf36a592d6ef280ed1b9a1e386864949e96f52e156eb5e95b4565dd8eb239a23`.
+Candidate versus live has 525 content deltas. Only 113
+are outputs owned by the eight V302 production sources. The other 412 comprise
+89 additions, 323 changes, and zero removals.
+
+- The 412 non-V302 deltas contain 391 AI classes: 86 additions and 305 changes.
+  Family counts are 307 shared/common, 42 Rando, and 42 Chosen One class
+  entries.
+- The remaining 21 are non-AI entries: three additions and 18 changes. They
+  cover Hall/game classes (13), logic classes (3), async classes (2), one card
+  evaluator class, the packaged async POM, and `objective_playbooks.json`.
+- All 412 candidate bytes match the sealed V301 jar exactly at the same paths.
+  Candidate removes no current-live entry. It would nevertheless overwrite
+  305 current-live AI class variants that differ from sealed V301 and re-add
+  86 sealed V301 AI classes absent from the current-live jar.
+- The current-live artifact itself differs from sealed V301 in 1,029 entries,
+  529 outside the Set 27 output allowlist, and lacks both Rando and Chosen One
+  V301 adapter markers. This explains the candidate delta but does not make the
+  broader replacement implicit in a V302 deployment request.
+
+Required resolution: explicitly accept restoration of the sealed V301-derived
+source baseline as part of this deployment, or produce a candidate that
+preserves the intended current-live AI bytes. Re-run the deployment verifier
+after that decision. The verifier does not treat unreviewed live drift as
+implicitly disposable.
+
+Checks that passed:
+
+- Exact source identity and ancestry: PASS. HEAD and tree are exact, the
+  worktree was clean before this required history append, V302 is based on
+  `b9d607b973a264f46ddc5e6801f2f47fe61d8789`, and the three Set 27 commits are
+  direct descendants. No V302 production, test, audit, or history file changed
+  after `8be676df`.
+- V302 semantics: PASS. Actual card source confirms Tracked Fleet is
+  annihilated at the start of its owner's turn when that player controls its
+  physical host. The implementation ranks the current host before the shortest
+  admissible bridge, excludes prior hard vetoes and deferrals from the safe
+  tier, limits the V41 exemption to the exact host, retains V41-rejected bridge
+  deferral, holds a survivable unresolved host, releases retreatable danger,
+  funds exact pre-flip Kylo Outpost setup only behind an independently piloted
+  on-table chase ship and remaining move reserve, and hard-vetoes sole pending
+  trigger control-source movement and forfeit.
+- Both-bot parity: PASS. Fully normalized Rando and Chosen One
+  `CardSelectionEvaluator` files have zero diff lines; normalized
+  `MoveEvaluator` files also have zero diff lines. Shared policies own the
+  bounded contributions and source-ownership tests pass.
+- Independent focused tests: PASS, 165 tests, zero failures, zero errors, zero
+  skipped. The nine suites report 32, 12, 11, 6, 41, 43, 16, 2, and 2 tests.
+  The verifier's container Maven run exited zero.
+- Clean full-build evidence: PASS. There are 436 server reports totaling 3,535
+  tests, zero failures, zero errors, and 26 skipped, plus one async report with
+  10 tests and no failures, errors, or skips. Compilation and packaging had
+  completed in the same clean worktree.
+- Sealed artifact integrity: PASS. Path
+  `/Users/steve/gemp-deploy-artifacts/first-order-route-set27-2026-08-29/`
+  `b1f74cf6-947ee96c/web.jar`, SHA-256
+  `947ee96c3f3e3b6b5813dbb0ab784ec17ebe1052d36d97c49276a7e1f89cbbdb`,
+  46,208,218 bytes, 27,053 entries, zero duplicate names, and a clean full ZIP
+  test. The sealed bytes exactly match the worktree target jar.
+- Package source-byte ownership: PASS. The 22 changed production Java sources
+  produce 696 top-level and nested class files. All 696 match their module jars
+  and the sealed web jar byte-for-byte, with zero missing outputs or mismatches.
+- Marker presence: PASS in both bot adapters and shared policies for current
+  host, shortest safe bridge, V41 route hold and exact-host exemption, Kylo
+  Outpost setup, unresolved-host hold, and pending-trigger hold.
+- Strict known-baseline deltas: PASS. Candidate versus isolated V302 artifact
+  `ed7d0312c19979b57ed7d99a6d187ad789b9f19ac0a949def1f233209ab23e7f`
+  has exactly 500 deltas, all inside the 572-entry Set 27 class/resource
+  allowlist. Candidate versus sealed V301 has exactly 610 deltas, all inside
+  the 697-entry V302-plus-Set-27 allowlist. All 572 Set 27 output entries match
+  current live byte-for-byte.
+- Hygiene: PASS. `git diff --check`, objective JSON parsing, type-by-API scan,
+  card-source truth, changelog description parity, and normalized adapter
+  parity all passed.
+
+Verdict: FAIL for deployment, with one exact scope blocker. Source, tests,
+package integrity, V302 semantics, Set 27 preservation, and known-baseline
+union are verified. The unresolved issue is the additional restoration of 412
+non-V302 live entries, including replacement of 305 current-live AI byte
+variants. This supports the candidate as an exact clean source build, but not
+as an authorized narrow live replacement.
+
+## 2026-08-29 20:29 PDT: V301 plus V302 plus Set 27 live runtime -> PASS
+
+Operation: independent read-only post-deployment verification of expected live
+artifact
+`947ee96c3f3e3b6b5813dbb0ab784ec17ebe1052d36d97c49276a7e1f89cbbdb`.
+No server setting, database row, game state, container, source, artifact, or
+repository state was changed. Authentication created only a temporary local
+session for the Hall read.
+
+- Artifact identity: PASS. The sealed candidate, live host jar, and running
+  container jar have the exact expected SHA-256 and are each 46,208,218 bytes.
+  The jar mtime is `2026-08-29T22:15:18Z`; the fresh app started later at
+  `2026-08-30T03:25:19.011669461Z`.
+- App-only recreation: PASS. Fresh app container is
+  `d4d4fb2ebfb729392cc67539cc6d1db65f523888d5d570ea0767ab81c206e281`.
+  Database container
+  `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6`
+  retained its identity and `2026-08-29T20:44:46.847479292Z` start time.
+- Runtime process: PASS. Java is direct PID 1 with the expected `-jar` path.
+  At the final `2026-08-30T03:29:25Z` check the app and database were running,
+  each had restart count zero, and neither was OOM-killed.
+- HTTP: PASS. Three consecutive probes to `/gemp-swccg-server/` returned 200
+  with 300-byte bodies.
+- Gameplay settings: PASS. Direct read-only database query found exactly the
+  five expected settings enabled: AI tables, bonus abilities, in-game
+  statistics, new-account registration, and private games.
+- Hall safety: PASS. Local `asdf` authentication and authenticated Hall GET
+  both returned 200. The Hall XML had root `hall`, zero tables, zero games,
+  zero player attribute values, and zero error elements.
+- Live markers: PASS. Both Rando and Chosen One contain the V301 marker and all
+  V302 current-host, shortest-bridge, V41, Kylo Outpost, unresolved-host, and
+  pending-trigger markers. All five new Set 27 top-level card classes and
+  `set227-rarity.txt` are present with nonzero bytes in the running jar.
+- Logs: PASS. The 365 post-start log lines contain one startup-complete marker,
+  one operational-mode marker, Set 227 loading, zero ERROR/FATAL lines, zero
+  Java stack frames, and zero `Caused by:` lines.
+
+Verdict: PASS. The exact combined V301 plus V302 plus Set 27 artifact is loaded
+and the runtime is healthy with an empty authenticated Hall. Proof ceiling is
+`RUNTIME_LOADED`, not `REPLAY_FIRED`; no gameplay branch firing was attempted.
