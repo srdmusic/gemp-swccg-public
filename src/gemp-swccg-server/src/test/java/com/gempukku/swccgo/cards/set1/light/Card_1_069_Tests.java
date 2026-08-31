@@ -7,6 +7,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
 import org.junit.Ignore;
@@ -30,7 +31,8 @@ public class Card_1_069_Tests {
 					put("ywing2","1_147");
 					put("xwing","1_146");
 					put("hut","4_089"); //Dagobah: Yoda's Hut
-					put("hoth","3_055");
+                    put("hoth","3_055");
+                    put("skiff","6_088");
 				}},
 				new HashMap<>() {{
 					put("landing","11_092"); //Tatooine: Desert Landing Site
@@ -257,7 +259,114 @@ public class Card_1_069_Tests {
 		assertTrue(scn.IsAttachedTo(ywing, yerka)); //test1
 	}
 
-	//add tests for:
+    @Test
+    public void YerkaMigCanEmbarkOnVehicle() {
+        //test1: can embark on a vehicle with passenger capacity (1+ available)
+        //test2: attaches to skiff
+        //test3: is identified as being aboard as passenger
+        var scn = GetScenario();
+
+        var yerka = scn.GetLSCard("yerka");
+        var skiff = scn.GetLSCard("skiff");
+        var site = scn.GetDSStartingLocation();
+
+        var trooper = scn.GetDSFiller(1);
+        var vcsd = scn.GetDSCard("vcsd");
+        var system = scn.GetLSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLSHand(yerka);
+
+        scn.MoveCardsToLocation(site, skiff);
+        scn.MoveCardsToLocation(system, vcsd);
+
+        scn.BoardAsPassenger(vcsd, trooper);
+
+        scn.SkipToLSTurn(Phase.DEPLOY);
+        scn.LSDeployCard(yerka);
+        scn.LSChooseCard(site);
+        scn.LSChooseCard(trooper);
+        scn.PassAllResponses();
+
+        scn.SkipToPhase(Phase.MOVE);
+        assertTrue(scn.LSCardActionAvailable(yerka,"Embark")); //test1
+        scn.LSUseCardAction(yerka,"Embark");
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingDSMovePhaseActions());
+        assertTrue(scn.IsAttachedTo(skiff, yerka)); //test2
+        assertTrue(scn.IsAboardAsPassenger(skiff, yerka)); //test3
+    }
+
+    @Test
+    public void YerkaMigCanJumpOffVehicle() {
+        //test1: when characters aboard are given option to 'jump off' (disembark) a vehicle, Yerka is also allowed to 'jump off'
+        //test2: skiff is lost
+        //test3: yerka is not lost (and at the location)
+        var scn = GetScenario();
+
+        var yerka = scn.GetLSCard("yerka");
+        var skiff = scn.GetLSCard("skiff");
+        var rebelTrooper = scn.GetLSFiller(1);
+        var site = scn.GetDSStartingLocation();
+
+        var trooper = scn.GetDSFiller(1);
+        var trooper2 = scn.GetDSFiller(2);
+        var trooper3 = scn.GetDSFiller(3);
+        var trooper4 = scn.GetDSFiller(4);
+        var vcsd = scn.GetDSCard("vcsd");
+        var system = scn.GetLSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLSHand(yerka);
+
+        scn.MoveCardsToLocation(site, skiff, trooper2, trooper3, trooper4);
+        scn.MoveCardsToLocation(system, vcsd);
+
+        scn.BoardAsPassenger(vcsd, trooper);
+        scn.BoardAsPassenger(skiff, rebelTrooper);
+
+        scn.SkipToLSTurn(Phase.DEPLOY);
+        scn.LSDeployCard(yerka);
+        scn.LSChooseCard(site);
+        scn.LSChooseCard(trooper);
+        scn.PassAllResponses();
+
+        scn.SkipToPhase(Phase.MOVE);
+        scn.LSUseCardAction(yerka,"Embark");
+        scn.PassAllResponses();
+
+        scn.SkipToDSTurn(Phase.BATTLE);
+        scn.DSInitiateBattle(site);
+        scn.PassAllResponses();
+        scn.SkipToDamageSegment();
+        assertTrue(scn.AwaitingLSBattleDamagePayment()); //LS power 1, DS power 2 (3 - 1 from yerka)
+        scn.LSChooseCard(skiff);
+
+        assertTrue(scn.LSCardActionAvailable(rebelTrooper, "off")); //jump off
+        assertTrue(scn.LSCardActionAvailable(yerka, "off")); //test1
+        scn.LSUseCardAction(yerka, "off");
+
+        scn.DSPass(); //DISEMBARKING - Optional responses
+        scn.LSPass();
+
+        scn.DSPass(); //DISEMBARKED - Optional responses
+        scn.LSPass();
+
+        assertTrue(scn.LSCardActionAvailable(rebelTrooper, "off")); //jump off
+        assertFalse(scn.LSCardActionAvailable(yerka, "off")); //jump off
+        scn.LSUseCardAction(rebelTrooper, "off");
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingLSBattlePhaseActions());
+        assertEquals(Zone.TOP_OF_LOST_PILE,skiff.getZone()); //test2
+        assertTrue(scn.CardsAtLocation(site, yerka, rebelTrooper)); //test3
+    }
+
+    //add tests for:
 	// requires targetable opponent's character to play
 
 	// canceling
@@ -270,6 +379,7 @@ public class Card_1_069_Tests {
 
 	// movement
 	//  embark/disembark, etc
+    //  cannot embark on vehicle without passenger capacity (ewok glider?)
 
 	// deploy
 	//	deploy aboard vehicle with passenger capacity
