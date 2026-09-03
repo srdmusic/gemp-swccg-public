@@ -40,6 +40,7 @@ import java.util.List;
 public class Card501_210 extends AbstractUsedInterrupt {
     public Card501_210() {
         super(Side.LIGHT, 6, "Watch Out For That Crossfire, Boys", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Many pilots for the Rebellion learned their skills using modified T-47s and other airspeeders. Being able to weave in and out of combat has become second nature to them.");
         setGameText("Add 2 to power and maneuver of your T-47 until end of turn. (Interrupt may even affect the result of a destiny draw targeting the T-47's maneuver.) OR Once per game, if you are about to lose Force, reduce the loss by 1 for each marker site you occupy.");
         addIcons(Icon.VIRTUAL_SET_27);
         setTestingText("Watch Out For That Crossfire, Boys");
@@ -84,7 +85,7 @@ public class Card501_210 extends AbstractUsedInterrupt {
             if (!result.isCannotBeReduced(game)) {
                 int numMarkerSites = Filters.countTopLocationsOnTable(game, Filters.and(Filters.marker_site, Filters.occupies(playerId)));
                 if (numMarkerSites > 0) {
-                    final int reduceAmount = Math.min(numMarkerSites, (int) Math.ceil(result.getForceLossAmount(game)));
+                    final int reduceAmount = numMarkerSites;
 
                     final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
                     action.setText("Reduce Force loss");
