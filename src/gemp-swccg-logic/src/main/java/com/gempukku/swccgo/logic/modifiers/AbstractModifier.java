@@ -607,7 +607,7 @@ public abstract class AbstractModifier implements Modifier {
     }
 
     @Override
-    public float getDestinyModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+    public float getDestinyIncreaseLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
         return 0;
     }
 

@@ -278,7 +278,7 @@ public interface Modifier {
 
     float getDestinyModifier(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
 
-    float getDestinyModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
+    float getDestinyIncreaseLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
     float getDestinyDrawFromSourceCardModifier(String playerId, GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard sourceOfDestinyDraw);
 
     float getPowerModifier(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
