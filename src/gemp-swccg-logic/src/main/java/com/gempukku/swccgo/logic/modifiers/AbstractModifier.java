@@ -530,7 +530,7 @@ public abstract class AbstractModifier implements Modifier {
     }
 
     @Override
-    public float getPowerModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+    public float getPowerIncreaseLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
         return 0;
     }
 
