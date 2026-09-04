@@ -74,7 +74,7 @@ public class Card501_016 extends AbstractAlien {
             actions.add(action);
         }
 
-        GameTextActionId activateId = GameTextActionId.RUNHEB_VOEND__ACTIVATE_FORCE;
+        GameTextActionId activateId = GameTextActionId.OTHER_CARD_ACTION_1;
         if (GameConditions.isDuringYourTurn(game, self)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, activateId)) {
 
