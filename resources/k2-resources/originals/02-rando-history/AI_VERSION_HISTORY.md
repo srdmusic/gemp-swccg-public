@@ -15,8 +15,14 @@ prompts, so `Target character` removal completes instead of cancelling. In game 
 Krennic kill scored +620 but the child target was incorrectly -530; a September 3 Mara kill repeated
 the same bug at +700. AI-only source is mirrored across both bots. The isolated V301/V302/Set 27 and
 offline-image baseline packaged successfully with tests skipped at Steve's request. Candidate web.jar
-SHA-256 is 7e64ff8ed42ccf6dc226d746d7d09b523e9478465467e51756f607063ec32344. Runtime and gameplay
-proof remain separate gates. See AI_CHANGELOG 2026-09-05.
+SHA-256 is 7e64ff8ed42ccf6dc226d746d7d09b523e9478465467e51756f607063ec32344. K-2's
+wider sample objected that raw-parity and deficit initiations had lost, including one to opponent
+attrition immunity; Steve's explicit parity/slight-deficit/armed aggression direction controls, so
+that narrower boundary did not ship. Authenticated Hall checks and shutdown freeze were empty. Only
+the app was recreated; MariaDB retained identity and start time. Host and container hashes match,
+startup completed, three HTTP probes returned 200, settings were restored, and the final Hall was
+empty. Independent post-deployment verification returned PASS. Runtime is loaded; replay-fired
+behavior awaits Steve's game. See AI_CHANGELOG 2026-09-05.
 
   ==== LOCAL OFFLINE IMAGE LIBRARY (2026-08-30, V301 + V302 + SET 27) ====
 Localhost GEMP and Epic Duel now route every gameplay and UI image through a dedicated disk-backed
