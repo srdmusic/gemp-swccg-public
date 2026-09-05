@@ -4071,9 +4071,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
             else if (textLower.contains("weapon destiny") &&
                      (actionText.contains("+3") || actionText.contains("+2") || textLower.contains("add"))) {
                 action.setActionType(ActionType.FIRE_WEAPON);
+                boolean preserveForHitRemoval =
+                    "10_47".equals(exactSourceBlueprintId)
+                    || "10_23".equals(exactSourceBlueprintId)
+                    || "5_135".equals(exactSourceBlueprintId)
+                    || "5_35".equals(exactSourceBlueprintId);
                 applyBattleActionTextPolicy(action,
                     BattleActionTextPolicy.scoreWeaponDestinyModifier(
-                        new BattleActionTextFacts.ActionFacts(actionId)));
+                        new BattleActionTextFacts.ActionFacts(actionId),
+                        preserveForHitRemoval));
             }
 
             // ========== Protect Battle Destiny Draws ==========

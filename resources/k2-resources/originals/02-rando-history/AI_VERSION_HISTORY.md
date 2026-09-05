@@ -1,3 +1,23 @@
+  ==== V303 BATTLE NOW + HIT-REMOVAL COMPLETION (2026-09-05, both bots) ====
+The two newest completed asdf games showed Rando passing three destiny-capable fights in Steve's
+requested trade band: 5/5 versus 8/5, 10/10 versus 8/6, and 13/10 versus 17/12. V76's whole-battle
+win estimate outweighed immediate material value, then the opponent reinforced or Rando retreated.
+The shared battle owner now treats a healthy-Reserve normal-destiny fight as a worthwhile +40 trade
+unless raw power is catastrophic or Rando is behind by the established doomed combat gap and also
+lower in ability. The existing V76 reconciliation keeps its -800 trace but exactly compensates a
+probable-defeat score for that trade when expected damage is below 10; pyrrhic, no-destiny,
+low-Reserve, catastrophic, and objective hard vetoes remain. Armed marginal fights are favorable.
+Movement threat scoring now uses the shared typed weapon estimate symmetrically instead of inflating
+only the opponent into a false survival retreat. Exact sources 10_47, 10_23, 5_135, and 5_35 defer
+their +3 weapon-destiny mode so the card remains for post-hit removal; originals 2_139 and 2_57 are
+unchanged. V51 already-hit and V36 hit-chance scoring now apply only to real `Choose target` weapon
+prompts, so `Target character` removal completes instead of cancelling. In game 72345 the parent
+Krennic kill scored +620 but the child target was incorrectly -530; a September 3 Mara kill repeated
+the same bug at +700. AI-only source is mirrored across both bots. The isolated V301/V302/Set 27 and
+offline-image baseline packaged successfully with tests skipped at Steve's request. Candidate web.jar
+SHA-256 is 7e64ff8ed42ccf6dc226d746d7d09b523e9478465467e51756f607063ec32344. Runtime and gameplay
+proof remain separate gates. See AI_CHANGELOG 2026-09-05.
+
   ==== LOCAL OFFLINE IMAGE LIBRARY (2026-08-30, V301 + V302 + SET 27) ====
 Localhost GEMP and Epic Duel now route every gameplay and UI image through a dedicated disk-backed
 `/gemp-swccg/localimage/` handler rather than the CDN or the online proxy. The handler stays outside

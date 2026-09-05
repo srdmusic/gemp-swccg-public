@@ -11392,6 +11392,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         String playerId = context.getPlayerId();
         String decisionText = context.getDecisionText();
         String targetDecisionId = context.getDecisionId();
+        boolean weaponTargetPrompt = decisionText != null
+            && decisionText.trim().toLowerCase(Locale.ROOT)
+                .startsWith("choose target");
 
         // Target The Main Generator's child chooses our weapon source. It is not
         // a harmful target selection, despite offering our attached cannons.
@@ -11460,7 +11463,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             // Harmful card (weapon, etc.) - target OPPONENT cards
                             if (!isOurCard) {
                                 // V51: Don't waste weapons on already-hit characters
-                                if (card.isHit()) {
+                                if (weaponTargetPrompt && card.isHit()) {
                                     targetLedger.register(BattleWeaponsPolicy.scoreTarget(
                                         new BattleWeaponsFacts.TargetFacts(
                                             cardId, card.getTitle(), true,
@@ -11486,7 +11489,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     // Only fire at targets we can actually hit!
                                     SwccgGame targetGame = context.getGame();
                                     boolean battleMode = targetGame != null && gameState != null && context.getPhase() == Phase.BATTLE;
-                                    if (battleMode) {
+                                    if (battleMode && weaponTargetPrompt) {
                                         try {
                                             // Get target's defense value (ability for characters)
                                             float defenseValue = targetGame.getModifiersQuerying().getDefenseValue(gameState, card);

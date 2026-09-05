@@ -1,5 +1,7 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.ai.models.common.strategy.FormationSafety;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +12,7 @@ import java.util.List;
 public final class BattleInitiationPolicy {
     private static final int FAVORABLE_THRESHOLD = 5;
     private static final int MARGINAL_THRESHOLD = 2;
-    private static final float ABILITY_BATTLE_MAX_POWER_DEFICIT = 2.0f;
+    private static final float ABILITY_BATTLE_MAX_POWER_DEFICIT = 4.0f;
     private static final int MIN_RESERVE_FOR_BATTLE = 3;
 
     public record Contribution(boolean applies, String reason, float delta) {
@@ -38,6 +40,7 @@ public final class BattleInitiationPolicy {
         FAVORABLE,
         ARMED_MARGINAL,
         UNARMED_MARGINAL,
+        DESTINY_TRADE,
         UNFAVORABLE
     }
 
@@ -239,10 +242,7 @@ public final class BattleInitiationPolicy {
                     false);
         }
 
-        if (theirPower > ourPower && weaponBonus == 0.0f) {
-            float penalty = theirPower > ourPower * 2.0f
-                    ? -600.0f
-                    : -300.0f;
+        if (theirPower > ourPower * 2.0f && theirPower > 6.0f) {
             return new SpecificBattleDecision(
                     SpecificBattleBranch.OUTGUNNED,
                     new Contribution(
@@ -251,20 +251,7 @@ public final class BattleInitiationPolicy {
                                     "V29 DON'T INITIATE: %.0f vs %.0f power — we're outgunned!",
                                     ourPower,
                                     theirPower),
-                            penalty),
-                    false);
-        }
-        if (theirPower > ourPower && weaponBonus > 0.0f
-                && weaponEffectiveDiff < MARGINAL_THRESHOLD) {
-            return new SpecificBattleDecision(
-                    SpecificBattleBranch.WEAPONS_NOT_ENOUGH,
-                    new Contribution(
-                            true,
-                            String.format(
-                                    "V29.7 WEAPONS NOT ENOUGH: power %.0f+weapons vs %.0f — still risky",
-                                    ourPower,
-                                    theirPower),
-                            -150.0f),
+                            -600.0f),
                     false);
         }
         if (weaponEffectiveDiff >= FAVORABLE_THRESHOLD) {
@@ -334,7 +321,7 @@ public final class BattleInitiationPolicy {
                                         ourPower,
                                         theirPower),
                                 80.0f),
-                        false);
+                        true);
             }
             // V29 ADJUSTED 2026-08-08 (passivity fix, m01683): an unarmed +2..+4 edge
             // was scored NEGATIVE (-50, favorable=false — which then stacked the -60
@@ -365,6 +352,51 @@ public final class BattleInitiationPolicy {
                     true);
         }
 
+        int normalBattleDestinyDraws = ourAbility >= FormationSafety.DESTINY_ABILITY_THRESHOLD
+                ? 1 : 0;
+        if (isDestinyTradeBattle(
+                ourPower, theirPower, ourAbility, theirAbility,
+                weaponEffectiveDiff, normalBattleDestinyDraws,
+                reserveHealthy)) {
+            return new SpecificBattleDecision(
+                    SpecificBattleBranch.DESTINY_TRADE,
+                    new Contribution(
+                            true,
+                            String.format(
+                                    "V303 DESTINY TRADE at %s: power %.0f vs %.0f, ability %.0f vs %.0f; fight now before reinforcement",
+                                    locationTitle,
+                                    ourPower,
+                                    theirPower,
+                                    ourAbility,
+                                    theirAbility),
+                            40.0f),
+                    true);
+        }
+        if (theirPower > ourPower && weaponBonus == 0.0f) {
+            return new SpecificBattleDecision(
+                    SpecificBattleBranch.OUTGUNNED,
+                    new Contribution(
+                            true,
+                            String.format(
+                                    "V29 DON'T INITIATE: %.0f vs %.0f power — we're outgunned!",
+                                    ourPower,
+                                    theirPower),
+                            -300.0f),
+                    false);
+        }
+        if (theirPower > ourPower && weaponBonus > 0.0f) {
+            return new SpecificBattleDecision(
+                    SpecificBattleBranch.WEAPONS_NOT_ENOUGH,
+                    new Contribution(
+                            true,
+                            String.format(
+                                    "V29.7 WEAPONS NOT ENOUGH: power %.0f+weapons vs %.0f — still risky",
+                                    ourPower,
+                                    theirPower),
+                            -150.0f),
+                    false);
+        }
+
         float penalty = -100.0f;
         if (weaponEffectiveDiff < -8.0f) {
             penalty = -200.0f;
@@ -383,6 +415,37 @@ public final class BattleInitiationPolicy {
                                 theirPower),
                         penalty),
                 false);
+    }
+
+    /**
+     * A destiny-capable force should take a material trade while the opponent is
+     * still within reach. Typed weapon strength is counted for both sides. Only
+     * a doomed combat-power gap combined with lower ability falls outside this
+     * band; the raw-power catastrophe remains an independent safety brake.
+     */
+    public static boolean isDestinyTradeBattle(
+            float ourPower,
+            float theirPower,
+            float ourAbility,
+            float theirAbility,
+            float weaponEffectiveDiff,
+            int normalBattleDestinyDraws,
+            boolean reserveHealthy) {
+        if (!(ourPower > 0.0f) || !(theirPower > 0.0f)
+                || normalBattleDestinyDraws < 1 || !reserveHealthy) {
+            return false;
+        }
+        boolean catastrophicPowerGap = theirPower > ourPower * 2.0f
+                && theirPower > 6.0f;
+        if (catastrophicPowerGap) {
+            return false;
+        }
+        float abilityWeightedDiff = (ourAbility - theirAbility) * 2.5f;
+        float weaponAdjustedCombatDiff = weaponEffectiveDiff - abilityWeightedDiff;
+        boolean significantlyBehindInBoth =
+                weaponAdjustedCombatDiff <= -FormationSafety.DOOMED_GAP
+                && ourAbility < theirAbility;
+        return !significantlyBehindInBoth;
     }
 
     public static FallbackDecision fallbackLocation(

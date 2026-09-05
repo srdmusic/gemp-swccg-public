@@ -845,6 +845,50 @@ public final class BattleDecisionPolicy {
                                             context.getReserveDeckSize() >= 3);
                                     action.apply(specificBattle.contribution());
 
+                                    // V303: The predictor estimates who wins the whole battle,
+                                    // not whether attacking now produces a worthwhile material
+                                    // exchange before the defender retrieves and reinforces. For
+                                    // a healthy-reserve, destiny-capable trade that is not badly
+                                    // behind in both combat power and ability, preserve the old
+                                    // V76 trace but exactly neutralize its probable-defeat score.
+                                    // Pyrrhic projections (expected damage >= 10) remain blocked.
+                                    boolean v303TradeWorthy =
+                                        selectedRetentionPredictionGate != null
+                                            && BattleInitiationPolicy.isDestinyTradeBattle(
+                                                ourPower,
+                                                theirPower,
+                                                ourAbility,
+                                                theirAbility,
+                                                weaponEffectiveDiff,
+                                                selectedRetentionPredictionGate.myDestinyDraws(),
+                                                context.getReserveDeckSize() >= 3)
+                                            && selectedRetentionPredictionGate.decision() != null
+                                            && selectedRetentionPredictionGate.prediction() != null
+                                            && selectedRetentionPredictionGate.prediction().expectedDamageTaken < 10.0f;
+                                    if (v303TradeWorthy
+                                            && selectedRetentionPredictionGate.decision().branch()
+                                                == BattleInitiationPolicy.PredictionBranch.PROBABLE_DEFEAT) {
+                                        BattleInitiationPolicy.Contribution predictionContribution =
+                                            selectedRetentionPredictionGate.decision().contribution();
+                                        if (predictionContribution.applies()
+                                                && predictionContribution.delta() < 0.0f) {
+                                            action.addReasoning(String.format(
+                                                "V303 DESTINY TRADE: worthwhile exchange overrides %.0f%% win-rate penalty (+%.0f)",
+                                                selectedRetentionPredictionGate.prediction().winProbability * 100.0f,
+                                                -predictionContribution.delta()),
+                                                -predictionContribution.delta());
+                                            logger.warn(
+                                                "V303 DESTINY TRADE at {}: winRate {} but expected damage taken {}; neutralizing V76 {} for immediate material exchange",
+                                                targetLocation.getTitle(),
+                                                String.format("%.2f", selectedRetentionPredictionGate.prediction().winProbability),
+                                                String.format("%.1f", selectedRetentionPredictionGate.prediction().expectedDamageTaken),
+                                                (int) predictionContribution.delta());
+                                        }
+                                    }
+                                    if (v303TradeWorthy) {
+                                        foundFavorableBattle = true;
+                                    }
+
                                     // === V76/V25 RECONCILIATION ===
                                     // ADDED 2026-08-08 (passivity fix, m01683): live log
                                     // evidence — a winRate 0.98 battle was DECLINED because

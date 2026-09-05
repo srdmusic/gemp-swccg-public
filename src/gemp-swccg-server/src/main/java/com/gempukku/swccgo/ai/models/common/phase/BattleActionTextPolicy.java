@@ -349,7 +349,22 @@ public final class BattleActionTextPolicy {
 
     public static PolicyResult scoreWeaponDestinyModifier(
             BattleActionTextFacts.ActionFacts facts) {
+        return scoreWeaponDestinyModifier(facts, false);
+    }
+
+    public static PolicyResult scoreWeaponDestinyModifier(
+            BattleActionTextFacts.ActionFacts facts,
+            boolean preserveForHitRemoval) {
         Objects.requireNonNull(facts, "facts");
+        if (preserveForHitRemoval) {
+            return weaponsResult(List.of(PolicyOperation.defer(
+                    facts.actionId(),
+                    TraceRuleId.of("V303-preserve-hit-removal"),
+                    TraceDomainId.BATTLE_WEAPONS,
+                    TraceOutputKind.VETO,
+                    0.0f,
+                    "V303 HIT REMOVAL: preserve this interrupt for an already-hit character")));
+        }
         return oneWeapons(facts.actionId(), "BATTLE-weapon-destiny-modifier",
                 TraceOutputKind.BANDED, 50.0f,
                 "Boost weapon destiny - increases hit chance!");

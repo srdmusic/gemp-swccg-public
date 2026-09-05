@@ -91,7 +91,7 @@ public class BattleInitiationPolicyTest {
 
         assertSpecific(ourBattle(10, 8, 4, 4, 1, 2),
                 BattleInitiationPolicy.SpecificBattleBranch.ARMED_MARGINAL,
-                80.0f, false);
+                80.0f, true);
         // ADJUSTED 2026-08-08 (passivity fix, m01683): unarmed marginal flipped from
         // -50/non-favorable to +30/favorable — a real unarmed power edge is a fight
         // worth taking (live log: unarmed +3 edge netted ~+15 vs Pass and was skipped).
@@ -102,14 +102,14 @@ public class BattleInitiationPolicyTest {
                 BattleInitiationPolicy.SpecificBattleBranch.UNARMED_MARGINAL,
                 30.0f, true);
         assertSpecific(ourBattle(10, 10, 4, 4, 0, -8),
-                BattleInitiationPolicy.SpecificBattleBranch.UNFAVORABLE,
-                -100.0f, false);
+                BattleInitiationPolicy.SpecificBattleBranch.DESTINY_TRADE,
+                40.0f, true);
         assertSpecific(ourBattle(10, 10, 4, 4, 0, -9),
-                BattleInitiationPolicy.SpecificBattleBranch.UNFAVORABLE,
-                -200.0f, false);
+                BattleInitiationPolicy.SpecificBattleBranch.DESTINY_TRADE,
+                40.0f, true);
         assertSpecific(ourBattle(10, 10, 4, 4, 0, -16),
-                BattleInitiationPolicy.SpecificBattleBranch.UNFAVORABLE,
-                -400.0f, false);
+                BattleInitiationPolicy.SpecificBattleBranch.DESTINY_TRADE,
+                40.0f, true);
     }
 
     // ADDED 2026-08-08 (passivity fix, m01683): the FAVORABLE arm is now

@@ -107,10 +107,11 @@ public class BattleResidualSourceOwnershipTest {
             assertTrue(target.contains("String owner = card.getOwner()"));
             assertTrue(target.contains(
                     "SwccgCardBlueprint blueprint = card.getBlueprint()"));
-            assertTrue(target.contains("if (card.isHit())"));
+            assertTrue(target.contains("if (weaponTargetPrompt && card.isHit())"));
             assertTrue(target.contains("boolean undercover = card.isUndercover()"));
             assertTrue(target.contains(
                     "targetGame != null && gameState != null && context.getPhase() == Phase.BATTLE"));
+            assertTrue(target.contains("if (battleMode && weaponTargetPrompt)"));
             assertTrue(target.contains(
                     "getModifiersQuerying().getDefenseValue(gameState, card)"));
             assertTrue(target.contains("context.getDeckOracle()"));

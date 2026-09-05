@@ -26,6 +26,7 @@ import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveWeaponHunterPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveWinnabilityPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.common.strategy.FormationSafety;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
@@ -3110,32 +3111,14 @@ public class MoveEvaluator extends ActionEvaluator {
             } else if (opponentId != null && opponentId.equals(owner)) {
                 theirPower += power;
                 theirCardCount++;
-                // V37.1 ADJUSTED 2026-07-10 (Rey replay rbujmoc90br3uu4c, T5: Lando held at
-                // 6v8 raw vs 6v11 armed — hit + forfeited + 5 damage next turn): the threat
-                // tiers were blind to opponent WEAPONS. Weapon-adjust their power with the
-                // V29.7 heuristic (lightsaber +5, other +3; attached or permanent) so
-                // calculateThreatLevel sees the real fight. Thresholds themselves unchanged.
-                if (bp.getCardCategory() == com.gempukku.swccgo.common.CardCategory.CHARACTER) {
-                    try {
-                        List<PhysicalCard> wAtts = gameState.getAttachedCards(card);
-                        if (wAtts != null) {
-                            for (PhysicalCard att : wAtts) {
-                                if (att == null || att.getBlueprint() == null) continue;
-                                if (att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
-                                    String wt = att.getTitle() != null ? att.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                                    theirPower += wt.contains("lightsaber") ? 5.0f : 3.0f;
-                                }
-                            }
-                        }
-                        String wgt = bp.getGameText();
-                        if (wgt != null && wgt.toLowerCase(java.util.Locale.ROOT).contains("permanent weapon")) {
-                            String wct = card.getTitle() != null ? card.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
-                            theirPower += wct.contains("lightsaber") ? 5.0f : 3.0f;
-                        }
-                    } catch (Exception e) { /* fail-open: raw power */ }
-                }
             }
         }
+
+        // V303: Threat math previously counted only the opponent's weapons, so an
+        // armed Rando force could be mislabeled hopeless and receive an R3 retreat.
+        // Use the shared typed heuristic symmetrically for both sides.
+        myPower += FormationSafety.weaponBonusAt(gameState, location, playerId);
+        theirPower += FormationSafety.weaponBonusAt(gameState, location, opponentId);
 
         float powerDiff = myPower - theirPower;
         boolean theirHasCards = theirCardCount > 0;
