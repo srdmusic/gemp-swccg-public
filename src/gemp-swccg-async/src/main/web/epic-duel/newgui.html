@@ -71,6 +71,41 @@
           }
           return _origFetch.apply(this, arguments);
         };
+        // --- Image element interception (2026-08-30) ---------------------
+        // Unity WebGL loads card textures by assigning HTMLImageElement.src,
+        // which bypasses both the fetch and XHR hooks above. Without this the
+        // Epic Duel client requests res.starwarsccg.org directly and shows card
+        // BACKS when offline, even though fetch/XHR rewriting works correctly.
+        // Patch the src setter so those loads go to the local image endpoint too.
+        try {
+          var _imgProto = HTMLImageElement.prototype;
+          var _srcDesc = Object.getOwnPropertyDescriptor(_imgProto, 'src')
+                      || Object.getOwnPropertyDescriptor(Element.prototype, 'src');
+          if (_srcDesc && _srcDesc.set) {
+            Object.defineProperty(_imgProto, 'src', {
+              configurable: true,
+              enumerable: _srcDesc.enumerable,
+              get: function() { return _srcDesc.get.call(this); },
+              set: function(value) {
+                var mapped = remap(value);
+                return _srcDesc.set.call(this, mapped ? mapped : value);
+              }
+            });
+          }
+          // setAttribute('src', ...) is a second route to the same load.
+          var _origSetAttr = Element.prototype.setAttribute;
+          Element.prototype.setAttribute = function(name, value) {
+            if (this instanceof HTMLImageElement
+                && typeof name === 'string' && name.toLowerCase() === 'src') {
+              var mapped = remap(value);
+              if (mapped) return _origSetAttr.call(this, name, mapped);
+            }
+            return _origSetAttr.apply(this, arguments);
+          };
+        } catch (e) {
+          console.error('[GEMP] Image src interception failed:', e);
+        }
+
         var _origOpen = XMLHttpRequest.prototype.open;
         XMLHttpRequest.prototype.open = function(method, url) {
           var cdnUrl = remap(url);
