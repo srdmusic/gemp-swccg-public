@@ -2018,3 +2018,50 @@ compiled adapter calls 1/1; compiled DeckOracle helper references 2/2;
 V300 compiled policy strings 5; mirror mismatches introduced 0;
 type-by-title violations 0; diff-check 0; blockers 0; warnings 0. Proof ceiling
 SOURCE_TESTED.
+
+## 2026-09-06 21:24 PDT - V305 Reserve pull before pile recycle (AI evaluator edit) -> WARN
+
+1. SOURCE AND OBSERVED ROUTE: PASS. Replay-backed Like My Father Before Me
+offers `Deploy Luke's Lightsaber from Reserve Deck` and `Place card from hand
+on Force Pile` from the same physical source. The shared V67bb script now
+identifies that explicit same-source Reserve pull before resolving buckets and
+keeps the competing explicit Force, Used, or Reserve pile-placement mode out of
+the deploy hierarchy. Existing V192 scoring and dead-search guards are not in
+the diff.
+
+2. BOUNDARIES AND MIRROR: PASS. Same-source scoping prevents the new broad
+spelling matcher from demoting pile-cost actions belonging to unrelated source
+cards. Legacy `into ... pile` and hand-upload exclusions remain unchanged.
+Rando and Chosen One both inherit the single common DeployPhaseScript owner;
+their source and packaged facades match their compiled target classes.
+
+3. FOCUSED TEST AND PACKAGE: PASS. The user-requested focused characterization
+run passed 17/0/0/0 after an initial verifier-found bad unrelated-source fixture
+was corrected. No broad Maven suite was run. The rebuilt web.jar passes ZIP
+integrity, has 27,060 entries, and its common, Rando, and Chosen One
+DeployPhaseScript class hashes exactly match target/classes. The common class
+contains one V67bb PULL-FIRST marker and one same-source Reserve pattern.
+
+4. API, RECORDS, AND SCOPE: PASS. The diff has one shared production file, one
+focused test, and both required records; diff-check passes. New forbidden
+type-by-title checks: 0. `actions.add()` is not applicable because this edit
+changes classification, not EvaluatedAction construction. Card titles and the
+Like My Father Before Me game text match actual source/database records. The
+two records agree on why, repair, same-source boundary, V192 non-change, test
+count, and pre-deployment proof ceiling.
+
+5. UNIVERSALITY LIMIT: WARN. Detection is deliberately textual. It recognizes
+an offered sibling only when its visible action text contains `from Reserve
+Deck`, and recognizes the competing mode only when its visible text begins
+with put/place/return/move and names the destination pile. Implicit labels such
+as C-3PO (V)'s `Upload [A New Hope] R2-D2`, or actions whose visible label hides
+a pile cost such as `Activate 1 force`, are outside this guarantee. This does
+not affect replay 72349 or the audited explicit paired-action family, but V305
+must not be described as proving every semantic upload/recycle combination.
+
+NUMBERS: production 1; tests 1; required records 2; focused 17/0/0/0; compile
+0; diff-check 0; forbidden title typing 0; shared owners 2/2; target-to-package
+class matches 3/3; V67bb packaged markers 1; package entries 27060; package
+SHA-256 d6a5195c5a067adb59187f7e130896455f21505e7e7fda123a9aed5ac14c022d;
+blockers 0; warnings 1. Proof ceiling PACKAGED, not RUNTIME_LOADED or
+REPLAY_FIRED.

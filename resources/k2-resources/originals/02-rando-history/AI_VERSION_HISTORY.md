@@ -12,8 +12,15 @@ testing is omitted at Steve's request. Packaged web.jar SHA-256 is
 d6a5195c5a067adb59187f7e130896455f21505e7e7fda123a9aed5ac14c022d, and its shared deploy-phase
 class byte-matches the focused compile. Runtime proof is recorded after deployment. No card, rule,
 deck, client, database, movement, activation, or
-Force-drain behavior changed. Revert the V305 classifier and characterization test together to
-return to V304. See AI_CHANGELOG 2026-09-06.
+Force-drain behavior changed. The shutdown freeze followed a completed game with no active match.
+Only the app was recreated with the direct-Java override. Fresh app 9bb19137c679 started at
+2026-09-07T04:25:54.092815132Z with restart count zero and OOM false. Host and container hashes
+match, the V67bb marker is loaded, startup completed, HTTP returned 200, all gameplay switches are
+enabled, and the authenticated Hall has zero tables. Runtime is loaded; replay firing awaits Steve's
+playtest. Rollback is /Users/steve/gemp-deploy-backups/rando-pull-first-v305-2026-09-06/
+predeploy-36fc85c48-da407e9c/web.jar (SHA-256
+da407e9c19ddec818bd37d5e1c33cb3dc0f5ef9d61a76eda8a9393f41dadb0fc). Revert the V305 classifier
+and characterization test together to return to V304. See AI_CHANGELOG 2026-09-06.
 
   ==== V304 DEPLOY PACKAGE + DRAIN VALUE + RESERVE LOOKUP REPAIR (2026-09-06, both bots) ====
 Replay 72347 showed I Want That Map plan FN-2003 and Mara Jade together at Beldon's Corridor, then
