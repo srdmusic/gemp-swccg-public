@@ -272,11 +272,13 @@ public final class DeploySitingPolicy {
             OpponentForceIconsFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
-        if (facts.opponentIcons() > 0) {
+        if (facts.projectedDrainDamage() > 0) {
             operations.add(addSiting(facts.actionId(), "V23-force-icons",
-                    TraceOutputKind.BANDED, facts.opponentIcons() * 30.0f,
-                    "V23 FORCE DRAIN: " + facts.opponentIcons()
-                            + " opponent force icon(s) — better drain target!"));
+                    TraceOutputKind.BANDED,
+                    facts.projectedDrainDamage() * 30.0f,
+                    "V23 FORCE DRAIN: projected damage "
+                            + facts.projectedDrainDamage()
+                            + " — better drain target!"));
         }
         return new PolicyResult("DEPLOY_OPPONENT_FORCE_ICONS_POLICY", operations);
     }
@@ -373,9 +375,14 @@ public final class DeploySitingPolicy {
     }
 
     public record OpponentForceIconsFacts(String actionId,
-                                          int opponentIcons) {
+                                          float projectedDrainDamage) {
         public OpponentForceIconsFacts {
             Objects.requireNonNull(actionId, "actionId");
+            if (!Float.isFinite(projectedDrainDamage)
+                    || projectedDrainDamage < 0.0f) {
+                throw new IllegalArgumentException(
+                        "projectedDrainDamage must be finite and nonnegative");
+            }
         }
     }
 

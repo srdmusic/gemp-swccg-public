@@ -18,6 +18,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopeFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionEnvelopePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployCandidateLookupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployFormationSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSequencingFacts;
@@ -519,8 +520,10 @@ public class DeployEvaluator extends ActionEvaluator {
                 if (cardIdStr != null && !cardIdStr.isEmpty() && gameState != null) {
                     try {
                         int cardIdNum = Integer.parseInt(cardIdStr);
-                        actionCard = gameState.findCardById(cardIdNum);
-                        if (actionCard != null) {
+                        PhysicalCard resolved = gameState.findCardById(cardIdNum);
+                        if (DeployCandidateLookupPolicy
+                                .isDirectHandCandidate(resolved, playerId)) {
+                            actionCard = resolved;
                             bpId = actionCard.getBlueprintId(true);
                         }
                     } catch (NumberFormatException e) {
@@ -857,7 +860,11 @@ public class DeployEvaluator extends ActionEvaluator {
             PhysicalCard earlyLocationCard = null;
             if (cardIdStr != null && !cardIdStr.isEmpty() && gameState != null) {
                 try {
-                    earlyLocationCard = gameState.findCardById(Integer.parseInt(cardIdStr));
+                    PhysicalCard resolved = gameState.findCardById(
+                            Integer.parseInt(cardIdStr));
+                    earlyLocationCard = DeployCandidateLookupPolicy
+                            .isDirectHandCandidate(resolved, playerId)
+                            ? resolved : null;
                     if (cardTitleFromGemp == null) {
                         earlyCard = earlyLocationCard;
                         if (earlyCard != null && earlyCard.getTitle() != null) {
@@ -1176,9 +1183,14 @@ public class DeployEvaluator extends ActionEvaluator {
                 try {
                     int cardIdNum = Integer.parseInt(cardIdStr);
                     LOG.warn("🔎 [Method 2] Parsed cardId as int: {}", cardIdNum);
-                    card = gameState.findCardById(cardIdNum);
-                    if (card != null) {
+                    PhysicalCard resolved = gameState.findCardById(cardIdNum);
+                    if (DeployCandidateLookupPolicy
+                            .isDirectHandCandidate(resolved, playerId)) {
+                        card = resolved;
                         LOG.warn("🔎 [Method 2] ✅ Found card by ID {}: {}", cardIdNum, card.getTitle());
+                    } else if (resolved != null) {
+                        LOG.warn("🔎 [Method 2] Ignoring in-play action source {} while resolving deploy candidate",
+                                resolved.getTitle());
                     } else {
                         LOG.warn("🔎 [Method 2] ❌ gameState.findCardById({}) returned null", cardIdNum);
                     }

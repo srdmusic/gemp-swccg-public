@@ -111,7 +111,7 @@ public class DeployScalarAssetDestinationSourceParityTest {
 
     private static String iconSlice(String source) {
         return slice(source,
-                "// === V23: OPPONENT FORCE ICON PREFERENCE (ALL OBJECTIVES) ===",
+                "// === V23: PROJECTED FORCE DRAIN PREFERENCE (ALL OBJECTIVES) ===",
                 "// === V24.15: AVOID DEPLOYING CHARACTERS TO WORTHLESS-DRAIN LOCATIONS ===");
     }
 

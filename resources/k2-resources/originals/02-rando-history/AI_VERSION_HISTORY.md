@@ -1,3 +1,28 @@
+  ==== V304 DEPLOY PACKAGE + DRAIN VALUE + RESERVE LOOKUP REPAIR (2026-09-06, both bots) ====
+Replay 72347 showed I Want That Map plan FN-2003 and Mara Jade together at Beldon's Corridor, then
+split that affordable package when FN-2003 flipped the objective. Mara went to Tuanul, FN-2003 was
+left alone, and Steve destroyed him for 20 battle damage. A same-turn formation promise now keeps
+the exact physical anchor, companion, and destination through ordinary fingerprint changes while
+the normal paid deploy remains legal and affordable. It releases on turn change, safe formation,
+missing cards, or lost legality/affordability. Conditional drain planning requires the actual
+activating leader or executable companion package. Generic V22 is now candidate-aware, so an
+already-qualified battleground cannot give Hux another I Want That Map bonus. Existing V23 keeps
+its +30 per projected drain point but now sees Shield Control's printed drain 1 plus its conditional
++1 only for a First Order leader, with Great Warrior cancellation applied. Equal projected-drain
+destinations prefer Rando-owned sites. Command Shuttle's table action source is no longer mistaken
+for the unknown Reserve Deck candidate it downloads, while action guards retain the real source.
+Production changes are AI-only and mirrored across Rando and Chosen One. No card source, rule, deck,
+client, or database changed. Verification is intentionally limited to focused package, objective,
+drain, lookup, destination, and mirror checks at Steve's request; broad reactor testing is omitted.
+The packaged and live jar SHA-256 is da407e9c19ddec818bd37d5e1c33cb3dc0f5ef9d61a76eda8a9393f41dadb0fc.
+The authenticated Hall was empty before replacement. Only the app container was recreated; fresh
+app e1a95edd9a03 started at 2026-09-07T00:04:51.319249174Z with restart count zero and OOM false.
+Host and container hashes match, startup completed, HTTP returned 200, AI/private games are enabled,
+and the final Hall remained empty. Runtime loading is proven; replay firing awaits Steve's playtest.
+Rollback is /Users/steve/gemp-deploy-backups/rando-map-package-v304-2026-09-06/
+predeploy-7e64ff8e/web.jar (SHA-256 7e64ff8ed42ccf6dc226d746d7d09b523e9478465467e51756f607063ec32344).
+Revert the V304 AI source and tests together to return to V303. See AI_CHANGELOG 2026-09-06.
+
   ==== V303 BATTLE NOW + HIT-REMOVAL COMPLETION (2026-09-05, both bots) ====
 The two newest completed asdf games showed Rando passing three destiny-capable fights in Steve's
 requested trade band: 5/5 versus 8/5, 10/10 versus 8/6, and 13/10 versus 17/12. V76's whole-battle

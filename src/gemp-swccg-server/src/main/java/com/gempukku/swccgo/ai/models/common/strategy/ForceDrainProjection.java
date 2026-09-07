@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.common.strategy;
 
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
@@ -38,6 +39,63 @@ public final class ForceDrainProjection {
             return Math.max(0.0f, Math.min(nominal, lossLimit));
         } catch (Exception ignored) {
             return 0.0f;
+        }
+    }
+
+    /**
+     * Projected drain after this exact character deploys. The live engine owns
+     * all already-active modifiers. This overload adds only typed conditional
+     * modifiers that the prospective character itself would switch on.
+     */
+    public static float projectedDamageAfterCharacterDeploy(
+            GameState gameState, SwccgGame game, PhysicalCard location,
+            String drainingPlayer, PhysicalCard candidate) {
+        float current = projectedDamage(
+                gameState, game, location, drainingPlayer);
+        if (gameState == null || game == null || location == null
+                || drainingPlayer == null || candidate == null
+                || candidate.getBlueprint() == null
+                || !drainingPlayer.equals(candidate.getOwner())
+                || !"208_55".equals(location.getBlueprintId(true))) {
+            return current;
+        }
+        try {
+            if (!Filters.First_Order_leader.accepts(
+                    gameState, game.getModifiersQuerying(), candidate)) {
+                return current;
+            }
+            for (PhysicalCard card : gameState.getCardsAtLocation(location)) {
+                if (card != null && drainingPlayer.equals(card.getOwner())
+                        && card.getZone() != null
+                        && card.getZone().isInPlay()
+                        && !card.isUndercover()
+                        && Filters.First_Order_leader.accepts(
+                            gameState, game.getModifiersQuerying(), card)) {
+                    return current;
+                }
+            }
+            String opponent = gameState.getOpponent(drainingPlayer);
+            if (opponent == null) opponent = game.getOpponent(drainingPlayer);
+            if (opponent == null) return current;
+            if (opponent != null && game.getModifiersQuerying()
+                    .occupiesLocation(gameState, location, opponent)) {
+                return current;
+            }
+            String sourceOwner = location.getOwner();
+            if (sourceOwner == null || game.getModifiersQuerying()
+                    .isForceDrainModifierCanceled(
+                        gameState, location, location, sourceOwner,
+                        drainingPlayer, 1.0f)) {
+                return current;
+            }
+            float lossLimit = game.getModifiersQuerying()
+                    .getForceToLoseFromForceDrainLimit(
+                            gameState, opponent, location);
+            if (Float.isNaN(lossLimit)) return current;
+            return Math.max(0.0f,
+                    Math.min(current + 1.0f, lossLimit));
+        } catch (Exception ignored) {
+            return current;
         }
     }
 

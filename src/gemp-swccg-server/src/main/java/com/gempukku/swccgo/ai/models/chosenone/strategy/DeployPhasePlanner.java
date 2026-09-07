@@ -3,6 +3,7 @@ package com.gempukku.swccgo.ai.models.chosenone.strategy;
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployFormationPromisePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
@@ -11,6 +12,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.strategy.ForceDrainProjection;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.common.strategy.PublicImmediateReactAnalyzer;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
@@ -75,6 +77,8 @@ public class DeployPhasePlanner {
     private boolean lastPlanHadFlipGateActorInHand = false;
     private String lastPlanPreFlipProgressFingerprint = "";
     private long lastPlanPersistentResponseRevision = -1;
+    private DeployFormationPromisePolicy.Promise activeFormationPromise;
+    private int activeFormationPromiseTurn = -1;
 
     // Board state reference for scoring
     private SwccgGame currentGame;
@@ -104,6 +108,8 @@ public class DeployPhasePlanner {
         lastPlanHadFlipGateActorInHand = false;
         lastPlanPreFlipProgressFingerprint = "";
         lastPlanPersistentResponseRevision = -1;
+        activeFormationPromise = null;
+        activeFormationPromiseTurn = -1;
         currentGame = null;
         currentPlayerId = null;
     }
@@ -123,6 +129,51 @@ public class DeployPhasePlanner {
      * Get the current deployment plan, if any.
      */
     public DeploymentPlan getCurrentPlan() {
+        return currentPlan;
+    }
+
+    private DeploymentPlan detectPromisedFormation(
+            SwccgGame game, String playerId, int currentTurn) {
+        if (currentPlan == null) return null;
+        List<DeployFormationPromisePolicy.PlannedInstruction> facts =
+                new ArrayList<>();
+        for (DeploymentInstruction instruction
+                : currentPlan.getInstructions()) {
+            if (instruction.getCardPermanentCardId() == null
+                    || instruction.getCardCurrentCardId() == null
+                    || instruction.getTargetLocationId() == null) {
+                continue;
+            }
+            facts.add(new DeployFormationPromisePolicy.PlannedInstruction(
+                    instruction.getCardPermanentCardId(),
+                    instruction.getCardCurrentCardId(),
+                    instruction.getTargetLocationId()));
+        }
+        DeployFormationPromisePolicy.Promise promise =
+                DeployFormationPromisePolicy.detect(
+                        game, playerId,
+                        game.getGameState().getForcePileSize(playerId),
+                        facts);
+        if (promise == null) return null;
+
+        DeploymentInstruction companion =
+                currentPlan.getInstructionForPhysicalCard(
+                        promise.companionPermanentCardId(),
+                        promise.companionCurrentCardId(), null);
+        if (companion == null) return null;
+        currentPlan.recordDeployment(
+                promise.anchorPermanentCardId(),
+                promise.anchorCurrentCardId(), null);
+        currentPlan.setInstructions(new ArrayList<>(List.of(companion)));
+        currentPlan.setWaitingForPlannedCards(false);
+        currentPlan.setForceAllowExtras(false);
+        currentPlan.setForceToSpend(promise.companionCost());
+        currentPlan.setReason("Finish promised formation at "
+                + companion.getTargetLocationName());
+        activeFormationPromise = promise;
+        activeFormationPromiseTurn = currentTurn;
+        LOG.warn("DEPLOY.FORMATION.PROMISE: preserving exact companion {} at {} before replanning",
+                promise.companionName(), companion.getTargetLocationName());
         return currentPlan;
     }
 
@@ -147,6 +198,10 @@ public class DeployPhasePlanner {
         }
 
         int currentTurn = gameState.getPlayersLatestTurnNumber(playerId);
+        if (activeFormationPromiseTurn != currentTurn) {
+            activeFormationPromise = null;
+            activeFormationPromiseTurn = -1;
+        }
         String opponentId = gameState.getOpponent(playerId);
         boolean hasActiveFlipGate = hasActiveFlipGateLocation(
                 game, playerId);
@@ -170,7 +225,29 @@ public class DeployPhasePlanner {
 
         // If we already have a plan for this turn, return it
         if (currentPlan != null && lastPlanTurn == currentTurn) {
-            if (!lastPlanHadActiveFlipGate && hasActiveFlipGate) {
+            boolean formationPromiseReleased = false;
+            if (activeFormationPromise != null) {
+                if (DeployFormationPromisePolicy.shouldContinue(
+                        game, playerId,
+                        gameState.getForcePileSize(playerId),
+                        activeFormationPromise)) {
+                    LOG.debug("DEPLOY.FORMATION.PROMISE: returning exact companion plan for turn {}",
+                            currentTurn);
+                    return currentPlan;
+                }
+                LOG.warn("DEPLOY.FORMATION.PROMISE.RELEASE: package is complete or no longer executable");
+                activeFormationPromise = null;
+                activeFormationPromiseTurn = -1;
+                formationPromiseReleased = true;
+            } else {
+                DeploymentPlan promised = detectPromisedFormation(
+                        game, playerId, currentTurn);
+                if (promised != null) return promised;
+            }
+
+            if (formationPromiseReleased) {
+                LOG.info("DEPLOY.FORMATION.PROMISE.REPLAN: refreshing after promise release");
+            } else if (!lastPlanHadActiveFlipGate && hasActiveFlipGate) {
                 LOG.warn("OBJECTIVE.DEPLOY.REPLAN_GATE_APPEARED: refreshing turn {} plan "
                         + "because the exact pre-flip actor gate entered play",
                     currentTurn);
@@ -2405,11 +2482,38 @@ public class DeployPhasePlanner {
         DeploymentPlan plan = new DeploymentPlan(DeployStrategy.ESTABLISH,
             "Establish in " + domain);
 
-        // Sort by opponent icons, then stable location title.
+        // Rank the executable package, not just printed icons. A conditional
+        // drain site is promoted only when the exact selected package contains
+        // the character that turns its bonus on.
+        Map<Integer, Float> projectedDrainByTarget = new HashMap<>();
+        for (AiBoardAnalyzer.LocationAnalysis target : establishTargets) {
+            float projected = ForceDrainProjection.projectedDamage(
+                    currentGame.getGameState(), currentGame,
+                    target.location, currentPlayerId);
+            EstablishDrainPackage conditional =
+                    selectConditionalDrainPackage(
+                            filterDeployableCards(cards, target.location),
+                            target.location, forceAvailable);
+            if (conditional != null) {
+                projected = Math.max(projected,
+                        conditional.projectedDrain());
+            }
+            projectedDrainByTarget.put(
+                    target.location.getCardId(), projected);
+        }
+
         establishTargets.sort((a, b) -> {
-            int scoreA = a.theirForceIcons;
-            int scoreB = b.theirForceIcons;
-            int iconOrder = Integer.compare(scoreB, scoreA);
+            float drainA = projectedDrainByTarget.getOrDefault(
+                    a.location.getCardId(), 0.0f);
+            float drainB = projectedDrainByTarget.getOrDefault(
+                    b.location.getCardId(), 0.0f);
+            int drainOrder = Float.compare(drainB, drainA);
+            if (drainOrder != 0) return drainOrder;
+            boolean ownA = currentPlayerId.equals(a.location.getOwner());
+            boolean ownB = currentPlayerId.equals(b.location.getOwner());
+            if (ownA != ownB) return ownA ? -1 : 1;
+            int iconOrder = Integer.compare(
+                    b.theirForceIcons, a.theirForceIcons);
             if (iconOrder != 0) return iconOrder;
             return a.location.getTitle().compareToIgnoreCase(
                     b.location.getTitle());
@@ -2425,7 +2529,9 @@ public class DeployPhasePlanner {
         for (AiBoardAnalyzer.LocationAnalysis loc : establishTargets) {
             if (remaining <= 0 || available.isEmpty()) break;
             if (establishCount >= establishLimit) break;
-            if (loc.theirForceIcons <= 0) continue;
+            if (loc.theirForceIcons <= 0
+                    && projectedDrainByTarget.getOrDefault(
+                        loc.location.getCardId(), 0.0f) <= 0.0f) continue;
 
             // CRITICAL: Filter cards to only those that can deploy to this location
             List<CardInfo> deployableHere = filterDeployableCards(available, loc.location);
@@ -2467,6 +2573,28 @@ public class DeployPhasePlanner {
                     available.remove(lateBest);
                     establishCount++;
                 }
+                continue;
+            }
+
+            EstablishDrainPackage conditionalDrainPackage =
+                    selectConditionalDrainPackage(
+                            deployableHere, loc.location, remaining);
+            if (conditionalDrainPackage != null) {
+                for (int index = 0;
+                        index < conditionalDrainPackage.cards().size();
+                        index++) {
+                    CardInfo card = conditionalDrainPackage.cards().get(index);
+                    int exactCost = conditionalDrainPackage.costs().get(index);
+                    addCardToPlan(plan, card.card, loc, 2,
+                            String.format(
+                                "Establish at %s (projected drain %.0f)",
+                                loc.location.getTitle(),
+                                conditionalDrainPackage.projectedDrain()),
+                            exactCost);
+                    remaining -= exactCost;
+                    available.remove(card);
+                }
+                establishCount++;
                 continue;
             }
 
@@ -2573,6 +2701,102 @@ public class DeployPhasePlanner {
         }
 
         return plan;
+    }
+
+    private EstablishDrainPackage selectConditionalDrainPackage(
+            List<CardInfo> candidates, PhysicalCard location, int budget) {
+        if (candidates == null || candidates.isEmpty()
+                || location == null || budget <= 0) return null;
+        float currentDrain = ForceDrainProjection.projectedDamage(
+                currentGame.getGameState(), currentGame,
+                location, currentPlayerId);
+        EstablishDrainPackage best = null;
+        for (CardInfo activator : candidates) {
+            if (activator.card == null || activator.card.getBlueprint() == null
+                    || activator.card.getBlueprint().getCardCategory()
+                        != CardCategory.CHARACTER
+                    || activator.card.isUndercover()) {
+                continue;
+            }
+            float projected = ForceDrainProjection
+                    .projectedDamageAfterCharacterDeploy(
+                        currentGame.getGameState(), currentGame,
+                        location, currentPlayerId, activator.card);
+            if (projected <= currentDrain) continue;
+            Integer activatorCost = exactDeployCostAt(
+                    activator.card, location);
+            if (activatorCost == null || activatorCost > budget
+                    || !canDeployPaidDirectly(
+                        activator.card, location)) {
+                continue;
+            }
+
+            if (activator.power >= RandoConfig.MIN_SOLO_DEPLOY_POWER
+                    && activator.ability
+                        >= RandoConfig.ABILITY_THRESHOLD) {
+                EstablishDrainPackage solo = new EstablishDrainPackage(
+                        List.of(activator), List.of(activatorCost),
+                        projected, activatorCost,
+                        activator.power, activator.ability);
+                if (isBetterEstablishDrainPackage(solo, best)) best = solo;
+            }
+
+            for (CardInfo buddy : candidates) {
+                if (buddy == activator || buddy.card == null
+                        || buddy.card.getBlueprint() == null
+                        || buddy.card.getBlueprint().getCardCategory()
+                            != CardCategory.CHARACTER
+                        || buddy.card.isUndercover()) {
+                    continue;
+                }
+                Integer buddyCost = exactDeployCostAt(
+                        buddy.card, location);
+                int totalCost = buddyCost == null
+                        ? Integer.MAX_VALUE : activatorCost + buddyCost;
+                int totalPower = activator.power + buddy.power;
+                int totalAbility = activator.ability + buddy.ability;
+                if (buddyCost == null || totalCost > budget
+                        || totalPower < RandoConfig.MIN_SOLO_DEPLOY_POWER
+                        || totalAbility < RandoConfig.ABILITY_THRESHOLD
+                        || !canDeployPaidDirectly(
+                            buddy.card, location)) {
+                    continue;
+                }
+                EstablishDrainPackage pair = new EstablishDrainPackage(
+                        List.of(activator, buddy),
+                        List.of(activatorCost, buddyCost), projected,
+                        totalCost, totalPower, totalAbility);
+                if (isBetterEstablishDrainPackage(pair, best)) best = pair;
+            }
+        }
+        return best;
+    }
+
+    private boolean isBetterEstablishDrainPackage(
+            EstablishDrainPackage candidate,
+            EstablishDrainPackage current) {
+        if (current == null
+                || candidate.projectedDrain()
+                    != current.projectedDrain()) {
+            return current == null || candidate.projectedDrain()
+                    > current.projectedDrain();
+        }
+        if (candidate.cards().size() != current.cards().size()) {
+            return candidate.cards().size() < current.cards().size();
+        }
+        if (candidate.totalCost() != current.totalCost()) {
+            return candidate.totalCost() < current.totalCost();
+        }
+        if (candidate.totalPower() != current.totalPower()) {
+            return candidate.totalPower() > current.totalPower();
+        }
+        return candidate.totalAbility() > current.totalAbility();
+    }
+
+    private record EstablishDrainPackage(
+            List<CardInfo> cards, List<Integer> costs,
+            float projectedDrain, int totalCost,
+            int totalPower, int totalAbility) {
     }
 
     private LateGroundCandidate assessLateGroundCandidate(
@@ -3112,6 +3336,8 @@ public class DeployPhasePlanner {
         List<DeployPlanRankingPolicy.InstructionFacts> instructionFacts = new ArrayList<>();
         Map<String, Integer> powerByLocation = new HashMap<>();
         Map<String, Float> abilityByLocation = new HashMap<>();
+        Map<String, List<PhysicalCard>> plannedCardsByLocation =
+                new HashMap<>();
 
         int instructionIndex = 0;
         for (DeploymentInstruction inst : plan.getInstructions()) {
@@ -3123,6 +3349,18 @@ public class DeployPhasePlanner {
                 powerByLocation.merge(inst.getTargetLocationId(), inst.getPowerContribution(), Integer::sum);
                 abilityByLocation.merge(inst.getTargetLocationId(),
                     inst.getAbilityContribution(), Float::sum);
+                if (inst.getCardCurrentCardId() != null
+                        && currentGame != null
+                        && currentGame.getGameState() != null) {
+                    PhysicalCard plannedCard = currentGame.getGameState()
+                            .findCardById(inst.getCardCurrentCardId());
+                    if (plannedCard != null) {
+                        plannedCardsByLocation
+                            .computeIfAbsent(inst.getTargetLocationId(),
+                                ignored -> new ArrayList<>())
+                            .add(plannedCard);
+                    }
+                }
             }
         }
 
@@ -3154,19 +3392,46 @@ public class DeployPhasePlanner {
             float objectiveBonus = 0.0f;
             if (objectiveAnalyzer != null && objectiveAnalyzer.isAnalyzed()) {
                 String locTitle = targetLoc.location.getTitle();
-                if (locTitle != null && objectiveAnalyzer
-                        .isObjectiveRelevantLocation(
+                float objBonus = objectiveAnalyzer
+                        .isIWantThatMapObjectiveFamily()
+                        && !objectiveAnalyzer.isFlipped()
+                        ? objectiveAnalyzer
+                            .getDeployLocationObjectiveBonus(
+                                    currentGame, currentPlayerId,
+                                    plannedCardsByLocation.get(locId),
+                                    targetLoc.location)
+                        : objectiveAnalyzer.getLocationObjectiveBonus(
                                 targetLoc.location, currentGame,
-                                currentPlayerId)) {
-                    float objBonus = objectiveAnalyzer
-                            .getLocationObjectiveBonus(
-                                    targetLoc.location, currentGame,
-                                    currentPlayerId);
-                    objectiveRelevant = objBonus != 0.0f;
+                                currentPlayerId);
+                if (locTitle != null && objBonus != 0.0f) {
+                    objectiveRelevant = true;
                     objectiveBonus = objBonus;
                     LOG.warn("V22 PLAN SCORE: {} is objective-relevant, +{} to plan score", locTitle, objBonus);
                 }
             }
+
+            float projectedDrain = targetLoc.theirForceIcons;
+            if (currentGame != null
+                    && currentGame.getGameState() != null) {
+                projectedDrain = ForceDrainProjection.projectedDamage(
+                        currentGame.getGameState(), currentGame,
+                        targetLoc.location, currentPlayerId);
+                for (PhysicalCard plannedCard
+                        : plannedCardsByLocation.getOrDefault(
+                            locId, Collections.emptyList())) {
+                    projectedDrain = Math.max(projectedDrain,
+                            ForceDrainProjection
+                                .projectedDamageAfterCharacterDeploy(
+                                    currentGame.getGameState(), currentGame,
+                                    targetLoc.location, currentPlayerId,
+                                    plannedCard));
+                }
+            }
+            if (projectedDrain <= 0.0f) {
+                projectedDrain = targetLoc.theirForceIcons;
+            }
+            int projectedDrainDamage = Math.max(
+                    0, Math.round(projectedDrain));
 
             boolean formationPenaltyExempt = hasPlannedSpyAtTarget(plan, locId);
             boolean triggerKnowable = false;
@@ -3189,7 +3454,7 @@ public class DeployPhasePlanner {
             locationFacts.add(new DeployPlanRankingPolicy.LocationFacts(
                 "location-" + locationIndex++, postOurPower,
                 postOurAbility, targetLoc.theirPower,
-                targetLoc.ourForceIcons, targetLoc.theirForceIcons,
+                targetLoc.ourForceIcons, projectedDrainDamage,
                 targetLoc.theirCardCount, objectiveRelevant, objectiveBonus,
                 triggerKnowable, exposureProven, strongestReactPower,
                 formationPenaltyExempt));

@@ -340,7 +340,7 @@ public class DeploySitingPolicyTest {
     }
 
     @Test
-    public void opponentForceIconBonusPreservesZeroAndLinearScores() {
+    public void projectedDrainBonusPreservesZeroAndLinearScores() {
         assertTrue(DeploySitingPolicy.evaluateOpponentForceIcons(
                 new DeploySitingPolicy.OpponentForceIconsFacts(
                         "action-1", 0)).operations().isEmpty());
@@ -353,14 +353,14 @@ public class DeploySitingPolicyTest {
         assertEquals(PolicyOperationKind.ADD, one.kind());
         assertEquals(TraceDomainId.DEPLOY_SITING, one.domainId());
         assertEquals(TraceOutputKind.BANDED, one.outputKind());
-        assertEquals("V23 FORCE DRAIN: 1 opponent force icon(s) — better drain target!",
+        assertEquals("V23 FORCE DRAIN: projected damage 1.0 — better drain target!",
                 one.reason());
 
         PolicyOperation three = DeploySitingPolicy.evaluateOpponentForceIcons(
                 new DeploySitingPolicy.OpponentForceIconsFacts(
                         "action-1", 3)).operations().get(0);
         assertEquals(90.0f, three.delta(), 0.0f);
-        assertEquals("V23 FORCE DRAIN: 3 opponent force icon(s) — better drain target!",
+        assertEquals("V23 FORCE DRAIN: projected damage 3.0 — better drain target!",
                 three.reason());
     }
 

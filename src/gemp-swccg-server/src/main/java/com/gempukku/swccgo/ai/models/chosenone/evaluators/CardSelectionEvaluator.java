@@ -4281,24 +4281,22 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer locObjAnalyzer =
                             context.getObjectiveAnalyzer();
                         if (!earlySpyDetected && locObjAnalyzer != null && locObjAnalyzer.isAnalyzed() && title != null) {
-                            if (locObjAnalyzer.isObjectiveRelevantLocation(
-                                    location, game, playerId)) {
-                                float objLocBonus =
-                                    locObjAnalyzer.getLocationObjectiveBonus(
-                                        location, game, playerId);
-                                if (objLocBonus != 0.0f) {
-                                    DeployObjectiveSitingPolicy.Facts v22SitingFacts =
-                                        new DeployObjectiveSitingPolicy.Facts(
-                                            action.getActionId(), earlySpyDetected, true, true,
-                                            objLocBonus, false, false, false, false,
-                                            false, false, false, "", 0.0f, 0.0f);
-                                    PolicyContributionLedger v22SitingLedger = new PolicyContributionLedger(
-                                        "deploy-objective-v22-" + action.getActionId());
-                                    v22SitingLedger.register(
-                                        DeployObjectiveSitingPolicy.evaluate(v22SitingFacts));
-                                    PolicyOperationAdapter.apply(action, v22SitingLedger);
-                                    logger.warn("V22 OBJECTIVE DEPLOY: {} is objective-relevant (+{})", title, objLocBonus);
-                                }
+                            float objLocBonus =
+                                locObjAnalyzer.getDeployLocationObjectiveBonus(
+                                    game, playerId,
+                                    objectiveProgressDeployingCard, location);
+                            if (objLocBonus != 0.0f) {
+                                DeployObjectiveSitingPolicy.Facts v22SitingFacts =
+                                    new DeployObjectiveSitingPolicy.Facts(
+                                        action.getActionId(), earlySpyDetected, true, true,
+                                        objLocBonus, false, false, false, false,
+                                        false, false, false, "", 0.0f, 0.0f);
+                                PolicyContributionLedger v22SitingLedger = new PolicyContributionLedger(
+                                    "deploy-objective-v22-" + action.getActionId());
+                                v22SitingLedger.register(
+                                    DeployObjectiveSitingPolicy.evaluate(v22SitingFacts));
+                                PolicyOperationAdapter.apply(action, v22SitingLedger);
+                                logger.warn("V22 OBJECTIVE DEPLOY: {} advances or protects objective geography (+{})", title, objLocBonus);
                             }
                         }
 
@@ -5151,9 +5149,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
-                        // === V23: OPPONENT FORCE ICON PREFERENCE (ALL OBJECTIVES) ===
-                        // Locations with opponent force icons are better force drain targets.
-                        // For Dark Side: Light Side force icons = more drain damage.
+                        // === V23: PROJECTED FORCE DRAIN PREFERENCE (ALL OBJECTIVES) ===
+                        // Keep the original +30-per-damage magnitude, but rank the
+                        // engine-projected result rather than printed icons. This
+                        // includes candidate-triggered bonuses such as a First Order
+                        // leader at Shield Control and honors drain-bonus cancellation.
                         if (blueprint != null) {
                             Side mySide = context.getSide();
                             int opponentIcons = 0;
@@ -5162,13 +5162,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             } else {
                                 opponentIcons = blueprint.getIconCount(Icon.DARK_FORCE);
                             }
-                            if (opponentIcons > 0) {
-                                float iconBonus = opponentIcons * 30.0f;
+                            float projectedDrain = game != null
+                                ? com.gempukku.swccgo.ai.models.common.strategy
+                                    .ForceDrainProjection
+                                    .projectedDamageAfterCharacterDeploy(
+                                        gameState, game, location, playerId,
+                                        objectiveProgressDeployingCard)
+                                : opponentIcons;
+                            if (projectedDrain > 0.0f) {
+                                float drainBonus = projectedDrain * 30.0f;
                                 applyDeploySitingPolicy(action,
                                     DeploySitingPolicy.evaluateOpponentForceIcons(
                                         new DeploySitingPolicy.OpponentForceIconsFacts(
-                                            action.getActionId(), opponentIcons)));
-                                logger.info("V23 FORCE ICONS: {} has {} opponent icons (+{})", title, opponentIcons, (int)iconBonus);
+                                            action.getActionId(), projectedDrain)));
+                                logger.info("V23 FORCE DRAIN: {} projects {} damage (+{})",
+                                    title, projectedDrain, (int)drainBonus);
                             }
                         }
 

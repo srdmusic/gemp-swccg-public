@@ -3663,6 +3663,13 @@ public class ObjectiveAnalyzer {
                     game, playerId, alternative)) {
             return false;
         }
+        // 208_57 requires two distinct qualified battlegrounds. Adding another
+        // First Order character to a battleground that already qualifies is
+        // useful reinforcement, but it does not advance the flip count.
+        if (isIWantThatMapQualifiedBattlegroundAfterRemovalAt(
+                game, playerId, destination, null)) {
+            return false;
+        }
         com.gempukku.swccgo.filters.Filter actorFilter =
                 resolveFilter(alternative.actorFilterKey);
         boolean destinationQualifies = advancesAlternativeAt(
@@ -11369,6 +11376,42 @@ public class ObjectiveAnalyzer {
             return 150.0f;
         }
         return getLocationObjectiveBonus(location.getTitle());
+    }
+
+    /**
+     * Candidate-aware V22 location preference. I Want That Map counts distinct
+     * qualified battlegrounds, so reinforcing an already-qualified site is not
+     * pre-flip progress. Other objectives retain their existing location rule.
+     */
+    public float getDeployLocationObjectiveBonus(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard location) {
+        if (!analyzed || location == null) return 0.0f;
+        if (!isFlipped && isIWantThatMapObjectiveFamily()) {
+            return candidate != null
+                    && advancesPreFlipActorAtRuntimeLocation(
+                        game, playerId, candidate, location)
+                    ? 150.0f : 0.0f;
+        }
+        return getLocationObjectiveBonus(location, game, playerId);
+    }
+
+    /** Candidate-aware plan view, using one bounded bonus per destination. */
+    public float getDeployLocationObjectiveBonus(
+            SwccgGame game, String playerId,
+            Iterable<PhysicalCard> candidates, PhysicalCard location) {
+        if (!analyzed || location == null) return 0.0f;
+        if (!isFlipped && isIWantThatMapObjectiveFamily()) {
+            if (candidates == null) return 0.0f;
+            for (PhysicalCard candidate : candidates) {
+                if (getDeployLocationObjectiveBonus(
+                        game, playerId, candidate, location) > 0.0f) {
+                    return 150.0f;
+                }
+            }
+            return 0.0f;
+        }
+        return getLocationObjectiveBonus(location, game, playerId);
     }
 
     public Set<String> getFlipConditionLocationFragments() {
@@ -21222,21 +21265,26 @@ public class ObjectiveAnalyzer {
 
         int qualified = 0;
         for (PhysicalCard location : locations) {
-            if (location == null || !Filters.battleground.accepts(
-                        game.getGameState(),
-                        game.getModifiersQuerying(), location)
-                    || !game.getModifiersQuerying().controlsLocation(
-                        game.getGameState(), location, playerId,
-                        SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)
-                    || !hasIWantThatMapPresenceAfterRemovalAt(
-                        game, playerId, location, removedRoot)
-                    || !hasIWantThatMapActorAfterRemovalAt(
-                        game, playerId, location, removedRoot)) {
-                continue;
-            }
-            qualified++;
+            if (isIWantThatMapQualifiedBattlegroundAfterRemovalAt(
+                    game, playerId, location, removedRoot)) qualified++;
         }
         return qualified;
+    }
+
+    private boolean isIWantThatMapQualifiedBattlegroundAfterRemovalAt(
+            SwccgGame game, String playerId, PhysicalCard location,
+            PhysicalCard removedRoot) {
+        return location != null
+                && Filters.battleground.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), location)
+                && game.getModifiersQuerying().controlsLocation(
+                    game.getGameState(), location, playerId,
+                    SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)
+                && hasIWantThatMapPresenceAfterRemovalAt(
+                    game, playerId, location, removedRoot)
+                && hasIWantThatMapActorAfterRemovalAt(
+                    game, playerId, location, removedRoot);
     }
 
     private boolean hasIWantThatMapPresenceAfterRemovalAt(

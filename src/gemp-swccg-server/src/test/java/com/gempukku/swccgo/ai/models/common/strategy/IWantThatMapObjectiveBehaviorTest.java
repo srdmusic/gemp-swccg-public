@@ -142,6 +142,36 @@ public class IWantThatMapObjectiveBehaviorTest {
     }
 
     @Test
+    public void handActorAdvancesOnlyADistinctMissingBattleground() {
+        for (Bot bot : Bot.values()) {
+            Fixture fixture = fixture(bot, false);
+            PhysicalCard anchor = character(
+                    fixture, "First Order Stormtrooper", PLAYER, true);
+            place(fixture, anchor, fixture.firstSite);
+            control(fixture, fixture.firstSite);
+
+            PhysicalCard leader = character(
+                    fixture, "General Hux", PLAYER, true);
+            when(leader.getZone()).thenReturn(Zone.HAND);
+            when(fixture.gameState.getHand(PLAYER))
+                    .thenReturn(List.of(leader));
+
+            assertFalse("Reinforcing the already-qualified Tuanul leg is not"
+                            + " a second battleground: " + label(bot),
+                    fixture.analyzer
+                        .advancesPreFlipActorAtRuntimeLocation(
+                            fixture.game, PLAYER, leader,
+                            fixture.firstSite));
+            assertTrue("The same leader advances at a distinct missing"
+                            + " battleground: " + label(bot),
+                    fixture.analyzer
+                        .advancesPreFlipActorAtRuntimeLocation(
+                            fixture.game, PLAYER, leader,
+                            fixture.secondSite));
+        }
+    }
+
+    @Test
     public void backProtectsExactTwoOccupiedBattlegroundsAndWholePilotGroup() {
         for (Bot bot : Bot.values()) {
             Fixture exactTwo = fixture(bot, true);
