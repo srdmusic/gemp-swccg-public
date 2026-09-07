@@ -1,3 +1,41 @@
+  ==== V306 DEPLOY COMMITMENT + VOLUNTARY 13-CARD CEILING (2026-09-07, both bots) ====
+Replays 72352 and 72351 exposed three connected deployment failures and renewed hand hoarding. An
+exact funded Nute Gunray plus Dr. Evazan package was accepted, but its first character was still
+judged as an unsupported solo and both attempts were cancelled. Asajj Ventress followed a stale
+zero-drain Works plan after Count Dooku independently entered the contested Jabiim site. The cancel
+tracker stored a menu slot, so a different character inheriting that slot was also blocked. In the
+other game Rando held affordable characters and 12 Force, then voluntarily drew from 5 cards to the
+legacy cap of 16 while suffering about 5 net drain each turn.
+
+The existing formation owner now proves a package from exact physical and current card ids, the
+same planned site, normal engine legality, exact modified costs, and `first + companion <= Force -
+battle reserve`. Only that proof bypasses V156's unsupported-solo label in both deploy routes. A
+high-ability first character no longer dissolves its real promise. A newly appearing lone friendly
+at an opponent-occupied battleground retargets the strongest affordable unpaired planned companion;
+members of another intact funded pair are not stolen. V64 remains `-1500` for an empty Mapuzo
+non-Jedi deploy, while V201 now admits alternative sites when that exact planned target is vetoed.
+
+Turn-scoped cancel blocks now use physical card id plus normalized action text and resolve against
+the current menu, so the cancelled card follows a moved slot and a different card cannot inherit
+the veto. Ordinary draw-phase Force Pile draws may take hand 12 to 13 and then stop at 13 with
+`-150`; forced and card-effect routes retain the legacy 16-card ceiling. No card, game rule, deck,
+client, database, battle, movement, activation, or Force-drain code changed.
+
+Source commit `cf6d277e9` passed 74 focused tests with zero failures, errors, or skips. Independent
+review passed another 69 focused tests plus both-bot parity, boundary, marker, dead-guard, and diff
+checks. Broad reactor testing was omitted at Steve's request. Packaged and live `web.jar` SHA-256 is
+4ca3ebeacb39096c66d55a1acb224def0759c781669117bb63b035e365401f2c. V301, V302, all six Set 27
+outer card classes, and the offline-image handler remain present. Empty authenticated Hall checks
+bracketed the shutdown freeze and replacement. Only the app was recreated; fresh container
+036b3cd7cf35 started at 2026-09-07T21:29:28.927860211Z with restart count zero, OOM false, and Java
+as PID 1. Candidate, host, and container hashes match; startup completed; three HTTP probes returned
+200; gameplay switches were restored; the final Hall remained empty; and MariaDB container
+46a8397072d3 was untouched. Runtime loading is proven; replay firing awaits Steve's playtest.
+Rollback is /Users/steve/gemp-deploy-backups/rando-deploy-commitment-v306-2026-09-07/
+predeploy-cf6d277e9-d6a5195c/web.jar (SHA-256
+d6a5195c5a067adb59187f7e130896455f21505e7e7fda123a9aed5ac14c022d). Revert `cf6d277e9` or
+restore that jar to return to V305. See AI_CHANGELOG 2026-09-07.
+
   ==== V305 RESERVE PULL BEFORE PILE RECYCLE (2026-09-06, both bots) ====
 Replay 72349 showed Like My Father Before Me offer its real Luke's Lightsaber Reserve Deck download
 beside `Place card from hand on Force Pile`. V67bb rejected only `into force pile`, then read the
