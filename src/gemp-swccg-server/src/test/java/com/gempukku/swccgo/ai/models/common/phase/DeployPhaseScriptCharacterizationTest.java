@@ -72,6 +72,42 @@ public class DeployPhaseScriptCharacterizationTest {
     }
 
     @Test
+    public void pilePlacementModesCannotPreemptSameSourceReservePull() {
+        AwaitingDecision decision = mock(AwaitingDecision.class);
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        PhysicalCard source = mock(PhysicalCard.class);
+        SwccgCardBlueprint blueprint = mock(SwccgCardBlueprint.class);
+
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put("actionId", new String[] {
+                "pull", "force", "used", "reserve", "compound"
+        });
+        parameters.put("actionText", new String[] {
+                "Deploy Luke's Lightsaber from Reserve Deck",
+                "Place card from hand on Force Pile",
+                "Put card from hand into Used Pile",
+                "Return card from hand to the top of Reserve Deck",
+                "Place weapon on Used Pile"
+        });
+        parameters.put("cardId", new String[] {
+                "199", "199", "199", "199", "217"
+        });
+
+        when(decision.getDecisionParameters()).thenReturn(parameters);
+        when(gameState.getPlayersLatestTurnNumber("p")).thenReturn(3);
+        when(gameState.findCardById(199)).thenReturn(source);
+        when(source.getBlueprint()).thenReturn(blueprint);
+
+        DeployPhaseScript.Result result = new TestWeaponSourceDeployPhaseScript()
+                .selectAllowedActions(decision, gameState, game, "p", null);
+
+        assertEquals("[WEAPONS]", result.stepBucketLabels.toString());
+        assertEquals("[[pull, compound]]", result.stepBuckets.toString());
+        assertEquals(Set.of("pull", "compound"), result.allowedActionIds);
+    }
+
+    @Test
     public void bothBotsKeepFlipGateActorUploadOutOfDeployBuckets() throws Exception {
         AwaitingDecision decision = mock(AwaitingDecision.class);
         GameState gameState = mock(GameState.class);
@@ -621,6 +657,26 @@ public class DeployPhaseScriptCharacterizationTest {
         protected java.util.List<String> parseSourceCardPullTargets(
                 String gameText) {
             return java.util.List.of("a site or cloud sector");
+        }
+    }
+
+    private static final class TestWeaponSourceDeployPhaseScript
+            extends DeployPhaseScript {
+        private TestWeaponSourceDeployPhaseScript() {
+            super(org.apache.logging.log4j.LogManager.getLogger(
+                    TestWeaponSourceDeployPhaseScript.class));
+        }
+
+        @Override
+        protected String sourceCardFullGameText(
+                SwccgCardBlueprint blueprint, Side side) {
+            return "May deploy Luke's Lightsaber from Reserve Deck or place a card from hand on Force Pile.";
+        }
+
+        @Override
+        protected java.util.List<String> parseSourceCardPullTargets(
+                String gameText) {
+            return java.util.List.of("Luke's Lightsaber");
         }
     }
 }

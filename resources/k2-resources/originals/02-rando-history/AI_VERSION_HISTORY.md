@@ -1,3 +1,20 @@
+  ==== V305 RESERVE PULL BEFORE PILE RECYCLE (2026-09-06, both bots) ====
+Replay 72349 showed Like My Father Before Me offer its real Luke's Lightsaber Reserve Deck download
+beside `Place card from hand on Force Pile`. V67bb rejected only `into force pile`, then read the
+shared source card's full game text and incorrectly admitted the actual recycle mode to the WEAPONS
+bucket. That score-zero choice preempted viable pulls, including Gift Of The Mentor at +550, until
+both sabers had left Reserve Deck. When that same source also offers a `from Reserve Deck` action,
+existing V67bb now excludes its competing put, place, return, or move action when the destination is
+Force Pile, Used Pile, or Reserve Deck/Pile. V192 pull scores and dead-search guards are unchanged.
+Pile-cost actions from unrelated sources remain eligible. The shared owner covers Rando and Chosen
+One. A focused 17-test characterization run passed with zero failures or errors; broad reactor
+testing is omitted at Steve's request. Packaged web.jar SHA-256 is
+d6a5195c5a067adb59187f7e130896455f21505e7e7fda123a9aed5ac14c022d, and its shared deploy-phase
+class byte-matches the focused compile. Runtime proof is recorded after deployment. No card, rule,
+deck, client, database, movement, activation, or
+Force-drain behavior changed. Revert the V305 classifier and characterization test together to
+return to V304. See AI_CHANGELOG 2026-09-06.
+
   ==== V304 DEPLOY PACKAGE + DRAIN VALUE + RESERVE LOOKUP REPAIR (2026-09-06, both bots) ====
 Replay 72347 showed I Want That Map plan FN-2003 and Mara Jade together at Beldon's Corridor, then
 split that affordable package when FN-2003 flipped the objective. Mara went to Tuanul, FN-2003 was

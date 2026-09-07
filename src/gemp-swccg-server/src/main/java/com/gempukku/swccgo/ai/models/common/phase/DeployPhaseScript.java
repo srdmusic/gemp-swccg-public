@@ -77,6 +77,17 @@ public abstract class DeployPhaseScript {
     private static final Pattern BLUEPRINT_HINT_PATTERN =
         Pattern.compile("value=['\"]([^'\"]+)['\"]");
 
+    private static final Pattern PILE_PLACEMENT_PATTERN = Pattern.compile(
+        "^(?:(?:used|lost):\\s*)?(?:put|place|return|move)\\b.*\\b"
+            + "(?:on|in|into|under|beneath|to)\\s+"
+            + "(?:(?:the\\s+)?(?:top|bottom)\\s+of\\s+)?"
+            + "(?:your\\s+)?(?:force pile|used pile|reserve (?:deck|pile))\\b",
+        Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern RESERVE_PULL_CHOICE_PATTERN = Pattern.compile(
+        "\\bfrom\\s+(?:your\\s+)?reserve deck\\b",
+        Pattern.CASE_INSENSITIVE);
+
     // V179 (2026-06): location-keyword set MIRRORS DeployEvaluator V67ai
     // (DeployEvaluator.java ~line 3275). Generic category-pull actions
     // ("Deploy a farm from Reserve Deck") name the card only by category noun —
@@ -135,6 +146,17 @@ public abstract class DeployPhaseScript {
         // 1) RESOLVE every action to the SET of steps it could satisfy.
         Map<Step, LinkedHashSet<String>> byStep = new EnumMap<>(Step.class);
         for (Step s : Step.values()) byStep.put(s, new LinkedHashSet<>());
+        Set<String> reservePullSourceIds = new HashSet<>();
+        if (cardIds != null) {
+            for (int i = 0; i < actionTexts.length && i < cardIds.length; i++) {
+                String sourceId = cardIds[i];
+                String actionText = actionTexts[i];
+                if (sourceId != null && actionText != null
+                        && RESERVE_PULL_CHOICE_PATTERN.matcher(actionText).find()) {
+                    reservePullSourceIds.add(sourceId);
+                }
+            }
+        }
 
         int classifiedCount = 0;
         for (int i = 0; i < actionIds.length; i++) {
@@ -144,7 +166,8 @@ public abstract class DeployPhaseScript {
 
             String cidStr = (cardIds != null && i < cardIds.length) ? cardIds[i] : null;
             Set<Step> steps = resolveSteps(txt, cidStr, gameState, game, playerId,
-                                            objectiveAnalyzer);
+                                            objectiveAnalyzer,
+                                            reservePullSourceIds.contains(cidStr));
             if (steps != null && !steps.isEmpty()) {
                 for (Step s : steps) byStep.get(s).add(aid);
                 classifiedCount++;
@@ -232,6 +255,14 @@ public abstract class DeployPhaseScript {
     private Set<Step> resolveSteps(String actionText, String cardIdStr,
                                     GameState gameState, SwccgGame game, String playerId,
                                     ObjectiveAnalyzer objectiveAnalyzer) {
+        return resolveSteps(actionText, cardIdStr, gameState, game, playerId,
+                objectiveAnalyzer, false);
+    }
+
+    private Set<Step> resolveSteps(String actionText, String cardIdStr,
+                                    GameState gameState, SwccgGame game, String playerId,
+                                    ObjectiveAnalyzer objectiveAnalyzer,
+                                    boolean hasSameSourceReservePullChoice) {
         EnumSet<Step> steps = EnumSet.noneOf(Step.class);
         if (actionText == null) return steps;
         String txt = actionText.toLowerCase(Locale.ROOT).trim();
@@ -381,9 +412,17 @@ public abstract class DeployPhaseScript {
         // EXCLUDE pulls that go INTO HAND / pile, not to table — these are not
         // deploy-step actions. Objective preference is scored by the normal
         // evaluator and may not promote an upload into a deploy-card bucket.
-        if (txt.contains("into hand") || txt.contains("into your hand")
-                || txt.contains("into used pile") || txt.contains("into reserve")
+        if (txt.contains("into hand") || txt.contains("into your hand")) {
+            return steps;
+        }
+        if (txt.contains("into used pile") || txt.contains("into reserve")
                 || txt.contains("into force pile")) {
+            return steps;
+        }
+        if (hasSameSourceReservePullChoice
+                && PILE_PLACEMENT_PATTERN.matcher(txt).find()) {
+            log.debug("V67bb PULL-FIRST: keeping pile-placement mode '{}' outside deploy buckets",
+                    actionText);
             return steps;
         }
 
