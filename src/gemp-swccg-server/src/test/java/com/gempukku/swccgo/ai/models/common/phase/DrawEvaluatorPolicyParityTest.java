@@ -12,6 +12,18 @@ import static org.junit.Assert.assertFalse;
 public class DrawEvaluatorPolicyParityTest {
 
     @Test
+    public void mirroredBotsShareTheV306VoluntaryDrawCeiling() {
+        assertEquals(13,
+                com.gempukku.swccgo.ai.models.rando.RandoConfig
+                        .VOLUNTARY_DRAW_HAND_CEILING);
+        assertEquals(
+                com.gempukku.swccgo.ai.models.rando.RandoConfig
+                        .VOLUNTARY_DRAW_HAND_CEILING,
+                com.gempukku.swccgo.ai.models.chosenone.RandoConfig
+                        .VOLUNTARY_DRAW_HAND_CEILING);
+    }
+
+    @Test
     public void mirroredAdaptersProduceIdenticalTypedDrawActions() {
         com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext randoContext =
                 new com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext(

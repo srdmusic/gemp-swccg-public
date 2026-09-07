@@ -35,6 +35,7 @@ public class DecisionTracker {
 
     private static final int MAX_HISTORY = 100;
     private static final int MAX_SEQUENCE = 20;
+    private static final String STABLE_CARD_ACTION_PREFIX = "V306_CARD_ACTION|";
 
     // Decision history
     private final List<DecisionEntry> history = new ArrayList<>();
@@ -104,6 +105,33 @@ public class DecisionTracker {
     }
 
     /**
+     * Resolve a positional CARD_ACTION_CHOICE response to the physical card and
+     * action it selected. The engine may reorder action slots after board state
+     * changes, while the card id and action text remain stable.
+     */
+    private String stableActionResponse(String response, String[] actionIds,
+                                        String[] cardIds, String[] actionTexts) {
+        if (response == null || response.isEmpty() || actionIds == null
+                || cardIds == null) {
+            return response;
+        }
+        for (int i = 0; i < actionIds.length; i++) {
+            if (!response.equals(actionIds[i]) || i >= cardIds.length) {
+                continue;
+            }
+            String cardId = cardIds[i] != null ? cardIds[i].trim() : "";
+            if (cardId.isEmpty()) {
+                return response;
+            }
+            String actionText = actionTexts != null && i < actionTexts.length
+                    && actionTexts[i] != null
+                        ? actionTexts[i].trim().toLowerCase(Locale.ROOT) : "";
+            return STABLE_CARD_ACTION_PREFIX + cardId + "|" + actionText;
+        }
+        return response;
+    }
+
+    /**
      * Update tracked game state. Call this before recording decisions.
      *
      * If state changes (e.g., hand size increases after drawing), the sequence
@@ -138,6 +166,19 @@ public class DecisionTracker {
      */
     public void recordDecision(String decisionType, String decisionText,
                                String decisionId, String response) {
+        recordDecision(decisionType, decisionText, decisionId, response,
+                null, null, null);
+    }
+
+    /**
+     * Record a decision with the current CARD_ACTION_CHOICE identity arrays.
+     * Other decision types and callers without those arrays retain legacy
+     * positional-response behavior.
+     */
+    public void recordDecision(String decisionType, String decisionText,
+                               String decisionId, String response,
+                               String[] actionIds, String[] cardIds,
+                               String[] actionTexts) {
         String key = decisionKey(decisionType, decisionText);
 
         DecisionEntry entry = new DecisionEntry(
@@ -158,7 +199,8 @@ public class DecisionTracker {
         // Track the last CARD_ACTION_CHOICE so we can block it if cancelled
         if ("CARD_ACTION_CHOICE".equals(decisionType) && response != null && !response.isEmpty()) {
             lastActionChoiceKey = key;
-            lastActionChoiceResponse = response;
+            lastActionChoiceResponse = stableActionResponse(
+                    response, actionIds, cardIds, actionTexts);
         }
 
         // CRITICAL: Only track NON-PASS responses for loop detection.
@@ -341,15 +383,51 @@ public class DecisionTracker {
      * Note: Empty string (pass) is never blocked since passing can't cause loops.
      */
     public Set<String> getBlockedResponses(String decisionType, String decisionText) {
+        return getBlockedResponses(decisionType, decisionText,
+                null, null, null);
+    }
+
+    /**
+     * Resolve stable card-action blocks against the current action list. A card
+     * that moves to another slot remains blocked; a different card reusing the
+     * old slot does not inherit the block.
+     */
+    public Set<String> getBlockedResponses(String decisionType,
+                                           String decisionText,
+                                           String[] actionIds,
+                                           String[] cardIds,
+                                           String[] actionTexts) {
         String key = decisionKey(decisionType, decisionText);
-        Set<String> blocked = new HashSet<>();
+        Set<String> stored = new HashSet<>();
 
         // Combine both immediate blocked_responses and turn-persistent blocks
         if (blockedResponses.containsKey(key)) {
-            blocked.addAll(blockedResponses.get(key));
+            stored.addAll(blockedResponses.get(key));
         }
         if (turnBlockedActions.containsKey(key)) {
-            blocked.addAll(turnBlockedActions.get(key));
+            stored.addAll(turnBlockedActions.get(key));
+        }
+
+        Set<String> blocked = new HashSet<>();
+        for (String storedResponse : stored) {
+            if (storedResponse == null
+                    || !storedResponse.startsWith(STABLE_CARD_ACTION_PREFIX)) {
+                blocked.add(storedResponse);
+                continue;
+            }
+            if (actionIds == null || cardIds == null) {
+                continue;
+            }
+            for (int i = 0; i < actionIds.length; i++) {
+                if (i >= cardIds.length) {
+                    continue;
+                }
+                String currentIdentity = stableActionResponse(
+                        actionIds[i], actionIds, cardIds, actionTexts);
+                if (storedResponse.equals(currentIdentity)) {
+                    blocked.add(actionIds[i]);
+                }
+            }
         }
 
         // Never block empty response (pass) - passing can't cause loops
@@ -458,6 +536,9 @@ public class DecisionTracker {
             // reads BOTH maps (within-turn loop protection preserved) and turnBlockedActions
             // clears every turn change (updateState). Verified GO by adversarial review +
             // council. Same fix applied at line ~302 + the chosenone mirror.
+            // V306: metadata-aware callers store a stable card-plus-action identity rather
+            // than the positional slot. The block follows the same card when slots move and
+            // cannot poison a different card that later inherits the old slot.
             // blockedResponses.computeIfAbsent(lastActionChoiceKey, k -> new HashSet<>())
             //     .add(lastActionChoiceResponse);
 

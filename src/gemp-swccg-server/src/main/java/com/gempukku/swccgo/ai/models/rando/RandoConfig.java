@@ -19,6 +19,9 @@ public final class RandoConfig {
     /** Hard cap - strongly avoid drawing above this */
     public static final int MAX_HAND_SIZE = 16;
 
+    /** V306: Ordinary draw-phase actions stop once hand reaches this size. */
+    public static final int VOLUNTARY_DRAW_HAND_CEILING = 13;
+
     /** Soft cap - start penalizing draws above this */
     public static final int HAND_SOFT_CAP = 12;
 

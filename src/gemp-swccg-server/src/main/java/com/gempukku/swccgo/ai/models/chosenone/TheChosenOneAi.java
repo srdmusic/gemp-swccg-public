@@ -977,7 +977,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
             DecisionTrackerSnapshot traceTrackerBefore =
                 traceOpened ? decisionTracker.traceSnapshot() : null;
             decisionTracker.recordDecision(decisionType, decisionText,
-                String.valueOf(decision.getAwaitingDecisionId()), result != null ? result : "");
+                String.valueOf(decision.getAwaitingDecisionId()), result != null ? result : "",
+                actionIds, cardIds,
+                params != null ? params.get("actionText") : null);
             if (traceOpened) {
                 TraceSession.recordTrackerRecordResponse(TrackerOwner.OUTER_CHOSENONE,
                     decisionType, String.valueOf(decision.getAwaitingDecisionId()),
@@ -1065,7 +1067,11 @@ public class TheChosenOneAi extends HeuristicAiBase {
             }
         }
         try {
-            in.blockedResponses = decisionTracker.getBlockedResponses(decisionType, decisionText);
+            in.blockedResponses = decisionTracker.getBlockedResponses(
+                    decisionType, decisionText,
+                    params != null ? params.get("actionId") : null,
+                    params != null ? params.get("cardId") : null,
+                    params != null ? params.get("actionText") : null);
         } catch (Exception ignore) {
             // leave null — facts model treats it as empty
         }
@@ -2163,7 +2169,11 @@ public class TheChosenOneAi extends HeuristicAiBase {
         // Set blocked responses for loop prevention
         // This allows evaluators to penalize previously-cancelled actions
         String decisionText = decision.getText() != null ? decision.getText() : "";
-        Set<String> blocked = decisionTracker.getBlockedResponses(decisionType.name(), decisionText);
+        Set<String> blocked = decisionTracker.getBlockedResponses(
+                decisionType.name(), decisionText,
+                params != null ? params.get("actionId") : null,
+                params != null ? params.get("cardId") : null,
+                params != null ? params.get("actionText") : null);
         if (!blocked.isEmpty()) {
             evalContext.setBlockedResponses(blocked);
             LOG.debug("🚫 {} blocked responses for this decision", blocked.size());

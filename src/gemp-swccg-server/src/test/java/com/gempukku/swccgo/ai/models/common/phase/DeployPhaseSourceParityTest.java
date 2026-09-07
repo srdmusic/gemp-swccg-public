@@ -40,6 +40,28 @@ public class DeployPhaseSourceParityTest {
     }
 
     @Test
+    public void exactFundedPairProofFeedsBothV136DeployRoutes()
+            throws IOException {
+        String parent = evaluatorSource(
+                "rando", "DeployEvaluator.java");
+        String destination = evaluatorSource(
+                "rando", "CardSelectionEvaluator.java");
+
+        assertTrue(parent.contains(
+                "DeployFormationPromisePolicy\n"
+                    + "                                        .detectFundedPair("));
+        assertTrue(parent.contains(
+                "v136ExactFundedPair,\n"
+                    + "                                    v136Hand,"));
+        assertTrue(destination.contains(
+                "DeployFormationPromisePolicy\n"
+                    + "                                                    .detectFundedPair("));
+        assertTrue(destination.contains(
+                "v306ExactFundedPair,\n"
+                    + "                                                v136Hand,"));
+    }
+
+    @Test
     public void actionTextEvaluatorsStayNormalizedMirrors() throws IOException {
         assertNormalizedMirror("ActionTextEvaluator.java");
     }

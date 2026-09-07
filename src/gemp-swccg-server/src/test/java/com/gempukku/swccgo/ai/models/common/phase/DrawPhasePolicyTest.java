@@ -156,7 +156,52 @@ public class DrawPhasePolicyTest {
                 "DRAW-critical-life");
 
         Facts handLimit = responseFacts(16, 5, 5);
+        handLimit.ordinaryStockDraw = false;
         assertIds(assess(handLimit, false).operations(),
+                "DRAW-hand-limit");
+    }
+
+    @Test
+    public void v306StopsOnlyTheFourteenthVoluntaryDraw() {
+        Facts handTwelve = new Facts();
+        handTwelve.hand = 12;
+        handTwelve.force = 8;
+        handTwelve.generalForceReserve = 1;
+
+        PolicyResult belowCeiling = assess(handTwelve, false);
+        assertFalse(hasId(belowCeiling, "V306-voluntary-hand-ceiling"));
+        assertTrue(hasId(belowCeiling, "V58-draw-down"));
+
+        Facts handThirteen = new Facts();
+        handThirteen.hand = 13;
+        handThirteen.force = 8;
+        handThirteen.generalForceReserve = 1;
+
+        List<PolicyOperation> atCeiling = assess(handThirteen, false).operations();
+        assertIds(atCeiling, "V306-voluntary-hand-ceiling");
+        assertBits(-150.0f, atCeiling.get(0).delta());
+        assertFalse(handThirteen.reserveRead);
+    }
+
+    @Test
+    public void v306LeavesCardEffectDrawsAtTheLegacySixteenCardLimit() {
+        Facts cardEffectAtThirteen = new Facts();
+        cardEffectAtThirteen.hand = 13;
+        cardEffectAtThirteen.force = 8;
+        cardEffectAtThirteen.generalForceReserve = 1;
+        cardEffectAtThirteen.ordinaryStockDraw = false;
+
+        PolicyResult belowLegacyLimit = assess(cardEffectAtThirteen, false);
+        assertFalse(hasId(belowLegacyLimit, "V306-voluntary-hand-ceiling"));
+        assertTrue(hasId(belowLegacyLimit, "DRAW-baseline"));
+        assertTrue(hasId(belowLegacyLimit, "V58-draw-down"));
+
+        Facts cardEffectAtSixteen = new Facts();
+        cardEffectAtSixteen.hand = 16;
+        cardEffectAtSixteen.force = 8;
+        cardEffectAtSixteen.ordinaryStockDraw = false;
+
+        assertIds(assess(cardEffectAtSixteen, false).operations(),
                 "DRAW-hand-limit");
     }
 
@@ -415,6 +460,7 @@ public class DrawPhasePolicyTest {
         @Override public int forcePileSize() { return force; }
         @Override public int turnNumber() { return turn; }
         @Override public int maxHandSize() { return 16; }
+        @Override public int voluntaryDrawHandCeiling() { return 13; }
         @Override public int handSoftCap() { return 12; }
         @Override public int maintenanceObligation() { return maintenance; }
         @Override public int forceGeneration() { return generation; }

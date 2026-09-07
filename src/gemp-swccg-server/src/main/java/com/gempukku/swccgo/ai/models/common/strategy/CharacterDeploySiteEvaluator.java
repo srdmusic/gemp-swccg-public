@@ -113,6 +113,31 @@ public class CharacterDeploySiteEvaluator {
             int currentTurn,
             int deckShipCount,
             boolean perSiteEffectActive) {
+        return evaluateSite(
+                game, deployingCard, candidateSite, playerId,
+                isObjectiveRelevantSite, objectiveSoloSafetyExempt,
+                false, friendlyHand, availableForceForDeploys,
+                currentTurn, deckShipCount, perSiteEffectActive);
+    }
+
+    /**
+     * Score a deploy with exact proof that a funded planned companion follows.
+     * The proof exempts only V156's unsupported-solo label. Other destination
+     * vetoes, including V64 Mapuzo, remain independent.
+     */
+    public static float evaluateSite(
+            SwccgGame game,
+            PhysicalCard deployingCard,
+            PhysicalCard candidateSite,
+            String playerId,
+            boolean isObjectiveRelevantSite,
+            boolean objectiveSoloSafetyExempt,
+            boolean exactFundedCompanion,
+            List<PhysicalCard> friendlyHand,
+            int availableForceForDeploys,
+            int currentTurn,
+            int deckShipCount,
+            boolean perSiteEffectActive) {
 
         if (game == null || deployingCard == null || candidateSite == null || playerId == null) {
             return 0f;  // fail-open
@@ -153,7 +178,8 @@ public class CharacterDeploySiteEvaluator {
         float scoreA = computeTeamViability(
             gs, mq, deployingCard, candidateSite, playerId, opponentId,
             friendlyHand, availableForceForDeploys, currentTurn,
-            isObjectiveRelevantSite, objectiveSoloSafetyExempt);
+            isObjectiveRelevantSite, objectiveSoloSafetyExempt,
+            exactFundedCompanion);
 
         // ─── §B strategic position ─────────────────────────────────────
         float scoreB = computeStrategicPosition(
@@ -235,7 +261,8 @@ public class CharacterDeploySiteEvaluator {
             String playerId, String opponentId,
             List<PhysicalCard> friendlyHand, int availableForceForDeploys,
             int currentTurn, boolean isObjectiveRelevantSite,
-            boolean objectiveSoloSafetyExempt) {
+            boolean objectiveSoloSafetyExempt,
+            boolean exactFundedCompanion) {
 
         // Existing friendlies at the site
         List<PhysicalCard> friendliesAtSite;
@@ -591,7 +618,9 @@ public class CharacterDeploySiteEvaluator {
         // by construction. Objective influence is scored separately and stays bounded.
         // The former turn-only gate remains in git history.
         boolean v156WeakBandAllTurns = v156DeployAbility < 4f && v156AnyBuddyAvailable;
-        if ((currentTurn <= 2 || v156WeakBandAllTurns) && teamBodyCount == 1 && oppPower == 0f
+        if (!exactFundedCompanion
+                && (currentTurn <= 2 || v156WeakBandAllTurns)
+                && teamBodyCount == 1 && oppPower == 0f
                 && v156IsBG && v156IsChar) {
             boolean v156Armed = false;
             if (v156DeployAbility >= 5f && friendlyHand != null) {

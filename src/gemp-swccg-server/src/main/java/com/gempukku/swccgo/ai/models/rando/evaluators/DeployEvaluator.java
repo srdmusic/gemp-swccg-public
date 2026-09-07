@@ -20,6 +20,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCandidateLookupPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployFormationSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployFormationPromisePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSequencingFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSequencingPolicy;
@@ -1466,45 +1467,31 @@ public class DeployEvaluator extends ActionEvaluator {
                             int v136ForceAvail = gameState.getForcePileSize(playerId);
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v136Obj =
                                 context.getObjectiveAnalyzer();
+                            int v136ForceReserved = plan != null
+                                ? plan.getForceReservedForBattle() : 0;
+                            DeployFormationPromisePolicy.FundedPair
+                                v136FundedPair = plan == null ? null
+                                    : DeployFormationPromisePolicy
+                                        .detectFundedPair(
+                                            game, playerId,
+                                            v136ForceAvail,
+                                            v136ForceReserved,
+                                            card.getPermanentCardId(),
+                                            card.getCardId(),
+                                            String.valueOf(
+                                                v136Candidate.getCardId()),
+                                            formationFacts(plan));
+                            boolean v136ExactFundedPair =
+                                v136FundedPair != null;
                             // step 3b (2026-07-10): filter-based relevance overload (rules) — for objectives
                             // WITHOUT rules this equals the old title/fragment check (behavior-neutral).
                             boolean v136CountedFormationExemption = true;
                             if (v136Obj != null
                                     && v136Obj.hasCountedOperativeFormationRule()) {
-                                boolean v136ExactPlannedPair = false;
-                                if (plan != null && plan.getReason() != null
-                                        && plan.getReason().startsWith(
-                                            "Objective counted-operative formations")) {
-                                    DeploymentInstruction v136Instruction =
-                                        plan.getInstructionForPhysicalCard(
-                                            card.getPermanentCardId(), card.getCardId(),
-                                            card.getBlueprintId(true));
-                                    if (v136Instruction != null) {
-                                        java.util.Set<Integer> v136CharacterIdsInHand =
-                                            new java.util.HashSet<>();
-                                        for (PhysicalCard v136HandCard : v136Hand) {
-                                            if (v136HandCard != null
-                                                    && v136HandCard.getBlueprint() != null
-                                                    && v136HandCard.getBlueprint().getCardCategory()
-                                                        == CardCategory.CHARACTER) {
-                                                v136CharacterIdsInHand.add(
-                                                    v136HandCard.getPermanentCardId());
-                                            }
-                                        }
-                                        Float v136BuddyCost =
-                                            plan.getCheapestPlannedCharacterBuddyCost(
-                                                v136Instruction,
-                                                String.valueOf(v136Candidate.getCardId()),
-                                                v136CharacterIdsInHand);
-                                        v136ExactPlannedPair = v136BuddyCost != null
-                                            && v136Instruction.getDeployCost()
-                                                + v136BuddyCost <= v136ForceAvail;
-                                    }
-                                }
                                 v136CountedFormationExemption =
                                     v136Obj.advancesPreFlipRequirementAt(
                                         game, playerId, card, v136Candidate)
-                                    || v136ExactPlannedPair;
+                                    || v136ExactFundedPair;
                             }
                             boolean v136ObjRelevant = v136Obj != null && v136Obj.isAnalyzed()
                                 && v136Candidate.getTitle() != null
@@ -1535,6 +1522,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                     game, card, v136Candidate, playerId,
                                     v136ObjRelevant,
                                     v136ObjRelevant && v136CountedFormationExemption,
+                                    v136ExactFundedPair,
                                     v136Hand,
                                     v136ForceAvail,
                                     v136Turn,
@@ -5700,6 +5688,25 @@ public class DeployEvaluator extends ActionEvaluator {
                 responseBucket.get().actionId(),
                 obligation.responseTargetLocation().title(),
                 obligation.responseTargetLocation().permanentCardId());
+    }
+
+    private static List<DeployFormationPromisePolicy.PlannedInstruction>
+    formationFacts(DeploymentPlan plan) {
+        List<DeployFormationPromisePolicy.PlannedInstruction> facts =
+            new ArrayList<>();
+        if (plan == null) return facts;
+        for (DeploymentInstruction instruction : plan.getInstructions()) {
+            if (instruction.getCardPermanentCardId() == null
+                    || instruction.getCardCurrentCardId() == null
+                    || instruction.getTargetLocationId() == null) {
+                continue;
+            }
+            facts.add(new DeployFormationPromisePolicy.PlannedInstruction(
+                instruction.getCardPermanentCardId(),
+                instruction.getCardCurrentCardId(),
+                instruction.getTargetLocationId()));
+        }
+        return facts;
     }
 
     private void applyRequiredCardInactivationPreference(

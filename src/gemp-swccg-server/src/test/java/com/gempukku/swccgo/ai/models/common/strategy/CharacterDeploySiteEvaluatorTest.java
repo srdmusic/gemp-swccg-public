@@ -150,6 +150,26 @@ public class CharacterDeploySiteEvaluatorTest {
     }
 
     @Test
+    public void v306ExactFundedPairIsNotScoredAsUnsupportedSolo() {
+        PhysicalCard site = site("Funded Pair Battleground");
+        PhysicalCard weak = character(
+                "First Planned Body", ME, 3f, 3f, 2f, 3f);
+        PhysicalCard companion = character(
+                "Exact Planned Companion", ME, 1f, 1f, 2f, 2f);
+        when(modifiers.isBattleground(gameState, site, null))
+                .thenReturn(true);
+
+        float score = CharacterDeploySiteEvaluator.evaluateSite(
+                game, weak, site, ME,
+                false, false, true,
+                Collections.singletonList(companion),
+                8, 4, 0, false);
+
+        // Section A +500 and battleground +100. V156 alone supplied the old -600.
+        assertScore(600f, score);
+    }
+
+    @Test
     public void objectiveGeographyDoesNotAutomaticallyExemptAWeakSolo() {
         PhysicalCard site = site("Objective Battleground");
         PhysicalCard weak = character(

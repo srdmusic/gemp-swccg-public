@@ -136,6 +136,10 @@ public class DrawEvaluator extends ActionEvaluator {
                 return RandoConfig.MAX_HAND_SIZE;
             }
 
+            @Override public int voluntaryDrawHandCeiling() {
+                return RandoConfig.VOLUNTARY_DRAW_HAND_CEILING;
+            }
+
             @Override public int handSoftCap() {
                 return RandoConfig.HAND_SOFT_CAP;
             }

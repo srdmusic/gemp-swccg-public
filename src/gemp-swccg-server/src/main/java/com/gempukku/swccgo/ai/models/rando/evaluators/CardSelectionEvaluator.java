@@ -14,6 +14,7 @@ import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
 import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.CaptureVirtualHutChoicePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployFormationSitingPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployFormationPromisePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValueFacts;
 import com.gempukku.swccgo.ai.models.common.phase.DeployCardValuePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
@@ -3492,8 +3493,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 && isPlannedTargetFormationHardBlocked(context,
                                     plannedTargetId, deployingBlueprintId,
                                     plannedDeployInstruction, deploymentPlanSnapshot);
+                            boolean plannedTargetMapuzoBlocked = plannedTargetOffered
+                                && isPlannedTargetEmptyMapuzoTrap(
+                                    context, plannedTargetId,
+                                    deployingBlueprintId);
                             boolean plannedTargetBlocked = plannedTargetSpyBlocked
-                                || plannedTargetFormationBlocked;
+                                || plannedTargetFormationBlocked
+                                || plannedTargetMapuzoBlocked;
                             // V201 ADJUSTED 2026-08-08 (passivity fix, m01683): dominant-
                             // alternative release. When THIS destination has live opponent
                             // presence and our power there + the deploying card's power
@@ -3565,6 +3571,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     title);
                             } else if (isPlannedTarget && plannedTargetFormationBlocked) {
                                 logger.warn("V297.1 PLAN FALLBACK: planned target {} is FormationSafety hard-blocked; release alternate destinations",
+                                    title);
+                            } else if (isPlannedTarget && plannedTargetMapuzoBlocked) {
+                                logger.warn("V306 PLAN FALLBACK: planned target {} is the live V64 empty-Mapuzo trap; release alternate destinations",
                                     title);
                             } else if (isPlannedTarget) {
                                 logger.info("✅ {} is the PLANNED target (+200)", title);
@@ -4721,6 +4730,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         boolean v212V193FormationSupported = true;
                                         float v212V193CsWeight = 300.0f;
                                         String v212V193CsGateCard = "";
+                                        int v306ForceAvailable = gameState
+                                            .getForcePileSize(context.getPlayerId());
+                                        int v306ForceReserved = deploymentPlanSnapshot != null
+                                            ? deploymentPlanSnapshot
+                                                .getForceReservedForBattle()
+                                            : 0;
+                                        DeployFormationPromisePolicy.FundedPair
+                                            v306FundedPair = deploymentPlanSnapshot == null
+                                                ? null
+                                                : DeployFormationPromisePolicy
+                                                    .detectFundedPair(
+                                                        context.getGame(),
+                                                        context.getPlayerId(),
+                                                        v306ForceAvailable,
+                                                        v306ForceReserved,
+                                                        v136DeployingCard
+                                                            .getPermanentCardId(),
+                                                        v136DeployingCard
+                                                            .getCardId(),
+                                                        String.valueOf(
+                                                            location.getCardId()),
+                                                        formationFacts(
+                                                            deploymentPlanSnapshot));
+                                        boolean v306ExactFundedPair =
+                                            v306FundedPair != null;
 
                                         // FORMATION SAFETY (2026-07-11c): L3/L4 deploy vetoes — un-outvotable.
                                         // (Codex audit incident 1: Greedo ability 1 deployed solo at 1420 while
@@ -4731,25 +4765,16 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     && context.getGame() != null) {
                                                 // V201: a companion is real only when the detached deployment
                                                 // plan names another exact physical character at this destination.
-                                                float fsForce = gameState.getForcePileSize(context.getPlayerId());
-                                                Float fsThisCost = fsDepBp.getDeployCost();
-                                                Float fsBuddyCost = null;
-                                                java.util.Set<Integer> fsCharacterIdsInHand = new java.util.HashSet<>();
-                                                for (PhysicalCard fsH : gameState.getHand(context.getPlayerId())) {
-                                                    if (fsH == null || fsH.getBlueprint() == null) continue;
-                                                    if (fsH.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                                    fsCharacterIdsInHand.add(fsH.getPermanentCardId());
-                                                }
-                                                boolean fsExactPlanCard = plannedDeployInstruction != null
-                                                    && plannedDeployInstruction.getCardPermanentCardId() != null
-                                                    && plannedDeployInstruction.getCardCurrentCardId() != null
-                                                    && v136DeployingCard.getPermanentCardId() == plannedDeployInstruction.getCardPermanentCardId()
-                                                    && v136DeployingCard.getCardId() == plannedDeployInstruction.getCardCurrentCardId();
-                                                if (fsExactPlanCard && deploymentPlanSnapshot != null) {
-                                                    fsBuddyCost = deploymentPlanSnapshot.getCheapestPlannedCharacterBuddyCost(
-                                                        plannedDeployInstruction, String.valueOf(location.getCardId()),
-                                                        fsCharacterIdsInHand);
-                                                }
+                                                float fsForce = Math.max(0,
+                                                    v306ForceAvailable
+                                                        - v306ForceReserved);
+                                                Float fsThisCost = v306FundedPair != null
+                                                    ? (float) v306FundedPair.firstCost()
+                                                    : fsDepBp.getDeployCost();
+                                                Float fsBuddyCost = v306FundedPair != null
+                                                    ? (float) v306FundedPair
+                                                        .companionCost()
+                                                    : null;
                                                 com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer fsObj =
                                                     context.getObjectiveAnalyzer();
                                                 boolean fsTerminalHardLossDefense = fsObj != null
@@ -4844,43 +4869,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         boolean v136CountedFormationExemption = true;
                                         if (v136Obj != null
                                                 && v136Obj.hasCountedOperativeFormationRule()) {
-                                            boolean v136ExactPlannedPair = false;
-                                            if (deploymentPlanSnapshot != null
-                                                    && deploymentPlanSnapshot.getReason() != null
-                                                    && deploymentPlanSnapshot.getReason().startsWith(
-                                                        "Objective counted-operative formations")
-                                                    && plannedDeployInstruction != null
-                                                    && plannedDeployInstruction.getCardPermanentCardId() != null
-                                                    && plannedDeployInstruction.getCardCurrentCardId() != null
-                                                    && v136DeployingCard.getPermanentCardId()
-                                                        == plannedDeployInstruction.getCardPermanentCardId()
-                                                    && v136DeployingCard.getCardId()
-                                                        == plannedDeployInstruction.getCardCurrentCardId()) {
-                                                java.util.Set<Integer> v136CharacterIdsInHand =
-                                                    new java.util.HashSet<>();
-                                                for (PhysicalCard v136HandCard : v136Hand) {
-                                                    if (v136HandCard != null
-                                                            && v136HandCard.getBlueprint() != null
-                                                            && v136HandCard.getBlueprint().getCardCategory()
-                                                                == CardCategory.CHARACTER) {
-                                                        v136CharacterIdsInHand.add(
-                                                            v136HandCard.getPermanentCardId());
-                                                    }
-                                                }
-                                                Float v136BuddyCost = deploymentPlanSnapshot
-                                                    .getCheapestPlannedCharacterBuddyCost(
-                                                        plannedDeployInstruction,
-                                                        String.valueOf(location.getCardId()),
-                                                        v136CharacterIdsInHand);
-                                                v136ExactPlannedPair = v136BuddyCost != null
-                                                    && plannedDeployInstruction.getDeployCost()
-                                                        + v136BuddyCost <= v136ForceAvail;
-                                            }
                                             v136CountedFormationExemption =
                                                 v136Obj.advancesPreFlipRequirementAt(
                                                     context.getGame(), context.getPlayerId(),
                                                     v136DeployingCard, location)
-                                                || v136ExactPlannedPair;
+                                                || v306ExactFundedPair;
                                         }
                                         boolean v136ObjRelevant = v136Obj != null && v136Obj.isAnalyzed()
                                             && title != null
@@ -4914,6 +4907,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 context.getPlayerId(),
                                                 v136ObjRelevant,
                                                 v136ObjRelevant && v136CountedFormationExemption,
+                                                v306ExactFundedPair,
                                                 v136Hand,
                                                 v136ForceAvail,
                                                 v136Turn,
@@ -12589,6 +12583,49 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     && context.getGame().getModifiersQuerying().getTotalPowerAtLocation(
                             context.getGameState(), target, opponentId,
                             false, false) <= 0.0f;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private static List<DeployFormationPromisePolicy.PlannedInstruction>
+    formationFacts(DeploymentPlan plan) {
+        List<DeployFormationPromisePolicy.PlannedInstruction> facts =
+            new ArrayList<>();
+        if (plan == null) return facts;
+        for (DeploymentInstruction instruction : plan.getInstructions()) {
+            if (instruction.getCardPermanentCardId() == null
+                    || instruction.getCardCurrentCardId() == null
+                    || instruction.getTargetLocationId() == null) {
+                continue;
+            }
+            facts.add(new DeployFormationPromisePolicy.PlannedInstruction(
+                instruction.getCardPermanentCardId(),
+                instruction.getCardCurrentCardId(),
+                instruction.getTargetLocationId()));
+        }
+        return facts;
+    }
+
+    private boolean isPlannedTargetEmptyMapuzoTrap(
+            DecisionContext context, String plannedTargetId,
+            String deployingBlueprintId) {
+        try {
+            if (context == null || context.getGameState() == null
+                    || context.getGame() == null
+                    || context.getPlayerId() == null
+                    || plannedTargetId == null
+                    || deployingBlueprintId == null) {
+                return false;
+            }
+            PhysicalCard target = context.getGameState().findCardById(
+                Integer.parseInt(plannedTargetId));
+            SwccgCardBlueprint deployingBlueprint =
+                getBlueprintFromId(context, deployingBlueprintId);
+            return DeployFormationPromisePolicy
+                .isEmptyMapuzoNonJediTrap(
+                    context.getGame(), context.getPlayerId(),
+                    deployingBlueprint, target);
         } catch (Exception ignored) {
             return false;
         }

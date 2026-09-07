@@ -40,6 +40,7 @@ public final class DrawPhasePolicy {
         int forcePileSize();
         int turnNumber();
         int maxHandSize();
+        int voluntaryDrawHandCeiling();
         int handSoftCap();
         int maintenanceObligation();
         int forceGeneration();
@@ -144,6 +145,20 @@ public final class DrawPhasePolicy {
             add(operations, actionId, "DRAW-hand-limit", TraceDomainId.DRAW_COUNT,
                     TraceOutputKind.BANDED, VERY_BAD_DELTA,
                     "CRITICAL: Hand " + handSize + " >= life force limit " + effectiveMaxHand);
+            return result(operations);
+        }
+
+        boolean ordinaryStockDraw = facts.ordinaryStockForcePileDraw();
+        int voluntaryDrawCeiling = facts.voluntaryDrawHandCeiling();
+        if (ordinaryStockDraw && handSize >= voluntaryDrawCeiling) {
+            add(operations, actionId, "V306-voluntary-hand-ceiling",
+                    TraceDomainId.DRAW_COUNT, TraceOutputKind.BANDED,
+                    VERY_BAD_DELTA,
+                    "V306 HAND CEILING: Hand " + handSize
+                            + " >= voluntary draw ceiling " + voluntaryDrawCeiling
+                            + "; stop drawing and preserve Force");
+            logger.warn("V306 HAND CEILING: hand={} >= ceiling={}; suppress voluntary stock draw, PASS wins",
+                    handSize, voluntaryDrawCeiling);
             return result(operations);
         }
 

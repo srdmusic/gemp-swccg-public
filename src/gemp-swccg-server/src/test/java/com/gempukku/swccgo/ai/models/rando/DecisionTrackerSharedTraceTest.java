@@ -11,6 +11,8 @@ import com.gempukku.swccgo.ai.models.common.trace.state.TrackerRecordResponseEve
 import com.gempukku.swccgo.ai.models.common.trace.state.TrackerUpdateStateEvent;
 import org.junit.Test;
 
+import java.util.Set;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -146,6 +148,36 @@ public class DecisionTrackerSharedTraceTest {
         assertEquals(1, afterBlock.turnBlockRows().size());
         assertEquals(KEY_A, afterBlock.turnBlockRows().get(0).decisionKey());
         assertEquals("5", afterBlock.turnBlockRows().get(0).sortedResponses().get(0));
+    }
+
+    @Test
+    public void cancelBlockFollowsTheSameCardActionAfterSlotsChange() {
+        DecisionTracker tracker = new DecisionTracker();
+        String prompt = "Choose Deploy action or Pass";
+        String[] beforeActionIds = {"0", "1", "2", "3", "4"};
+        String[] beforeCardIds = {"156", "202", "210", "259", "323"};
+        String[] beforeActionTexts = {
+            "Play a card", "Deploy card from Reserve Deck", "Deploy", "Deploy", "Deploy"
+        };
+
+        tracker.recordDecision("CARD_ACTION_CHOICE", prompt, "1", "3",
+            beforeActionIds, beforeCardIds, beforeActionTexts);
+        assertTrue(tracker.blockLastActionOnCancel(
+            "CARD_SELECTION", "Choose where to deploy, or click Done to cancel"));
+        assertEquals(Set.of("3"), tracker.getBlockedResponses(
+            "CARD_ACTION_CHOICE", prompt,
+            beforeActionIds, beforeCardIds, beforeActionTexts));
+
+        String[] afterActionIds = {"0", "1", "2", "3", "4"};
+        String[] afterCardIds = {"156", "202", "249", "210", "259"};
+        String[] afterActionTexts = {
+            "Play a card", "Deploy card from Reserve Deck", "Transfer", "Deploy", "Deploy"
+        };
+        Set<String> afterBlocked = tracker.getBlockedResponses(
+            "CARD_ACTION_CHOICE", prompt,
+            afterActionIds, afterCardIds, afterActionTexts);
+        assertEquals(Set.of("4"), afterBlocked);
+        assertFalse(afterBlocked.contains("3"));
     }
 
     // =========================================================================

@@ -32,6 +32,10 @@ public class DeployMapuzoPlanDestinationSourceParityTest {
         assertTrue(source.contains(
                 "isPlannedTargetFormationHardBlocked(context,"));
         assertTrue(source.contains(
+                "isPlannedTargetEmptyMapuzoTrap("));
+        assertTrue(source.contains(
+                "|| plannedTargetMapuzoBlocked"));
+        assertTrue(source.contains(
                 "if ((!isPlannedTarget || !plannedTargetBlocked)"));
         assertTrue(source.contains(
                 "plannedTargetOffered && !plannedTargetBlocked"));

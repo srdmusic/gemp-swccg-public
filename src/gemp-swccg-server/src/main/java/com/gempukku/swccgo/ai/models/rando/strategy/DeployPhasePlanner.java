@@ -79,6 +79,8 @@ public class DeployPhasePlanner {
     private long lastPlanPersistentResponseRevision = -1;
     private DeployFormationPromisePolicy.Promise activeFormationPromise;
     private int activeFormationPromiseTurn = -1;
+    private Set<Integer> contestedAnchorsAtPlanCreation =
+            Collections.emptySet();
 
     // Board state reference for scoring
     private SwccgGame currentGame;
@@ -110,6 +112,7 @@ public class DeployPhasePlanner {
         lastPlanPersistentResponseRevision = -1;
         activeFormationPromise = null;
         activeFormationPromiseTurn = -1;
+        contestedAnchorsAtPlanCreation = Collections.emptySet();
         currentGame = null;
         currentPlayerId = null;
     }
@@ -136,23 +139,12 @@ public class DeployPhasePlanner {
             SwccgGame game, String playerId, int currentTurn) {
         if (currentPlan == null) return null;
         List<DeployFormationPromisePolicy.PlannedInstruction> facts =
-                new ArrayList<>();
-        for (DeploymentInstruction instruction
-                : currentPlan.getInstructions()) {
-            if (instruction.getCardPermanentCardId() == null
-                    || instruction.getCardCurrentCardId() == null
-                    || instruction.getTargetLocationId() == null) {
-                continue;
-            }
-            facts.add(new DeployFormationPromisePolicy.PlannedInstruction(
-                    instruction.getCardPermanentCardId(),
-                    instruction.getCardCurrentCardId(),
-                    instruction.getTargetLocationId()));
-        }
+                formationFacts(currentPlan);
         DeployFormationPromisePolicy.Promise promise =
                 DeployFormationPromisePolicy.detect(
                         game, playerId,
                         game.getGameState().getForcePileSize(playerId),
+                        battleForceReserve,
                         facts);
         if (promise == null) return null;
 
@@ -175,6 +167,70 @@ public class DeployPhasePlanner {
         LOG.warn("DEPLOY.FORMATION.PROMISE: preserving exact companion {} at {} before replanning",
                 promise.companionName(), companion.getTargetLocationName());
         return currentPlan;
+    }
+
+    private DeploymentPlan replanToLiveContestedAnchor(
+            SwccgGame game, String playerId, int currentTurn) {
+        if (currentPlan == null) return null;
+        DeployFormationPromisePolicy.Promise promise =
+                DeployFormationPromisePolicy.detectLiveContestedAnchor(
+                        game, playerId,
+                        game.getGameState().getForcePileSize(playerId),
+                        battleForceReserve, formationFacts(currentPlan),
+                        contestedAnchorsAtPlanCreation);
+        if (promise == null) return null;
+
+        DeploymentInstruction companion =
+                currentPlan.getInstructionForPhysicalCard(
+                        promise.companionPermanentCardId(),
+                        promise.companionCurrentCardId(), null);
+        PhysicalCard target;
+        try {
+            target = game.getGameState().findCardById(
+                    Integer.parseInt(promise.targetLocationId()));
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+        if (companion == null || target == null) return null;
+
+        currentPlan.recordDeployment(
+                promise.anchorPermanentCardId(),
+                promise.anchorCurrentCardId(), null);
+        companion.setTargetLocationId(promise.targetLocationId());
+        companion.setTargetLocationName(target.getTitle());
+        companion.setPriority(0);
+        companion.setReason("Join new contested anchor before it fights alone");
+        companion.setDeployCost(promise.companionCost());
+        currentPlan.setInstructions(new ArrayList<>(List.of(companion)));
+        currentPlan.setWaitingForPlannedCards(false);
+        currentPlan.setForceAllowExtras(false);
+        currentPlan.setForceToSpend(promise.companionCost());
+        currentPlan.setForceReservedForBattle(battleForceReserve);
+        activeFormationPromise = promise;
+        activeFormationPromiseTurn = currentTurn;
+        LOG.warn("DEPLOY.FORMATION.LIVE_ANCHOR: retargeting exact companion {} to {} and preserving {} Force for battle",
+                promise.companionName(), target.getTitle(),
+                battleForceReserve);
+        return currentPlan;
+    }
+
+    private static List<DeployFormationPromisePolicy.PlannedInstruction>
+    formationFacts(DeploymentPlan plan) {
+        List<DeployFormationPromisePolicy.PlannedInstruction> facts =
+                new ArrayList<>();
+        if (plan == null) return facts;
+        for (DeploymentInstruction instruction : plan.getInstructions()) {
+            if (instruction.getCardPermanentCardId() == null
+                    || instruction.getCardCurrentCardId() == null
+                    || instruction.getTargetLocationId() == null) {
+                continue;
+            }
+            facts.add(new DeployFormationPromisePolicy.PlannedInstruction(
+                    instruction.getCardPermanentCardId(),
+                    instruction.getCardCurrentCardId(),
+                    instruction.getTargetLocationId()));
+        }
+        return facts;
     }
 
     // =========================================================================
@@ -230,6 +286,7 @@ public class DeployPhasePlanner {
                 if (DeployFormationPromisePolicy.shouldContinue(
                         game, playerId,
                         gameState.getForcePileSize(playerId),
+                        battleForceReserve,
                         activeFormationPromise)) {
                     LOG.debug("DEPLOY.FORMATION.PROMISE: returning exact companion plan for turn {}",
                             currentTurn);
@@ -244,6 +301,9 @@ public class DeployPhasePlanner {
                         game, playerId, currentTurn);
                 if (promised != null) return promised;
             }
+            DeploymentPlan liveAnchorPlan = replanToLiveContestedAnchor(
+                    game, playerId, currentTurn);
+            if (liveAnchorPlan != null) return liveAnchorPlan;
 
             if (formationPromiseReleased) {
                 LOG.info("DEPLOY.FORMATION.PROMISE.REPLAN: refreshing after promise release");
@@ -444,12 +504,17 @@ public class DeployPhasePlanner {
             bestPlan = createHoldBackPlan("No strategic deployment targets");
         }
 
+        bestPlan.setTotalForceAvailable(forceAvailable);
+        bestPlan.setForceReservedForBattle(battleForceReserve);
         currentPlan = bestPlan;
         lastPlanTurn = currentTurn;
         lastPlanHadActiveFlipGate = hasActiveFlipGate;
         lastPlanHadFlipGateActorInHand = hasFlipGateActorInHand;
         lastPlanPreFlipProgressFingerprint = preFlipProgressFingerprint;
         lastPlanPersistentResponseRevision = persistentRevision;
+        contestedAnchorsAtPlanCreation =
+                DeployFormationPromisePolicy.snapshotLiveContestedAnchors(
+                        game, playerId);
         logFinalPlan(bestPlan);
 
         return currentPlan;
