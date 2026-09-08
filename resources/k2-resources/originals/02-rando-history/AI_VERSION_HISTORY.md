@@ -1,3 +1,64 @@
+  ==== V310 HUNT DOWN LIVE CONTINUATION + WEAPON REPAIR (2026-09-08, both bots) ====
+Completed game 72356, Rando recording grguzhrwannvjo42 and asdf recording a2ketg9gwtich91l,
+proved V309 did not fire. Rando selected the exact outbound Vader's Castle action at +390, then the
+engine exposed only the abortable origin prompt. Castle card 215 was its sole candidate. Generic
+destination rules scored that origin -10174 once and -20173 thereafter. Seven parent cycles made 21
+child cancellations, no V309 marker fired, and Vader never moved before Rando lost by Life Force
+depletion. The engine's MoveUsingLocationTextAction owns its own nextEffect path and never registers
+the top game-text action state V309 required.
+
+V310 captures exact provenance at the final validated parent response. It arms only for Rando's
+owned, in-play 209_50, exact Castle inbound or outbound action text, Hunt Down V preflip, MOVE phase,
+and the same turn. A shared continuation carries physical source, selected origin, selected
+destination, and direction through the three exact child prompts, including the live optional-cancel
+suffix. Prompt text alone cannot authenticate it. Cancel, malformed or unoffered response, unrelated
+prompt, phase or turn change, flip, stale Castle, final mover, or game change clears it. Existing
+typed route assessment still owns legality, safety, and the requirement that the destination differ
+from Castle.
+
+The same replay proved two saber failures. Direct Dark Jedi Lightsaber V 211_25 was engine-offered
+with 13 Force and an unarmed ability-6 Vader, but V158 parsed its alternate host text as only `urra
+sing` and applied -9999. V158 now hard-vetoes only when a real parsed matching wielder exists and all
+matching wielders are armed; otherwise the existing generic legal high-ability-warrior fallback may
+score the offered saber +300. The named Vader's Lightsaber Reserve action separately received two
+false -800 V66 duplicate penalties because the OR matcher let Vader's Castle satisfy the lone token
+`Vader's`. Named duplicate checks now require every parsed name token on one in-play or hand card;
+broad source-zone matching is unchanged. Darth Vader's Lightsaber V eventually deployed on Vader on
+turn 4, so the observed defect was its avoidable delay. On turn 2 only 1 Force remained, enough for
+the cost-1 named saber or cost-1 Castle move but not both.
+
+USED and LOST Force Lightning 9_136 both scored 0 against Undercover Jyn while Pass scored -8.
+First-offered USED won, and V51 then mislabeled Jyn as a +500 elimination target. USED merely reduced
+her defense until end of turn; ComScan Detection caused her later loss. Exact USED Force Lightning
+against an opponent Undercover character is now hard-vetoed. LOST mode, ordinary opponent targets,
+own-card handling, and ComScan Detection are unchanged.
+
+All production edits are AI-only and mirrored. Card, engine, deck, client, database, objective flip,
+Formation Safety, V307 buddies, and V308 battle concentration are unchanged. Source commit
+54c3b4a92b passed 78 focused tests with no failures, errors, or skips, plus diff checks. The ring
+covers no-top-action Castle routing, exact live prompts, provenance lifecycle and negative controls,
+Hunt Down combined selection, V158, real I Am Your Father V and saber source, Force Lightning modes,
+ComScan preservation, and both-bot parity. Broad reactor testing was omitted at Steve's request.
+
+Pinned offline Corretto Java 21 packaging produced a ZIP-valid 46,315,070-byte, 27,086-entry jar with
+SHA-256 2cecaa451b129e09ace6e9d5e82c8c9779ad38b2d78f42170a6acc8abc3d8214. Relative to V309 it
+added nine expected AI entries, removed zero, and changed only AI entries. V301, V302, Set 27, V307,
+V308, and the offline-image handler remain packaged. Authenticated Hall gates before freeze, after
+freeze, and after restart were 0/0/0. Only gemp_swccg_app_1 was recreated. Fresh app d2c9465d7853
+started 2026-09-08T16:12:31.028246791Z with direct Java PID 1, restart zero, and no OOM. MariaDB
+46a8397072d3 retained its identity and 2026-09-04T13:43:54.597649711Z start time. Candidate, host,
+and container hashes match; V310, Force Lightning, continuation, named-matcher, V301, V302, and
+offline markers are loaded; startup completed; three HTTP probes returned 200; gameplay switches
+were restored; and refined material post-start findings were zero.
+
+Candidate:
+/Users/steve/gemp-deploy-artifacts/rando-hunt-down-live-v310-2026-09-08/54c3b4a92b-2cecaa45/web.jar
+Rollback:
+/Users/steve/gemp-deploy-backups/rando-hunt-down-live-v310-2026-09-08/predeploy-54c3b4a92b-5bf380df/web.jar
+with SHA-256 5bf380df5747734a542bf5ab8b68ce50d410dc3ad6b0ec5c140b3fa90bf1c4a0 and the pinned direct-Java
+override. V309 is REPLAY_FAILED by game 72356. V310 is RUNTIME_LOADED and awaits gameplay proof.
+Nothing was pushed.
+
   ==== V309 HUNT DOWN CASTLE CHILD ROUTING (2026-09-08, both bots) ====
 Game 72355 proved that the exact Vader's Castle parent action was already selected at +390, but the
 first child selection failed. The engine's abortable prompt was `Choose card to move from, or click
