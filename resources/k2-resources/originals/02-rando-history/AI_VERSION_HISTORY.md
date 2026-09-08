@@ -1,3 +1,42 @@
+  ==== V311 PROSPECTIVE BATTLE DESTINY PAIRS (2026-09-08, both bots) ====
+Steve asked Rando to recognize character pairings such as Grand Moff Tarkin (V) with Vader while
+choosing deployments and movement, before the cards are already together. The engine's live
+WithCondition and battle-destiny query cannot answer that hypothetical without an active battle.
+V311 adds a typed, fail-open prospective reader keyed to exact blueprint ids and engine Filters. It
+does not parse English game text.
+
+The first registry covers thirteen fixed direct pair rules. It includes both Tarkin (V) printings
+with Vader or an Imperial leader, Boba Fett (V) with Vader, Solo (V) with Chewie or Rey, Han Solo
+(V) with Chewie, Princess Leia (V) with Han or Vader, Leia With Blaster Rifle with Han, Sim Aloo
+with the Emperor, and source-verified Enhanced Premiere, Enhanced Cloud City, Qui-Gon, and Nien
+Nunb pairings. Tarkin's optional add action is kept separate from his if-unable floor. Every passive
+entry must still expose the matching engine NUM_BATTLE_DESTINY_DRAWS modifier and exact value at
+runtime. A stale or unsupported entry therefore contributes zero.
+
+For deployment, an otherwise admissible plan gets one bounded +100 ordering preference when its
+exact physical cards newly complete a recognized pair at an opponent-contested site or the retained
+V308 own-turn battle target. A pair already on table does not make an unrelated deployment score
+again, and an empty-site pair gets no V311 bonus. Existing affordability, objective-package,
+formation, Undercover, battle-reserve, and danger checks remain authoritative.
+
+For movement, an otherwise admissible move gets the same +100 ordinary ordering preference when the
+exact mover newly completes a recognized pair at an opponent-contested destination. The parent move
+and destination child use the same marginal fact, but their scores occur on separate decision
+surfaces. V311 does not claim the movement ladder, waive V137, add a separation penalty, or keep a
+pair glued together after the battle.
+
+K2 reviews m01817, m01819, and m01820 confirmed the registry architecture and exact Tarkin behavior.
+They also identified the larger future predictor model: minimum draws, opponent-triggered draws,
+resets, subtractions, ability requirements, caps, and Reserve Deck bounds. V311 deliberately leaves
+the existing 0/1 battle predictor unchanged and never uses a hypothetical extra draw to authorize a
+battle that current safety rejects.
+
+Source commit 8e9b43571 passed compile, 60 focused fact and policy checks, 71 adapter and source-
+parity checks, and git diff --check, all with zero failures. Production changes are AI-only and
+mirrored. No card, engine, deck, client, database, objective, V307 package, V308 concentration, or
+V310 Hunt Down behavior changed. V311 is SOURCE_TESTED only. It has not been packaged, loaded, or
+replay-fired, and nothing was pushed. Revert 8e9b43571 to remove it.
+
   ==== V310 HUNT DOWN LIVE CONTINUATION + WEAPON REPAIR (2026-09-08, both bots) ====
 Completed game 72356, Rando recording grguzhrwannvjo42 and asdf recording a2ketg9gwtich91l,
 proved V309 did not fire. Rando selected the exact outbound Vader's Castle action at +390, then the
