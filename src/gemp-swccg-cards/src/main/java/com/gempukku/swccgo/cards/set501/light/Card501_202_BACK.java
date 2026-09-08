@@ -41,6 +41,7 @@ public class Card501_202_BACK extends AbstractNormalEffect {
         addIcons(Icon.VIRTUAL_SET_27);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Sacrifice For Something Bigger");
+        setMayNotBePlacedInReserveDeck(true);
     }
 
     @Override
