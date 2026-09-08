@@ -78,6 +78,22 @@ public final class BattleWeaponsFacts {
         }
     }
 
+    public enum ForceLightningTargetMode {
+        OTHER_SOURCE,
+        USED,
+        LOST
+    }
+
+    public record ForceLightningTargetFacts(String actionId,
+                                            ForceLightningTargetMode mode,
+                                            boolean opponentTarget,
+                                            boolean undercover) {
+        public ForceLightningTargetFacts {
+            Objects.requireNonNull(actionId, "actionId");
+            Objects.requireNonNull(mode, "mode");
+        }
+    }
+
     public record BlasterRackFacts(String actionId,
                                    boolean duringBattleDamage,
                                    boolean weaponCharacterAtBattle) {

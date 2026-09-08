@@ -27,6 +27,7 @@ import com.gempukku.swccgo.ai.models.common.phase.CoordinatorPosturePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DrawPhaseFactsReader;
+import com.gempukku.swccgo.ai.models.common.phase.HuntDownCastleMoveContinuation;
 import com.gempukku.swccgo.ai.models.common.phase.MovePhysicalCardResolver;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetupPolicy;
@@ -154,6 +155,9 @@ public class TheChosenOneAi extends HeuristicAiBase {
     private Integer pendingObjectiveDeployingCardId;
     private Integer pendingDeployActionSourcePermanentCardId;
     private Integer pendingOnTheVergeVaderActionSourcePermanentCardId;
+    private final HuntDownCastleMoveContinuation
+            huntDownCastleMoveContinuation =
+                new HuntDownCastleMoveContinuation();
 
     // Bot stats DAO for record lookups (optional - set via setter)
     private com.gempukku.swccgo.db.BotStatsDAO botStatsDAO;
@@ -940,6 +944,15 @@ public class TheChosenOneAi extends HeuristicAiBase {
                 LOG.warn("🚨 Response corrected: {}", validated[1]);
             }
             result = validated[0];
+
+            HuntDownCastleMoveContinuation.Update castleMoveUpdate =
+                    huntDownCastleMoveContinuation.recordFinalResponse(
+                        decision, result, gameState, playerId,
+                        objectiveAnalyzer);
+            if (castleMoveUpdate
+                    == HuntDownCastleMoveContinuation.Update.ARMED) {
+                LOG.warn("V310 HUNT DOWN CASTLE PARENT: exact selected action armed child continuation");
+            }
 
             String stackedPileSourceCardId = ShieldPolicy.selectedTopLevelPlayCardSourceId(
                     decisionType, actionIds,
@@ -2194,6 +2207,33 @@ public class TheChosenOneAi extends HeuristicAiBase {
             // V29.7: Refresh flip status each evaluation so we detect when objective actually flips
             objectiveAnalyzer.refreshFlipStatus(currentGame.getGameState(), playerId);
         }
+        HuntDownCastleMoveContinuation.RouteFacts castleMoveFacts =
+                huntDownCastleMoveContinuation.factsForDecision(
+                    decision, gameState, playerId,
+                    objectiveAnalyzer);
+        if (castleMoveFacts != null) {
+            evalContext.setExtra(
+                HuntDownCastleMoveContinuation
+                    .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA,
+                castleMoveFacts.actionSourcePermanentCardId());
+            evalContext.setExtra(
+                HuntDownCastleMoveContinuation.OUTBOUND_EXTRA,
+                castleMoveFacts.outbound());
+            if (castleMoveFacts.originPermanentCardId()
+                    != null) {
+                evalContext.setExtra(
+                    HuntDownCastleMoveContinuation
+                        .ORIGIN_PERMANENT_CARD_ID_EXTRA,
+                    castleMoveFacts.originPermanentCardId());
+            }
+            if (castleMoveFacts.destinationPermanentCardId()
+                    != null) {
+                evalContext.setExtra(
+                    HuntDownCastleMoveContinuation
+                        .DESTINATION_PERMANENT_CARD_ID_EXTRA,
+                    castleMoveFacts.destinationPermanentCardId());
+            }
+        }
         if (decisionType
                 == AwaitingDecisionType.CARD_ACTION_CHOICE
                 && phase == Phase.DEPLOY
@@ -2286,6 +2326,7 @@ public class TheChosenOneAi extends HeuristicAiBase {
         // V194: game-scoped planning facts must not survive a rematch.
         if (this.currentGame != game) {
             activationAmountLatch.reset();
+            huntDownCastleMoveContinuation.reset();
             strategyController.resetPersistentResponse();
             // V295 RETIRED: objectiveHandler.reset();
             objectiveAnalyzer.reset();

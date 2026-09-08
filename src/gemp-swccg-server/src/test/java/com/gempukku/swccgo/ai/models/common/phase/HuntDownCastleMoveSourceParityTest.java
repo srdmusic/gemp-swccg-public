@@ -158,7 +158,7 @@ public class HuntDownCastleMoveSourceParityTest {
     }
 
     @Test
-    public void destinationReadsTheLiveCastleActionBeforeScoring()
+    public void destinationRequiresLiveActionOrSelectedParentContinuationBeforeScoring()
             throws IOException {
         String destination = methodSlice(
                 evaluatorSource("rando", "CardSelectionEvaluator.java"),
@@ -174,15 +174,18 @@ public class HuntDownCastleMoveSourceParityTest {
         int sourceBlueprint = destination.indexOf(
                 "\"209_50\"", actionSource);
         int exactAction = destination.indexOf(
-                "\"" + OUTBOUND_ACTION + "\"", actionSource);
-        if (exactAction < 0) {
-            exactAction = destination.indexOf(
-                    "\"" + OUTBOUND_ACTION.toLowerCase() + "\"",
-                    actionSource);
-        }
+                ".OUTBOUND_ACTION", actionSource);
+        int continuationSource = destination.indexOf(
+                ".ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA",
+                exactAction);
+        int continuationDirection = destination.indexOf(
+                ".OUTBOUND_EXTRA", continuationSource);
+        int continuedPhysicalSource = destination.indexOf(
+                "findCardByPermanentId(",
+                continuationDirection);
         int routeAssessment = destination.indexOf(
                 "assessVaderCastleRoutes(",
-                exactAction);
+                continuedPhysicalSource);
         int destinationSafety = destination.indexOf(
                 "route.admissible()", routeAssessment);
         int objectiveAdvance = destination.indexOf(
@@ -199,6 +202,12 @@ public class HuntDownCastleMoveSourceParityTest {
                 sourceBlueprint > actionSource);
         assertTrue("Require the outbound Castle action, not the retreat",
                 exactAction > actionSource);
+        assertTrue("Fallback requires the selected parent source token",
+                continuationSource > exactAction);
+        assertTrue("Fallback requires the selected parent direction",
+                continuationDirection > continuationSource);
+        assertTrue("Fallback resolves the same physical Castle",
+                continuedPhysicalSource > continuationDirection);
         assertTrue("Assess every exact physical Castle route",
                 routeAssessment > exactAction);
         assertTrue("Reject an inadmissible selected route",

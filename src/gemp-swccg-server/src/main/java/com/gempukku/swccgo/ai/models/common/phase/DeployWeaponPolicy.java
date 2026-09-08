@@ -30,12 +30,11 @@ public final class DeployWeaponPolicy {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
 
-        if (!facts.criteria().isBlank() && facts.matchingUnarmed() == 0) {
-            String why = facts.matchingArmed() > 0
-                    ? String.format("every '%s' wielder (%d) already armed",
-                            facts.criteria(), facts.matchingArmed())
-                    : String.format("no '%s' friendly on table at all - deploy has no legal target",
-                            facts.criteria());
+        if (!facts.criteria().isBlank()
+                && facts.matchingArmed() > 0
+                && facts.matchingUnarmed() == 0) {
+            String why = String.format("every '%s' wielder (%d) already armed",
+                    facts.criteria(), facts.matchingArmed());
             add(operations, facts.actionId(), "V158", TraceOutputKind.VETO,
                     -9999.0f, "V158 WEAPON BLOCK: " + why + " - hold it");
         } else if (facts.lightsaber() && facts.unarmedWarriorAbilityFour() == 0) {

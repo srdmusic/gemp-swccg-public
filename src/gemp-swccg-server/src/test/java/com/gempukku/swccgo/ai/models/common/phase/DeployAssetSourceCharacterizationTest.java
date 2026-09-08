@@ -99,6 +99,23 @@ public class DeployAssetSourceCharacterizationTest {
         }
     }
 
+    @Test
+    public void bothDeployMirrorsPreserveCriteriaSafeVaderFallback()
+            throws IOException {
+        for (String bot : new String[]{"rando", "chosenone"}) {
+            String source = evaluatorSource(bot, "DeployEvaluator.java");
+            assertTrue(bot + " must prove an armed criteria match before vetoing",
+                    source.contains("if (v158Criteria != null && matchArmed > 0\n"
+                            + "                                    && matchUnarmed == 0)"));
+            assertTrue(bot + " must retain the generic legal lightsaber-host count",
+                    source.contains("if (v158IsLightsaber && !armed\n"
+                            + "                                        && tc.getBlueprint().hasIcon"));
+            assertTrue(bot + " must pass the ability-4 warrior fallback to shared policy",
+                    source.contains("totalArmed, totalUnarmed, matchArmed, matchUnarmed,\n"
+                            + "                                    unarmedWarrior4"));
+        }
+    }
+
     private static void assertNormalizedMirror(String fileName) throws IOException {
         assertEquals(normalize(evaluatorSource("rando", fileName)),
                 normalize(evaluatorSource("chosenone", fileName)));

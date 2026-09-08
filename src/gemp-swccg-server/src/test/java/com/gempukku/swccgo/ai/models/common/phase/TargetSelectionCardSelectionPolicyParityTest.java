@@ -1,11 +1,14 @@
 package com.gempukku.swccgo.ai.models.common.phase;
 
+import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.game.state.actions.PlayCardState;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import org.junit.Test;
 
@@ -15,6 +18,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -146,6 +150,62 @@ public class TargetSelectionCardSelectionPolicyParityTest {
     }
 
     @Test
+    public void forceLightningUsedUndercoverVetoUsesExactParentStateForBothBots() {
+        Map<Integer, PhysicalCard> cards = new LinkedHashMap<>();
+        cards.put(40, card("Opponent Spy", "opponent", 4.0f,
+                false, false, true));
+        cards.put(41, card("Opponent Character", "opponent", 4.0f,
+                false, false, false));
+        cards.put(42, card("Own Spy", "tester", 4.0f,
+                false, false, true));
+
+        GameState usedState = gameState(cards);
+        setTopInterrupt(usedState, "9_136", CardSubtype.USED);
+        var usedRando = evaluateRando(usedState, null,
+                "Choose character, or click 'Done' to cancel",
+                List.of("40", "41", "42"), Phase.BATTLE);
+        var usedChosen = evaluateChosen(usedState, null,
+                "Choose character, or click 'Done' to cancel",
+                List.of("40", "41", "42"), Phase.BATTLE);
+
+        assertActionParity(usedRando, usedChosen);
+        assertTrue(action(usedRando, "40").isHardVetoed());
+        assertBits(600.0f, action(usedRando, "40").getScore());
+        assertReasons(action(usedRando, "40").getReasoning(),
+                "Target opponent's card (+50.0)",
+                "HARD VETO: V51 FORCE LIGHTNING USED BLOCK: Defense reduction alone cannot remove an Undercover spy",
+                "V51 KILL SPY: Target is an undercover spy — eliminate it! (+500.0)");
+        assertFalse(action(usedRando, "41").isHardVetoed());
+        assertBits(100.0f, action(usedRando, "41").getScore());
+        assertFalse(action(usedRando, "42").isHardVetoed());
+        assertBits(-9949.0f, action(usedRando, "42").getScore());
+
+        GameState lostState = gameState(cards);
+        setTopInterrupt(lostState, "9_136", CardSubtype.LOST);
+        var lostRando = evaluateRando(lostState, null,
+                "Choose character, or click 'Done' to cancel",
+                List.of("40"), Phase.BATTLE);
+        var lostChosen = evaluateChosen(lostState, null,
+                "Choose character, or click 'Done' to cancel",
+                List.of("40"), Phase.BATTLE);
+        assertActionParity(lostRando, lostChosen);
+        assertFalse(lostRando.get(0).isHardVetoed());
+        assertBits(600.0f, lostRando.get(0).getScore());
+
+        GameState comScanState = gameState(cards);
+        setTopInterrupt(comScanState, "221_13", CardSubtype.USED);
+        var comScanRando = evaluateRando(comScanState, null,
+                "Target spy to be lost, or click 'Done' to cancel",
+                List.of("40"), Phase.BATTLE);
+        var comScanChosen = evaluateChosen(comScanState, null,
+                "Target spy to be lost, or click 'Done' to cancel",
+                List.of("40"), Phase.BATTLE);
+        assertActionParity(comScanRando, comScanChosen);
+        assertFalse(comScanRando.get(0).isHardVetoed());
+        assertBits(600.0f, comScanRando.get(0).getScore());
+    }
+
+    @Test
     public void shieldGeneratorPromptTreatsOwnCannonAsBeneficialForBothBots() {
         PhysicalCard ownCannon = card("AT-AT Cannon", "tester",
                 0.0f, false, false, false);
@@ -216,6 +276,19 @@ public class TargetSelectionCardSelectionPolicyParityTest {
         return card;
     }
 
+    private static void setTopInterrupt(GameState gameState,
+                                        String blueprintId,
+                                        CardSubtype subtype) {
+        PhysicalCard source = mock(PhysicalCard.class);
+        when(source.getBlueprintId(true)).thenReturn(blueprintId);
+        PlayInterruptAction action = mock(PlayInterruptAction.class);
+        when(action.getPlayedCard()).thenReturn(source);
+        when(action.getPlayedAsSubtype()).thenReturn(subtype);
+        PlayCardState state = mock(PlayCardState.class);
+        when(state.getPlayCardAction()).thenReturn(action);
+        when(gameState.getTopPlayCardState(null)).thenReturn(state);
+    }
+
     private static List<com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction>
     evaluateRando(GameState gameState, SwccgGame game, String prompt,
                   List<String> cardIds, Phase phase) {
@@ -259,6 +332,8 @@ public class TargetSelectionCardSelectionPolicyParityTest {
             assertEquals(rando.get(i).getActionId(), chosen.get(i).getActionId());
             assertBits(rando.get(i).getScore(), chosen.get(i).getScore());
             assertEquals(rando.get(i).getReasoning(), chosen.get(i).getReasoning());
+            assertEquals(rando.get(i).isHardVetoed(), chosen.get(i).isHardVetoed());
+            assertEquals(rando.get(i).getVetoReason(), chosen.get(i).getVetoReason());
         }
     }
 

@@ -23,6 +23,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployUndercoverModePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.HuntDownCastleMoveContinuation;
 import com.gempukku.swccgo.ai.models.common.phase.KyloBattleKitFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveAbilityPolicy;
@@ -69,6 +70,7 @@ import com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan;
 import com.gempukku.swccgo.ai.models.chosenone.RandoConfig;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
@@ -79,8 +81,11 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.game.state.actions.PlayCardState;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.PlayCardAction;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8600,12 +8605,23 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
     private boolean isHuntDownCastleMoveDecision(
             DecisionContext context) {
+        return huntDownCastleMoveProvenance(context) != null;
+    }
+
+    private record HuntDownCastleMoveProvenance(
+            PhysicalCard castle, boolean outbound) {
+    }
+
+    private HuntDownCastleMoveProvenance
+            huntDownCastleMoveProvenance(
+                DecisionContext context) {
         if (context == null || context.getDecisionText() == null
                 || context.getGameState() == null
                 || context.getObjectiveAnalyzer() == null
+                || context.getPhase() != Phase.MOVE
                 || !context.getObjectiveAnalyzer().isHuntDownV()
                 || context.getObjectiveAnalyzer().isFlipped()) {
-            return false;
+            return null;
         }
         String decision = context.getDecisionText().trim()
                 .toLowerCase(Locale.ROOT);
@@ -8614,7 +8630,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 && !"choose card to move to".equals(decision)
                 && !decision.startsWith("choose card to move to,")
                 && !decision.startsWith("choose card to move to ")) {
-            return false;
+            return null;
         }
         try {
             var actionState =
@@ -8625,34 +8641,60 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     ? liveAction.getActionSource() : null;
             String liveText = liveAction != null
                     ? liveAction.getText() : null;
-            return source != null
+            if (source != null
+                    && context.getPlayerId().equals(
+                        source.getOwner())
                     && "209_50".equals(
                         source.getBlueprintId(true))
-                    && ("move from here to other battleground site"
-                            .equalsIgnoreCase(
-                                liveText != null
-                                    ? liveText.trim() : "")
-                        || "move from other battleground site to here"
-                            .equalsIgnoreCase(
-                                liveText != null
-                                    ? liveText.trim() : ""));
-        } catch (Exception e) {
-            return false;
+                    && (HuntDownCastleMoveContinuation
+                            .OUTBOUND_ACTION.equals(liveText)
+                        || HuntDownCastleMoveContinuation
+                            .INBOUND_ACTION.equals(liveText))) {
+                return new HuntDownCastleMoveProvenance(
+                        source,
+                        HuntDownCastleMoveContinuation
+                            .OUTBOUND_ACTION.equals(liveText));
+            }
+        } catch (Exception ignored) {
         }
+
+        Object sourceId = context.getExtra(
+                HuntDownCastleMoveContinuation
+                    .ACTION_SOURCE_PERMANENT_CARD_ID_EXTRA);
+        Object outbound = context.getExtra(
+                HuntDownCastleMoveContinuation.OUTBOUND_EXTRA);
+        if (sourceId == null || !(outbound instanceof Boolean)) {
+            return null;
+        }
+        try {
+            PhysicalCard source = context.getGameState()
+                    .findCardByPermanentId(
+                        Integer.parseInt(
+                            String.valueOf(sourceId)));
+            if (source != null
+                    && context.getPlayerId().equals(
+                        source.getOwner())
+                    && "209_50".equals(
+                        source.getBlueprintId(true))
+                    && source.getZone() != null
+                    && source.getZone().isInPlay()) {
+                return new HuntDownCastleMoveProvenance(
+                        source, (Boolean) outbound);
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     private List<EvaluatedAction> evaluateHuntDownCastleMove(
             DecisionContext context) {
         List<EvaluatedAction> actions = new ArrayList<>();
         GameState gameState = context.getGameState();
-        var actionState = gameState.getTopGameTextActionState();
-        var liveAction = actionState.getGameTextAction();
-        PhysicalCard castle = liveAction.getActionSource();
-        String liveText = liveAction.getText() != null
-                ? liveAction.getText().trim() : "";
-        boolean outbound =
-                "move from here to other battleground site"
-                    .equalsIgnoreCase(liveText);
+        HuntDownCastleMoveProvenance provenance =
+                huntDownCastleMoveProvenance(context);
+        if (provenance == null) return actions;
+        PhysicalCard castle = provenance.castle();
+        boolean outbound = provenance.outbound();
         var objective = context.getObjectiveAnalyzer();
         List<com.gempukku.swccgo.ai.models.common.strategy
                 .ObjectiveAnalyzer.VaderCastleRouteAssessment>
@@ -8669,12 +8711,25 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 "choose card to move to".equals(normalizedDecision)
                 || normalizedDecision.startsWith(
                     "choose card to move to,");
-        logger.warn("V309 HUNT DOWN CASTLE CHILD: routed {} selection through the exact Castle action",
+        logger.warn("V310 HUNT DOWN CASTLE CHILD: routed {} selection through the exact Castle action",
                 chooseOrigin ? "origin" : chooseDestination ? "destination" : "mover");
-        PhysicalCard finalDestination =
-                !chooseOrigin && !chooseDestination
-                ? resolveCastleFinalDestination(
-                        gameState, decision) : null;
+        PhysicalCard selectedOrigin =
+                huntDownCastleMoveExtraCard(
+                    context,
+                    HuntDownCastleMoveContinuation
+                        .ORIGIN_PERMANENT_CARD_ID_EXTRA);
+        PhysicalCard selectedDestination =
+                huntDownCastleMoveExtraCard(
+                    context,
+                    HuntDownCastleMoveContinuation
+                        .DESTINATION_PERMANENT_CARD_ID_EXTRA);
+        PhysicalCard finalDestination = null;
+        if (!chooseOrigin && !chooseDestination) {
+            finalDestination = selectedDestination != null
+                    ? selectedDestination
+                    : resolveCastleFinalDestination(
+                        gameState, decision);
+        }
 
         List<Boolean> admissible = new ArrayList<>();
         List<Boolean> preferred = new ArrayList<>();
@@ -8692,6 +8747,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             boolean candidatePreferred = false;
             boolean candidateFormationSafe = false;
             for (var route : routes) {
+                if (selectedOrigin != null
+                        && !samePhysicalCard(
+                            route.origin(), selectedOrigin)) {
+                    continue;
+                }
                 boolean bound = chooseOrigin
                         ? samePhysicalCard(
                             route.origin(), candidate)
@@ -8741,6 +8801,20 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             actions.add(action);
         }
         return actions;
+    }
+
+    private PhysicalCard huntDownCastleMoveExtraCard(
+            DecisionContext context, String key) {
+        Object permanentId = context.getExtra(key);
+        if (permanentId == null) return null;
+        try {
+            return context.getGameState()
+                    .findCardByPermanentId(
+                        Integer.parseInt(
+                            String.valueOf(permanentId)));
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private boolean isObjectiveDockingTransitDecision(
@@ -11373,6 +11447,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         boolean weaponTargetPrompt = decisionText != null
             && decisionText.trim().toLowerCase(Locale.ROOT)
                 .startsWith("choose target");
+        BattleWeaponsFacts.ForceLightningTargetMode forceLightningTargetMode =
+            getForceLightningTargetMode(gameState);
 
         // Target The Main Generator's child chooses our weapon source. It is not
         // a harmful target selection, despite offering our attached cannons.
@@ -11415,9 +11491,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         TargetSelectionFacts.Ownership ownership = isOurCard
                             ? TargetSelectionFacts.Ownership.OWN
                             : TargetSelectionFacts.Ownership.OPPONENT;
+                        boolean undercover = card.isUndercover();
                         targetLedger.register(TargetSelectionPolicy.scoreOwnership(
                             new TargetSelectionFacts.OwnershipFacts(
                                 cardId, intent, ownership)));
+                        targetLedger.register(BattleWeaponsPolicy.scoreForceLightningTarget(
+                            new BattleWeaponsFacts.ForceLightningTargetFacts(
+                                cardId, forceLightningTargetMode, !isOurCard, undercover)));
 
                         if (targetOwnCards) {
                             // Beneficial card - target OUR cards, not opponent's
@@ -11451,7 +11531,6 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
 
                                 // V51: Force Lightning / Trample — prioritize opponent spies
-                                boolean undercover = card.isUndercover();
                                 targetLedger.register(TargetSelectionPolicy.scoreUndercover(
                                     new TargetSelectionFacts.UndercoverFacts(
                                         cardId, intent, ownership, undercover)));
@@ -11545,6 +11624,32 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         }
 
         return actions;
+    }
+
+    private BattleWeaponsFacts.ForceLightningTargetMode getForceLightningTargetMode(
+            GameState gameState) {
+        if (gameState == null) {
+            return BattleWeaponsFacts.ForceLightningTargetMode.OTHER_SOURCE;
+        }
+        PlayCardState playCardState = gameState.getTopPlayCardState(null);
+        if (playCardState == null) {
+            return BattleWeaponsFacts.ForceLightningTargetMode.OTHER_SOURCE;
+        }
+        PlayCardAction playCardAction = playCardState.getPlayCardAction();
+        if (!(playCardAction instanceof PlayInterruptAction interruptAction)) {
+            return BattleWeaponsFacts.ForceLightningTargetMode.OTHER_SOURCE;
+        }
+        PhysicalCard playedCard = interruptAction.getPlayedCard();
+        if (playedCard == null || !"9_136".equals(playedCard.getBlueprintId(true))) {
+            return BattleWeaponsFacts.ForceLightningTargetMode.OTHER_SOURCE;
+        }
+        if (interruptAction.getPlayedAsSubtype() == CardSubtype.USED) {
+            return BattleWeaponsFacts.ForceLightningTargetMode.USED;
+        }
+        if (interruptAction.getPlayedAsSubtype() == CardSubtype.LOST) {
+            return BattleWeaponsFacts.ForceLightningTargetMode.LOST;
+        }
+        return BattleWeaponsFacts.ForceLightningTargetMode.OTHER_SOURCE;
     }
 
     /**

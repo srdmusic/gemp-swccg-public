@@ -48,6 +48,21 @@ public final class BattleWeaponsPolicy {
         return new PolicyResult("BATTLE_WEAPONS_ACTION_TEXT_POLICY", operations);
     }
 
+    public static PolicyResult scoreForceLightningTarget(
+            BattleWeaponsFacts.ForceLightningTargetFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>();
+        if (facts.mode() == BattleWeaponsFacts.ForceLightningTargetMode.USED
+                && facts.opponentTarget()
+                && facts.undercover()) {
+            operations.add(PolicyOperation.hardVeto(
+                    facts.actionId(), TraceRuleId.of("V51-force-lightning-used-undercover"),
+                    TraceDomainId.BATTLE_WEAPONS, TraceOutputKind.VETO,
+                    "V51 FORCE LIGHTNING USED BLOCK: Defense reduction alone cannot remove an Undercover spy"));
+        }
+        return new PolicyResult("BATTLE_WEAPONS_TARGET_POLICY", operations);
+    }
+
     public static PolicyResult scoreBlasterRack(
             BattleWeaponsFacts.BlasterRackFacts facts) {
         Objects.requireNonNull(facts, "facts");

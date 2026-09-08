@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.rando.strategy;
 
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
+import com.gempukku.swccgo.ai.models.common.strategy.NamedPullTargetMatcher;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Side;
@@ -1177,6 +1178,22 @@ public class DeckOracle {
         return false;
     }
 
+    private boolean hasNamedTargetInZone(Zone zone, String... keywords) {
+        if (zone == null) return false;
+        return allCards.stream()
+                .filter(card -> zone.equals(card.getCurrentZone()))
+                .anyMatch(card -> NamedPullTargetMatcher.matchesTitle(
+                        card.getTitle(), keywords));
+    }
+
+    private boolean hasNamedTargetInPlay(String... keywords) {
+        return allCards.stream()
+                .filter(card -> card.getCurrentZone() != null
+                        && card.getCurrentZone().isInPlay())
+                .anyMatch(card -> NamedPullTargetMatcher.matchesTitle(
+                        card.getTitle(), keywords));
+    }
+
     /**
      * V66: Classify an action's source zone from its text.
      * Returns null if the action doesn't involve a zone pull.
@@ -1251,13 +1268,13 @@ public class DeckOracle {
                 || targetKeywords[0].equalsIgnoreCase("droid"));
         if (!isGenericCategory && sourceZone == Zone.RESERVE_DECK) {
             // For specifically-named pulls, check if already in play (duplicate)
-            if (hasTargetInPlay(targetKeywords)) {
+            if (hasNamedTargetInPlay(targetKeywords)) {
                 return new PullValidation(PullOutcome.WASTEFUL,
                     "'" + String.join("/", targetKeywords)
                         + "' already in play — pull would be redundant");
             }
             // Or already in hand (no point pulling a second copy usually)
-            if (hasTargetInHand(targetKeywords)) {
+            if (hasNamedTargetInZone(Zone.HAND, targetKeywords)) {
                 return new PullValidation(PullOutcome.WASTEFUL,
                     "'" + String.join("/", targetKeywords)
                         + "' already in hand — don't pull a duplicate");

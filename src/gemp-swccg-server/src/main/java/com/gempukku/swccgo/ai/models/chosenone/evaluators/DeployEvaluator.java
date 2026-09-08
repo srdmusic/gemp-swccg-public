@@ -4027,9 +4027,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                     unarmedWarrior4)));
                             PolicyOperationAdapter.apply(action, v213WeaponLedger);
 
-                            if (v158Criteria != null && matchUnarmed == 0) {
+                            if (v158Criteria != null && matchArmed > 0
+                                    && matchUnarmed == 0) {
                                 LOG.warn("V158 WEAPON BLOCK ({}): {} criteria='{}' matchArmed={} matchUnarmed=0 → -9999",
-                                    matchArmed > 0 ? "criteria all armed" : "criteria absent",
+                                    "criteria all armed",
                                     card.getTitle(), v158Criteria, matchArmed);
                             } else if (v158IsLightsaber && unarmedWarrior4 == 0) {
                                 LOG.warn("V158 WEAPON BLOCK (no lightsaber wielder): {} → -9999", card.getTitle());

@@ -32,6 +32,36 @@ public class BattleWeaponsPolicyTest {
     }
 
     @Test
+    public void forceLightningUsedOnlyVetoesOpponentUndercoverTarget() {
+        PolicyResult blocked = BattleWeaponsPolicy.scoreForceLightningTarget(
+                new BattleWeaponsFacts.ForceLightningTargetFacts(
+                        "spy", BattleWeaponsFacts.ForceLightningTargetMode.USED,
+                        true, true));
+
+        assertEquals("BATTLE_WEAPONS_TARGET_POLICY", blocked.producerId());
+        assertEquals(1, blocked.operations().size());
+        PolicyOperation operation = blocked.operations().get(0);
+        assertEquals("spy", operation.actionId());
+        assertEquals("V51-force-lightning-used-undercover", operation.ruleArmId().id());
+        assertEquals(TraceDomainId.BATTLE_WEAPONS, operation.domainId());
+        assertEquals(TraceOutputKind.VETO, operation.outputKind());
+        assertEquals(PolicyOperationKind.HARD_VETO, operation.kind());
+        assertRawFloat(0.0f, operation.delta());
+        assertEquals(
+                "V51 FORCE LIGHTNING USED BLOCK: Defense reduction alone cannot remove an Undercover spy",
+                operation.reason());
+
+        assertForceLightningTargetAllowed(
+                BattleWeaponsFacts.ForceLightningTargetMode.LOST, true, true);
+        assertForceLightningTargetAllowed(
+                BattleWeaponsFacts.ForceLightningTargetMode.USED, true, false);
+        assertForceLightningTargetAllowed(
+                BattleWeaponsFacts.ForceLightningTargetMode.USED, false, true);
+        assertForceLightningTargetAllowed(
+                BattleWeaponsFacts.ForceLightningTargetMode.OTHER_SOURCE, true, true);
+    }
+
+    @Test
     public void blasterRackRetainsBattleLocationPrecedenceAndExactBands() {
         PolicyOperation atBattle = only(BattleWeaponsPolicy.scoreBlasterRack(
                 new BattleWeaponsFacts.BlasterRackFacts("rack", true, true)));
@@ -284,6 +314,17 @@ public class BattleWeaponsPolicyTest {
         assertEquals(1, result.operations().size());
         assertPolicyShape(result);
         return result.operations().get(0);
+    }
+
+    private static void assertForceLightningTargetAllowed(
+            BattleWeaponsFacts.ForceLightningTargetMode mode,
+            boolean opponentTarget,
+            boolean undercover) {
+        PolicyResult result = BattleWeaponsPolicy.scoreForceLightningTarget(
+                new BattleWeaponsFacts.ForceLightningTargetFacts(
+                        "target", mode, opponentTarget, undercover));
+        assertEquals("BATTLE_WEAPONS_TARGET_POLICY", result.producerId());
+        assertTrue(result.operations().isEmpty());
     }
 
     private static void assertOperation(PolicyOperation operation,

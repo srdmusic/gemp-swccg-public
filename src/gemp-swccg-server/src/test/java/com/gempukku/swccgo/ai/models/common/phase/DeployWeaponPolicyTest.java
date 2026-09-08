@@ -36,12 +36,23 @@ public class DeployWeaponPolicyTest {
                 CardCategory.LOCATION));
     }
     @Test
-    public void criteriaGateDominatesOtherDirectWeaponArms() {
+    public void criteriaGateBlocksOnlyWhenARealMatchingWielderIsAlreadyArmed() {
         List<PolicyOperation> operations = DeployWeaponPolicy.evaluateDirectEligibility(
-                direct("Dooku", true, 4, 2, 0, 0, 2)).operations();
+                direct("Dooku", true, 1, 1, 1, 0, 1)).operations();
 
         assertOne(operations, "V158", -9999.0f, TraceOutputKind.VETO);
-        assertTrue(operations.get(0).reason().contains("no 'Dooku' friendly"));
+        assertTrue(operations.get(0).reason().contains("every 'Dooku' wielder"));
+    }
+
+    @Test
+    public void truncatedOrAbsentCriteriaFallsBackToLegalUnarmedVader() {
+        int vaderAsUnarmedAbilitySixWarrior = 1;
+        for (String criteria : new String[]{"urra sing", ""}) {
+            assertOne(DeployWeaponPolicy.evaluateDirectEligibility(
+                            direct(criteria, true, 0, 1, 0, 0,
+                                    vaderAsUnarmedAbilitySixWarrior)).operations(),
+                    "V158", 300.0f, TraceOutputKind.BANDED);
+        }
     }
 
     @Test
