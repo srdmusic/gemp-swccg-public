@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployFormationPromisePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployUndercoverModePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
@@ -21,6 +22,7 @@ import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -30,6 +32,7 @@ import com.gempukku.swccgo.filters.Filters;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 // ═══════════════════════════════════════════════════════════
@@ -81,6 +84,12 @@ public class DeployPhasePlanner {
     private int activeFormationPromiseTurn = -1;
     private Set<Integer> contestedAnchorsAtPlanCreation =
             Collections.emptySet();
+
+    private enum CountedPackageState {
+        NONE,
+        CONTINUE,
+        RELEASE
+    }
 
     // Board state reference for scoring
     private SwccgGame currentGame;
@@ -148,25 +157,247 @@ public class DeployPhasePlanner {
                         facts);
         if (promise == null) return null;
 
-        DeploymentInstruction companion =
-                currentPlan.getInstructionForPhysicalCard(
-                        promise.companionPermanentCardId(),
-                        promise.companionCurrentCardId(), null);
-        if (companion == null) return null;
+        List<DeploymentInstruction> committed =
+                committedFormationInstructions(
+                    currentPlan, promise.committedCards());
+        if (committed == null || committed.isEmpty()) return null;
         currentPlan.recordDeployment(
                 promise.anchorPermanentCardId(),
                 promise.anchorCurrentCardId(), null);
-        currentPlan.setInstructions(new ArrayList<>(List.of(companion)));
+        currentPlan.setInstructions(committed);
         currentPlan.setWaitingForPlannedCards(false);
         currentPlan.setForceAllowExtras(false);
-        currentPlan.setForceToSpend(promise.companionCost());
+        currentPlan.setForceToSpend(promise.committedCards().stream()
+                .mapToInt(DeployFormationPromisePolicy.CommittedCard::cost)
+                .sum());
         currentPlan.setReason("Finish promised formation at "
-                + companion.getTargetLocationName());
+                + committed.get(0).getTargetLocationName());
         activeFormationPromise = promise;
         activeFormationPromiseTurn = currentTurn;
-        LOG.warn("DEPLOY.FORMATION.PROMISE: preserving exact companion {} at {} before replanning",
-                promise.companionName(), companion.getTargetLocationName());
+        LOG.warn("DEPLOY.FORMATION.PROMISE: preserving {} exact companion(s) at {} before replanning",
+                committed.size(), committed.get(0).getTargetLocationName());
         return currentPlan;
+    }
+
+    private List<DeploymentInstruction> committedFormationInstructions(
+            DeploymentPlan plan,
+            List<DeployFormationPromisePolicy.CommittedCard> members) {
+        List<DeploymentInstruction> result = new ArrayList<>();
+        if (plan == null || members == null) return null;
+        for (DeployFormationPromisePolicy.CommittedCard member : members) {
+            DeploymentInstruction instruction =
+                    plan.getInstructionForPhysicalCard(
+                        member.permanentCardId(),
+                        member.currentCardId(), null);
+            if (instruction == null) return null;
+            instruction.setDeployCost(member.cost());
+            result.add(instruction);
+        }
+        return result;
+    }
+
+    private boolean refreshActiveFormationPromise(
+            SwccgGame game, String playerId) {
+        List<DeployFormationPromisePolicy.CommittedCard> remaining =
+                DeployFormationPromisePolicy.remainingCommittedCards(
+                    game, playerId,
+                    game.getGameState().getForcePileSize(playerId),
+                    battleForceReserve, activeFormationPromise);
+        if (remaining == null || remaining.isEmpty()) return false;
+        List<DeploymentInstruction> instructions =
+                committedFormationInstructions(currentPlan, remaining);
+        if (instructions == null || instructions.isEmpty()) return false;
+        currentPlan.setInstructions(instructions);
+        currentPlan.setForceToSpend(remaining.stream()
+                .mapToInt(DeployFormationPromisePolicy.CommittedCard::cost)
+                .sum());
+        return true;
+    }
+
+    private CountedPackageState refreshCountedDeployPackage(
+            SwccgGame game, String playerId) {
+        if (currentPlan == null
+                || currentPlan.getCountedDeployRouteKey() == null) {
+            return CountedPackageState.NONE;
+        }
+        if (objectiveAnalyzer == null) {
+            currentPlan.clearCountedDeployPackage();
+            return CountedPackageState.RELEASE;
+        }
+
+        boolean progressed = false;
+        Set<String> progressedTargets = new LinkedHashSet<>();
+        int remainingCost = 0;
+        List<DeploymentInstruction> remaining = new ArrayList<>();
+        for (DeploymentPlan.CountedDeployCommitment commitment
+                : currentPlan.getCountedDeployCommitments()) {
+            PhysicalCard card = game.getGameState()
+                    .findCardByPermanentId(
+                        commitment.permanentCardId());
+            PhysicalCard target = exactLocation(
+                    game.getGameState(),
+                    commitment.targetLocationId());
+            if (card == null || target == null) {
+                currentPlan.clearCountedDeployPackage();
+                return CountedPackageState.RELEASE;
+            }
+            if (card.getCardId() == commitment.currentCardId()
+                    && card.getZone() == Zone.HAND) {
+                DeploymentInstruction template = currentPlan
+                    .getCountedDeployInstructions().stream()
+                    .filter(instruction ->
+                        instruction.getCardPermanentCardId() != null
+                            && instruction.getCardCurrentCardId() != null
+                            && instruction.getCardPermanentCardId()
+                                == commitment.permanentCardId()
+                            && instruction.getCardCurrentCardId()
+                                == commitment.currentCardId())
+                    .findFirst().orElse(null);
+                Integer exactCost = exactDeployCostAt(card, target);
+                if (template == null || exactCost == null
+                        || !canDeployPaidDirectly(card, target)) {
+                    currentPlan.clearCountedDeployPackage();
+                    return CountedPackageState.RELEASE;
+                }
+                DeploymentInstruction instruction =
+                        new DeploymentInstruction(template);
+                instruction.setDeployCost(exactCost);
+                remaining.add(instruction);
+                remainingCost += exactCost;
+                continue;
+            }
+            if (!isCommittedCardAtTarget(
+                    game, playerId, card, target)) {
+                currentPlan.clearCountedDeployPackage();
+                return CountedPackageState.RELEASE;
+            }
+            progressed = true;
+            progressedTargets.add(commitment.targetLocationId());
+        }
+
+        boolean ruleSatisfied = objectiveAnalyzer
+                .isCountedDeployRuleSatisfied(
+                    game, playerId,
+                    currentPlan.getCountedDeployRouteKey());
+        if (ruleSatisfied && progressed) {
+            remaining = remaining.stream()
+                .filter(instruction -> progressedTargets.contains(
+                    instruction.getTargetLocationId()))
+                .collect(Collectors.toCollection(ArrayList::new));
+            remainingCost = remaining.stream()
+                .mapToInt(DeploymentInstruction::getDeployCost)
+                .sum();
+        }
+        int spendable = Math.max(0,
+                game.getGameState().getForcePileSize(playerId)
+                    - battleForceReserve);
+        if (remainingCost > spendable) {
+            currentPlan.clearCountedDeployPackage();
+            return CountedPackageState.RELEASE;
+        }
+        if (!progressed && ruleSatisfied) {
+            currentPlan.clearCountedDeployPackage();
+            return CountedPackageState.RELEASE;
+        }
+        if (remaining.isEmpty()) {
+            currentPlan.clearCountedDeployPackage();
+            return CountedPackageState.RELEASE;
+        }
+        if (!countedPackageStillSafe(game, playerId, remaining)) {
+            currentPlan.clearCountedDeployPackage();
+            return CountedPackageState.RELEASE;
+        }
+        String activeTarget = remaining.stream()
+            .filter(instruction -> progressedTargets.contains(
+                instruction.getTargetLocationId()))
+            .map(DeploymentInstruction::getTargetLocationId)
+            .findFirst()
+            .orElse(remaining.get(0).getTargetLocationId());
+        List<DeploymentInstruction> activePacket = remaining.stream()
+            .filter(instruction -> Objects.equals(
+                activeTarget, instruction.getTargetLocationId()))
+            .collect(Collectors.toCollection(ArrayList::new));
+        currentPlan.setInstructions(activePacket);
+        currentPlan.setWaitingForPlannedCards(false);
+        currentPlan.setForceAllowExtras(false);
+        currentPlan.setForceToSpend(remainingCost);
+        currentPlan.setReason(
+                "Finish exact counted objective package");
+        LOG.warn("V307 OBJECTIVE.DEPLOY.COUNTED_PACKAGE: exposing {} local member(s) at {} while preserving {} exact member(s)",
+                activePacket.size(), activeTarget, remaining.size());
+        return CountedPackageState.CONTINUE;
+    }
+
+    private boolean countedPackageStillSafe(
+            SwccgGame game, String playerId,
+            List<DeploymentInstruction> remaining) {
+        String opponentId = game.getGameState().getOpponent(playerId);
+        if (opponentId == null || remaining == null
+                || remaining.isEmpty()) {
+            return false;
+        }
+        Map<String, List<CardInfo>> packetsByTarget =
+                new LinkedHashMap<>();
+        for (DeploymentInstruction instruction : remaining) {
+            if (instruction.getCardPermanentCardId() == null
+                    || instruction.getTargetLocationId() == null) {
+                return false;
+            }
+            PhysicalCard card = game.getGameState()
+                    .findCardByPermanentId(
+                        instruction.getCardPermanentCardId());
+            if (card == null || card.getZone() != Zone.HAND) {
+                return false;
+            }
+            packetsByTarget.computeIfAbsent(
+                    instruction.getTargetLocationId(), ignored ->
+                        new ArrayList<>()).add(new CardInfo(card));
+        }
+        for (Map.Entry<String, List<CardInfo>> entry
+                : packetsByTarget.entrySet()) {
+            PhysicalCard target = exactLocation(
+                    game.getGameState(), entry.getKey());
+            if (target == null) return false;
+            AiBoardAnalyzer.LocationAnalysis liveTarget =
+                    AiBoardAnalyzer.analyzeLocation(
+                        game, playerId, opponentId, target, currentSide);
+            if (!objectivePacketIsSafe(
+                    liveTarget, entry.getValue())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static PhysicalCard exactLocation(
+            GameState gameState, String locationId) {
+        if (gameState == null || locationId == null) return null;
+        try {
+            return gameState.findCardById(
+                    Integer.parseInt(locationId));
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static boolean isCommittedCardAtTarget(
+            SwccgGame game, String playerId,
+            PhysicalCard card, PhysicalCard target) {
+        if (game == null || playerId == null || card == null
+                || target == null || card.getZone() == null
+                || !card.getZone().isInPlay()
+                || !playerId.equals(card.getOwner())) {
+            return false;
+        }
+        try {
+            PhysicalCard actual = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(
+                        game.getGameState(), card);
+            return actual != null
+                    && actual.getCardId() == target.getCardId();
+        } catch (RuntimeException ignored) {
+            return false;
+        }
     }
 
     private DeploymentPlan replanToLiveContestedAnchor(
@@ -281,14 +512,19 @@ public class DeployPhasePlanner {
 
         // If we already have a plan for this turn, return it
         if (currentPlan != null && lastPlanTurn == currentTurn) {
+            CountedPackageState countedPackageState =
+                    refreshCountedDeployPackage(game, playerId);
+            if (countedPackageState
+                    == CountedPackageState.CONTINUE) {
+                return currentPlan;
+            }
+            boolean countedPackageReleased = countedPackageState
+                    == CountedPackageState.RELEASE;
             boolean formationPromiseReleased = false;
-            if (activeFormationPromise != null) {
-                if (DeployFormationPromisePolicy.shouldContinue(
-                        game, playerId,
-                        gameState.getForcePileSize(playerId),
-                        battleForceReserve,
-                        activeFormationPromise)) {
-                    LOG.debug("DEPLOY.FORMATION.PROMISE: returning exact companion plan for turn {}",
+            if (!countedPackageReleased
+                    && activeFormationPromise != null) {
+                if (refreshActiveFormationPromise(game, playerId)) {
+                    LOG.debug("DEPLOY.FORMATION.PROMISE: returning exact formation queue for turn {}",
                             currentTurn);
                     return currentPlan;
                 }
@@ -296,16 +532,21 @@ public class DeployPhasePlanner {
                 activeFormationPromise = null;
                 activeFormationPromiseTurn = -1;
                 formationPromiseReleased = true;
-            } else {
+            } else if (!countedPackageReleased) {
                 DeploymentPlan promised = detectPromisedFormation(
                         game, playerId, currentTurn);
                 if (promised != null) return promised;
             }
-            DeploymentPlan liveAnchorPlan = replanToLiveContestedAnchor(
-                    game, playerId, currentTurn);
-            if (liveAnchorPlan != null) return liveAnchorPlan;
+            if (!countedPackageReleased) {
+                DeploymentPlan liveAnchorPlan =
+                        replanToLiveContestedAnchor(
+                            game, playerId, currentTurn);
+                if (liveAnchorPlan != null) return liveAnchorPlan;
+            }
 
-            if (formationPromiseReleased) {
+            if (countedPackageReleased) {
+                LOG.info("V307 OBJECTIVE.DEPLOY.COUNTED_PACKAGE.REPLAN: refreshing after package release");
+            } else if (formationPromiseReleased) {
                 LOG.info("DEPLOY.FORMATION.PROMISE.REPLAN: refreshing after promise release");
             } else if (!lastPlanHadActiveFlipGate && hasActiveFlipGate) {
                 LOG.warn("OBJECTIVE.DEPLOY.REPLAN_GATE_APPEARED: refreshing turn {} plan "
@@ -507,6 +748,14 @@ public class DeployPhasePlanner {
         bestPlan.setTotalForceAvailable(forceAvailable);
         bestPlan.setForceReservedForBattle(battleForceReserve);
         currentPlan = bestPlan;
+        if (currentPlan.getCountedDeployRouteKey() != null
+                && refreshCountedDeployPackage(game, playerId)
+                    == CountedPackageState.RELEASE) {
+            currentPlan = createHoldBackPlan(
+                    "Counted objective package no longer executable");
+            currentPlan.setTotalForceAvailable(forceAvailable);
+            currentPlan.setForceReservedForBattle(battleForceReserve);
+        }
         lastPlanTurn = currentTurn;
         lastPlanHadActiveFlipGate = hasActiveFlipGate;
         lastPlanHadFlipGateActorInHand = hasFlipGateActorInHand;
@@ -1165,6 +1414,17 @@ public class DeployPhasePlanner {
             return plans;
         }
 
+        for (DeploymentPlan countedTypePackage
+                : generateCountedTypeCompletionPlans(
+                    characters, allLocations,
+                    objectiveFormationForceAvailable)) {
+            float score = scoreObjectiveFlipGateFormationPlan(
+                    countedTypePackage, allLocations, turn);
+            plans.add(new ScoredPlan(
+                    countedTypePackage, score,
+                    "ground_objective_counted_type_completion"));
+        }
+
         DeploymentPlan bunkerGarrisonPlan =
                 generateEopBunkerGarrisonPlan(
                         characters, allLocations,
@@ -1262,6 +1522,302 @@ public class DeployPhasePlanner {
         }
 
         return plans;
+    }
+
+    /**
+     * Build exact, fully funded packages for typed counted objective routes.
+     * On-table counts concentrate at one site. Location-counting routes open
+     * only the distinct sites required by the card and give every weak first
+     * body a funded local buddy.
+     */
+    private List<DeploymentPlan> generateCountedTypeCompletionPlans(
+            List<CardInfo> characters,
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations,
+            int forceAvailable) {
+        if (objectiveAnalyzer == null || !objectiveAnalyzer.isAnalyzed()
+                || currentGame == null || currentPlayerId == null
+                || characters == null || characters.isEmpty()
+                || forceAvailable <= 0) {
+            return List.of();
+        }
+        List<ObjectiveAnalyzer.CountedDeployRoute> routes =
+                objectiveAnalyzer.openCountedDeployCompletionRoutes(
+                    currentGame, currentPlayerId);
+        if (routes.isEmpty()) return List.of();
+
+        List<AiBoardAnalyzer.LocationAnalysis> targets =
+                allLocations.stream()
+                    .filter(Objects::nonNull)
+                    .filter(AiBoardAnalyzer.LocationAnalysis::isGround)
+                    .filter(loc -> loc.location != null)
+                    .sorted(countedTypeTargetComparator())
+                    .toList();
+        List<DeploymentPlan> result = new ArrayList<>();
+        for (ObjectiveAnalyzer.CountedDeployRoute route : routes) {
+            if (route.countsCardsOnTable()) {
+                for (AiBoardAnalyzer.LocationAnalysis target : targets) {
+                    DeploymentPlan plan = buildCountedOnTablePackage(
+                            route, characters, target, forceAvailable);
+                    if (plan != null) result.add(plan);
+                }
+            } else {
+                DeploymentPlan plan = buildCountedLocationPackage(
+                        route, characters, targets, forceAvailable);
+                if (plan != null) result.add(plan);
+            }
+        }
+        return result;
+    }
+
+    private Comparator<AiBoardAnalyzer.LocationAnalysis>
+            countedTypeTargetComparator() {
+        return Comparator
+            .comparingInt((AiBoardAnalyzer.LocationAnalysis loc) ->
+                loc.ourCardCount > 0 ? 0 : 1)
+            .thenComparingInt(loc ->
+                currentPlayerId.equals(loc.location.getOwner()) ? 0 : 1)
+            .thenComparing((AiBoardAnalyzer.LocationAnalysis loc) ->
+                -projectedDrainAt(loc.location))
+            .thenComparingInt(loc -> -loc.theirForceIcons)
+            .thenComparing(loc -> loc.location.getTitle(),
+                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+    }
+
+    private DeploymentPlan buildCountedOnTablePackage(
+            ObjectiveAnalyzer.CountedDeployRoute route,
+            List<CardInfo> characters,
+            AiBoardAnalyzer.LocationAnalysis target,
+            int forceAvailable) {
+        List<CardInfo> matching = characters.stream()
+            .filter(card -> objectiveAnalyzer.matchesCountedDeployCandidateAt(
+                currentGame, currentPlayerId, route.key(),
+                card.card, target.location))
+            .filter(card -> canDeployPaidDirectly(card.card, target.location))
+            .filter(card -> exactDeployCostAt(
+                card.card, target.location) != null)
+            .sorted(Comparator
+                .comparingInt((CardInfo card) ->
+                    exactDeployCostAt(card.card, target.location))
+                .thenComparingInt(card -> -(card.power + card.ability))
+                .thenComparingInt(card ->
+                    card.card.getPermanentCardId()))
+            .limit(route.missingCount())
+            .collect(Collectors.toCollection(ArrayList::new));
+        if (matching.size() != route.missingCount()) return null;
+
+        List<CardInfo> packet = new ArrayList<>(matching);
+        int cost = exactPacketCost(packet, target.location);
+        if (cost < 0 || cost > forceAvailable) return null;
+        if (!objectivePacketIsSafe(target, packet)) {
+            CardInfo buddy = cheapestSafeBuddy(
+                    characters, packet, target, forceAvailable - cost,
+                    card -> false);
+            if (buddy == null) return null;
+            packet.add(buddy);
+            cost = exactPacketCost(packet, target.location);
+        }
+        if (cost < 0 || cost > forceAvailable
+                || !objectivePacketIsSafe(target, packet)) {
+            return null;
+        }
+        return countedTypePlan(route, packet, target, cost);
+    }
+
+    private DeploymentPlan buildCountedLocationPackage(
+            ObjectiveAnalyzer.CountedDeployRoute route,
+            List<CardInfo> characters,
+            List<AiBoardAnalyzer.LocationAnalysis> targets,
+            int forceAvailable) {
+        List<CardInfo> available = new ArrayList<>(characters);
+        DeploymentPlan plan = new DeploymentPlan(
+                DeployStrategy.REINFORCE,
+                "Objective counted-type completion: "
+                    + route.key().ruleId());
+        int remaining = forceAvailable;
+        int completedLocations = 0;
+        int priority = 1;
+        Predicate<CardInfo> preserveForObjective = card ->
+            targets.stream().anyMatch(candidateTarget ->
+                objectiveAnalyzer.matchesCountedDeployCandidateAt(
+                    currentGame, currentPlayerId, route.key(),
+                    card.card, candidateTarget.location));
+
+        for (AiBoardAnalyzer.LocationAnalysis target : targets) {
+            if (completedLocations >= route.missingCount()) break;
+            int actorsNeeded = objectiveAnalyzer.countedDeployActorsNeededAt(
+                    currentGame, currentPlayerId,
+                    route.key(), target.location);
+            if (actorsNeeded <= 0) continue;
+            List<CardInfo> actors = available.stream()
+                .filter(card -> objectiveAnalyzer
+                    .matchesCountedDeployCandidateAt(
+                        currentGame, currentPlayerId, route.key(),
+                        card.card, target.location))
+                .filter(card -> canDeployPaidDirectly(
+                    card.card, target.location))
+                .filter(card -> exactDeployCostAt(
+                    card.card, target.location) != null)
+                .sorted(Comparator
+                    .comparingInt((CardInfo card) ->
+                        exactDeployCostAt(card.card, target.location))
+                    .thenComparingInt(card ->
+                        -(card.power + card.ability)))
+                .limit(actorsNeeded)
+                .collect(Collectors.toCollection(ArrayList::new));
+            if (actors.size() != actorsNeeded) continue;
+
+            List<CardInfo> packet = new ArrayList<>(actors);
+            int packetCost = exactPacketCost(packet, target.location);
+            if (packetCost < 0 || packetCost > remaining) continue;
+            if (!objectivePacketIsSafe(target, packet)) {
+                CardInfo buddy = cheapestSafeBuddy(
+                        available, packet, target,
+                        remaining - packetCost,
+                        preserveForObjective);
+                if (buddy == null) continue;
+                packet.add(buddy);
+                packetCost = exactPacketCost(packet, target.location);
+            }
+            if (packetCost < 0 || packetCost > remaining
+                    || !objectivePacketIsSafe(target, packet)) {
+                continue;
+            }
+
+            for (CardInfo card : packet) {
+                Integer exactCost = exactDeployCostAt(
+                        card.card, target.location);
+                addCardToPlan(plan, card.card, target, priority++,
+                        "Complete typed objective package at "
+                            + target.location.getTitle(), exactCost);
+            }
+            available.removeAll(packet);
+            remaining -= packetCost;
+            completedLocations++;
+        }
+        if (completedLocations != route.missingCount()) return null;
+        plan.setForceToSpend(forceAvailable - remaining);
+        plan.markCountedDeployPackage(route.key());
+        return plan;
+    }
+
+    private DeploymentPlan countedTypePlan(
+            ObjectiveAnalyzer.CountedDeployRoute route,
+            List<CardInfo> packet,
+            AiBoardAnalyzer.LocationAnalysis target,
+            int cost) {
+        DeploymentPlan plan = new DeploymentPlan(
+                DeployStrategy.REINFORCE,
+                "Objective counted-type completion: "
+                    + route.key().ruleId());
+        int priority = 1;
+        for (CardInfo card : packet) {
+            Integer exactCost = exactDeployCostAt(
+                    card.card, target.location);
+            addCardToPlan(plan, card.card, target, priority++,
+                    "Complete typed objective package at "
+                        + target.location.getTitle(), exactCost);
+        }
+        plan.setForceToSpend(cost);
+        plan.markCountedDeployPackage(route.key());
+        return plan;
+    }
+
+    private int exactPacketCost(
+            List<CardInfo> packet, PhysicalCard target) {
+        int total = 0;
+        for (CardInfo card : packet) {
+            Integer cost = exactDeployCostAt(card.card, target);
+            if (cost == null) return -1;
+            total += cost;
+        }
+        return total;
+    }
+
+    private CardInfo cheapestSafeBuddy(
+            List<CardInfo> candidates, List<CardInfo> packet,
+            AiBoardAnalyzer.LocationAnalysis target, int budget,
+            Predicate<CardInfo> preserveForObjective) {
+        return candidates.stream()
+            .filter(card -> !packet.contains(card))
+            .filter(card -> card.isCharacter && !card.card.isUndercover())
+            .filter(card -> !DeployUndercoverModePolicy
+                .isUndercoverDeploy(currentGame, card.card,
+                    card.card.getBlueprint(), ""))
+            .filter(card -> canDeployPaidDirectly(
+                card.card, target.location))
+            .filter(card -> {
+                Integer cost = exactDeployCostAt(
+                        card.card, target.location);
+                if (cost == null || cost > budget) return false;
+                List<CardInfo> withBuddy = new ArrayList<>(packet);
+                withBuddy.add(card);
+                return objectivePacketIsSafe(target, withBuddy);
+            })
+            .min(Comparator
+                .comparingInt((CardInfo card) ->
+                    preserveForObjective != null
+                        && preserveForObjective.test(card) ? 1 : 0)
+                .thenComparingInt(card ->
+                    exactDeployCostAt(card.card, target.location))
+                .thenComparingInt(card -> -(card.power + card.ability)))
+            .orElse(null);
+    }
+
+    private boolean objectivePacketIsSafe(
+            AiBoardAnalyzer.LocationAnalysis target,
+            List<CardInfo> packet) {
+        if (target == null || packet == null || packet.isEmpty()) {
+            return false;
+        }
+        int friendlyCharacters = com.gempukku.swccgo.ai.models.common
+                .strategy.FormationSafety
+                .countFriendlyNonUndercoverCharacters(
+                    currentGame.getGameState()
+                        .getCardsAtLocation(target.location),
+                    currentPlayerId);
+        int packetPower = packet.stream()
+                .mapToInt(card -> card.power).sum();
+        int packetAbility = packet.stream()
+                .mapToInt(card -> card.ability).sum();
+        boolean opponentPresent = target.theirCardCount > 0
+                || target.theirPower > 0.0f
+                || target.theirAbility > 0.0f;
+        if (!opponentPresent) {
+            return friendlyCharacters > 0
+                    || packet.size() >= 2
+                        && (packetPower >= RandoConfig.MIN_SOLO_DEPLOY_POWER
+                            || packetAbility
+                                >= RandoConfig.ABILITY_THRESHOLD);
+        }
+        CardInfo lead = packet.get(0);
+        int formationBodies = friendlyCharacters + packet.size();
+        DeployTacticalPolicy.ContactAssessment contact =
+                DeployTacticalPolicy.assessV171V172Contact(
+                    new DeployTacticalPolicy.ContactFacts(
+                        "counted-type-completion",
+                        target.location.getTitle(), true, true,
+                        formationBodies, target.ourPower,
+                        lead.power, packetPower - lead.power,
+                        Math.max(0, formationBodies - 1), 0.0f,
+                        target.theirPower,
+                        packet.stream().mapToInt(card -> card.power)
+                            .max().orElse(0),
+                        countArmedOpponentCharactersAt(target.location),
+                        target.ourAbility + packetAbility));
+        return contact.viable()
+                && target.ourAbility + packetAbility
+                    >= com.gempukku.swccgo.ai.models.common.strategy
+                        .FormationSafety.DESTINY_ABILITY_THRESHOLD;
+    }
+
+    private float projectedDrainAt(PhysicalCard location) {
+        try {
+            return ForceDrainProjection.projectedDamage(
+                    currentGame.getGameState(), currentGame,
+                    location, currentPlayerId);
+        } catch (Exception ignored) {
+            return 0.0f;
+        }
     }
 
     private PolicyResult endorPostFlipPlanAdjustment(
@@ -3563,7 +4119,9 @@ public class DeployPhasePlanner {
             && (plan.getReason().startsWith(
                     "V297 objective flip-gate formation")
                 || plan.getReason().startsWith(
-                    "Objective counted-operative formations"));
+                    "Objective counted-operative formations")
+                || plan.getReason().startsWith(
+                    "Objective counted-type completion"));
     }
 
     private boolean hasPlannedSpyAtTarget(
@@ -3643,6 +4201,7 @@ public class DeployPhasePlanner {
         for (DeploymentInstruction inst : best.plan.getInstructions()) {
             finalPlan.addInstruction(inst);
         }
+        finalPlan.copyCountedDeployPackageFrom(best.plan);
         if (persistentSelection != null) {
             finalPlan.setPersistentResponseObligation(
                 persistentSelection.obligation());

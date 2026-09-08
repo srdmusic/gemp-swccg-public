@@ -4,12 +4,19 @@ import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.PhysicalCardImpl;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -62,6 +69,10 @@ public class WatchYourStepObjectiveEngineContractTest {
                 new HashMap<>() {{
                     put("han", "1_11");
                     put("corellianSmuggler", "2_6");
+                    put("corellianSmugglerB", "2_6");
+                    put("undercoverSmuggler", "7_048");
+                    put("buddyA", "1_17");
+                    put("buddyB", "1_19");
                     put("kesselRun", "1_52");
                     put("kesselRunV", "213_46");
                 }},
@@ -81,6 +92,18 @@ public class WatchYourStepObjectiveEngineContractTest {
                 StartingSetup.NoDSShields,
                 VirtualTableScenario.Open
         );
+    }
+
+    private void keepOnlyLightHandCards(
+            VirtualTableScenario scn, PhysicalCard... keep) {
+        List<PhysicalCard> retained = List.of(keep);
+        for (PhysicalCard card : new ArrayList<>(
+                scn.gameState().getHand(VirtualTableScenario.LS))) {
+            if (!retained.contains(card)) {
+                scn.MoveCardsToBottomOfLSReserveDeck(
+                        (PhysicalCardImpl) card);
+            }
+        }
     }
 
     @Test
@@ -371,5 +394,129 @@ public class WatchYourStepObjectiveEngineContractTest {
                 scn.game(), VirtualTableScenario.LS, "preFlip", "flip");
         assertTrue("Two recorded Kessel Runs satisfy the counter route",
                 viaCounter.get(0).conditionSatisfied());
+    }
+
+    @Test
+    public void countedSmugglerRouteRejectsForcedUndercoverDeployment() {
+        var scn = classicScenario();
+        var normalSmuggler = scn.GetLSCard("corellianSmuggler");
+        var undercoverSmuggler = scn.GetLSCard("undercoverSmuggler");
+
+        scn.StartGame();
+        scn.MoveCardsToLSHand(normalSmuggler, undercoverSmuggler);
+
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(scn.game(), VirtualTableScenario.LS, Side.LIGHT);
+        var smugglerRoute = analyzer.openCountedDeployCompletionRoutes(
+                scn.game(), VirtualTableScenario.LS).stream()
+            .filter(route -> "occupyWith".equals(route.relation()))
+            .findFirst().orElseThrow();
+
+        assertTrue("A normally deployed smuggler advances the counted route",
+                analyzer.matchesCountedDeployCandidateAt(
+                    scn.game(), VirtualTableScenario.LS,
+                    smugglerRoute.key(), normalSmuggler,
+                    scn.GetLSCard("cantina")));
+        assertFalse("TK-422 cannot occupy with a smuggler while Undercover",
+                analyzer.matchesCountedDeployCandidateAt(
+                    scn.game(), VirtualTableScenario.LS,
+                    smugglerRoute.key(), undercoverSmuggler,
+                    scn.GetLSCard("cantina")));
+    }
+
+    @Test
+    public void countedSmugglerPackageExposesOneProtectedSiteAtATime() {
+        var scn = classicScenario();
+        var smugglerA = scn.GetLSCard("corellianSmuggler");
+        var smugglerB = scn.GetLSCard("corellianSmugglerB");
+        var buddyA = scn.GetLSCard("buddyA");
+        var buddyB = scn.GetLSCard("buddyB");
+
+        scn.StartGame();
+        scn.MoveCardsToLSHand(smugglerA, smugglerB, buddyA, buddyB);
+        keepOnlyLightHandCards(
+                scn, smugglerA, smugglerB, buddyA, buddyB);
+        scn.LSActivateForceCheat(28);
+        scn.SkipToLSTurn(Phase.DEPLOY);
+
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(scn.game(), VirtualTableScenario.LS, Side.LIGHT);
+        var planner = new com.gempukku.swccgo.ai.models.rando.strategy
+                .DeployPhasePlanner();
+        planner.setObjectiveAnalyzer(analyzer);
+
+        var initial = planner.createPlan(
+                scn.game(), VirtualTableScenario.LS, Side.LIGHT);
+        assertNotNull(initial.getCountedDeployRouteKey());
+        assertEquals("The full retained package contains two local pairs", 4,
+                initial.getCountedDeployCommitments().size());
+        var retainedBySite = initial.getCountedDeployCommitments().stream()
+            .collect(Collectors.groupingBy(
+                commitment -> commitment.targetLocationId(),
+                Collectors.counting()));
+        assertEquals("The retained package spans two sites", 2,
+                retainedBySite.size());
+        assertTrue("Each retained site has its actor and buddy",
+                retainedBySite.values().stream()
+                    .allMatch(count -> count == 2L));
+
+        assertEquals("Only the first site's packet is initially exposed", 2,
+                initial.getInstructions().size());
+        String firstSite = initial.getInstructions().get(0)
+                .getTargetLocationId();
+        assertTrue(initial.getInstructions().stream().allMatch(
+                instruction -> firstSite.equals(
+                    instruction.getTargetLocationId())));
+        Set<Integer> smugglerIds = Set.of(
+                smugglerA.getPermanentCardId(),
+                smugglerB.getPermanentCardId());
+        var firstActor = initial.getInstructions().stream()
+            .filter(instruction -> smugglerIds.contains(
+                instruction.getCardPermanentCardId()))
+            .findFirst().orElseThrow();
+        deployPlannedCard(scn, planner, firstActor);
+
+        var afterActor = planner.createPlan(
+                scn.game(), VirtualTableScenario.LS, Side.LIGHT);
+        assertEquals("The first actor exposes only its local buddy", 1,
+                afterActor.getInstructions().size());
+        var firstBuddy = afterActor.getInstructions().get(0);
+        assertEquals(firstSite, firstBuddy.getTargetLocationId());
+        assertFalse(smugglerIds.contains(
+                firstBuddy.getCardPermanentCardId()));
+        deployPlannedCard(scn, planner, firstBuddy);
+
+        var secondPacket = planner.createPlan(
+                scn.game(), VirtualTableScenario.LS, Side.LIGHT);
+        assertEquals("The second site's protected packet opens next", 2,
+                secondPacket.getInstructions().size());
+        String secondSite = secondPacket.getInstructions().get(0)
+                .getTargetLocationId();
+        assertFalse("The next packet must use the other site",
+                firstSite.equals(secondSite));
+        assertTrue(secondPacket.getInstructions().stream().allMatch(
+                instruction -> secondSite.equals(
+                    instruction.getTargetLocationId())));
+    }
+
+    private void deployPlannedCard(
+            VirtualTableScenario scn,
+            com.gempukku.swccgo.ai.models.rando.strategy
+                    .DeployPhasePlanner planner,
+            com.gempukku.swccgo.ai.models.rando.strategy
+                    .DeploymentInstruction instruction) {
+        var card = (PhysicalCardImpl) scn.gameState()
+                .findCardByPermanentId(
+                    instruction.getCardPermanentCardId());
+        var target = (PhysicalCardImpl) scn.gameState().findCardById(
+                Integer.parseInt(instruction.getTargetLocationId()));
+        int originalCurrentId = instruction.getCardCurrentCardId();
+        planner.recordDeployment(
+                instruction.getCardPermanentCardId(), originalCurrentId,
+                instruction.getCardBlueprintId());
+        scn.MoveCardsToLocation(target, card);
+        card.setCardId(originalCurrentId + 10000);
     }
 }

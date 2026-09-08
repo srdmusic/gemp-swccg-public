@@ -18,6 +18,12 @@ import java.util.Set;
  * Ported from Python deploy_planner.py DeploymentPlan dataclass.
  */
 public class DeploymentPlan {
+    public record CountedDeployCommitment(int permanentCardId,
+                                          int currentCardId,
+                                          String targetLocationId,
+                                          int cost) {
+    }
+
     private DeployStrategy strategy;
     private String reason;
 
@@ -49,6 +55,12 @@ public class DeploymentPlan {
     private PersistentResponsePolicy.Obligation
         persistentResponseObligation;
 
+    // Exact physical package for a counted objective route. This survives the
+    // normal hand-to-table current-card-id change after each member deploys.
+    private ObjectiveAnalyzer.CountedDeployRouteKey countedDeployRouteKey;
+    private List<CountedDeployCommitment> countedDeployCommitments = List.of();
+    private List<DeploymentInstruction> countedDeployInstructions = List.of();
+
     public DeploymentPlan(DeployStrategy strategy, String reason) {
         this.strategy = strategy;
         this.reason = reason;
@@ -71,6 +83,11 @@ public class DeploymentPlan {
         copy.waitingForPlannedCards = waitingForPlannedCards;
         copy.originalPlanCost = originalPlanCost;
         copy.persistentResponseObligation = persistentResponseObligation;
+        copy.countedDeployRouteKey = countedDeployRouteKey;
+        copy.countedDeployCommitments = List.copyOf(
+                countedDeployCommitments);
+        copy.countedDeployInstructions = copyInstructions(
+                countedDeployInstructions);
         return copy;
     }
 
@@ -323,5 +340,59 @@ public class DeploymentPlan {
     public void setPersistentResponseObligation(
             PersistentResponsePolicy.Obligation obligation) {
         persistentResponseObligation = obligation;
+    }
+
+    public ObjectiveAnalyzer.CountedDeployRouteKey
+    getCountedDeployRouteKey() {
+        return countedDeployRouteKey;
+    }
+
+    public List<CountedDeployCommitment>
+    getCountedDeployCommitments() {
+        return countedDeployCommitments;
+    }
+
+    public List<DeploymentInstruction> getCountedDeployInstructions() {
+        return countedDeployInstructions;
+    }
+
+    public void markCountedDeployPackage(
+            ObjectiveAnalyzer.CountedDeployRouteKey routeKey) {
+        countedDeployRouteKey = routeKey;
+        countedDeployCommitments = instructions.stream()
+            .filter(instruction ->
+                instruction.getCardPermanentCardId() != null
+                    && instruction.getCardCurrentCardId() != null
+                    && instruction.getTargetLocationId() != null)
+            .map(instruction -> new CountedDeployCommitment(
+                instruction.getCardPermanentCardId(),
+                instruction.getCardCurrentCardId(),
+                instruction.getTargetLocationId(),
+                instruction.getDeployCost()))
+            .toList();
+        countedDeployInstructions = copyInstructions(instructions);
+    }
+
+    public void copyCountedDeployPackageFrom(DeploymentPlan source) {
+        if (source == null) return;
+        countedDeployRouteKey = source.countedDeployRouteKey;
+        countedDeployCommitments = List.copyOf(
+                source.countedDeployCommitments);
+        countedDeployInstructions = copyInstructions(
+                source.countedDeployInstructions);
+    }
+
+    public void clearCountedDeployPackage() {
+        countedDeployRouteKey = null;
+        countedDeployCommitments = List.of();
+        countedDeployInstructions = List.of();
+    }
+
+    private static List<DeploymentInstruction> copyInstructions(
+            List<DeploymentInstruction> source) {
+        if (source == null || source.isEmpty()) return List.of();
+        return source.stream()
+            .map(DeploymentInstruction::new)
+            .toList();
     }
 }

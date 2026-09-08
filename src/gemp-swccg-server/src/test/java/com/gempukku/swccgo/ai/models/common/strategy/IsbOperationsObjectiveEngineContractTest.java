@@ -23,6 +23,8 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -192,6 +194,172 @@ public class IsbOperationsObjectiveEngineContractTest {
                 .filter(action -> expectedActionId.equals(
                         action.getActionId()))
                 .findFirst().orElseThrow();
+    }
+
+    @Test
+    public void typedFourAgentRouteBuildsOneFundedConcentratedPackage() {
+        var scn = isboScenario();
+        scn.StartGame();
+        var agent1 = scn.GetDSCard("agent1");
+        var agent2 = scn.GetDSCard("agent2");
+        var agent3 = scn.GetDSCard("agent3");
+        var agent4 = scn.GetDSCard("agent4");
+        scn.MoveCardsToDSHand(agent1, agent2, agent3, agent4);
+        keepOnlyDarkHandCards(scn, agent1, agent2, agent3, agent4);
+        scn.DSActivateForceCheat(20);
+        scn.SkipToPhase(Phase.DEPLOY);
+
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        var onTableRoute = analyzer.openCountedDeployCompletionRoutes(
+                scn.game(), VirtualTableScenario.DS).stream()
+            .filter(ObjectiveAnalyzer.CountedDeployRoute::countsCardsOnTable)
+            .findFirst().orElseThrow();
+        assertEquals(4, onTableRoute.missingCount());
+        assertTrue(analyzer.matchesCountedDeployCandidateAt(
+                scn.game(), VirtualTableScenario.DS,
+                onTableRoute.key(), agent1,
+                scn.GetDSCard("corusDb")));
+        assertFalse(analyzer.matchesCountedDeployCandidateAt(
+                scn.game(), VirtualTableScenario.DS,
+                onTableRoute.key(), scn.GetDSCard("nonAgent"),
+                scn.GetDSCard("corusDb")));
+
+        var planner = new com.gempukku.swccgo.ai.models.rando.strategy
+                .DeployPhasePlanner();
+        planner.setObjectiveAnalyzer(analyzer);
+        var plan = planner.createPlan(
+                scn.game(), VirtualTableScenario.DS, Side.DARK);
+        Set<Integer> agentIds = Set.of(
+                agent1.getPermanentCardId(), agent2.getPermanentCardId(),
+                agent3.getPermanentCardId(), agent4.getPermanentCardId());
+        var agentInstructions = plan.getInstructions().stream()
+            .filter(instruction -> instruction.getCardPermanentCardId() != null
+                    && agentIds.contains(
+                        instruction.getCardPermanentCardId()))
+            .toList();
+        assertEquals("The complete route must be funded this phase", 4,
+                agentInstructions.size());
+        assertEquals("An on-table count does not require four exposed fronts",
+                1, agentInstructions.stream()
+                    .map(instruction -> instruction.getTargetLocationId())
+                    .collect(Collectors.toSet()).size());
+    }
+
+    @Test
+    public void countedPackageSurvivesFirstAgentsZoneIdChange() {
+        var scn = isboScenario();
+        scn.StartGame();
+        var agent1 = scn.GetDSCard("agent1");
+        var agent2 = scn.GetDSCard("agent2");
+        var agent3 = scn.GetDSCard("agent3");
+        var agent4 = scn.GetDSCard("agent4");
+        scn.MoveCardsToDSHand(agent1, agent2, agent3, agent4);
+        keepOnlyDarkHandCards(scn, agent1, agent2, agent3, agent4);
+        scn.DSActivateForceCheat(20);
+        scn.SkipToPhase(Phase.DEPLOY);
+
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        var planner = new com.gempukku.swccgo.ai.models.rando.strategy
+                .DeployPhasePlanner();
+        planner.setObjectiveAnalyzer(analyzer);
+        var initial = planner.createPlan(
+                scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertNotNull(initial.getCountedDeployRouteKey());
+        var first = initial.getInstructions().stream()
+            .filter(instruction -> instruction.getCardPermanentCardId()
+                    != null)
+            .findFirst().orElseThrow();
+        var firstAgent = (PhysicalCardImpl) scn.gameState()
+                .findCardByPermanentId(
+                    first.getCardPermanentCardId());
+        var target = (PhysicalCardImpl) scn.gameState().findCardById(
+                Integer.parseInt(first.getTargetLocationId()));
+        int originalCurrentId = first.getCardCurrentCardId();
+        planner.recordDeployment(
+                first.getCardPermanentCardId(), originalCurrentId,
+                first.getCardBlueprintId());
+        scn.MoveCardsToLocation(target, firstAgent);
+        firstAgent.setCardId(originalCurrentId + 10000);
+
+        var continued = planner.createPlan(
+                scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertEquals("The remaining exact package must not be replanned away",
+                3, continued.getInstructions().size());
+        assertTrue(continued.getInstructions().stream().allMatch(
+                instruction -> first.getTargetLocationId().equals(
+                    instruction.getTargetLocationId())));
+    }
+
+    @Test
+    public void completedObjectiveActorsDoNotAbandonCommittedSupport() {
+        var scn = isboScenario();
+        scn.StartGame();
+        var agent1 = scn.GetDSCard("agent1");
+        var agent2 = scn.GetDSCard("agent2");
+        var agent3 = scn.GetDSCard("agent3");
+        var agent4 = scn.GetDSCard("agent4");
+        var support = scn.GetDSCard("nonAgent");
+        scn.MoveCardsToDSHand(
+                agent1, agent2, agent3, agent4, support);
+        keepOnlyDarkHandCards(
+                scn, agent1, agent2, agent3, agent4, support);
+        scn.DSActivateForceCheat(20);
+        scn.SkipToPhase(Phase.DEPLOY);
+
+        var analyzer = new com.gempukku.swccgo.ai.models.rando.strategy
+                .ObjectiveAnalyzer();
+        analyzer.analyze(scn.game(), VirtualTableScenario.DS, Side.DARK);
+        var planner = new com.gempukku.swccgo.ai.models.rando.strategy
+                .DeployPhasePlanner();
+        planner.setObjectiveAnalyzer(analyzer);
+        var plan = planner.createPlan(
+                scn.game(), VirtualTableScenario.DS, Side.DARK);
+        var routeKey = plan.getCountedDeployRouteKey();
+        assertNotNull(routeKey);
+        var objectiveInstructions = new ArrayList<>(
+                plan.getInstructions());
+        String targetId = objectiveInstructions.get(0)
+                .getTargetLocationId();
+        var target = (PhysicalCardImpl) scn.gameState().findCardById(
+                Integer.parseInt(targetId));
+        var supportInstruction = new com.gempukku.swccgo.ai.models.rando
+                .strategy.DeploymentInstruction(
+                    support.getBlueprintId(true), support.getTitle(),
+                    targetId, target.getTitle(), 99,
+                    "Committed local safety support");
+        supportInstruction.setCardPermanentCardId(
+                support.getPermanentCardId());
+        supportInstruction.setCardCurrentCardId(support.getCardId());
+        supportInstruction.setDeployCost(2);
+        plan.addInstruction(supportInstruction);
+        plan.markCountedDeployPackage(routeKey);
+
+        for (var instruction : objectiveInstructions) {
+            var agent = (PhysicalCardImpl) scn.gameState()
+                    .findCardByPermanentId(
+                        instruction.getCardPermanentCardId());
+            int currentId = instruction.getCardCurrentCardId();
+            planner.recordDeployment(
+                    instruction.getCardPermanentCardId(), currentId,
+                    instruction.getCardBlueprintId());
+            scn.MoveCardsToLocation(target, agent);
+            agent.setCardId(currentId + 10000);
+        }
+        assertTrue(analyzer.isCountedDeployRuleSatisfied(
+                scn.game(), VirtualTableScenario.DS, routeKey));
+
+        var continued = planner.createPlan(
+                scn.game(), VirtualTableScenario.DS, Side.DARK);
+        assertEquals(1, continued.getInstructions().size());
+        assertEquals(support.getPermanentCardId(),
+                continued.getInstructions().get(0)
+                    .getCardPermanentCardId().intValue());
+        assertEquals(targetId, continued.getInstructions().get(0)
+                .getTargetLocationId());
     }
 
     private com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction

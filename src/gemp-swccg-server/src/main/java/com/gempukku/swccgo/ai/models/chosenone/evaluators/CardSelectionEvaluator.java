@@ -21,6 +21,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.DeployUndercoverModePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveAbilityPolicy;
@@ -3582,34 +3583,21 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                         // =====================================================
                         // V24.14B: EARLY SPY DETECTION (UNIVERSAL)
-                        // Check the deploying card's blueprint game text for "undercover".
-                        // This catches ALL undercover spy cards, not just hardcoded names.
+                        // Use the engine's typed only/may-deploy-undercover flags.
+                        // Mere rules text that mentions another Undercover spy is not a mode.
                         // Sets earlySpyDetected flag — deeper spy scoring handles location logic
                         // (including allowing spy at CC sites where OPPONENT has presence).
                         // =====================================================
-                        boolean earlySpyDetected = false;
-                        // Primary: Check deploying card's blueprint game text for "undercover"
-                        if (deployingBlueprintId != null) {
-                            try {
-                                SwccgCardBlueprint deployingBp = getBlueprintFromId(context, deployingBlueprintId);
-                                if (deployingBp != null) {
-                                    String gameTextCheck = deployingBp.getGameText();
-                                    if (gameTextCheck != null && gameTextCheck.toLowerCase(java.util.Locale.ROOT).contains("undercover")) {
-                                        earlySpyDetected = true;
-                                        logger.warn("V24.14B SPY DETECT: Blueprint game text contains 'undercover' — spy deploy!");
-                                    }
-                                }
-                            } catch (Exception e) {
-                                logger.debug("V24.14B: Error checking deploying blueprint: {}", e.getMessage());
-                            }
-                        }
-                        // Fallback: Check decision text for spy-related keywords
-                        if (!earlySpyDetected) {
-                            if (decisionText.contains("undercover") || decisionText.contains("as a spy")) {
-                                earlySpyDetected = true;
-                                logger.warn("V24.14B SPY DETECT: Decision text contains spy keyword — spy deploy!");
-                            }
-                        }
+                        SwccgCardBlueprint undercoverDeployBlueprint =
+                            objectiveProgressDeployingCard != null
+                                ? objectiveProgressDeployingCard.getBlueprint()
+                                : deployingBlueprintId == null ? null
+                                    : getBlueprintFromId(
+                                        context, deployingBlueprintId);
+                        boolean earlySpyDetected = DeployUndercoverModePolicy
+                            .isUndercoverDeploy(
+                                game, objectiveProgressDeployingCard,
+                                undercoverDeployBlueprint, decisionText);
 
                         // V29 ADJUSTED 2026-08-08 (passivity fix, m01683): hoisted out of
                         // the aboard block so the passenger penalty ahead of the
@@ -6139,32 +6127,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     boolean objectiveIsFlipped = deployObjAnalyzer.isFlipped();
 
                                     // V24.2E (V24.9/V24.14B fix): Detect undercover spy deployment.
-                                    // UNIVERSAL: Check deploying card's blueprint game text for "undercover".
-                                    // This works for ALL spy cards without hardcoding names.
-                                    // Also uses early detection result from V24.14B if available.
-                                    boolean isUndercoverSpy = earlySpyDetected;  // Reuse V24.14B early detection
-                                    // Method 1 (UNIVERSAL): Check deploying card's blueprint game text
-                                    if (!isUndercoverSpy && deployingBlueprintId != null) {
-                                        try {
-                                            SwccgCardBlueprint spyCheckBp = getBlueprintFromId(context, deployingBlueprintId);
-                                            if (spyCheckBp != null) {
-                                                String spyCheckText = spyCheckBp.getGameText();
-                                                if (spyCheckText != null && spyCheckText.toLowerCase(java.util.Locale.ROOT).contains("undercover")) {
-                                                    isUndercoverSpy = true;
-                                                    logger.warn("V24.14B SPY DETECT Method 1: Blueprint game text contains 'undercover'!");
-                                                }
-                                            }
-                                        } catch (Exception e) {
-                                            logger.debug("V24.14B SPY DETECT Method 1: Error: {}", e.getMessage());
-                                        }
-                                    }
-                                    // Method 1b (fallback): Decision text keywords
-                                    if (!isUndercoverSpy) {
-                                        if (decisionText.contains("undercover") || decisionText.contains("as a spy")) {
-                                            isUndercoverSpy = true;
-                                            logger.warn("V24.14B SPY DETECT Method 1b: Decision text spy keyword!");
-                                        }
-                                    }
+                                    // Reuse the typed engine-mode result from V24.14B.
+                                    boolean isUndercoverSpy = earlySpyDetected;
                                     // V67bt (Steve, 2026-05-11): METHOD 2 REMOVED.
                                     //
                                     // The old heuristic was: "if location options include both our-side
@@ -6179,29 +6143,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     // Rando deployed Nevar (power 3) solo at Cloud City: Lower
                                     // Corridor across from Rey (power 7) → 22 battle damage, concede.
                                     //
-                                    // Steve's rule (and memory file feedback_card_search_by_type_not_text):
-                                    // detect spies BY GAME TEXT or KEYWORD, never by heuristic.
-                                    // Methods 1 (decision text "undercover"/"spy") and Method 3
-                                    // (blueprint game text "undercover") are the correct typed checks.
-                                    // Method 2 is permanently removed.
-                                    // Method 3: Check deploying card's blueprint game text for "undercover" keyword.
-                                    // User confirmed: spy cards have "undercover" in their game text.
-                                    // deployingBlueprintId is extracted from the decision text HTML earlier in this method.
-                                    if (!isUndercoverSpy && deployingBlueprintId != null) {
-                                        try {
-                                            SwccgCardBlueprint deployingBp = getBlueprintFromId(context, deployingBlueprintId);
-                                            if (deployingBp != null) {
-                                                String spyGameText = deployingBp.getGameText();
-                                                if (spyGameText != null && spyGameText.toLowerCase(java.util.Locale.ROOT).contains("undercover")) {
-                                                    isUndercoverSpy = true;
-                                                    logger.info("V24.9 SPY DETECT Method 3: Blueprint game text contains 'undercover' — this is a spy deploy!");
-                                                }
-                                            }
-                                        } catch (Exception e) {
-                                            logger.debug("V24.9 SPY DETECT Method 3: Error checking blueprint: {}", e.getMessage());
-                                        }
-                                    }
-
+                                    // Detection now uses the engine's typed deployment capability;
+                                    // raw card text is not behavioral proof.
                                     if (isUndercoverSpy && !spyScoringApplied) {
                                         // V24.14B: SPY LOCATION SCORING — check WHO has presence.
                                         // Spy blocks force drains for BOTH sides at a location.

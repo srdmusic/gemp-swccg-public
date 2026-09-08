@@ -12,6 +12,8 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 
 import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -24,6 +26,9 @@ import java.util.Set;
  */
 public final class DeployFormationPromisePolicy {
 
+    public static final String VERSION_MARKER =
+            "V307_DURABLE_FORMATION_QUEUE";
+
     private DeployFormationPromisePolicy() {
     }
 
@@ -32,13 +37,37 @@ public final class DeployFormationPromisePolicy {
                                      String targetLocationId) {
     }
 
+    public record CommittedCard(int permanentCardId,
+                                int currentCardId,
+                                String name,
+                                int cost) {
+    }
+
     public record Promise(int anchorPermanentCardId,
                           int anchorCurrentCardId,
-                          int companionPermanentCardId,
-                          int companionCurrentCardId,
                           String targetLocationId,
-                          String companionName,
-                          int companionCost) {
+                          List<CommittedCard> committedCards) {
+        public Promise {
+            committedCards = committedCards == null
+                    ? List.of()
+                    : List.copyOf(committedCards);
+        }
+
+        public int companionPermanentCardId() {
+            return committedCards.get(0).permanentCardId();
+        }
+
+        public int companionCurrentCardId() {
+            return committedCards.get(0).currentCardId();
+        }
+
+        public String companionName() {
+            return committedCards.get(0).name();
+        }
+
+        public int companionCost() {
+            return committedCards.get(0).cost();
+        }
     }
 
     public record FundedPair(int firstPermanentCardId,
@@ -71,9 +100,8 @@ public final class DeployFormationPromisePolicy {
         }
         GameState gameState = game.getGameState();
         for (PlannedInstruction anchorInstruction : instructions) {
-            PhysicalCard anchor = exactCard(
-                    gameState, anchorInstruction.permanentCardId(),
-                    anchorInstruction.currentCardId());
+            PhysicalCard anchor = stableCard(
+                    gameState, anchorInstruction.permanentCardId());
             PhysicalCard target = exactTarget(
                     gameState, anchorInstruction.targetLocationId());
             if (!isExactAnchorAtSite(
@@ -82,7 +110,8 @@ public final class DeployFormationPromisePolicy {
                 continue;
             }
 
-            Promise best = null;
+            List<CommittedCard> committed = new ArrayList<>();
+            int committedCost = 0;
             for (PlannedInstruction companionInstruction : instructions) {
                 if (companionInstruction == anchorInstruction
                         || !anchorInstruction.targetLocationId().equals(
@@ -94,19 +123,21 @@ public final class DeployFormationPromisePolicy {
                         companionInstruction.currentCardId());
                 Integer cost = exactAffordableCompanionCost(
                         game, playerId, companion, target,
-                        spendableForce(forceAvailable, forceReserved));
+                        spendableForce(forceAvailable, forceReserved)
+                                - committedCost);
                 if (cost == null) continue;
-                if (best == null || cost < best.companionCost()) {
-                    best = new Promise(
-                            anchorInstruction.permanentCardId(),
-                            anchorInstruction.currentCardId(),
-                            companionInstruction.permanentCardId(),
-                            companionInstruction.currentCardId(),
-                            anchorInstruction.targetLocationId(),
-                            companion.getTitle(), cost);
-                }
+                committed.add(new CommittedCard(
+                        companionInstruction.permanentCardId(),
+                        companionInstruction.currentCardId(),
+                        companion.getTitle(), cost));
+                committedCost += cost;
             }
-            if (best != null) return best;
+            if (!committed.isEmpty()) {
+                return new Promise(
+                        anchorInstruction.permanentCardId(),
+                        anchorInstruction.currentCardId(),
+                        anchorInstruction.targetLocationId(), committed);
+            }
         }
         return null;
     }
@@ -132,9 +163,8 @@ public final class DeployFormationPromisePolicy {
             return false;
         }
         GameState gameState = game.getGameState();
-        PhysicalCard anchor = exactCard(
-                gameState, promise.anchorPermanentCardId(),
-                promise.anchorCurrentCardId());
+        PhysicalCard anchor = stableCard(
+                gameState, promise.anchorPermanentCardId());
         PhysicalCard target = exactTarget(
                 gameState, promise.targetLocationId());
         if (!isExactAnchorAtSite(
@@ -142,12 +172,63 @@ public final class DeployFormationPromisePolicy {
                 promise.targetLocationId())) {
             return false;
         }
-        PhysicalCard companion = exactCard(
-                gameState, promise.companionPermanentCardId(),
-                promise.companionCurrentCardId());
-        return exactAffordableCompanionCost(
-                game, playerId, companion, target,
-                spendableForce(forceAvailable, forceReserved)) != null;
+        List<CommittedCard> remaining = remainingCommittedCards(
+                game, playerId, forceAvailable, forceReserved, promise);
+        return remaining != null && !remaining.isEmpty();
+    }
+
+    /**
+     * Reconcile a committed same-site queue after normal engine card-id changes.
+     * Cards still in hand remain exact current-id matches. A committed member
+     * that has deployed counts as complete only when the same permanent card is
+     * now in play at the promised site.
+     */
+    public static List<CommittedCard> remainingCommittedCards(
+            SwccgGame game, String playerId,
+            int forceAvailable, int forceReserved,
+            Promise promise) {
+        if (game == null || playerId == null || promise == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return null;
+        }
+        GameState gameState = game.getGameState();
+        PhysicalCard target = exactTarget(
+                gameState, promise.targetLocationId());
+        PhysicalCard anchor = stableCard(
+                gameState, promise.anchorPermanentCardId());
+        if (!isExactAnchorAtSite(
+                game, playerId, anchor, target,
+                promise.targetLocationId())) {
+            return null;
+        }
+
+        int spendable = spendableForce(forceAvailable, forceReserved);
+        int remainingCost = 0;
+        List<CommittedCard> remaining = new ArrayList<>();
+        for (CommittedCard committed : promise.committedCards()) {
+            PhysicalCard card = stableCard(
+                    gameState, committed.permanentCardId());
+            if (card == null) return null;
+            if (card.getCardId() == committed.currentCardId()
+                    && card.getZone() == Zone.HAND) {
+                Integer exactCost = exactAffordableCompanionCost(
+                        game, playerId, card, target,
+                        spendable - remainingCost);
+                if (exactCost == null) return null;
+                remaining.add(new CommittedCard(
+                        committed.permanentCardId(),
+                        committed.currentCardId(),
+                        card.getTitle(), exactCost));
+                remainingCost += exactCost;
+                continue;
+            }
+            if (!isCommittedCardAtTarget(
+                    game, playerId, card, target)) {
+                return null;
+            }
+        }
+        return Collections.unmodifiableList(remaining);
     }
 
     /**
@@ -248,9 +329,9 @@ public final class DeployFormationPromisePolicy {
                 continue;
             }
             String locationId = Integer.toString(location.getCardId());
-            PlannedInstruction anchorInstruction = exactInstructionFor(
-                    instructions, anchor.getPermanentCardId(),
-                    anchor.getCardId());
+            PlannedInstruction anchorInstruction =
+                    instructionForPermanentCard(
+                        instructions, anchor.getPermanentCardId());
             if (anchorInstruction != null
                     && locationId.equals(
                             anchorInstruction.targetLocationId())) {
@@ -259,9 +340,7 @@ public final class DeployFormationPromisePolicy {
 
             for (PlannedInstruction instruction : instructions) {
                 if (instruction.permanentCardId()
-                            == anchor.getPermanentCardId()
-                        && instruction.currentCardId()
-                            == anchor.getCardId()) {
+                            == anchor.getPermanentCardId()) {
                     continue;
                 }
                 PhysicalCard companion = exactCard(
@@ -289,12 +368,16 @@ public final class DeployFormationPromisePolicy {
                         || originalBuddy == bestOriginalBuddy
                             && combatValue == bestCombatValue
                             && cost < best.companionCost()) {
+                    int anchorCurrentCardId = anchorInstruction != null
+                            ? anchorInstruction.currentCardId()
+                            : anchor.getCardId();
                     best = new Promise(
                             anchor.getPermanentCardId(),
-                            anchor.getCardId(),
-                            instruction.permanentCardId(),
-                            instruction.currentCardId(), locationId,
-                            companion.getTitle(), cost);
+                            anchorCurrentCardId, locationId,
+                            List.of(new CommittedCard(
+                                instruction.permanentCardId(),
+                                instruction.currentCardId(),
+                                companion.getTitle(), cost)));
                     bestOriginalBuddy = originalBuddy;
                     bestCombatValue = combatValue;
                 }
@@ -379,11 +462,32 @@ public final class DeployFormationPromisePolicy {
             if (actualLocation == null
                     || actualLocation.getCardId() != target.getCardId()
                     || FormationSafety.countFriendlyNonUndercoverCharacters(
-                            gameState.getCardsAtLocation(target), playerId) != 1) {
+                            gameState.getCardsAtLocation(target), playerId) < 1) {
                 return false;
             }
             return Integer.toString(target.getCardId())
                     .equals(targetLocationId);
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private static boolean isCommittedCardAtTarget(
+            SwccgGame game, String playerId,
+            PhysicalCard card, PhysicalCard target) {
+        if (card == null || target == null || card.getBlueprint() == null
+                || card.getBlueprint().getCardCategory()
+                    != CardCategory.CHARACTER
+                || !playerId.equals(card.getOwner())
+                || card.isUndercover() || card.getZone() == null
+                || !card.getZone().isInPlay()) {
+            return false;
+        }
+        try {
+            PhysicalCard actual = game.getModifiersQuerying()
+                    .getLocationThatCardIsAt(game.getGameState(), card);
+            return actual != null
+                    && actual.getCardId() == target.getCardId();
         } catch (Exception ignored) {
             return false;
         }
@@ -425,12 +529,11 @@ public final class DeployFormationPromisePolicy {
         return Math.max(0, forceAvailable - Math.max(0, forceReserved));
     }
 
-    private static PlannedInstruction exactInstructionFor(
+    private static PlannedInstruction instructionForPermanentCard(
             List<PlannedInstruction> instructions,
-            int permanentCardId, int currentCardId) {
+            int permanentCardId) {
         for (PlannedInstruction instruction : instructions) {
-            if (instruction.permanentCardId() == permanentCardId
-                    && instruction.currentCardId() == currentCardId) {
+            if (instruction.permanentCardId() == permanentCardId) {
                 return instruction;
             }
         }
@@ -501,6 +604,11 @@ public final class DeployFormationPromisePolicy {
         PhysicalCard card = gameState.findCardByPermanentId(permanentCardId);
         return card != null && card.getCardId() == currentCardId
                 ? card : null;
+    }
+
+    private static PhysicalCard stableCard(
+            GameState gameState, int permanentCardId) {
+        return gameState.findCardByPermanentId(permanentCardId);
     }
 
     private static PhysicalCard exactTarget(

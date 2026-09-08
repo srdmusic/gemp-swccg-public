@@ -83,9 +83,105 @@ public class DeployFormationPromisePolicyTest {
         when(modifiers.getTotalAbilityAtLocation(
                 gameState, "rando", site)).thenReturn(1.0f);
         when(anchor.getCardId()).thenReturn(9);
-        assertNull("A stale current-card id cannot inherit the promise",
+        assertNotNull("A normal hand-to-table current-id change must keep the same physical anchor",
                 DeployFormationPromisePolicy.detect(
                     game, "rando", 6, 1, plan));
+
+        when(companion.getCardId()).thenReturn(10);
+        assertNull("A pending hand card must still match its exact current id",
+                DeployFormationPromisePolicy.detect(
+                    game, "rando", 6, 1, plan));
+    }
+
+    @Test
+    public void fundedSameSiteGroupRemainsAnOrderedQueue() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard anchor = character(1, Zone.AT_LOCATION);
+        PhysicalCard second = character(2, Zone.HAND);
+        PhysicalCard third = character(3, Zone.HAND);
+        PhysicalCard site = site(100, "Battleground");
+
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.findCardByPermanentId(1)).thenReturn(anchor);
+        when(gameState.findCardByPermanentId(2)).thenReturn(second);
+        when(gameState.findCardByPermanentId(3)).thenReturn(third);
+        when(gameState.findCardById(100)).thenReturn(site);
+        when(modifiers.getLocationThatCardIsAt(gameState, anchor))
+                .thenReturn(site);
+        when(gameState.getCardsAtLocation(site))
+                .thenReturn(List.of(anchor));
+        allowDeploys(modifiers);
+        when(modifiers.getDeployCost(
+                gameState, second, second, site,
+                false, null, false, 0.0f, null, true))
+                .thenReturn(2.0f);
+        when(modifiers.getDeployCost(
+                gameState, third, third, site,
+                false, null, false, 0.0f, null, true))
+                .thenReturn(3.0f);
+
+        List<DeployFormationPromisePolicy.PlannedInstruction> plan = List.of(
+                new DeployFormationPromisePolicy.PlannedInstruction(
+                        1, 1, "100"),
+                new DeployFormationPromisePolicy.PlannedInstruction(
+                        2, 2, "100"),
+                new DeployFormationPromisePolicy.PlannedInstruction(
+                        3, 3, "100"));
+        var promise = DeployFormationPromisePolicy.detect(
+                game, "rando", 6, 1, plan);
+        assertNotNull(promise);
+        assertEquals(2, promise.committedCards().size());
+
+        when(second.getZone()).thenReturn(Zone.AT_LOCATION);
+        when(second.getCardId()).thenReturn(22);
+        when(modifiers.getLocationThatCardIsAt(gameState, second))
+                .thenReturn(site);
+        when(gameState.getCardsAtLocation(site))
+                .thenReturn(List.of(anchor, second));
+        var remaining = DeployFormationPromisePolicy
+                .remainingCommittedCards(
+                    game, "rando", 4, 1, promise);
+        assertNotNull(remaining);
+        assertEquals(1, remaining.size());
+        assertEquals(3, remaining.get(0).permanentCardId());
+    }
+
+    @Test
+    public void differentPhysicalAnchorCannotInheritAFormationPromise() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard replacement = character(9, Zone.AT_LOCATION);
+        PhysicalCard companion = character(2, Zone.HAND);
+        PhysicalCard site = site(100, "Battleground");
+
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.findCardByPermanentId(1)).thenReturn(null);
+        when(gameState.findCardByPermanentId(9)).thenReturn(replacement);
+        when(gameState.findCardByPermanentId(2)).thenReturn(companion);
+        when(gameState.findCardById(100)).thenReturn(site);
+        when(modifiers.getLocationThatCardIsAt(gameState, replacement))
+                .thenReturn(site);
+        when(gameState.getCardsAtLocation(site))
+                .thenReturn(List.of(replacement));
+        allowDeploys(modifiers);
+        when(modifiers.getDeployCost(
+                gameState, companion, companion, site,
+                false, null, false, 0.0f, null, true))
+                .thenReturn(2.0f);
+
+        List<DeployFormationPromisePolicy.PlannedInstruction> plan = List.of(
+                new DeployFormationPromisePolicy.PlannedInstruction(
+                        1, 1, "100"),
+                new DeployFormationPromisePolicy.PlannedInstruction(
+                        2, 2, "100"));
+
+        assertNull(DeployFormationPromisePolicy.detect(
+                game, "rando", 4, 1, plan));
     }
 
     @Test

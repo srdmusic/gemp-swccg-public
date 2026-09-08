@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.models.common.strategy;
 
 import com.gempukku.swccgo.ai.models.common.phase.ObjectiveSideBlueprints;
 import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectiveFacts;
+import com.gempukku.swccgo.ai.models.common.phase.DeployUndercoverModePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.playbook.ObjectiveProgressAssessment;
@@ -547,6 +548,293 @@ public class ObjectiveAnalyzer {
             }
         }
         return false;
+    }
+
+    /** Stable opaque key for one typed counted deployment route. */
+    public record CountedDeployRouteKey(String ruleId,
+                                        int alternativeIndex) {
+    }
+
+    /**
+     * Public facts for a missing typed actor route. Filter implementation stays
+     * inside this analyzer; deploy planners receive only the count and grouping
+     * law needed to build an exact package.
+     */
+    public record CountedDeployRoute(CountedDeployRouteKey key,
+                                     boolean anyOf,
+                                     String relation,
+                                     int targetCount,
+                                     int currentCount,
+                                     int missingCount,
+                                     int minActorsPerLocation) {
+        public boolean countsCardsOnTable() {
+            return "onTable".equals(relation);
+        }
+
+        public boolean countsDistinctLocations() {
+            return !countsCardsOnTable();
+        }
+    }
+
+    /**
+     * Returns only lower-bound, actor-typed pre-flip routes that a deployment
+     * package can finish. Any-of alternatives remain separate packages. An
+     * all-of actor route is exposed only after its sibling legs are satisfied.
+     */
+    public List<CountedDeployRoute> openCountedDeployCompletionRoutes(
+            SwccgGame game, String playerId) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return List.of();
+        }
+        List<CountedDeployRoute> result = new ArrayList<>();
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (!isActivePreFlipRule(rule)
+                    || isRuleSatisfied(game, playerId, rule)) {
+                continue;
+            }
+            for (int index = 0; index < rule.alternatives.size(); index++) {
+                FlipLocationAlternative alternative =
+                        rule.alternatives.get(index);
+                if (!isDeployCompletableCountedActorAlternative(
+                            game, playerId, alternative)
+                        || !"anyOf".equals(rule.mode)
+                            && !allSiblingAlternativesSatisfied(
+                                game, playerId, rule, index)) {
+                    continue;
+                }
+                int target = countedDeployTarget(
+                        game, playerId, alternative.count);
+                String controller = resolveController(
+                        game.getGameState(), playerId,
+                        alternative.controller);
+                int current = countAlternativeMatches(
+                        game, playerId, controller, alternative);
+                int missing = Math.max(0, target - current);
+                if (missing == 0) continue;
+                result.add(new CountedDeployRoute(
+                        new CountedDeployRouteKey(rule.id, index),
+                        "anyOf".equals(rule.mode),
+                        alternative.relation, target, current, missing,
+                        Math.max(1,
+                            alternative.minActorsPerLocation == null
+                                ? 1
+                                : alternative.minActorsPerLocation)));
+            }
+        }
+        return Collections.unmodifiableList(result);
+    }
+
+    /** Candidate and destination truth for an opaque counted route. */
+    public boolean matchesCountedDeployCandidateAt(
+            SwccgGame game, String playerId,
+            CountedDeployRouteKey key, PhysicalCard candidate,
+            PhysicalCard location) {
+        FlipLocationAlternative alternative = countedDeployAlternative(key);
+        if (!isDeployCompletableCountedActorAlternative(
+                    game, playerId, alternative)
+                || candidate == null || location == null
+                || candidate.getZone() != Zone.HAND
+                || !playerId.equals(candidate.getOwner())) {
+            return false;
+        }
+        // The engine's ControlsWith/OccupiesWith conditions inject a
+        // not-undercover actor filter. Plain on-table spotting may explicitly
+        // include excluded-from-battle cards, so do not narrow those routes.
+        if (("controlWith".equals(alternative.relation)
+                || "occupyWith".equals(alternative.relation))
+                && DeployUndercoverModePolicy.predictsUndercoverDeploy(
+                    game, candidate, candidate.getBlueprint(), null)) {
+            return false;
+        }
+        if ("onTable".equals(alternative.relation)) {
+            boolean destinationMatches = alternative.locationFilterKey == null
+                    ? location.getBlueprint() != null
+                        && location.getBlueprint().getCardSubtype()
+                            == CardSubtype.SITE
+                    : locationMatchesAlternative(
+                        game.getGameState(), game, playerId,
+                        location, alternative);
+            return destinationMatches
+                    && candidateMatchesAlternativeActor(
+                        game, playerId, candidate, alternative);
+        }
+        return advancesAlternativeAt(
+                game, playerId, candidate, location, alternative);
+    }
+
+    /** Number of additional matching actors needed for this location to count. */
+    public int countedDeployActorsNeededAt(
+            SwccgGame game, String playerId,
+            CountedDeployRouteKey key, PhysicalCard location) {
+        FlipLocationAlternative alternative = countedDeployAlternative(key);
+        if (alternative == null || location == null
+                || "onTable".equals(alternative.relation)
+                || game == null || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || !locationMatchesAlternative(
+                    game.getGameState(), game, playerId,
+                    location, alternative)) {
+            return 0;
+        }
+        String controller = resolveController(
+                game.getGameState(), playerId,
+                alternative.controller);
+        if (relationSatisfiedAt(
+                game, playerId, controller, location,
+                alternative.relation, alternative.actorFilterKey,
+                alternative.includeExcludedFromBattle,
+                alternative.spotOverride)
+                && meetsPerLocationActorFloor(
+                    game, controller, location, alternative)) {
+            return 0;
+        }
+        int required = Math.max(1,
+                alternative.minActorsPerLocation == null
+                    ? 1 : alternative.minActorsPerLocation);
+        return Math.max(0, required - countMatchingActorsAtLocation(
+                game, controller, location, alternative));
+    }
+
+    public boolean isCountedDeployRuleSatisfied(
+            SwccgGame game, String playerId,
+            CountedDeployRouteKey key) {
+        FlipLocationRule rule = countedDeployRule(key);
+        return rule == null || isRuleSatisfied(game, playerId, rule);
+    }
+
+    private boolean isDeployCompletableCountedActorAlternative(
+            SwccgGame game, String playerId,
+            FlipLocationAlternative alternative) {
+        if (game == null || playerId == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null
+                || alternative == null
+                || alternative.actorFilterKey == null
+                || alternative.count == null
+                || alternative.count.value == null
+                || alternative.count.value <= 1
+                || alternative.count.referenceController != null
+                || isUpperBound(alternative.count)
+                || !("self".equals(alternative.controller)
+                    || "any".equals(alternative.controller))
+                || isCountedOperativeFormationAlternative(alternative)
+                || !("onTable".equals(alternative.relation)
+                    || "at".equals(alternative.relation)
+                    || "presentAt".equals(alternative.relation)
+                    || "control".equals(alternative.relation)
+                    || "occupy".equals(alternative.relation)
+                    || "controlWith".equals(alternative.relation)
+                    || "occupyWith".equals(alternative.relation))) {
+            return false;
+        }
+        return opponentConstraintSatisfied(
+                game, playerId, alternative.opponentConstraint);
+    }
+
+    private boolean allSiblingAlternativesSatisfied(
+            SwccgGame game, String playerId,
+            FlipLocationRule rule, int selectedIndex) {
+        for (int index = 0; index < rule.alternatives.size(); index++) {
+            if (index != selectedIndex
+                    && !isFlipLocationAlternativeSatisfied(
+                        game, playerId,
+                        rule.alternatives.get(index))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private int countedDeployTarget(
+            SwccgGame game, String playerId, RuleCount count) {
+        int expected = expectedCount(game, playerId, count);
+        return count != null && ">".equals(count.comparator)
+                ? expected + 1 : expected;
+    }
+
+    private FlipLocationRule countedDeployRule(
+            CountedDeployRouteKey key) {
+        if (key == null || activeFlipLocationRules == null) return null;
+        for (FlipLocationRule rule : activeFlipLocationRules) {
+            if (rule != null && Objects.equals(rule.id, key.ruleId())
+                    && rule.alternatives != null
+                    && key.alternativeIndex() >= 0
+                    && key.alternativeIndex()
+                        < rule.alternatives.size()) {
+                return rule;
+            }
+        }
+        return null;
+    }
+
+    private FlipLocationAlternative countedDeployAlternative(
+            CountedDeployRouteKey key) {
+        FlipLocationRule rule = countedDeployRule(key);
+        return rule == null ? null
+                : rule.alternatives.get(key.alternativeIndex());
+    }
+
+    private boolean candidateMatchesAlternativeActor(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            FlipLocationAlternative alternative) {
+        boolean prospectiveIsbAgent = isISBOperations
+                && ("ISB_agent".equals(alternative.actorFilterKey)
+                    || "non_undercover_ISB_agent".equals(
+                        alternative.actorFilterKey))
+                && !candidate.isUndercover()
+                && isIsbLoreAgentCandidate(
+                    game, playerId, candidate);
+        com.gempukku.swccgo.filters.Filter prospectiveActorFilter =
+                switch (alternative.actorFilterKey) {
+                    case "senator_at_Galactic_Senate" ->
+                        Filters.senator;
+                    case "senator_with_blockade_agenda_at_Galactic_Senate" ->
+                        Filters.and(Filters.senator,
+                            Filters.blockade_agenda);
+                    case "senator_with_peace_agenda_at_Galactic_Senate" ->
+                        Filters.and(Filters.senator,
+                            Filters.peace_agenda);
+                    default -> null;
+                };
+        boolean prospectiveCompositeActor =
+                prospectiveActorFilter != null
+                    && prospectiveActorFilter.accepts(
+                        game.getGameState(),
+                        game.getModifiersQuerying(), candidate);
+        com.gempukku.swccgo.filters.Filter actorFilter =
+                resolveFilter(alternative.actorFilterKey);
+        return prospectiveIsbAgent || prospectiveCompositeActor
+                || actorFilter != null
+                && actorFilter.accepts(
+                    game.getGameState(),
+                    game.getModifiersQuerying(), candidate);
+    }
+
+    private int countMatchingActorsAtLocation(
+            SwccgGame game, String controller, PhysicalCard location,
+            FlipLocationAlternative alternative) {
+        Collection<PhysicalCard> permanents =
+                game.getGameState().getAllPermanentCards();
+        if (permanents == null) return 0;
+        int count = 0;
+        for (PhysicalCard card : permanents) {
+            if (card == null || controller != null
+                    && !controller.equals(card.getOwner())
+                    || !isActiveForSpot(
+                        game, card,
+                        alternative.includeExcludedFromBattle)
+                    || !candidateMatchesAlternativeActor(
+                        game, controller, card, alternative)) {
+                continue;
+            }
+            PhysicalCard at = actorLocationForAlternative(
+                    game, card, alternative);
+            if (samePhysicalLocation(at, location)) count++;
+        }
+        return count;
     }
 
     /**
@@ -7960,20 +8248,9 @@ public class ObjectiveAnalyzer {
                     game, playerId, candidate, location,
                     alternative, controller);
         }
-        com.gempukku.swccgo.filters.Filter actorFilter =
-                resolveFilter(alternative.actorFilterKey);
         if (alternative.actorFilterKey != null) {
-            boolean prospectiveIsbAgent =
-                    isIsbRebelBaseAgentAlternative(alternative)
-                    && (candidate.getZone() == null
-                        || !candidate.getZone().isInPlay())
-                    && !candidate.isUndercover()
-                    && isIsbLoreAgentCandidate(
-                        game, playerId, candidate);
-            if (!prospectiveIsbAgent
-                    && (actorFilter == null || !actorFilter.accepts(
-                        game.getGameState(),
-                        game.getModifiersQuerying(), candidate))) {
+            if (!candidateMatchesAlternativeActor(
+                    game, playerId, candidate, alternative)) {
                 return false;
             }
         }

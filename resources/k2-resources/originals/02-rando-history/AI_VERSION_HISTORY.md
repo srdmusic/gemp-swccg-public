@@ -1,3 +1,38 @@
+  ==== V307 COUNTED OBJECTIVE PACKAGES + DURABLE GLOBAL BUDDIES (2026-09-07, both bots) ====
+Replay 72353 exposed the remaining hole in V304/V306. ISB Operations had enough Force and four
+qualifying agents available, and the accepted plan included funded same-site partners. After each
+first character deployed, the engine's ordinary hand-to-play current-card-id change made the buddy
+promise reject its own anchor. Structured objective progress then triggered a replan, leaving weak
+first bodies exposed and the four-agent route unfinished. Ysanne Isard was separately treated as
+Undercover because her ordinary rules text mentions an Undercover spy.
+
+V307 tracks deployed anchors by permanent physical identity plus exact destination. Pending group
+members remain strict current-id hand cards, must retain normal deploy legality and exact modified
+affordability, and cannot consume the battle reserve. Every affordable same-site member becomes a
+queue, so the local group finishes before another front opens. Wrong-site, missing, illegal, or
+unaffordable state releases the queue rather than bypassing a hard veto.
+
+The shared ObjectiveAnalyzer now publishes unfinished lower-bound typed actor routes from the
+structured objective playbook. Any-of branches remain independent; an all-of leg is eligible only
+after its siblings are true. Both planners require a complete affordable package. On-table counts
+concentrate at one safe site, while rules that count distinct locations get only the required number
+of locally protected packets. The full multi-site package stays reserved, but only one site's local
+packet is selectable at a time; the next site cannot open until the current actor-and-buddy group is
+complete. Every continuation rechecks exact affordability, battle reserve, and live board safety,
+and ordinary buddies are preferred over actors required by a later site. The operative-special owner
+remains intact. Forced Undercover deployment is recognized from typed engine APIs and character
+modifiers. Optional capability counts only when V170 would select that mode, and the text fallback
+requires an explicit deploy-as-an-Undercover-spy prompt. Control-with and occupy-with packages reject
+actors predicted to arrive Undercover; source-defined on-table spotting retains its own visibility.
+
+Changes are AI-only and mirrored. Existing legality, Formation Safety, severe-loss, objective, and
+battle-reserve vetoes remain dominant. A focused 89-test ring passed with no failures, errors, or
+skips. It covers the four-agent concentrated plan, continuation after a normal current-id change,
+forced-Undercover exclusion from a control-with route, and a two-site four-card package that exposes
+the second local pair only after the first actor-and-buddy pair is complete. Broad reactor testing was
+omitted at Steve's request. Packaging and runtime loading are recorded after deployment. Revert the
+V307 source and focused tests together to return to V306. See AI_CHANGELOG 2026-09-07.
+
   ==== V306 DEPLOY COMMITMENT + VOLUNTARY 13-CARD CEILING (2026-09-07, both bots) ====
 Replays 72352 and 72351 exposed three connected deployment failures and renewed hand hoarding. An
 exact funded Nute Gunray plus Dr. Evazan package was accepted, but its first character was still
