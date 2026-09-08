@@ -26,12 +26,27 @@ requires an explicit deploy-as-an-Undercover-spy prompt. Control-with and occupy
 actors predicted to arrive Undercover; source-defined on-table spotting retains its own visibility.
 
 Changes are AI-only and mirrored. Existing legality, Formation Safety, severe-loss, objective, and
-battle-reserve vetoes remain dominant. A focused 89-test ring passed with no failures, errors, or
-skips. It covers the four-agent concentrated plan, continuation after a normal current-id change,
-forced-Undercover exclusion from a control-with route, and a two-site four-card package that exposes
-the second local pair only after the first actor-and-buddy pair is complete. Broad reactor testing was
-omitted at Steve's request. Packaging and runtime loading are recorded after deployment. Revert the
-V307 source and focused tests together to return to V306. See AI_CHANGELOG 2026-09-07.
+battle-reserve vetoes remain dominant. Local source commit 326da35be passed a focused 89-test ring
+with no failures, errors, or skips. It covers the four-agent concentrated plan, continuation after a
+normal current-id change, forced-Undercover exclusion from a control-with route, and a two-site
+four-card package that exposes the second local pair only after the first actor-and-buddy pair is
+complete. Independent verification repeated all 89 tests and passed markers, mirror parity, diff,
+and forbidden-symbol checks. Broad reactor testing was omitted at Steve's request.
+
+The ZIP-valid 27,069-entry web.jar has SHA-256
+37092f8f4bbdcd4dcadbe5b651453541264d99456c4782e1820e9e50c8e3e111. V301, V302, all six Set 27
+outer classes, and the offline-image handler remain packaged. The authenticated Hall was empty before
+the shutdown freeze and after restart. Only gemp_swccg_app_1 was recreated. Fresh app d45211865775
+started 2026-09-08T02:20:25.48104572Z with zero restarts and no OOM; candidate, host, and container
+hashes match; Set 227 loaded; startup completed; three game-page probes returned 200; and all gameplay
+switches were restored. MariaDB container 46a8397072d3 retained its original
+2026-09-04T13:43:54.597649711Z start time with zero restarts and no OOM. The sealed candidate is
+/Users/steve/gemp-deploy-artifacts/rando-counted-buddy-v307-2026-09-07/326da35be-37092f8f/web.jar.
+Immediate rollback is
+/Users/steve/gemp-deploy-backups/rando-counted-buddy-v307-2026-09-07/predeploy-326da35be-4ca3ebea/web.jar,
+SHA-256 4ca3ebeacb39096c66d55a1acb224def0759c781669117bb63b035e365401f2c. Proof is RUNTIME_LOADED;
+REPLAY_FIRED awaits Steve's playtest. No push occurred. Revert the V307 source and focused tests
+together to return to V306. See AI_CHANGELOG 2026-09-07.
 
   ==== V306 DEPLOY COMMITMENT + VOLUNTARY 13-CARD CEILING (2026-09-07, both bots) ====
 Replays 72352 and 72351 exposed three connected deployment failures and renewed hand hoarding. An
