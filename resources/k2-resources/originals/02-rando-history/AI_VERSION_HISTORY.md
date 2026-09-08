@@ -34,8 +34,26 @@ battle that current safety rejects.
 Source commit 8e9b43571 passed compile, 60 focused fact and policy checks, 71 adapter and source-
 parity checks, and git diff --check, all with zero failures. Production changes are AI-only and
 mirrored. No card, engine, deck, client, database, objective, V307 package, V308 concentration, or
-V310 Hunt Down behavior changed. V311 is SOURCE_TESTED only. It has not been packaged, loaded, or
-replay-fired, and nothing was pushed. Revert 8e9b43571 to remove it.
+V310 Hunt Down behavior changed. Revert 8e9b43571 to remove it from source.
+
+Steve then authorized deployment. Offline pinned Java 21 packaging passed. The ZIP-valid web.jar
+has 46,332,356 bytes and 27,094 entries, SHA-256
+4c8d526f5f3c9c0054c8c45d70236384f92f452d6235d9893a75e793a9b57253.
+Compared with V310, it adds eight prospective-synergy classes and changes 42 classes inside the
+nine expected AI source families. It removes zero entries and changes no non-AI class or resource.
+All nine outer classes match compiled output; eight expected V311 marker classes are present.
+V301, V302, Set 27, and the offline-image handler remain packaged.
+
+Authenticated Hall gates before freeze, after freeze, and after restart each returned zero tables,
+games, and newGame entries. App a0c1741ecaad started 2026-09-08T17:59:07.182640258Z with direct
+Java PID 1, zero restarts, and OOM false. Database 46a8397072d3 retained its identity and original
+2026-09-04T13:43:54.597649711Z start time. Candidate and container hashes match, startup completed,
+HTTP returned 200, and operational mode and all four gameplay settings were restored.
+Candidate: /Users/steve/gemp-deploy-artifacts/rando-destiny-pairs-v311-2026-09-08/8e9b43571-4c8d526f/web.jar.
+Rollback: /Users/steve/gemp-deploy-backups/rando-destiny-pairs-v311-2026-09-08/predeploy-8e9b43571-2cecaa45/web.jar,
+SHA-256 2cecaa451b129e09ace6e9d5e82c8c9779ad38b2d78f42170a6acc8abc3d8214, with its pinned direct-Java
+compose override. V311 is RUNTIME_LOADED; gameplay firing awaits Steve's test. The fail-neutral
+attached/aboard/permanent-partner limitation remains. Nothing was pushed.
 
   ==== V310 HUNT DOWN LIVE CONTINUATION + WEAPON REPAIR (2026-09-08, both bots) ====
 Completed game 72356, Rando recording grguzhrwannvjo42 and asdf recording a2ketg9gwtich91l,
