@@ -24,6 +24,7 @@ public class DeploymentPlanAssessmentCopyPurityTest {
                 "bp-1", "Stormtrooper", "loc-1", "Docking Bay", 1, "reinforce");
         original.setVerifiedCrewPackage(true);
         plan.addInstruction(original);
+        plan.markPlannedBattleTarget("loc-battle", "Beldon's Corridor");
 
         com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan copy = plan.assessmentCopy();
         com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction copied =
@@ -52,6 +53,9 @@ public class DeploymentPlanAssessmentCopyPurityTest {
         assertFalse(plan.getHoldBackCards().contains("copy-only"));
         assertEquals("bp-1", copied.getCardBlueprintId());
         assertEquals(1, copied.getPriority());
+        assertEquals("loc-battle", copy.getPlannedBattleTargetLocationId());
+        assertEquals("Beldon's Corridor",
+                copy.getPlannedBattleTargetLocationName());
     }
 
     @Test
@@ -64,6 +68,7 @@ public class DeploymentPlanAssessmentCopyPurityTest {
                 "bp-1", "Stormtrooper", "loc-1", "Docking Bay", 1, "reinforce");
         original.setVerifiedCrewPackage(true);
         plan.addInstruction(original);
+        plan.markPlannedBattleTarget("loc-battle", "Beldon's Corridor");
 
         com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentPlan copy = plan.assessmentCopy();
         com.gempukku.swccgo.ai.models.chosenone.strategy.DeploymentInstruction copied =
@@ -92,6 +97,9 @@ public class DeploymentPlanAssessmentCopyPurityTest {
         assertFalse(plan.getHoldBackCards().contains("copy-only"));
         assertEquals("bp-1", copied.getCardBlueprintId());
         assertEquals(1, copied.getPriority());
+        assertEquals("loc-battle", copy.getPlannedBattleTargetLocationId());
+        assertEquals("Beldon's Corridor",
+                copy.getPlannedBattleTargetLocationName());
     }
 
     @Test

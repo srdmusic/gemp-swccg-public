@@ -148,6 +148,64 @@ public class DeployWeaponPolicyTest {
     }
 
     @Test
+    public void kyloBattleKitActionBoostsOnlyTheFundedPlannedSiteRoute() {
+        assertOne(DeployWeaponPolicy.evaluateKyloBattleKitAction(
+                        kyloAction(true, true, true, true,
+                                true, true, 1, 1, 2)).operations(),
+                "V308-kylo-battle-kit-action",
+                600.0f, TraceOutputKind.BANDED);
+        assertOne(DeployWeaponPolicy.evaluateKyloBattleKitAction(
+                        kyloAction(true, true, true, true,
+                                true, true, 1, 1, 1)).operations(),
+                "V308-kylo-battle-kit-action",
+                -9999.0f, TraceOutputKind.VETO);
+        assertTrue(DeployWeaponPolicy.evaluateKyloBattleKitAction(
+                kyloAction(true, true, true, false,
+                        false, false, -1, -1, 2))
+                .operations().isEmpty());
+        assertTrue(DeployWeaponPolicy.evaluateKyloBattleKitAction(
+                kyloAction(false, true, true, true,
+                        true, true, 1, 1, 2))
+                .operations().isEmpty());
+    }
+
+    @Test
+    public void kyloBattleKitActionRejectsAnOnlyAboardOrArmedRoute() {
+        assertOne(DeployWeaponPolicy.evaluateKyloBattleKitAction(
+                        kyloAction(true, true, false, false,
+                                false, false, -1, -1, 3)).operations(),
+                "V308-kylo-battle-kit-action",
+                -9999.0f, TraceOutputKind.VETO);
+    }
+
+    @Test
+    public void kyloBattleKitDestinationRequiresGroundUnarmedAndBattleFunded() {
+        assertOne(DeployWeaponPolicy.evaluateKyloBattleKitDestination(
+                        kyloDestination(true, true, true,
+                                true, false, true,
+                                true, true, 1, 1, 2)).operations(),
+                "V308-kylo-battle-kit-destination",
+                600.0f, TraceOutputKind.BANDED);
+        assertTrue(DeployWeaponPolicy.evaluateKyloBattleKitDestination(
+                kyloDestination(true, true, true,
+                        true, false, true,
+                        false, false, -1, -1, 2))
+                .operations().isEmpty());
+        assertOne(DeployWeaponPolicy.evaluateKyloBattleKitDestination(
+                        kyloDestination(true, true, true,
+                                true, true, true,
+                                true, true, 1, 1, 2)).operations(),
+                "V308-kylo-battle-kit-destination",
+                -9999.0f, TraceOutputKind.VETO);
+        assertOne(DeployWeaponPolicy.evaluateKyloBattleKitDestination(
+                        kyloDestination(true, true, true,
+                                true, false, true,
+                                true, true, 1, 1, 1)).operations(),
+                "V308-kylo-battle-kit-destination",
+                -9999.0f, TraceOutputKind.VETO);
+    }
+
+    @Test
     public void reserveWeaponGuardsPreserveAdditiveHardBlocks() {
         assertOne(DeployWeaponPolicy.evaluateReserveTarget(
                         new DeployWeaponPolicy.ReserveTargetFacts(
@@ -185,6 +243,43 @@ public class DeployWeaponPolicyTest {
         return new DeployWeaponPolicy.DirectEligibilityFacts(
                 "a", criteria, lightsaber, armed, unarmed,
                 matchingArmed, matchingUnarmed, warriorFour);
+    }
+
+    private static DeployWeaponPolicy.KyloBattleKitActionFacts kyloAction(
+            boolean saber,
+            boolean legalKylo,
+            boolean legalGroundKylo,
+            boolean kyloAtPlannedTarget,
+            boolean legalPlannedTarget,
+            boolean battleCanInitiate,
+            int deployPayment,
+            int battlePayment,
+            int forceAvailable) {
+        return new DeployWeaponPolicy.KyloBattleKitActionFacts(
+                "a", saber, legalKylo, legalGroundKylo,
+                kyloAtPlannedTarget, legalPlannedTarget,
+                battleCanInitiate, deployPayment,
+                battlePayment, forceAvailable);
+    }
+
+    private static DeployWeaponPolicy.KyloBattleKitDestinationFacts
+            kyloDestination(
+            boolean saber,
+            boolean kyloTarget,
+            boolean deployLegal,
+            boolean atSite,
+            boolean aboardStarship,
+            boolean unarmed,
+            boolean atPlannedTarget,
+            boolean battleCanInitiate,
+            int deployPayment,
+            int battlePayment,
+            int forceAvailable) {
+        return new DeployWeaponPolicy.KyloBattleKitDestinationFacts(
+                "a", saber, kyloTarget, deployLegal,
+                atSite, aboardStarship, unarmed,
+                atPlannedTarget, battleCanInitiate,
+                deployPayment, battlePayment, forceAvailable);
     }
 
     private static void assertOne(List<PolicyOperation> operations,

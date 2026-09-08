@@ -23,6 +23,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployUndercoverModePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.KyloBattleKitFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveAbilityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveDestinationPolicy;
@@ -2464,14 +2465,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
         DeployPhasePlanner deployPhasePlanner = context.getDeployPhasePlanner();
         if (deployPhasePlanner != null) {
             DeploymentPlan currentPlan = deployPhasePlanner.getCurrentPlan();
-            if (currentPlan != null && !currentPlan.getInstructions().isEmpty()) {
+            if (currentPlan != null) {
                 // V201: evaluators read a detached plan. Blueprint fallback is accepted
                 // only when it identifies one instruction; duplicate physical copies or
-                // an unknown source never inherit the first unrelated destination.
+                // an unknown source never inherit the first unrelated destination. V308
+                // also retains completed-plan battle intent long enough to equip the
+                // assembled character packet before the deploy phase ends.
                 deploymentPlanSnapshot = currentPlan.assessmentCopy();
                 persistentResponseObligation = deploymentPlanSnapshot
                     .getPersistentResponseObligation();
-                if (deployingBlueprintId != null) {
+                if (!deploymentPlanSnapshot.getInstructions().isEmpty()
+                        && deployingBlueprintId != null) {
                     plannedDeployInstruction = objectiveProgressDeployingCard != null
                         ? deploymentPlanSnapshot.getInstructionForPhysicalCard(
                             objectiveProgressDeployingCard.getPermanentCardId(),
@@ -2487,7 +2491,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     } else {
                         logger.info("📋 No unique matching instruction for blueprint {}", deployingBlueprintId);
                     }
-                } else {
+                } else if (!deploymentPlanSnapshot.getInstructions().isEmpty()) {
                     logger.warn("⚠️ Could not extract deploy blueprint; refusing blind plan-target fallback");
                 }
             }
@@ -3800,6 +3804,26 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             } catch (Exception e) {
                                 logger.debug("V297 objective gate weapon target failed open: {}",
                                         e.getMessage());
+                            }
+
+                            if (deploymentPlanSnapshot != null
+                                    && deploymentPlanSnapshot
+                                        .getPlannedBattleTargetLocationId()
+                                        != null) {
+                                KyloBattleKitFactsReader.readDestination(
+                                        action.getActionId(), game, playerId,
+                                        objectiveProgressDeployingCard,
+                                        objectiveProgressDeployingCard,
+                                        targetCharacter,
+                                        deploymentPlanSnapshot
+                                            .getPlannedBattleTargetLocationId(),
+                                        decisionText.contains("for free"),
+                                        0.0f)
+                                    .ifPresent(facts ->
+                                        applyDeployWeaponPolicy(action,
+                                            DeployWeaponPolicy
+                                                .evaluateKyloBattleKitDestination(
+                                                    facts)));
                             }
                         }
 

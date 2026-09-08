@@ -2111,6 +2111,184 @@ public class DeployPlanRankingAdapterParityTest {
         assertEquals("Buddy", chosenPlan.getInstructions().get(0).getCardName());
     }
 
+    @Test
+    public void bothBotsConcentrateSplitCharactersAtFundedBattleSite()
+            throws Exception {
+        BattleConcentrationFixture fixture = battleConcentrationFixture();
+
+        var randoPlanner = newRandoPlanner();
+        configurePlannerState(randoPlanner, fixture.game());
+        var randoLead = randoInstruction(
+                String.valueOf(LOCATION_ID), 4, 2);
+        randoLead.setCardPermanentCardId(10);
+        randoLead.setCardCurrentCardId(1010);
+        var randoBuddy = randoInstruction("294", 4, 2);
+        randoBuddy.setCardPermanentCardId(11);
+        randoBuddy.setCardCurrentCardId(1011);
+        var randoPlan = randoPlan(randoLead, randoBuddy);
+
+        var chosenPlanner = newChosenPlanner();
+        configurePlannerState(chosenPlanner, fixture.game());
+        var chosenLead = chosenInstruction(
+                String.valueOf(LOCATION_ID), 4, 2);
+        chosenLead.setCardPermanentCardId(10);
+        chosenLead.setCardCurrentCardId(1010);
+        var chosenBuddy = chosenInstruction("294", 4, 2);
+        chosenBuddy.setCardPermanentCardId(11);
+        chosenBuddy.setCardCurrentCardId(1011);
+        var chosenPlan = chosenPlan(chosenLead, chosenBuddy);
+
+        invokeBattleConcentration(
+                randoPlanner, randoPlan, fixture.locations(), 4);
+        invokeBattleConcentration(
+                chosenPlanner, chosenPlan, fixture.locations(), 4);
+
+        assertTrue(randoPlan.getInstructions().stream().allMatch(
+                instruction -> String.valueOf(LOCATION_ID).equals(
+                        instruction.getTargetLocationId())));
+        assertTrue(chosenPlan.getInstructions().stream().allMatch(
+                instruction -> String.valueOf(LOCATION_ID).equals(
+                        instruction.getTargetLocationId())));
+        assertEquals(String.valueOf(LOCATION_ID),
+                randoPlan.getPlannedBattleTargetLocationId());
+        assertEquals(randoPlan.getPlannedBattleTargetLocationId(),
+                chosenPlan.getPlannedBattleTargetLocationId());
+        assertEquals("Beldon's Corridor",
+                randoPlan.getPlannedBattleTargetLocationName());
+        assertEquals(randoPlan.getPlannedBattleTargetLocationName(),
+                chosenPlan.getPlannedBattleTargetLocationName());
+        assertEquals(4, randoPlan.getForceToSpend());
+        assertEquals(randoPlan.getForceToSpend(),
+                chosenPlan.getForceToSpend());
+    }
+
+    @Test
+    public void bothBotsLeaveSplitPlanUnchangedWhenBattleStackIsUnaffordable()
+            throws Exception {
+        BattleConcentrationFixture fixture = battleConcentrationFixture();
+
+        var randoPlanner = newRandoPlanner();
+        configurePlannerState(randoPlanner, fixture.game());
+        var randoLead = randoInstruction(
+                String.valueOf(LOCATION_ID), 4, 2);
+        randoLead.setCardPermanentCardId(10);
+        randoLead.setCardCurrentCardId(1010);
+        var randoBuddy = randoInstruction("294", 4, 2);
+        randoBuddy.setCardPermanentCardId(11);
+        randoBuddy.setCardCurrentCardId(1011);
+        var randoPlan = randoPlan(randoLead, randoBuddy);
+
+        var chosenPlanner = newChosenPlanner();
+        configurePlannerState(chosenPlanner, fixture.game());
+        var chosenLead = chosenInstruction(
+                String.valueOf(LOCATION_ID), 4, 2);
+        chosenLead.setCardPermanentCardId(10);
+        chosenLead.setCardCurrentCardId(1010);
+        var chosenBuddy = chosenInstruction("294", 4, 2);
+        chosenBuddy.setCardPermanentCardId(11);
+        chosenBuddy.setCardCurrentCardId(1011);
+        var chosenPlan = chosenPlan(chosenLead, chosenBuddy);
+
+        invokeBattleConcentration(
+                randoPlanner, randoPlan, fixture.locations(), 3);
+        invokeBattleConcentration(
+                chosenPlanner, chosenPlan, fixture.locations(), 3);
+
+        assertEquals(List.of(String.valueOf(LOCATION_ID), "294"),
+                randoPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getTargetLocationId())
+                        .toList());
+        assertEquals(List.of(String.valueOf(LOCATION_ID), "294"),
+                chosenPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getTargetLocationId())
+                        .toList());
+        assertNull(randoPlan.getPlannedBattleTargetLocationId());
+        assertNull(chosenPlan.getPlannedBattleTargetLocationId());
+    }
+
+    @Test
+    public void bothBotsExcludePredictedUndercoverCharactersFromBattleStack()
+            throws Exception {
+        BattleConcentrationFixture fixture = battleConcentrationFixture();
+        PhysicalCard undercover = fixture.game().getGameState()
+                .findCardByPermanentId(11);
+        when(undercover.getBlueprint().isOnlyDeploysAsUndercoverSpy(
+                fixture.game(), undercover)).thenReturn(true);
+
+        var randoPlanner = newRandoPlanner();
+        configurePlannerState(randoPlanner, fixture.game());
+        var randoLead = randoInstruction(
+                String.valueOf(LOCATION_ID), 2, 2);
+        randoLead.setCardPermanentCardId(10);
+        randoLead.setCardCurrentCardId(1010);
+        var randoUndercover = randoInstruction("294", 8, 4);
+        randoUndercover.setCardPermanentCardId(11);
+        randoUndercover.setCardCurrentCardId(1011);
+        var randoPlan = randoPlan(randoLead, randoUndercover);
+
+        var chosenPlanner = newChosenPlanner();
+        configurePlannerState(chosenPlanner, fixture.game());
+        var chosenLead = chosenInstruction(
+                String.valueOf(LOCATION_ID), 2, 2);
+        chosenLead.setCardPermanentCardId(10);
+        chosenLead.setCardCurrentCardId(1010);
+        var chosenUndercover = chosenInstruction("294", 8, 4);
+        chosenUndercover.setCardPermanentCardId(11);
+        chosenUndercover.setCardCurrentCardId(1011);
+        var chosenPlan = chosenPlan(chosenLead, chosenUndercover);
+
+        invokeBattleConcentration(
+                randoPlanner, randoPlan, fixture.locations(), 4);
+        invokeBattleConcentration(
+                chosenPlanner, chosenPlan, fixture.locations(), 4);
+
+        assertEquals(List.of(String.valueOf(LOCATION_ID), "294"),
+                randoPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getTargetLocationId())
+                        .toList());
+        assertEquals(List.of(String.valueOf(LOCATION_ID), "294"),
+                chosenPlan.getInstructions().stream()
+                        .map(instruction -> instruction.getTargetLocationId())
+                        .toList());
+        assertNull(randoPlan.getPlannedBattleTargetLocationId());
+        assertNull(chosenPlan.getPlannedBattleTargetLocationId());
+    }
+
+    @Test
+    public void battleConcentrationRunsOnlyDuringOurDeployPhase()
+            throws Exception {
+        BattleConcentrationFixture fixture = battleConcentrationFixture();
+        var planner = newRandoPlanner();
+        configurePlannerState(planner, fixture.game());
+        var lead = randoInstruction(
+                String.valueOf(LOCATION_ID), 4, 2);
+        lead.setCardPermanentCardId(10);
+        lead.setCardCurrentCardId(1010);
+        var buddy = randoInstruction("294", 4, 2);
+        buddy.setCardPermanentCardId(11);
+        buddy.setCardCurrentCardId(1011);
+        var plan = randoPlan(lead, buddy);
+        GameState gameState = fixture.game().getGameState();
+
+        when(gameState.getCurrentPlayerId()).thenReturn("opponent");
+        invokeBattleConcentration(
+                planner, plan, fixture.locations(), 4);
+        assertEquals(List.of(String.valueOf(LOCATION_ID), "294"),
+                plan.getInstructions().stream()
+                        .map(instruction -> instruction.getTargetLocationId())
+                        .toList());
+
+        when(gameState.getCurrentPlayerId()).thenReturn("player");
+        when(gameState.getCurrentPhase()).thenReturn(Phase.CONTROL);
+        invokeBattleConcentration(
+                planner, plan, fixture.locations(), 4);
+        assertEquals(List.of(String.valueOf(LOCATION_ID), "294"),
+                plan.getInstructions().stream()
+                        .map(instruction -> instruction.getTargetLocationId())
+                        .toList());
+        assertNull(plan.getPlannedBattleTargetLocationId());
+    }
+
     private static float scoreRandoScenario(
             com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner planner,
             Scenario scenario) throws Exception {
@@ -2315,6 +2493,23 @@ public class DeployPlanRankingAdapterParityTest {
                 forceAvailable, 0, "ground");
     }
 
+    private static Object invokeBattleConcentration(
+            Object planner, Object plan,
+            List<AiBoardAnalyzer.LocationAnalysis> locations,
+            int deploymentBudget) throws Exception {
+        Method method = null;
+        for (Method candidate : planner.getClass().getDeclaredMethods()) {
+            if (candidate.getName().equals(
+                    "concentratePlannedCharactersForBattle")) {
+                method = candidate;
+                break;
+            }
+        }
+        assertNotNull(method);
+        method.setAccessible(true);
+        return method.invoke(planner, plan, locations, deploymentBudget);
+    }
+
     private static Object invokeSelectBestPlan(
             Object planner, List<?> allPlans, List<?> locationDeploys,
             Object selectedScoredPlan,
@@ -2408,6 +2603,62 @@ public class DeployPlanRankingAdapterParityTest {
                         AiBoardAnalyzer.ContestStatus.UNCONTESTED, true);
         return new FormationFixture(
                 game, location, actor, buddy, List.of(analysis));
+    }
+
+    private static BattleConcentrationFixture battleConcentrationFixture() {
+        GameState gameState = mock(GameState.class);
+        SwccgGame game = mock(SwccgGame.class);
+        ModifiersQuerying modifiers = mock(ModifiersQuerying.class);
+        PhysicalCard battleSite = locationCard(
+                "5_82", "Beldon's Corridor", LOCATION_ID,
+                CardSubtype.SITE);
+        PhysicalCard openSite = locationCard(
+                "5_83", "Guest Quarters", 294, CardSubtype.SITE);
+        PhysicalCard lead = character(
+                "1_101", "Lead", 10, 4, 2, 2);
+        PhysicalCard buddy = character(
+                "1_102", "Buddy", 11, 4, 2, 2);
+
+        when(game.getGameState()).thenReturn(gameState);
+        when(game.getModifiersQuerying()).thenReturn(modifiers);
+        when(gameState.getCurrentPlayerId()).thenReturn("player");
+        when(gameState.getCurrentPhase()).thenReturn(Phase.DEPLOY);
+        when(gameState.getOpponent("player")).thenReturn("opponent");
+        when(gameState.findCardByPermanentId(10)).thenReturn(lead);
+        when(gameState.findCardByPermanentId(11)).thenReturn(buddy);
+        when(gameState.findCardById(LOCATION_ID)).thenReturn(battleSite);
+        when(gameState.findCardById(294)).thenReturn(openSite);
+        when(gameState.getReserveDeckSize("player")).thenReturn(3);
+        when(lead.getZone()).thenReturn(Zone.HAND);
+        when(buddy.getZone()).thenReturn(Zone.HAND);
+        when(modifiers.isDeployableToTarget(
+                any(), any(), any(), anyBoolean(), any(), anyBoolean(),
+                anyFloat(), any(), any(), any(), any(), any(), any(),
+                anyBoolean(), anyFloat())).thenReturn(true);
+        when(modifiers.getDeployCost(
+                gameState, lead, lead, battleSite,
+                false, null, false, 0.0f, null, true))
+                .thenReturn(2.0f);
+        when(modifiers.getDeployCost(
+                gameState, buddy, buddy, battleSite,
+                false, null, false, 0.0f, null, true))
+                .thenReturn(2.0f);
+        when(modifiers.getInitiateBattleCost(
+                gameState, battleSite, "player", true))
+                .thenReturn(1.0f);
+
+        AiBoardAnalyzer.LocationAnalysis battle =
+                new AiBoardAnalyzer.LocationAnalysis(
+                        battleSite, 3.0f, 9.0f, 0.0f, 0.0f,
+                        1, 1, 1, 1,
+                        AiBoardAnalyzer.ContestStatus.LOSING, true);
+        AiBoardAnalyzer.LocationAnalysis open =
+                new AiBoardAnalyzer.LocationAnalysis(
+                        openSite, 0.0f, 0.0f, 0.0f, 0.0f,
+                        1, 1, 0, 0,
+                        AiBoardAnalyzer.ContestStatus.UNCONTESTED, true);
+        return new BattleConcentrationFixture(
+                game, List.of(battle, open));
     }
 
     private static PlanRefreshFixture planRefreshFixture() {
@@ -2857,6 +3108,11 @@ public class DeployPlanRankingAdapterParityTest {
     private record FormationFixture(
             SwccgGame game, PhysicalCard location, PhysicalCard actor,
             PhysicalCard buddy,
+            List<AiBoardAnalyzer.LocationAnalysis> locations) {
+    }
+
+    private record BattleConcentrationFixture(
+            SwccgGame game,
             List<AiBoardAnalyzer.LocationAnalysis> locations) {
     }
 

@@ -33,6 +33,7 @@ import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationFacts
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.KyloBattleKitFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullActionPolicy;
@@ -4043,6 +4044,26 @@ public class DeployEvaluator extends ActionEvaluator {
                         } catch (Exception e) {
                             LOG.debug("V158 error: {}", e.getMessage());
                         }
+                    }
+
+                    // V308: finish the retained own-turn battle packet before
+                    // considering ordinary weapon ordering. Exact engine facts
+                    // keep Kylo's saber off aboard/space routes and preserve the
+                    // Force still required to initiate the planned site battle.
+                    if (category == CardCategory.WEAPON
+                            && gameState != null && plan != null
+                            && plan.getPlannedBattleTargetLocationId()
+                                != null) {
+                        KyloBattleKitFactsReader.readAction(
+                                actionId, game, playerId,
+                                deployActionSource, deployActionSource,
+                                plan.getPlannedBattleTargetLocationId(),
+                                actionLower.contains("for free"), 0.0f)
+                            .ifPresent(facts -> applySharedPolicy(
+                                action, decisionId, actionId,
+                                "deploy-kylo-battle-kit-action",
+                                DeployWeaponPolicy
+                                    .evaluateKyloBattleKitAction(facts)));
                     }
 
 

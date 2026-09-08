@@ -4,6 +4,7 @@ import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
 import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPlanRankingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployFormationPromisePolicy;
+import com.gempukku.swccgo.ai.models.common.phase.BattleInitiationPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployUndercoverModePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationPolicy;
@@ -21,6 +22,7 @@ import com.gempukku.swccgo.ai.models.chosenone.RandoLogger;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -82,6 +84,7 @@ public class DeployPhasePlanner {
     private long lastPlanPersistentResponseRevision = -1;
     private DeployFormationPromisePolicy.Promise activeFormationPromise;
     private int activeFormationPromiseTurn = -1;
+    private boolean activeFormationPromiseIsBattleFocus = false;
     private Set<Integer> contestedAnchorsAtPlanCreation =
             Collections.emptySet();
 
@@ -121,6 +124,7 @@ public class DeployPhasePlanner {
         lastPlanPersistentResponseRevision = -1;
         activeFormationPromise = null;
         activeFormationPromiseTurn = -1;
+        activeFormationPromiseIsBattleFocus = false;
         contestedAnchorsAtPlanCreation = Collections.emptySet();
         currentGame = null;
         currentPlayerId = null;
@@ -174,6 +178,9 @@ public class DeployPhasePlanner {
                 + committed.get(0).getTargetLocationName());
         activeFormationPromise = promise;
         activeFormationPromiseTurn = currentTurn;
+        activeFormationPromiseIsBattleFocus = Objects.equals(
+                currentPlan.getPlannedBattleTargetLocationId(),
+                promise.targetLocationId());
         LOG.warn("DEPLOY.FORMATION.PROMISE: preserving {} exact companion(s) at {} before replanning",
                 committed.size(), committed.get(0).getTargetLocationName());
         return currentPlan;
@@ -439,6 +446,7 @@ public class DeployPhasePlanner {
         currentPlan.setForceReservedForBattle(battleForceReserve);
         activeFormationPromise = promise;
         activeFormationPromiseTurn = currentTurn;
+        activeFormationPromiseIsBattleFocus = false;
         LOG.warn("DEPLOY.FORMATION.LIVE_ANCHOR: retargeting exact companion {} to {} and preserving {} Force for battle",
                 promise.companionName(), target.getTitle(),
                 battleForceReserve);
@@ -488,6 +496,7 @@ public class DeployPhasePlanner {
         if (activeFormationPromiseTurn != currentTurn) {
             activeFormationPromise = null;
             activeFormationPromiseTurn = -1;
+            activeFormationPromiseIsBattleFocus = false;
         }
         String opponentId = gameState.getOpponent(playerId);
         boolean hasActiveFlipGate = hasActiveFlipGateLocation(
@@ -512,6 +521,11 @@ public class DeployPhasePlanner {
 
         // If we already have a plan for this turn, return it
         if (currentPlan != null && lastPlanTurn == currentTurn) {
+            if (currentPlan.getPlannedBattleTargetLocationId() != null
+                    && currentPlan.isPlanComplete()) {
+                LOG.debug("V308 BATTLE STACK: deployment packet is complete; retain battle intent through this turn");
+                return currentPlan;
+            }
             CountedPackageState countedPackageState =
                     refreshCountedDeployPackage(game, playerId);
             if (countedPackageState
@@ -528,9 +542,17 @@ public class DeployPhasePlanner {
                             currentTurn);
                     return currentPlan;
                 }
+                if (activeFormationPromiseIsBattleFocus) {
+                    LOG.warn("V308 BATTLE STACK COMPLETE: keep the exact battle target and do not rebuild a spreading plan before battle");
+                    activeFormationPromise = null;
+                    activeFormationPromiseTurn = -1;
+                    activeFormationPromiseIsBattleFocus = false;
+                    return currentPlan;
+                }
                 LOG.warn("DEPLOY.FORMATION.PROMISE.RELEASE: package is complete or no longer executable");
                 activeFormationPromise = null;
                 activeFormationPromiseTurn = -1;
+                activeFormationPromiseIsBattleFocus = false;
                 formationPromiseReleased = true;
             } else if (!countedPackageReleased) {
                 DeploymentPlan promised = detectPromisedFormation(
@@ -745,6 +767,10 @@ public class DeployPhasePlanner {
             bestPlan = createHoldBackPlan("No strategic deployment targets");
         }
 
+        bestPlan = concentratePlannedCharactersForBattle(
+                bestPlan, allLocations,
+                Math.max(0, forceAfterLocations));
+
         bestPlan.setTotalForceAvailable(forceAvailable);
         bestPlan.setForceReservedForBattle(battleForceReserve);
         currentPlan = bestPlan;
@@ -767,6 +793,230 @@ public class DeployPhasePlanner {
         logFinalPlan(bestPlan);
 
         return currentPlan;
+    }
+
+    /**
+     * V308: once the accepted plan can produce a real own-turn site battle,
+     * stack every legal, affordable planned ground character there before
+     * opening another site. Counted objective packages and persistent
+     * responses retain their exact destinations.
+     */
+    private DeploymentPlan concentratePlannedCharactersForBattle(
+            DeploymentPlan plan,
+            List<AiBoardAnalyzer.LocationAnalysis> allLocations,
+            int deploymentBudget) {
+        if (plan == null || plan.getInstructions().isEmpty()
+                || plan.getStrategy() == DeployStrategy.HOLD_BACK
+                || plan.getCountedDeployRouteKey() != null
+                || plan.getPersistentResponseObligation() != null
+                || currentGame == null || currentPlayerId == null
+                || currentGame.getGameState() == null
+                || currentGame.getModifiersQuerying() == null
+                || allLocations == null || allLocations.isEmpty()) {
+            return plan;
+        }
+
+        GameState gameState = currentGame.getGameState();
+        if (!currentPlayerId.equals(gameState.getCurrentPlayerId())
+                || gameState.getCurrentPhase() != Phase.DEPLOY) {
+            return plan;
+        }
+        Map<String, AiBoardAnalyzer.LocationAnalysis> analysisById =
+                new HashMap<>();
+        for (AiBoardAnalyzer.LocationAnalysis analysis : allLocations) {
+            if (analysis != null && analysis.location != null) {
+                analysisById.put(
+                        String.valueOf(analysis.location.getCardId()),
+                        analysis);
+            }
+        }
+
+        List<PlannedBattleCharacter> plannedCharacters =
+                new ArrayList<>();
+        LinkedHashSet<String> candidateIds = new LinkedHashSet<>();
+        for (DeploymentInstruction instruction : plan.getInstructions()) {
+            if (instruction.getCardPermanentCardId() == null
+                    || instruction.getCardCurrentCardId() == null
+                    || instruction.getTargetLocationId() == null
+                    || instruction.isVerifiedCrewPackage()
+                    || instruction.getAboardShipCardId() != null) {
+                continue;
+            }
+            PhysicalCard card = gameState.findCardByPermanentId(
+                    instruction.getCardPermanentCardId());
+            PhysicalCard originalTarget = exactLocation(
+                    gameState, instruction.getTargetLocationId());
+            if (card == null || card.getCardId()
+                    != instruction.getCardCurrentCardId()
+                    || card.getZone() != Zone.HAND
+                    || card.getBlueprint() == null
+                    || card.getBlueprint().getCardCategory()
+                        != CardCategory.CHARACTER
+                    || DeployUndercoverModePolicy
+                        .predictsUndercoverDeploy(
+                            currentGame, card,
+                            card.getBlueprint(), "")
+                    || originalTarget == null) {
+                continue;
+            }
+            boolean completesObjectiveAtOriginalTarget = false;
+            try {
+                completesObjectiveAtOriginalTarget =
+                        objectiveAnalyzer != null
+                        && objectiveAnalyzer
+                            .wouldCompletePreFlipRequirementAt(
+                                currentGame, currentPlayerId,
+                                card, originalTarget);
+            } catch (RuntimeException ignored) {
+                // Unknown objective projection does not invent a protection.
+            }
+            plannedCharacters.add(new PlannedBattleCharacter(
+                    instruction, card,
+                    completesObjectiveAtOriginalTarget));
+            candidateIds.add(instruction.getTargetLocationId());
+        }
+        if (plannedCharacters.isEmpty()) return plan;
+
+        String opponentId = gameState.getOpponent(currentPlayerId);
+        if (opponentId == null) return plan;
+        for (String candidateId : candidateIds) {
+            AiBoardAnalyzer.LocationAnalysis target =
+                    analysisById.get(candidateId);
+            if (target == null || !target.isSite
+                    || target.theirPower <= 0.0f) {
+                continue;
+            }
+            try {
+                if (currentGame.getModifiersQuerying()
+                        .mayNotInitiateBattleAtLocation(
+                            gameState, target.location,
+                            currentPlayerId)
+                        || currentGame.getModifiersQuerying()
+                            .isBattleOccurredAtLocationThisTurn(
+                                target.location)) {
+                    continue;
+                }
+            } catch (RuntimeException ignored) {
+                continue;
+            }
+
+            float battleCost;
+            try {
+                battleCost = currentGame.getModifiersQuerying()
+                        .getInitiateBattleCost(
+                            gameState, target.location,
+                            currentPlayerId, true);
+            } catch (RuntimeException ignored) {
+                continue;
+            }
+            if (!Float.isFinite(battleCost)
+                    || Math.ceil(Math.max(0.0f, battleCost))
+                        > battleForceReserve) {
+                continue;
+            }
+
+            List<PlannedBattleCharacter> focusMembers =
+                    new ArrayList<>();
+            Map<DeploymentInstruction, Integer> focusCosts =
+                    new IdentityHashMap<>();
+            boolean hasOriginalMember = false;
+            for (PlannedBattleCharacter member : plannedCharacters) {
+                boolean alreadyTargetsBattle = candidateId.equals(
+                        member.instruction().getTargetLocationId());
+                if (alreadyTargetsBattle) hasOriginalMember = true;
+                if (!alreadyTargetsBattle
+                        && member.completesObjectiveAtOriginalTarget()) {
+                    continue;
+                }
+                if (!canDeployPaidDirectly(
+                        member.card(), target.location)) {
+                    continue;
+                }
+                Integer exactCost = exactDeployCostAt(
+                        member.card(), target.location);
+                if (exactCost == null) continue;
+                focusMembers.add(member);
+                focusCosts.put(member.instruction(), exactCost);
+            }
+            if (!hasOriginalMember || focusMembers.isEmpty()) continue;
+
+            Set<DeploymentInstruction> focused =
+                    Collections.newSetFromMap(new IdentityHashMap<>());
+            for (PlannedBattleCharacter member : focusMembers) {
+                focused.add(member.instruction());
+            }
+            int totalPlanCost = 0;
+            for (DeploymentInstruction instruction
+                    : plan.getInstructions()) {
+                if (focused.contains(instruction)) {
+                    totalPlanCost += focusCosts.get(instruction);
+                } else if (instruction.getTargetLocationId() != null) {
+                    totalPlanCost += Math.max(
+                            0, instruction.getDeployCost());
+                }
+            }
+            if (totalPlanCost > deploymentBudget) continue;
+
+            float projectedPower = target.ourPower;
+            float projectedAbility = target.ourAbility;
+            for (PlannedBattleCharacter member : focusMembers) {
+                projectedPower += Math.max(
+                        0, member.instruction().getPowerContribution());
+                projectedAbility += Math.max(
+                        0.0f,
+                        member.instruction().getAbilityContribution());
+            }
+            if (projectedAbility
+                    < com.gempukku.swccgo.ai.models.common.strategy
+                        .FormationSafety.DESTINY_ABILITY_THRESHOLD
+                    || gameState.getReserveDeckSize(currentPlayerId) < 1) {
+                continue;
+            }
+            float effectiveDiff = projectedPower - target.theirPower
+                    + (projectedAbility - target.theirAbility) * 2.5f;
+            boolean reserveHealthy =
+                    gameState.getReserveDeckSize(currentPlayerId) >= 3;
+            BattleInitiationPolicy.SpecificBattleDecision battle =
+                    BattleInitiationPolicy.specificBattle(
+                        target.location.getTitle(), projectedPower,
+                        target.theirPower, projectedAbility,
+                        target.theirAbility, 0.0f, effectiveDiff,
+                        false, false, false, reserveHealthy);
+            if (!battle.favorable()) continue;
+
+            for (PlannedBattleCharacter member : focusMembers) {
+                DeploymentInstruction instruction =
+                        member.instruction();
+                instruction.setTargetLocationId(candidateId);
+                instruction.setTargetLocationName(
+                        target.location.getTitle());
+                instruction.setPriority(Math.min(
+                        instruction.getPriority(), 1));
+                instruction.setDeployCost(focusCosts.get(instruction));
+                instruction.setReason(
+                        "V308 stack before own-turn battle at "
+                            + target.location.getTitle());
+            }
+            plan.markPlannedBattleTarget(
+                    candidateId, target.location.getTitle());
+            plan.setForceToSpend(totalPlanCost);
+            plan.setReason(plan.getReason()
+                    + "; stack before battle at "
+                    + target.location.getTitle());
+            LOG.warn("V308 BATTLE STACK: concentrated {} planned character(s) at {} (projected power {}/{}, ability {}/{}, cost {}, reserve {})",
+                    focusMembers.size(), target.location.getTitle(),
+                    (int) projectedPower, (int) target.theirPower,
+                    (int) projectedAbility, (int) target.theirAbility,
+                    totalPlanCost, battleForceReserve);
+            return plan;
+        }
+        return plan;
+    }
+
+    private record PlannedBattleCharacter(
+            DeploymentInstruction instruction,
+            PhysicalCard card,
+            boolean completesObjectiveAtOriginalTarget) {
     }
 
     private boolean hasActiveFlipGateLocation(
@@ -4202,6 +4452,7 @@ public class DeployPhasePlanner {
             finalPlan.addInstruction(inst);
         }
         finalPlan.copyCountedDeployPackageFrom(best.plan);
+        finalPlan.copyBattleIntentFrom(best.plan);
         if (persistentSelection != null) {
             finalPlan.setPersistentResponseObligation(
                 persistentSelection.obligation());

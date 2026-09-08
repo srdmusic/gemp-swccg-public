@@ -120,6 +120,86 @@ public final class DeployWeaponPolicy {
         return new PolicyResult("DEPLOY_NAMED_WEAPON_POLICY", operations);
     }
 
+    /**
+     * V308 keeps Kylo's exact lightsaber with the own-turn site battle packet.
+     * The adapter proves all card, target, legality, and payment facts.
+     */
+    public static PolicyResult evaluateKyloBattleKitAction(
+            KyloBattleKitActionFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (!facts.kylosLightsaber()) {
+            return new PolicyResult(
+                    "DEPLOY_KYLO_BATTLE_KIT_ACTION_POLICY", operations);
+        }
+
+        if (facts.hasEngineLegalKyloTarget()
+                && !facts.hasEngineLegalGroundSiteKyloTarget()) {
+            add(operations, facts.actionId(),
+                    "V308-kylo-battle-kit-action",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "V308 KYLO BATTLE KIT: no legal unarmed Kylo is on a ground site");
+        } else if (facts.hasKyloAtPlannedBattleTarget()) {
+            if (!facts.hasEngineLegalPlannedBattleTarget()
+                    || !facts.battleCanInitiate()
+                    || !canFundBattleKit(
+                            facts.exactDeployPayment(),
+                            facts.exactBattlePayment(),
+                            facts.forceAvailable())) {
+                add(operations, facts.actionId(),
+                        "V308-kylo-battle-kit-action",
+                        TraceOutputKind.VETO, -9999.0f,
+                        "V308 KYLO BATTLE KIT: preserve the exact Force needed for the planned battle");
+            } else {
+                add(operations, facts.actionId(),
+                        "V308-kylo-battle-kit-action",
+                        TraceOutputKind.BANDED, 600.0f,
+                        "V308 KYLO BATTLE KIT: arm Kylo at the retained own-turn battle site");
+            }
+        }
+        return new PolicyResult(
+                "DEPLOY_KYLO_BATTLE_KIT_ACTION_POLICY", operations);
+    }
+
+    /** Scores one actual attachment destination for Kylo's Lightsaber. */
+    public static PolicyResult evaluateKyloBattleKitDestination(
+            KyloBattleKitDestinationFacts facts) {
+        Objects.requireNonNull(facts, "facts");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (!facts.kylosLightsaber() || !facts.kyloTarget()) {
+            return new PolicyResult(
+                    "DEPLOY_KYLO_BATTLE_KIT_DESTINATION_POLICY", operations);
+        }
+
+        if (!facts.engineDeployLegal()
+                || !facts.atSite()
+                || facts.aboardStarship()
+                || !facts.unarmed()) {
+            add(operations, facts.actionId(),
+                    "V308-kylo-battle-kit-destination",
+                    TraceOutputKind.VETO, -9999.0f,
+                    "V308 KYLO BATTLE KIT: use only a legal, unarmed Kylo on a ground site");
+        } else if (facts.atPlannedBattleTarget()) {
+            if (!facts.battleCanInitiate()
+                    || !canFundBattleKit(
+                            facts.exactDeployPayment(),
+                            facts.exactBattlePayment(),
+                            facts.forceAvailable())) {
+                add(operations, facts.actionId(),
+                        "V308-kylo-battle-kit-destination",
+                        TraceOutputKind.VETO, -9999.0f,
+                        "V308 KYLO BATTLE KIT: this attachment would strand the planned battle");
+            } else {
+                add(operations, facts.actionId(),
+                        "V308-kylo-battle-kit-destination",
+                        TraceOutputKind.BANDED, 600.0f,
+                        "V308 KYLO BATTLE KIT: attach at the retained own-turn battle site");
+            }
+        }
+        return new PolicyResult(
+                "DEPLOY_KYLO_BATTLE_KIT_DESTINATION_POLICY", operations);
+    }
+
     public static PolicyResult evaluateReserveTarget(ReserveTargetFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);
@@ -210,6 +290,40 @@ public final class DeployWeaponPolicy {
         }
     }
 
+    public record KyloBattleKitActionFacts(
+            String actionId,
+            boolean kylosLightsaber,
+            boolean hasEngineLegalKyloTarget,
+            boolean hasEngineLegalGroundSiteKyloTarget,
+            boolean hasKyloAtPlannedBattleTarget,
+            boolean hasEngineLegalPlannedBattleTarget,
+            boolean battleCanInitiate,
+            int exactDeployPayment,
+            int exactBattlePayment,
+            int forceAvailable) {
+        public KyloBattleKitActionFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
+    public record KyloBattleKitDestinationFacts(
+            String actionId,
+            boolean kylosLightsaber,
+            boolean kyloTarget,
+            boolean engineDeployLegal,
+            boolean atSite,
+            boolean aboardStarship,
+            boolean unarmed,
+            boolean atPlannedBattleTarget,
+            boolean battleCanInitiate,
+            int exactDeployPayment,
+            int exactBattlePayment,
+            int forceAvailable) {
+        public KyloBattleKitDestinationFacts {
+            Objects.requireNonNull(actionId, "actionId");
+        }
+    }
+
     public record ReserveTargetFacts(String actionId, String targetTitle,
                                      boolean targetAlreadyArmed) {
         public ReserveTargetFacts {
@@ -234,6 +348,16 @@ public final class DeployWeaponPolicy {
             weaponName = weaponName == null ? "" : weaponName;
             criteria = criteria == null ? "" : criteria;
         }
+    }
+
+    private static boolean canFundBattleKit(
+            int deployPayment,
+            int battlePayment,
+            int forceAvailable) {
+        return deployPayment >= 0
+                && battlePayment >= 0
+                && forceAvailable >= 0
+                && (long) deployPayment + battlePayment <= forceAvailable;
     }
 
     private static void add(List<PolicyOperation> operations, String actionId,

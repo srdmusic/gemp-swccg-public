@@ -72,6 +72,33 @@ public class DeployAssetSourceCharacterizationTest {
         }
     }
 
+    @Test
+    public void bothDeployMirrorsReadKyloBattleKitAfterV158WithRetainedTarget()
+            throws IOException {
+        for (String bot : new String[]{"rando", "chosenone"}) {
+            String source = evaluatorSource(bot, "DeployEvaluator.java");
+            int v158Apply = source.indexOf(
+                    "PolicyOperationAdapter.apply(action, v213WeaponLedger);");
+            int reader = source.indexOf(
+                    "KyloBattleKitFactsReader.readAction(", v158Apply);
+            int retainedTarget = source.indexOf(
+                    "plan.getPlannedBattleTargetLocationId()", reader);
+            int kyloPolicy = source.indexOf(
+                    ".evaluateKyloBattleKitAction(facts)", reader);
+            int namedWeapon = source.indexOf(
+                    "DeployWeaponPolicy.evaluateNamedPriority(", reader);
+
+            assertTrue(bot + " must keep the V158 contribution before V308",
+                    v158Apply >= 0 && reader > v158Apply);
+            assertTrue(bot + " must pass the retained battle target to V308",
+                    retainedTarget > reader);
+            assertTrue(bot + " must apply the typed V308 action policy",
+                    kyloPolicy > retainedTarget);
+            assertTrue(bot + " must finish V308 before ordinary named-weapon ordering",
+                    namedWeapon > kyloPolicy);
+        }
+    }
+
     private static void assertNormalizedMirror(String fileName) throws IOException {
         assertEquals(normalize(evaluatorSource("rando", fileName)),
                 normalize(evaluatorSource("chosenone", fileName)));

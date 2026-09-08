@@ -124,6 +124,57 @@ public class DeployWeaponDestinationSourceParityTest {
         }
     }
 
+    @Test
+    public void bothMirrorsSnapshotCompletedPlanAndRouteKyloDestination()
+            throws IOException {
+        for (String bot : new String[]{"rando", "chosenone"}) {
+            String source = evaluatorSource(bot);
+            int currentPlan = source.indexOf(
+                    "DeploymentPlan currentPlan = deployPhasePlanner.getCurrentPlan();");
+            int nonNullPlan = source.indexOf(
+                    "if (currentPlan != null) {", currentPlan);
+            int snapshot = source.indexOf(
+                    "deploymentPlanSnapshot = currentPlan.assessmentCopy();",
+                    nonNullPlan);
+            int instructionOnlyGate = source.indexOf(
+                    "if (!deploymentPlanSnapshot.getInstructions().isEmpty()",
+                    snapshot);
+
+            assertTrue(bot + " must snapshot any retained plan, including a completed one",
+                    currentPlan >= 0 && nonNullPlan > currentPlan
+                            && snapshot > nonNullPlan);
+            assertFalse(bot + " must not require unfinished instructions before snapshotting",
+                    source.substring(nonNullPlan, snapshot)
+                            .contains("getInstructions().isEmpty()"));
+            assertTrue(bot + " may gate instruction lookup only after preserving battle intent",
+                    instructionOnlyGate > snapshot);
+
+            String weapon = weaponSlice(source);
+            int slotPolicy = weapon.indexOf(
+                    "DeployWeaponPolicy.evaluateDestinationSlot(");
+            int reader = weapon.indexOf(
+                    "KyloBattleKitFactsReader.readDestination(", slotPolicy);
+            int targetCharacter = weapon.indexOf(
+                    "targetCharacter,", reader);
+            int retainedTarget = weapon.indexOf(
+                    ".getPlannedBattleTargetLocationId()", reader);
+            int kyloPolicy = weapon.indexOf(
+                    ".evaluateKyloBattleKitDestination(", reader);
+
+            assertTrue(bot + " must route V308 inside weapon-target selection",
+                    slotPolicy >= 0 && reader > slotPolicy);
+            assertTrue(bot + " must pass the actual offered weapon target",
+                    targetCharacter > reader);
+            assertTrue(bot + " must use completed-plan retained battle intent",
+                    retainedTarget > targetCharacter);
+            assertTrue(bot + " must apply the typed V308 destination policy",
+                    kyloPolicy > retainedTarget);
+            assertEquals(bot + " must have one Kylo destination reader",
+                    1, count(weapon,
+                            "KyloBattleKitFactsReader.readDestination("));
+        }
+    }
+
     private static String weaponSlice(String source) {
         return slice(source,
                 "// CRITICAL: WEAPON DEPLOYMENT - check if target already has weapon",

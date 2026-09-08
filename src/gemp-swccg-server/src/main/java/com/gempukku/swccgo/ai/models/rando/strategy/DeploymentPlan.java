@@ -55,6 +55,12 @@ public class DeploymentPlan {
     private PersistentResponsePolicy.Obligation
         persistentResponseObligation;
 
+    // Exact site where this deploy phase is building an own-turn battle stack.
+    // It survives instruction consumption so an available weapon can finish
+    // the battle kit before the deploy phase ends.
+    private String plannedBattleTargetLocationId;
+    private String plannedBattleTargetLocationName;
+
     // Exact physical package for a counted objective route. This survives the
     // normal hand-to-table current-card-id change after each member deploys.
     private ObjectiveAnalyzer.CountedDeployRouteKey countedDeployRouteKey;
@@ -83,6 +89,10 @@ public class DeploymentPlan {
         copy.waitingForPlannedCards = waitingForPlannedCards;
         copy.originalPlanCost = originalPlanCost;
         copy.persistentResponseObligation = persistentResponseObligation;
+        copy.plannedBattleTargetLocationId =
+                plannedBattleTargetLocationId;
+        copy.plannedBattleTargetLocationName =
+                plannedBattleTargetLocationName;
         copy.countedDeployRouteKey = countedDeployRouteKey;
         copy.countedDeployCommitments = List.copyOf(
                 countedDeployCommitments);
@@ -340,6 +350,32 @@ public class DeploymentPlan {
     public void setPersistentResponseObligation(
             PersistentResponsePolicy.Obligation obligation) {
         persistentResponseObligation = obligation;
+    }
+
+    public String getPlannedBattleTargetLocationId() {
+        return plannedBattleTargetLocationId;
+    }
+
+    public String getPlannedBattleTargetLocationName() {
+        return plannedBattleTargetLocationName;
+    }
+
+    public void markPlannedBattleTarget(
+            String locationId, String locationName) {
+        if (plannedBattleTargetLocationId != null
+                || locationId == null) {
+            return;
+        }
+        plannedBattleTargetLocationId = locationId;
+        plannedBattleTargetLocationName = locationName;
+    }
+
+    public void copyBattleIntentFrom(DeploymentPlan source) {
+        if (source == null) return;
+        plannedBattleTargetLocationId =
+                source.plannedBattleTargetLocationId;
+        plannedBattleTargetLocationName =
+                source.plannedBattleTargetLocationName;
     }
 
     public ObjectiveAnalyzer.CountedDeployRouteKey
