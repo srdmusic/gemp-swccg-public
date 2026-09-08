@@ -22,6 +22,16 @@ The clinical, formal tone is wrong for this project. If you find yourself writin
 - **DO ask permission for:** PROD code changes in `src/`, `docker compose down -v`, anything touching the deck library or DB schema, anything irreversible.
 - **Steve types from mobile sometimes.** Read past the typos to the meaning.
 
+## Workspace housekeeping (Steve's standing rule, 2026-09-08)
+
+Applies to every GEMP editing session, including Rando, Chosen One, K2, Alfred, and alternate worktrees.
+
+- Reuse an appropriate existing working directory. Do not create a new top-level folder, clone, or worktree for every fix or V-tag.
+- A small number of clearly named update landing folders is fine. Reuse established staging, deployment, and rollback locations; track revisions with Git commits/tags and small manifests instead of accumulating full checkouts.
+- If concurrent work or dirty files require isolation, use a temporary subfolder inside an established workspace area. Do not scatter more `gemp-*` folders across `/Users/steve`.
+- Include consolidation or archival of temporary work in task closeout after checking dependencies. Preserve uncommitted files, active sessions, live Docker paths, shared Git repositories, offline assets, and required rollback copies. Move linked worktrees with Git-aware operations.
+- Keep the rig tidy. This rule is not permission to delete data or blindly relocate existing folders.
+
 ## First reads — in this order
 
 NOTE (2026-07-07): this AGENTS.md IS your memory — Codex auto-loads it. You do NOT have
