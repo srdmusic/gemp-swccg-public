@@ -8607,11 +8607,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                 || context.getObjectiveAnalyzer().isFlipped()) {
             return false;
         }
-        String decision = context.getDecisionText().trim();
-        if (!"choose card to move from".equalsIgnoreCase(decision)
-                && !"choose card to move to".equalsIgnoreCase(decision)
-                && !decision.toLowerCase(Locale.ROOT)
-                    .startsWith("choose card to move to ")) {
+        String decision = context.getDecisionText().trim()
+                .toLowerCase(Locale.ROOT);
+        if (!"choose card to move from".equals(decision)
+                && !decision.startsWith("choose card to move from,")
+                && !"choose card to move to".equals(decision)
+                && !decision.startsWith("choose card to move to,")
+                && !decision.startsWith("choose card to move to ")) {
             return false;
         }
         try {
@@ -8658,10 +8660,17 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     context.getGame(), context.getPlayerId(),
                     castle, outbound);
         String decision = context.getDecisionText().trim();
+        String normalizedDecision = decision.toLowerCase(Locale.ROOT);
         boolean chooseOrigin =
-                "choose card to move from".equalsIgnoreCase(decision);
+                "choose card to move from".equals(normalizedDecision)
+                || normalizedDecision.startsWith(
+                    "choose card to move from,");
         boolean chooseDestination =
-                "choose card to move to".equalsIgnoreCase(decision);
+                "choose card to move to".equals(normalizedDecision)
+                || normalizedDecision.startsWith(
+                    "choose card to move to,");
+        logger.warn("V309 HUNT DOWN CASTLE CHILD: routed {} selection through the exact Castle action",
+                chooseOrigin ? "origin" : chooseDestination ? "destination" : "mover");
         PhysicalCard finalDestination =
                 !chooseOrigin && !chooseDestination
                 ? resolveCastleFinalDestination(

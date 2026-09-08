@@ -1197,7 +1197,7 @@ public class HuntDownCombinedEvaluatorDecisionTest {
 
             Decision originDecision =
                     Decision.castleChoice(
-                        "Choose card to move from",
+                        "Choose card to move from, or click 'Done' to cancel",
                         List.of(String.valueOf(CASTLE_ID)),
                         List.of(CASTLE_BP),
                         List.of(fixture.castle.getTitle()));
@@ -1212,7 +1212,7 @@ public class HuntDownCombinedEvaluatorDecisionTest {
 
             Decision destinationDecision =
                     Decision.castleChoice(
-                        "Choose card to move to",
+                        "Choose card to move to, or click 'Done' to cancel",
                         List.of(
                             String.valueOf(BATTLEGROUND_ID),
                             String.valueOf(
