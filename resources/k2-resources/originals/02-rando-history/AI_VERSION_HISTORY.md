@@ -1,3 +1,54 @@
+  ==== V308 OWN-TURN BATTLE STACK + KYLO BATTLE KIT (2026-09-07, both bots) ====
+Replay 72354 is the first live proof that the V307 deployment family materially improved Rando.
+Against Steve's strong MWYHL deck, Rando deployed aggressively, retained useful buddy packets,
+initiated battles, and reached a rare position where it could have overpowered the opponent. Future
+edits must preserve the combined V303 battle appetite, V306 voluntary 13-card ceiling and funded
+package commitment, and V307 durable buddies, typed objective packages, and Undercover correction.
+This combination is the new baseline.
+
+The narrow turn-three miss was exact. Rando had 13 Force and power 6 against 9 at Beldon's Corridor.
+The accepted plan sent Snoke to Beldon's but sent Kylo Ren `222_10` to empty Guest Quarters, despite
+the destination evaluator ranking Beldon's 1535 against 895. Snoke made the battle 9 against 9 and
+Rando correctly initiated it. Sending the already planned Kylo with Snoke would have projected 15
+against 9 while retaining enough Force to battle. Kylo Ren's Lightsaber `204_58` was already lost
+from hand, so the missing weapon was not a legal-action failure in this replay.
+
+V308 runs only during the current player's deploy phase and only after the winning plan exists. If
+that plan can make a favorable, destiny-capable site battle, every exact planned character that is
+legal and affordable at the target is concentrated there before another front opens. Modified costs
+and battle cost use ceiling math, the battle reserve remains funded, and the exact target survives
+packet completion so the weapon lane can finish the kit. Movement after battle is untouched.
+
+Counted objective packages, persistent responses, verified crew packets, aboard-starship assignments,
+an actor that would immediately complete an objective at its original site, and typed predicted
+Undercover deployments retain their original owners. Engine legality, whole-package affordability,
+Reserve Deck destiny availability, and the existing catastrophe checks still dominate. Exact Kylo's
+Lightsaber receives +600 only for an unarmed Kylo at the retained ground battle site when saber plus
+battle remain funded. Aboard, off-site, already armed, permanent-weapon, illegal, and battle-stranding
+routes are rejected. Other legal ground Kylo routes remain neutral.
+
+Source commit `382e4920a` passed `82/0/0/0` focused checks. Independent verification repeated all 82,
+including the Undercover phantom-power regression, and passed exact Rando/Chosen One parity, diff,
+card-source, legality, budget, ground-only, and permanent-weapon checks. Broad reactor testing was
+omitted at Steve's request. Pinned Corretto Java 21 packaging produced a ZIP-valid 46,296,942-byte,
+27,077-entry jar with SHA-256
+`d442f2ac894db103614e3d6b463f6f68bef74277f473453f35a2dfda3917f9e7`. It removes no V307 entry,
+adds the eight expected Kylo reader outputs, and retains V301, V302, all six Set 227 outer classes,
+V307, and the offline-image handler.
+
+Authenticated Hall gates before freeze, after freeze, and after restart were all `0/0/0`. Only
+`gemp_swccg_app_1` was recreated. Fresh app `f5d25c300394` started
+`2026-09-08T05:54:16.789442714Z` with direct Java PID 1, restart zero, and no OOM. MariaDB
+`46a8397072d3` retained its exact identity and start time. Candidate, host, and container hashes
+match; Set 227 loaded; startup completed; three HTTP probes returned 200; all gameplay switches are
+enabled; and material post-start log events are zero. Candidate:
+`/Users/steve/gemp-deploy-artifacts/rando-battle-stack-v308-2026-09-07/382e4920a-d442f2ac/web.jar`.
+Rollback:
+`/Users/steve/gemp-deploy-backups/rando-battle-stack-v308-2026-09-07/predeploy-382e4920a-37092f8f/web.jar`,
+SHA-256 `37092f8f4bbdcd4dcadbe5b651453541264d99456c4782e1820e9e50c8e3e111`, plus its direct-Java
+override. K2 requests `m01811` and `m01812` carry the preserve-V307 and overflow-review assignments.
+No overflow rule is part of V308. V307 is REPLAY_FIRED; V308 is RUNTIME_LOADED. Nothing was pushed.
+
   ==== V307 COUNTED OBJECTIVE PACKAGES + DURABLE GLOBAL BUDDIES (2026-09-07, both bots) ====
 Replay 72353 exposed the remaining hole in V304/V306. ISB Operations had enough Force and four
 qualifying agents available, and the accepted plan included funded same-site partners. After each
