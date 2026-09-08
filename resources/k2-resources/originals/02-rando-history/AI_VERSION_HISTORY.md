@@ -1,3 +1,45 @@
+  ==== V309 HUNT DOWN CASTLE CHILD ROUTING (2026-09-08, both bots) ====
+Game 72355 proved that the exact Vader's Castle parent action was already selected at +390, but the
+first child selection failed. The engine's abortable prompt was `Choose card to move from, or click
+'Done' to cancel`. The specialized Hunt Down handler matched only the bare prompt. The generic
+movement handler then found both `move` and `to`, with `to` coming from `to cancel`, and incorrectly
+evaluated the Castle origin as a destination. Existing additive rules contributed +15 icons, +10
+control, -200 zero drain, -9999 wrong direction, and -9999 Castle retreat for the strange but exact
+total -20173. After three cancellations, the existing loop owner rejected the parent action.
+
+V309 recognizes the live optional-cancel suffix at the exact Hunt Down Castle origin and destination
+steps, and uses that same normalized classification inside the specialized evaluator. The origin can
+only bind to `route.origin`, the destination to `route.destination`, and the final choice to the Vader
+mover. The real `209_50` action continues to filter destinations with `Filters.other(self)` and
+`Filters.battleground_site`; the objective analyzer also rejects the Castle as an outbound
+destination. The destination step therefore always means a different battleground, never the same
+location and never a move that cancels itself.
+
+No score magnitude, Formation Safety rule, objective flip condition, regular movement rule, card,
+engine, deck, client, or database behavior changed. V307 counted buddies and V308 battle
+concentration remain intact. Rando and Chosen One are mirrored. Source commit `32ae3c77b` passed
+37 focused checks with no failures, errors, or skips across combined evaluation, source parity, and
+the native engine contract. A failure-first run reproduced the exact suffixed-prompt defect.
+Independent read-only verification repeated all 37 checks and passed routing, identity, different-
+location, mirror, and scope gates.
+
+Pinned Corretto Java 21 packaging produced a ZIP-valid 46,297,568-byte, 27,077-entry jar with SHA-256
+`5bf380df5747734a542bf5ab8b68ce50d410dc3ad6b0ec5c140b3fa90bf1c4a0`. Compared with V308, only
+both bots' `CardSelectionEvaluator.class` and compiler-generated `$1` companions changed. V301,
+V302, all six Set 227 outer card classes, V307, V308, and the offline-image handler remain packaged.
+
+Authenticated Hall gates before freeze and after restart were 0/0/0. Only `gemp_swccg_app_1` was
+recreated. Fresh app `39f2cf5b226b` started `2026-09-08T15:09:46.343324136Z` with direct Java PID 1,
+restart zero, and no OOM. MariaDB `46a8397072d3` retained its identity and original start time.
+Candidate, host, and container hashes match; V309 occurs once in each bot class; startup completed;
+three HTTP probes returned 200; every gameplay switch was restored; and material post-start errors
+were zero. Candidate:
+`/Users/steve/gemp-deploy-artifacts/rando-hunt-down-castle-v309-2026-09-08/32ae3c77b-5bf380df/web.jar`.
+Rollback:
+`/Users/steve/gemp-deploy-backups/rando-hunt-down-castle-v309-2026-09-08/predeploy-32ae3c77b-d442f2ac/web.jar`,
+SHA-256 `d442f2ac894db103614e3d6b463f6f68bef74277f473453f35a2dfda3917f9e7`, plus the pinned direct-Java
+override. V309 is RUNTIME_LOADED and awaits replay proof. Nothing was pushed.
+
   ==== V308 OWN-TURN BATTLE STACK + KYLO BATTLE KIT (2026-09-07, both bots) ====
 Replay 72354 is the first live proof that the V307 deployment family materially improved Rando.
 Against Steve's strong MWYHL deck, Rando deployed aggressively, retained useful buddy packets,
