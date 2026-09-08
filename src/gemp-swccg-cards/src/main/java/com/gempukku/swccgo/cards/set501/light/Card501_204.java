@@ -104,6 +104,7 @@ public class Card501_204 extends AbstractJediMaster {
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.isDuringPodrace(game)
                 && GameConditions.hasLostPile(game, playerId)
                 && GameConditions.canTarget(game, self, yourPodracer)) {
 
