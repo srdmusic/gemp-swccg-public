@@ -12,6 +12,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.LateEstablishPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
+import com.gempukku.swccgo.ai.models.common.phase.ProspectiveBattleSynergy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
 import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.strategy.ForceDrainProjection;
@@ -4209,6 +4210,8 @@ public class DeployPhasePlanner {
         Map<String, Float> abilityByLocation = new HashMap<>();
         Map<String, List<PhysicalCard>> plannedCardsByLocation =
                 new HashMap<>();
+        List<PolicyResult> automaticAdjuncts = new ArrayList<>();
+        boolean battleSynergyAwarded = false;
 
         int instructionIndex = 0;
         for (DeploymentInstruction inst : plan.getInstructions()) {
@@ -4257,6 +4260,38 @@ public class DeployPhasePlanner {
 
             float postOurPower = targetLoc.ourPower + plannedPower;
             float postOurAbility = targetLoc.ourAbility + plannedAbility;
+
+            // V311: prefer, but never require, a complete source-proven
+            // extra-draw pair at the one battle this plan is building.
+            boolean battleRelevant = targetLoc.theirPower > 0.0f
+                    || locId.equals(
+                        plan.getPlannedBattleTargetLocationId());
+            if (!battleSynergyAwarded && battleRelevant
+                    && currentGame != null
+                    && currentPlayerId != null) {
+                ProspectiveBattleSynergy.Projection before =
+                    ProspectiveBattleSynergy.projectAtLocation(
+                        currentGame, currentPlayerId,
+                        targetLoc.location, List.of());
+                ProspectiveBattleSynergy.Projection after =
+                    ProspectiveBattleSynergy.projectAtLocation(
+                        currentGame, currentPlayerId,
+                        targetLoc.location,
+                        plannedCardsByLocation.getOrDefault(
+                            locId, Collections.emptyList()));
+                int gained = ProspectiveBattleSynergy
+                    .additionalDrawsGained(currentGame, before, after);
+                PolicyResult synergy = DeployPlanRankingPolicy
+                    .evaluateBattleDestinySynergy(
+                        "battle-synergy-" + locationIndex,
+                        true, gained);
+                if (!synergy.operations().isEmpty()) {
+                    automaticAdjuncts.add(synergy);
+                    battleSynergyAwarded = true;
+                    LOG.info("V311 PLAN PAIR: {} gains {} source-proven battle destiny draw(s), +100 plan preference",
+                        targetLoc.location.getTitle(), gained);
+                }
+            }
 
             // V22: Objective-relevant location bonus for plan scoring
             boolean objectiveRelevant = false;
@@ -4335,10 +4370,12 @@ public class DeployPhasePlanner {
                 instructionFacts, locationFacts);
         PolicyResult[] adjuncts = objectiveAdjuncts != null
                 ? objectiveAdjuncts : new PolicyResult[0];
-        PolicyResult[] results = new PolicyResult[adjuncts.length + 1];
-        results[0] = core;
-        System.arraycopy(adjuncts, 0, results, 1, adjuncts.length);
-        return DeployPlanRankingPolicy.apply(0.0f, results);
+        List<PolicyResult> results = new ArrayList<>();
+        results.add(core);
+        results.addAll(Arrays.asList(adjuncts));
+        results.addAll(automaticAdjuncts);
+        return DeployPlanRankingPolicy.apply(
+                0.0f, results.toArray(new PolicyResult[0]));
     }
 
     private float scoreObjectiveCapitalPlan(DeploymentPlan plan,

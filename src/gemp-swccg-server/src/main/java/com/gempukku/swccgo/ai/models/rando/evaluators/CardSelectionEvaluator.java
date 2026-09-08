@@ -45,6 +45,7 @@ import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidatePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PersistentResponsePlanAdapter;
+import com.gempukku.swccgo.ai.models.common.phase.ProspectiveBattleSynergy;
 import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ResponsePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
@@ -10248,6 +10249,34 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 } else if (opponentId != null && opponentId.equals(owner)) {
                                     theirPower += power;
                                 }
+                            }
+                        }
+
+                        // V311: once a move is already admissible, prefer the
+                        // contested destination where the actual mover completes
+                        // a source-proven extra-draw pair. No hold or veto is
+                        // created, so post-battle spreading remains available.
+                        if (game != null && playerId != null
+                                && fsMover != null && theirPower > 0.0f) {
+                            ProspectiveBattleSynergy.Projection before =
+                                ProspectiveBattleSynergy.projectAtLocation(
+                                    game, playerId, location, List.of());
+                            ProspectiveBattleSynergy.Projection after =
+                                ProspectiveBattleSynergy.projectAtLocation(
+                                    game, playerId, location,
+                                    List.of(fsMover));
+                            int gained = ProspectiveBattleSynergy
+                                .additionalDrawsGained(
+                                    game, before, after);
+                            MoveDestinationPolicy.Contribution pair =
+                                MoveDestinationPolicy
+                                    .battleDestinyPairDestination(
+                                        gained, fsMover.getTitle(), title);
+                            if (pair.applies()) {
+                                action.addReasoning(
+                                    pair.reason(), pair.delta());
+                                logger.info("V311 MOVE DEST PAIR: {} -> {} gains {} source-proven battle destiny draw(s), +100 ordering only",
+                                    fsMover.getTitle(), title, gained);
                             }
                         }
 

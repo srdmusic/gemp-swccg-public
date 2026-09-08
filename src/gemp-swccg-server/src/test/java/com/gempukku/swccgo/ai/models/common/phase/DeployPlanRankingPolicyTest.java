@@ -139,6 +139,26 @@ public class DeployPlanRankingPolicyTest {
     }
 
     @Test
+    public void battleDestinyPairIsOneBoundedBattleOnlyPreference() {
+        PolicyResult complete = DeployPlanRankingPolicy
+                .evaluateBattleDestinySynergy(
+                        "battle-pair", true, 2);
+        assertOperations(complete.operations(),
+                new String[]{"battle-pair"},
+                new String[]{"V311-plan-ranking-battle-destiny-pair"},
+                new float[]{100.0f},
+                new String[]{"V311 complete source-proven battle destiny pair"});
+        assertBits(0.0f, DeployPlanRankingPolicy.apply(
+                0.0f,
+                DeployPlanRankingPolicy.evaluateBattleDestinySynergy(
+                        "not-a-battle", false, 1)));
+        assertBits(0.0f, DeployPlanRankingPolicy.apply(
+                0.0f,
+                DeployPlanRankingPolicy.evaluateBattleDestinySynergy(
+                        "incomplete", true, 0)));
+    }
+
+    @Test
     public void existingFriendlyFormationCrossesLegacyDominanceWithoutNewScoreTower() {
         PolicyResult result = DeployPlanRankingPolicy.evaluate(
                 List.of(instruction("instruction", 4)),

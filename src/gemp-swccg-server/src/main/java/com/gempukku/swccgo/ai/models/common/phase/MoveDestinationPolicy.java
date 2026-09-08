@@ -121,6 +121,25 @@ public final class MoveDestinationPolicy {
                 "Do not move the objective's terminal actor into the exact conjunction that can place the objective out of play");
     }
 
+    /**
+     * V311 is an ordinary tie-break only. Existing objective and formation
+     * vetoes remain authoritative, and this does not claim movement doctrine.
+     */
+    public static Contribution battleDestinyPairDestination(
+            int additionalDrawsGained,
+            String moverTitle,
+            String destinationTitle) {
+        if (additionalDrawsGained <= 0) return Contribution.none();
+        return new Contribution(
+                true,
+                "V311 BATTLE DESTINY PAIR: "
+                        + (moverTitle != null ? moverTitle : "mover")
+                        + " completes a source-proven extra-draw pairing at "
+                        + (destinationTitle != null
+                            ? destinationTitle : "the contested destination"),
+                100.0f);
+    }
+
     public static Contribution objectivePostFlipPayoffStart(
             boolean hasSafePayoffHop,
             String actorTitle) {

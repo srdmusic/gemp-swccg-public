@@ -999,6 +999,20 @@ public class MoveDestinationPolicyTest {
                 .applies());
     }
 
+    @Test
+    public void battleDestinyPairIsOrderingOnlyAndNeverClaimsByItself() {
+        MoveDestinationPolicy.Contribution pair =
+                MoveDestinationPolicy.battleDestinyPairDestination(
+                        3, "Grand Moff Tarkin", "Cloud City");
+
+        assertTrue(pair.applies());
+        assertFloat(100.0f, pair.delta());
+        assertFalse(MoveDestinationPolicy
+                .battleDestinyPairDestination(
+                        0, "Grand Moff Tarkin", "Cloud City")
+                .applies());
+    }
+
     private static PhysicalCard location(
             String title, CardSubtype subtype) {
         PhysicalCard card = mock(PhysicalCard.class);

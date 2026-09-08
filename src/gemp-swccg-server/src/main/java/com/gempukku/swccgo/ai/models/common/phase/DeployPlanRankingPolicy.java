@@ -150,6 +150,22 @@ public final class DeployPlanRankingPolicy {
         return new PolicyResult(PRODUCER, operations);
     }
 
+    /** Bounded V311 preference for a proven extra-draw pair at one battle target. */
+    public static PolicyResult evaluateBattleDestinySynergy(
+            String contributionId,
+            boolean battleRelevant,
+            int additionalDrawsGained) {
+        requireNonBlank(contributionId, "contributionId");
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        if (battleRelevant && additionalDrawsGained > 0) {
+            add(operations, contributionId,
+                    "V311-plan-ranking-battle-destiny-pair",
+                    100.0f,
+                    "V311 complete source-proven battle destiny pair");
+        }
+        return new PolicyResult(PRODUCER, operations);
+    }
+
     /** Adds one Endor objective adjustment through the shared objective ceiling. */
     public static PolicyResult evaluateEndorAdjustment(
             String contributionId, String ruleId, float adjustment,

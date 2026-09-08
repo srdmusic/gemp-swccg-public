@@ -25,6 +25,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveVergePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.SetYourCourseObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveWeaponHunterPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveWinnabilityPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ProspectiveBattleSynergy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.strategy.FormationSafety;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
@@ -3629,6 +3630,33 @@ public class MoveEvaluator extends ActionEvaluator {
                     action.addReasoning(
                         destination.contestContribution().reason(),
                         destination.contestContribution().delta());
+                    if (cardToMove != null) {
+                        ProspectiveBattleSynergy.Projection before =
+                            ProspectiveBattleSynergy.projectAtLocation(
+                                game, playerId,
+                                destination.destination(), List.of());
+                        ProspectiveBattleSynergy.Projection after =
+                            ProspectiveBattleSynergy.projectAtLocation(
+                                game, playerId,
+                                destination.destination(),
+                                List.of(cardToMove));
+                        int gained = ProspectiveBattleSynergy
+                            .additionalDrawsGained(
+                                game, before, after);
+                        MoveDestinationPolicy.Contribution pair =
+                            MoveDestinationPolicy
+                                .battleDestinyPairDestination(
+                                    gained,
+                                    cardToMove.getTitle(),
+                                    destination.destination().getTitle());
+                        if (pair.applies()) {
+                            action.addReasoning(
+                                pair.reason(), pair.delta());
+                            logger.info("V311 MOVE PAIR: {} -> {} gains {} source-proven battle destiny draw(s), +100 ordering only",
+                                cardToMove.getTitle(),
+                                destination.destination().getTitle(), gained);
+                        }
+                    }
                     logger.warn("V34 CONTEST: {} moving to {} (opponent power {}{}) — bonus +{}",
                         cardToMove != null ? cardToMove.getTitle() : "?",
                         destination.destination().getTitle(),
