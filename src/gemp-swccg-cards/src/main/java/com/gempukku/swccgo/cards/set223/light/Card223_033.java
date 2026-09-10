@@ -54,7 +54,7 @@ public class Card223_033 extends AbstractDroid {
         // Check condition(s)
         if (GameConditions.isInBattle(game, self)
                 && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId)
-                && GameConditions.isInBattleWith(game, self, 2, Filters.and(Filters.your(self), Filters.icon(Icon.EPISODE_VII), Filters.character)) 
+                && GameConditions.isInBattleWith(game, self, 2, Filters.and(Filters.your(self), Filters.icon(Icon.EPISODE_VII), Filters.character))
                 && GameConditions.canAddDestinyDrawsToAttrition(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
@@ -65,7 +65,7 @@ public class Card223_033 extends AbstractDroid {
                     new OncePerBattleEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new AddDestinyToAttritionEffect(action, 1));
+                    new AddDestinyToAttritionEffect(action, 1, playerId));
 
             return Collections.singletonList(action);
         }
@@ -79,7 +79,7 @@ public class Card223_033 extends AbstractDroid {
         // Check condition(s)
         if (GameConditions.isInBattle(game, self)
                 && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId)
-                && GameConditions.isInBattleWith(game, self, 2, Filters.and(Filters.opponents(self), Filters.icon(Icon.EPISODE_VII), Filters.character)) 
+                && GameConditions.isInBattleWith(game, self, 2, Filters.and(Filters.opponents(self), Filters.icon(Icon.EPISODE_VII), Filters.character))
                 && GameConditions.canAddDestinyDrawsToAttrition(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
@@ -90,7 +90,7 @@ public class Card223_033 extends AbstractDroid {
                     new OncePerBattleEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new AddDestinyToAttritionEffect(action, 1));
+                    new AddDestinyToAttritionEffect(action, 1, playerId));
 
             return Collections.singletonList(action);
         }

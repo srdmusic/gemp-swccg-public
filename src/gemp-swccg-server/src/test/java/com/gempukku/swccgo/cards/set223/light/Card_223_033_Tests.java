@@ -157,8 +157,7 @@ public class Card_223_033_Tests {
         assertEquals(4,scn.GetUnpaidLSAttrition()); //test4:
     }
 
-        //demonstrates https://github.com/PlayersCommittee/gemp-swccg-public/issues/1031
-    @Test @Ignore
+    @Test
     public void CB_23AddsDSAttritionDestinyWithTwoOtherEpVII() {
         //CB-23 in battle with 2 other DS episode 7 characters and 2 other LS characters (only one is episode 7 character)
         //test1: DS can add attrition destiny
