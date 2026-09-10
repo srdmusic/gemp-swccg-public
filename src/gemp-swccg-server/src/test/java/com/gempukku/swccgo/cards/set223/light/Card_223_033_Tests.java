@@ -10,7 +10,6 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -214,7 +213,7 @@ public class Card_223_033_Tests {
         assertEquals(5,scn.GetUnpaidLSAttrition()); //test4: 3 + 2 attrition destiny
     }
 
-    @Test @Ignore
+    @Test
     public void CB_23AllowsBothPlayersToAddAttritionDestiny() {
         //CB-23 in battle with 2 other LS episode 7 characters, and 2 other DS episode 7 characters
         //test1: DS can add attrition destiny
