@@ -206,7 +206,7 @@ public final class ForceLossPolicy {
             add(operations, actionId, "V153-thin-reserve", TraceOutputKind.ORDERING,
                     -335.0f,
                     "V153 THIN RESERVE (deck=" + decision.reserveDeckSize()
-                            + "): demote reserve below hand chars to preserve destiny");
+                            + "): demote reserve to preserve destiny");
         }
 
         if (candidate.fromHand() && candidate.battleInterrupt() && protectChars
@@ -313,7 +313,7 @@ public final class ForceLossPolicy {
             add(operations, actionId, "V153-thin-reserve", TraceOutputKind.ORDERING,
                     -335.0f,
                     "V153 THIN RESERVE (deck=" + decision.reserveDeckSize()
-                            + "): demote reserve below hand chars to preserve destiny");
+                            + "): demote reserve to preserve destiny");
         }
 
         if (candidate.fromHand() && decision.handSize() <= 4
@@ -347,9 +347,17 @@ public final class ForceLossPolicy {
                                      ForceLossFacts.CandidateFacts candidate,
                                      boolean standalone) {
         boolean protectChars = decision.lifeForce() >= 4;
+        boolean retainLateHandCharacter = protectChars
+                && decision.turnNumber() > 3 && candidate.handCharacter();
         float zoneScore;
         if (candidate.fromHand()) {
-            if (candidate.duplicate()) {
+            if (retainLateHandCharacter) {
+                // V312: keep turn-4+ deployment bodies, including same-title
+                // troops. -700 stays below even Force protected by DTF and an
+                // objective (50 - 400 - 300 = -650). This is ordering only;
+                // mandatory loss remains payable and life below 4 keeps V153.
+                zoneScore = -700.0f;
+            } else if (candidate.duplicate()) {
                 zoneScore = 1000.0f;
             } else if (candidate.handCharacter()) {
                 zoneScore = protectChars ? 100.0f : 700.0f;
@@ -372,7 +380,10 @@ public final class ForceLossPolicy {
         add(operations, actionId, "V153-zone", TraceOutputKind.ORDERING,
                 zoneScore,
                 "V153 ZONE (" + zone + ", lifeForce=" + decision.lifeForce()
-                        + ", protectChars=" + protectChars + ")");
+                        + ", protectChars=" + protectChars + ")"
+                        + (retainLateHandCharacter
+                            ? " V312 RETAIN HAND CHARACTER: preserve turn-4+ deployment bodies"
+                            : ""));
     }
 
     private static boolean isLightsaber(String title) {

@@ -2063,6 +2063,18 @@ public class RandoCalAi extends HeuristicAiBase {
                     ObjectiveAnalyzer
                         .OBJECTIVE_DEPLOYING_CARD_ID_EXTRA,
                     pendingObjectiveDeployingCardId);
+                // V312: the owner, not a scoring evaluator, releases an
+                // unstarted plan whose exact target the engine did not offer.
+                Map<String, String[]> deployTargetParameters =
+                        decision.getDecisionParameters();
+                String[] offeredDeployTargets = deployTargetParameters == null
+                        ? null : deployTargetParameters.get("cardId");
+                if (phase == Phase.DEPLOY && offeredDeployTargets != null) {
+                    deployPhasePlanner.rejectUnavailableDeployTarget(
+                            findCardByPermanentId(gameState,
+                                pendingObjectiveDeployingCardId),
+                            java.util.Arrays.asList(offeredDeployTargets));
+                }
             }
             if (pendingDeployActionSourcePermanentCardId
                     != null) {

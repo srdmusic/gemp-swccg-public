@@ -67,6 +67,73 @@ public class ForceLossCardSelectionPolicyParityTest {
     }
 
     @Test
+    public void v312TurnFourAdaptersSpendThinReserveAndForceBeforeHandCharacters() {
+        for (boolean duplicate : List.of(false, true)) {
+            PhysicalCard character = card(
+                    "Rebel Trooper", Zone.HAND, CardCategory.CHARACTER);
+            PhysicalCard reserve = card(
+                    "Reserve Effect", Zone.RESERVE_DECK, CardCategory.EFFECT);
+            PhysicalCard force = card(
+                    "Activated Effect", Zone.FORCE_PILE, CardCategory.EFFECT);
+            List<PhysicalCard> hand = List.of(character,
+                    card(duplicate ? "Rebel Trooper" : "Other Character",
+                            Zone.HAND, CardCategory.CHARACTER),
+                    card("Hand Three", Zone.HAND, CardCategory.EFFECT),
+                    card("Hand Four", Zone.HAND, CardCategory.EFFECT),
+                    card("Hand Five", Zone.HAND, CardCategory.EFFECT));
+            for (String prompt : List.of("Choose Force to lose",
+                    "Choose Force to lose or a card from battle to forfeit")) {
+                GameState gameState = battleGameState(
+                        Map.of(7, character, 8, reserve, 9, force),
+                        hand, List.of(), 7, 7, 4, 2, 0);
+                var rando = new com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator()
+                        .evaluate(randoContext(gameState, prompt,
+                                List.of("7", "8", "9"), Phase.BATTLE));
+                var chosen = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator()
+                        .evaluate(chosenContext(gameState, prompt,
+                                List.of("7", "8", "9"), Phase.BATTLE));
+
+                assertActionParity(rando, chosen);
+                assertTrue(action(rando, "8").getScore() > action(rando, "7").getScore());
+                assertTrue(action(rando, "9").getScore() > action(rando, "7").getScore());
+                assertTrue(hasReason(action(rando, "7"), "V312 RETAIN HAND CHARACTER"));
+                assertFalse(action(rando, "7").isHardVetoed());
+                assertFalse(action(rando, "7").isDeferred());
+            }
+        }
+    }
+
+    @Test
+    public void v312MandatorySoleCharacterLossStillResolvesThroughBothCombinedEvaluators() {
+        PhysicalCard character = card("Rebel Trooper", Zone.HAND, CardCategory.CHARACTER);
+        GameState gameState = gameState(Map.of(7, character),
+                List.of(character), List.of(), 2, 2, 4);
+        var randoContext = randoContext(gameState, "Choose Force to lose",
+                List.of("7"), Phase.CONTROL);
+        randoContext.setMin(1);
+        randoContext.setNoPass(true);
+        var chosenContext = chosenContext(gameState, "Choose Force to lose",
+                List.of("7"), Phase.CONTROL);
+        chosenContext.setMin(1);
+        chosenContext.setNoPass(true);
+        var randoEvaluator = new com.gempukku.swccgo.ai.models.rando.evaluators.CombinedEvaluator();
+        randoEvaluator.getEvaluators().removeIf(evaluator -> !(evaluator instanceof
+                com.gempukku.swccgo.ai.models.rando.evaluators.CardSelectionEvaluator));
+        var chosenEvaluator = new com.gempukku.swccgo.ai.models.chosenone.evaluators.CombinedEvaluator();
+        chosenEvaluator.getEvaluators().removeIf(evaluator -> !(evaluator instanceof
+                com.gempukku.swccgo.ai.models.chosenone.evaluators.CardSelectionEvaluator));
+
+        var rando = randoEvaluator.evaluateDecision(randoContext);
+        var chosen = chosenEvaluator.evaluateDecision(chosenContext);
+
+        assertActionParity(List.of(rando), List.of(chosen));
+        assertEquals("7", rando.getActionId());
+        assertBits(-650.0f, rando.getScore());
+        assertFalse(rando.isHardVetoed());
+        assertFalse(rando.isDeferred());
+    }
+
+    @Test
     public void combinedPromptPrecedesStandaloneAndKeepsPolicyOrderOncePerBot() {
         PhysicalCard usedPriority = card("Houjix", Zone.USED_PILE,
                 CardCategory.INTERRUPT);
@@ -880,9 +947,9 @@ public class ForceLossCardSelectionPolicyParityTest {
                 .evaluate(chosenContext);
 
         assertActionParity(rando, chosen);
-        assertBits(750.0f, rando.get(0).getScore());
+        assertBits(-950.0f, rando.get(0).getScore());
         assertReasons(rando.get(0).getReasoning(),
-                "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+1000.0)",
+                "V153 ZONE (HAND, lifeForce=11, protectChars=true) V312 RETAIN HAND CHARACTER: preserve turn-4+ deployment bodies (-700.0)",
                 "OBJECTIVE CRITICAL IN HAND: prefer to retain (-300.0)");
     }
 
@@ -933,10 +1000,10 @@ public class ForceLossCardSelectionPolicyParityTest {
                 .evaluate(chosenContext);
 
         assertActionParity(rando, chosen);
-        assertBits(-150.0f, action(rando, "28").getScore());
+        assertBits(-950.0f, action(rando, "28").getScore());
         assertBits(350.0f, action(rando, "29").getScore());
         assertReasons(action(rando, "28").getReasoning(),
-                "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+100.0)",
+                "V153 ZONE (HAND, lifeForce=11, protectChars=true) V312 RETAIN HAND CHARACTER: preserve turn-4+ deployment bodies (-700.0)",
                 "OBJECTIVE CRITICAL IN HAND: prefer to retain (-300.0)");
         assertReasons(action(rando, "29").getReasoning(),
                 "V153 ZONE (HAND, lifeForce=11, protectChars=true) (+600.0)",

@@ -62,7 +62,7 @@ public class ForceLossPolicyTest {
                 op("V153-zone", 400.0f,
                         "V153 ZONE (RESERVE_DECK, lifeForce=4, protectChars=true)"),
                 op("V153-thin-reserve", -335.0f,
-                        "V153 THIN RESERVE (deck=10): demote reserve below hand chars to preserve destiny"));
+                        "V153 THIN RESERVE (deck=10): demote reserve to preserve destiny"));
         assertOperations(score(ForceLossPolicy.Route.STANDALONE,
                         decision(5, 11, 4, 0, 2, false), reserve, none()),
                 op("V153-zone", 400.0f,
@@ -86,6 +86,90 @@ public class ForceLossPolicyTest {
                         decision(5, 20, 10, 0, 2, false), hand, none()),
                 op("V153-zone", 600.0f,
                         "V153 ZONE (HAND, lifeForce=10, protectChars=true)"));
+    }
+
+    @Test
+    public void v312RetainsOrdinaryAndDuplicateCharactersStartingOnTurnFour() {
+        for (ForceLossPolicy.Route route : ForceLossPolicy.Route.values()) {
+            for (boolean duplicate : List.of(false, true)) {
+                ForceLossFacts.CandidateFacts character = candidate(
+                        "Rebel Trooper", ForceLossFacts.ZoneBand.HAND, "HAND",
+                        CardCategory.CHARACTER, duplicate, false, false, false, false);
+                assertEquals(duplicate ? 1000.0f : 100.0f,
+                        total(score(route, decision(5, 10, 14, 4, 3, false),
+                                character, none())), 0.0f);
+                PolicyResult late = score(route,
+                        decision(5, 10, 14, 4, 4, false), character, none());
+                assertEquals(-700.0f, total(late), 0.0f);
+                assertTrue(late.operations().stream().anyMatch(operation ->
+                        operation.reason().contains("V312 RETAIN HAND CHARACTER")));
+            }
+        }
+    }
+
+    @Test
+    public void v312RetainedCharactersRankBelowThinReserveUsedAndActivatedForce() {
+        ForceLossFacts.DecisionFacts facts = decision(5, 7, 15, 7, 5, false);
+        for (ForceLossPolicy.Route route : ForceLossPolicy.Route.values()) {
+            for (boolean duplicate : List.of(false, true)) {
+                float characterScore = total(score(route, facts,
+                        candidate("Rebel Trooper", ForceLossFacts.ZoneBand.HAND,
+                                "HAND", CardCategory.CHARACTER, duplicate,
+                                false, false, false, false), none()));
+                for (ForceLossFacts.ZoneBand pile : List.of(
+                        ForceLossFacts.ZoneBand.RESERVE, ForceLossFacts.ZoneBand.USED,
+                        ForceLossFacts.ZoneBand.FORCE_PILE)) {
+                    assertTrue(route + " must spend " + pile + " before a hand character",
+                            total(score(route, facts,
+                                    candidate("Pile card", pile, pile.name(), null,
+                                            false, false, false, false, false), none()))
+                                    > characterScore);
+                }
+            }
+        }
+    }
+
+    @Test
+    public void v312RetainsCharactersEvenAgainstDtfAndObjectiveProtectedForce() {
+        ForceLossFacts.DecisionFacts facts = decision(5, 1, 4, 3, 4, true);
+        ForceLossPolicy.ObjectiveFlags required =
+                new ForceLossPolicy.ObjectiveFlags(false, false, true, false);
+        for (ForceLossPolicy.Route route : ForceLossPolicy.Route.values()) {
+            float forceScore = total(score(route, facts,
+                    candidate("Reserved Force", ForceLossFacts.ZoneBand.FORCE_PILE,
+                            "FORCE_PILE", null, false, false, false, false, false),
+                    required));
+            for (boolean duplicate : List.of(false, true)) {
+                float characterScore = total(score(route, facts,
+                        candidate("Rebel Trooper", ForceLossFacts.ZoneBand.HAND,
+                                "HAND", CardCategory.CHARACTER, duplicate,
+                                false, false, false, false), none()));
+                assertTrue("Protected Force remains expendable before the deployment body",
+                        forceScore > characterScore);
+            }
+        }
+    }
+
+    @Test
+    public void v312PreservesLifeThreeSurvivalAndDoesNotVetoMandatoryCharacterLoss() {
+        for (ForceLossPolicy.Route route : ForceLossPolicy.Route.values()) {
+            for (boolean duplicate : List.of(false, true)) {
+                ForceLossFacts.CandidateFacts character = candidate(
+                        "Rebel Trooper", ForceLossFacts.ZoneBand.HAND, "HAND",
+                        CardCategory.CHARACTER, duplicate, false, false, false, false);
+                assertEquals(duplicate ? 1000.0f : 700.0f,
+                        total(score(route, decision(1, 1, 3, 2, 6, false),
+                                character, none())), 0.0f);
+                PolicyResult mandatoryOnlyCharacter = score(route,
+                        decision(1, 1, 4, 3, 6, false), character, none());
+                assertEquals(-700.0f, total(mandatoryOnlyCharacter), 0.0f);
+                assertEquals(1, mandatoryOnlyCharacter.operations().size());
+                assertTrue(mandatoryOnlyCharacter.operations().stream().allMatch(
+                        operation -> operation.kind() == PolicyOperationKind.ADD
+                                && operation.outputKind() == TraceOutputKind.ORDERING
+                                && ACTION_ID.equals(operation.actionId())));
+            }
+        }
     }
 
     @Test
@@ -493,6 +577,14 @@ public class ForceLossPolicyTest {
     private static boolean hasRule(PolicyResult result, String ruleId) {
         return result.operations().stream().anyMatch(
                 operation -> ruleId.equals(operation.ruleArmId().id()));
+    }
+
+    private static float total(PolicyResult result) {
+        float total = 0.0f;
+        for (PolicyOperation operation : result.operations()) {
+            total += operation.delta();
+        }
+        return total;
     }
 
     private static Expected op(String ruleId, float delta, String reason) {

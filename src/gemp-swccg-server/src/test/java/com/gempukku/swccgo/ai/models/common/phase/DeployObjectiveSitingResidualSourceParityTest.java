@@ -132,7 +132,7 @@ public class DeployObjectiveSitingResidualSourceParityTest {
     private static String[][] bounds() {
         return new String[][]{
                 {"// === V22.7: OBJECTIVE-CRITICAL LOCATION CONTESTATION ===",
-                        "// === V23: OPPONENT FORCE ICON PREFERENCE"},
+                        "// === V23: PROJECTED FORCE DRAIN PREFERENCE"},
                 {"// === V29.7: ISB OPERATIONS DEPLOYMENT STRATEGY",
                         "// === V29.7: ABILITY-BASED CHARACTER SCORING ==="},
                 {"// === V25: HUNT DOWN V — VADER PRIORITY DEPLOYMENT ===",

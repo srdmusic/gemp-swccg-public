@@ -802,6 +802,12 @@ public final class DeployObjectiveSitingPolicy {
                 single("DEPLOY_CLOUD_CITY_SPREAD_POLICY", operation), outcome);
     }
 
+    // V312: the legacy Cloud City protection belongs to Dark Side Lando only.
+    public static boolean isLegacyDarkSideLando(
+            com.gempukku.swccgo.common.Side cardSide, boolean landoPersona) {
+        return cardSide == com.gempukku.swccgo.common.Side.DARK && landoPersona;
+    }
+
     public static LandoSafetyEvaluation evaluateLandoSafety(
             LandoSafetyFacts facts) {
         Objects.requireNonNull(facts, "facts");

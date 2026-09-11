@@ -149,6 +149,52 @@ public class DeployPhasePlanner {
         return currentPlan;
     }
 
+    /** Release an unstarted packet when the engine does not offer its exact target. */
+    public boolean rejectUnavailableDeployTarget(
+            PhysicalCard deployingCard, Collection<String> offeredTargetIds) {
+        if (currentPlan == null || deployingCard == null
+                || offeredTargetIds == null || currentPlayerId == null
+                || deployingCard.getZone() != Zone.HAND
+                || !currentPlayerId.equals(deployingCard.getOwner())
+                || deployingCard.getBlueprint() == null
+                || deployingCard.getBlueprint().getCardCategory()
+                    != CardCategory.CHARACTER
+                || currentPlan.getDeploymentsMade() > 0
+                || currentPlan.getCountedDeployRouteKey() != null
+                || activeFormationPromise != null) {
+            return false;
+        }
+        DeploymentInstruction instruction = currentPlan
+                .getInstructionForPhysicalCard(
+                    deployingCard.getPermanentCardId(),
+                    deployingCard.getCardId(),
+                    deployingCard.getBlueprintId(true));
+        if (instruction == null
+                || instruction.getCardPermanentCardId() == null
+                || instruction.getCardCurrentCardId() == null
+                || instruction.getTargetLocationId() == null
+                || offeredTargetIds.contains(instruction.getTargetLocationId())) {
+            return false;
+        }
+        PhysicalCard target;
+        try {
+            target = currentGame.getGameState().findCardById(
+                    Integer.parseInt(instruction.getTargetLocationId()));
+        } catch (RuntimeException ignored) {
+            return false;
+        }
+        if (target == null || target.getBlueprint() == null
+                || target.getBlueprint().getCardSubtype()
+                    != com.gempukku.swccgo.common.CardSubtype.SITE) {
+            return false;
+        }
+        LOG.warn("V312 DEPLOY TARGET REPLAN: {} cannot select planned {}; release unstarted packet",
+                deployingCard.getTitle(), instruction.getTargetLocationName());
+        currentPlan = null;
+        lastPlanTurn = -1;
+        return true;
+    }
+
     private DeploymentPlan detectPromisedFormation(
             SwccgGame game, String playerId, int currentTurn) {
         if (currentPlan == null) return null;
@@ -4757,6 +4803,15 @@ public class DeployPhasePlanner {
     private boolean canDeployToLocation(PhysicalCard card, PhysicalCard location) {
         if (card == null || card.getBlueprint() == null) return true;
         if (location == null) return true;
+
+        // V312: printed 'deploys only' text is not engine legality. In replay
+        // 72361 it admitted Chewie to The Works without Light icons/presence,
+        // stranding the whole buddy packet behind a nonexistent first target.
+        // Let the engine retain spy/presence exceptions; do not ban zero-icon sites.
+        if (card.getBlueprint().getCardCategory() == CardCategory.CHARACTER
+                && currentGame != null) {
+            return canDeployPaidDirectly(card, location);
+        }
 
         String gametext = card.getBlueprint().getGameText();
         if (gametext == null || gametext.isEmpty()) return true;

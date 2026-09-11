@@ -6031,8 +6031,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     }
                                 }
 
-                                boolean v279LandoDeploy = isCharacter && decisionText != null
-                                    && decisionText.contains("lando");
+                                // V312: identify the actual printing, not a name in prompt text.
+                                SwccgCardBlueprint v312LandoBlueprint = objectiveProgressDeployingCard != null
+                                    ? objectiveProgressDeployingCard.getBlueprint()
+                                    : getBlueprintFromId(context, deployingBlueprintId);
+                                boolean v279LandoDeploy = isCharacter && v312LandoBlueprint != null
+                                    && DeployObjectiveSitingPolicy.isLegacyDarkSideLando(
+                                        v312LandoBlueprint.getSide(),
+                                        v312LandoBlueprint.hasPersona(com.gempukku.swccgo.common.Persona.LANDO));
                                 DeployObjectiveSitingPolicy.LandoDestinationEvaluation v279LandoDestination =
                                     DeployObjectiveSitingPolicy.evaluateLandoDestination(
                                         new DeployObjectiveSitingPolicy.LandoDestinationFacts(

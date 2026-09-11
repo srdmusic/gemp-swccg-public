@@ -769,3 +769,26 @@ session for the Hall read.
 Verdict: PASS. The exact combined V301 plus V302 plus Set 27 artifact is loaded
 and the runtime is healthy with an empty authenticated Hall. Proof ceiling is
 `RUNTIME_LOADED`, not `REPLAY_FIRED`; no gameplay branch firing was attempted.
+
+## 2026-09-11: V312 evaluator edits, PASS at SOURCE_TESTED
+
+Independent verifier reviewed the V312 diff against `5d5276eea` in the maintained
+`gemp-v304-map-buddy-drain-2026-09-06` worktree. Eight production classes changed:
+both bot owners, both deployment planners, both card-selection evaluators, and
+the shared ForceLossPolicy and DeployObjectiveSitingPolicy.
+
+- Compile and focused tests: PASS. Offline native Maven, JDK 25.0.2 targeting
+  Java 21. Ten fresh Surefire reports total 123 tests, zero failures, errors,
+  or skips. Independent review re-read those reports.
+- Mirrors: PASS. All three changed bot-pair diffs match exactly.
+- Compiled output: PASS. All eight changed production classes have the expected
+  marker or method; class major version 65. Zero new type-by-title heuristics.
+- Behavior boundaries: actual Light/Dark Lando printings, duplicate and ordinary
+  turn-4 hand characters, both loss routes, mandatory negative-score selection,
+  legal funded Hoth packet, zero-icon spy exception, exact missing site target,
+  and committed buddy/count packet protections are covered.
+- Documentation and diff: PASS. Both changelogs match source; diff check clean.
+- Limit: the deployment regression mocks the engine legality boundary. No new
+  speculative deployment sequencing, package, restart, or replay firing was
+  performed. Docker was already stopped and was not started. The installed V311
+  jar remains SHA-256 `4c8d526f5f3c9c0054c8c45d70236384f92f452d6235d9893a75e793a9b57253`.

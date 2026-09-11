@@ -1,3 +1,31 @@
+  ==== V312 LEGAL DEPLOY PACKETS AND LATE HAND CHARACTERS (2026-09-11, both bots) ====
+Steve authorized fixes after game 72361. Rando held Chewie, Light Side Lando, and Jyn
+through turns 5 and 6 with 10 and 17 Force. Its planned Chewie-first destination at
+The Works was not legal, but the stale target made other sites look unsupported.
+It then discarded Chewie and Lando from hand with 18 Life Force remaining.
+
+Character planning now asks the existing paid engine deployment query. The decision
+owner releases an exact missing site target only for an unstarted, uncommitted hand
+character packet. Completed deployments, active buddy promises, counted objective
+packets, and unrelated or attached targets are protected from that recovery hook.
+This preserves evaluator purity and buddy safety. Zero-own-icon sites are not banned;
+the engine still recognizes spy and presence exceptions. New speculative future-state
+deployment sequencing is not part of this patch.
+
+The legacy Lando destination/safety policy now requires the actual blueprint's Dark
+Side and Lando persona. Light Side Lando no longer receives that rule. Dark Side
+protection is retained unchanged, as Steve clarified.
+
+The shared V153 hand-character zone score becomes -700 on own turn 4 onward with
+Life Force >=4, including duplicate characters. This remains below even doubly
+protected Force (50 -400 DTF -300 objective = -650), without boosting pile scores
+or changing hit/attrition ordering. Both loss routes and both bots use the shared
+owner. Early turns, Life Force <4 survival, and mandatory loss remain supported.
+
+AI-only, mirrored source change. No card, client, deck, database, image, broad battle
+scoring, or runtime changes. Focused verification is documented in AI_CHANGELOG.md.
+Revert the V312 source/documentation commit to restore V311 source behavior. No push.
+
   ==== V311 PROSPECTIVE BATTLE DESTINY PAIRS (2026-09-08, both bots) ====
 Steve asked Rando to recognize character pairings such as Grand Moff Tarkin (V) with Vader while
 choosing deployments and movement, before the cards are already together. The engine's live
