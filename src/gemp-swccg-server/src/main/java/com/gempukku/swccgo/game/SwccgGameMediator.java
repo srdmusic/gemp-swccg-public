@@ -1010,7 +1010,11 @@ public class SwccgGameMediator {
     }
 
     public void cleanup() {
-        _writeLock.lock();
+        // The cleaner runs every second. If this game is in the middle of processing a player
+        // action (which holds the write lock for the whole action), skip this pass instead of
+        // waiting for it; the next pass will pick it up.
+        if (!_writeLock.tryLock())
+            return;
         try {
             long currentTime = System.currentTimeMillis();
             Map<String, GameCommunicationChannel> channelsCopy = new HashMap<String, GameCommunicationChannel>(_communicationChannels);
