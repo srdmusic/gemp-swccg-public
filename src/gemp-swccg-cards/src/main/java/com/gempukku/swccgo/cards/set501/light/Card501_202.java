@@ -6,6 +6,7 @@ import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -43,11 +44,16 @@ public class Card501_202 extends AbstractNormalEffect {
         addIcons(Icon.VIRTUAL_SET_27);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Sacrifice For Something Bigger");
+        setMayNotBePlacedInReserveDeck(true);
     }
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.and(Filters.your(self), Filters.title("Zero Hour")));
+        // Double-sided card: may only deploy at the start of the game (e.g. via a starting interrupt like
+        // Heading For The Medical Frigate, which deploys free "deploy on table" Effects from Reserve Deck),
+        // never floated in mid-game. Requires your Zero Hour on table.
+        return GameConditions.isDuringStartOfGame(game)
+                && Filters.canSpot(game, self, Filters.and(Filters.your(self), Filters.title("Zero Hour")));
     }
 
     @Override
@@ -56,7 +62,7 @@ public class Card501_202 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.KANAN)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Kanan from Reserve Deck");
