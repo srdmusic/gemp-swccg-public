@@ -54,14 +54,14 @@ public class Card_223_033_Tests {
          * Title: CB-23
          * Uniqueness: Unique
          * Side: Light
-         * Type: Character
-         * Subtype: Used or Lost
-         * Destiny: 5
-         * Icons: Dagobah, Set 23
-         * Game Text: USED: Target a starship. For remainder of turn, target may not use tractor beams, fire weapons, or 'cloak.'
-         *         LOST: Cancel a hologram. OR Cancel the game text of Emperor's Power or an Admiral's Order until start of your turn.
-         * Lore: After the mission, the Death Squadron HoloNet communications system reported fifteen system errors:
-         *         ten computer malfunctions, four power failures and one asteroid.
+         * Type: Droid
+         * Model: Astromech
+         * Destiny: 3
+         * Icons: Set 23
+         * Game Text: [Episode VII] characters deploy -1 here. During battle, each player with two other participating
+         *      [Episode VII] characters may add one destiny to attrition. While with Kazuda, Poe, or Rey, gains
+         *      Resistance Agent.
+         * Lore: Female.
          * Set: Set 23
          * Rarity: V
          */
@@ -280,6 +280,66 @@ public class Card_223_033_Tests {
 
         assertTrue(scn.AwaitingDSWeaponsSegmentActions());
         assertFalse(scn.DSCardActionAvailable(cb23, "attrition")); //test1
+    }
+
+    @Test
+    public void CB_23LSCanOnlyAddAttritionDestinyOncePerBattle() {
+        var scn = GetScenario();
+
+        var cb23 = scn.GetLSCard("cb23");
+        var finn = scn.GetLSCard("finn");
+        var poe = scn.GetLSCard("poe");
+
+        var trooper = scn.GetDSFiller(1);
+
+        var site = scn.GetDSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLocation(site, cb23, finn, poe, trooper);
+
+        scn.SkipToPhase(Phase.BATTLE);
+        scn.DSInitiateBattle(site);
+        scn.DSPass();
+
+        assertTrue(scn.AwaitingLSWeaponsSegmentActions());
+        assertTrue(scn.LSCardActionAvailable(cb23, "attrition"));
+        scn.LSUseCardAction(cb23,"attrition");
+        scn.PassAllResponses();
+
+        scn.DSPass();
+        assertTrue(scn.AwaitingLSWeaponsSegmentActions());
+        assertFalse(scn.LSCardActionAvailable(cb23, "attrition"));
+    }
+
+    @Test
+    public void CB_23DSCanOnlyAddAttritionDestinyOncePerBattle() {
+        var scn = GetScenario();
+
+        var cb23 = scn.GetLSCard("cb23");
+        var trooper = scn.GetLSFiller(1);
+
+        var tarkin = scn.GetDSCard("tarkin");
+        var fos1 = scn.GetDSCard("fos1");
+        var fos2 = scn.GetDSCard("fos2");
+
+        var site = scn.GetDSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLocation(site, cb23, trooper, tarkin, fos1, fos2);
+
+        scn.SkipToPhase(Phase.BATTLE);
+        scn.DSInitiateBattle(site);
+
+        assertTrue(scn.AwaitingDSWeaponsSegmentActions());
+        assertTrue(scn.DSCardActionAvailable(cb23, "attrition"));
+        scn.DSUseCardAction(cb23,"attrition");
+        scn.PassAllResponses();
+
+        scn.LSPass();
+        assertTrue(scn.AwaitingDSWeaponsSegmentActions());
+        assertFalse(scn.DSCardActionAvailable(cb23, "attrition"));
     }
 
 }

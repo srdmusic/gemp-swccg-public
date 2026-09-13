@@ -6,7 +6,6 @@ import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.AddDestinyToAttritionEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
-import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.ModelType;
@@ -51,15 +50,13 @@ public class Card223_033 extends AbstractDroid {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_DEFAULT;
-
         // Check condition(s)
         if (GameConditions.isInBattle(game, self)
-                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId)
                 && GameConditions.isInBattleWith(game, self, 2, Filters.and(Filters.your(self), Filters.icon(Icon.EPISODE_VII), Filters.character))
                 && GameConditions.canAddDestinyDrawsToAttrition(game, playerId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId);
             action.setText("Add one destiny to attrition");
             action.setActionMsg("Add one destiny to attrition");
             // Update usage limit(s)
@@ -67,7 +64,7 @@ public class Card223_033 extends AbstractDroid {
                     new OncePerBattleEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new AddDestinyToAttritionEffect(action, 1, playerId));
+                    new AddDestinyToAttritionEffect(action, 1));
 
             return Collections.singletonList(action);
         }
@@ -77,15 +74,15 @@ public class Card223_033 extends AbstractDroid {
 
     @Override
     protected List<TopLevelGameTextAction> getOpponentsCardGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        //GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
         if (GameConditions.isInBattle(game, self)
-                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId)
                 && GameConditions.isInBattleWith(game, self, 2, Filters.and(Filters.opponents(self), Filters.icon(Icon.EPISODE_VII), Filters.character))
                 && GameConditions.canAddDestinyDrawsToAttrition(game, playerId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId);
             action.setText("Add one destiny to attrition");
             action.setActionMsg("Add one destiny to attrition");
             // Update usage limit(s)
@@ -93,7 +90,7 @@ public class Card223_033 extends AbstractDroid {
                     new OncePerBattleEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new AddDestinyToAttritionEffect(action, 1, playerId));
+                    new AddDestinyToAttritionEffect(action, 1));
 
             return Collections.singletonList(action);
         }
