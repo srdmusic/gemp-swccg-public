@@ -18,6 +18,7 @@ import com.gempukku.swccgo.ai.models.common.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
 import com.gempukku.swccgo.ai.models.common.phase.ActivateDecisionRouting;
 import com.gempukku.swccgo.ai.models.common.phase.AiActionSourceProvenance;
+import com.gempukku.swccgo.ai.models.common.phase.ReserveWeaponDeploymentGuard;
 import com.gempukku.swccgo.ai.models.common.phase.BattleActionTextPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BhbmForceDripUrgencyFactsReader;
@@ -2258,6 +2259,10 @@ public class TheChosenOneAi extends HeuristicAiBase {
                         decision, currentGame,
                         playerId));
         }
+        evalContext.setExtra(
+            ReserveWeaponDeploymentGuard.BLOCKED_ACTIONS_EXTRA,
+            ReserveWeaponDeploymentGuard.readBlockedActions(
+                decision, currentGame, playerId));
         evalContext.setShieldStrategy(shieldStrategy);
         deployPhasePlanner.setObjectiveAnalyzer(objectiveAnalyzer);
         evalContext.setDeployPhasePlanner(deployPhasePlanner);

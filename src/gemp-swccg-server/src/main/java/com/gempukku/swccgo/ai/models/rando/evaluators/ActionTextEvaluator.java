@@ -10,6 +10,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeploySequencingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ReserveWeaponDeploymentGuard;
 import com.gempukku.swccgo.ai.models.common.phase.ForceLossPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.BattleTargetResolver;
 import com.gempukku.swccgo.ai.models.common.phase.BattleWeaponsFacts;
@@ -210,6 +211,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             .equals(textLower.trim());
 
             EvaluatedAction action = new EvaluatedAction(actionId, ActionType.UNKNOWN, 0.0f, actionText);
+            if (context.getExtra(ReserveWeaponDeploymentGuard.BLOCKED_ACTIONS_EXTRA)
+                    instanceof Set<?> reserveWeaponBlocks && reserveWeaponBlocks.contains(actionId)) {
+                PolicyContributionLedger weaponLedger =
+                        new PolicyContributionLedger("reserve-weapon-parent-" + actionId);
+                weaponLedger.register(DeployWeaponPolicy.evaluateReserveEligibility(actionId));
+                PolicyOperationAdapter.apply(action, weaponLedger);
+                actions.add(action);
+                continue;
+            }
             boolean exactTdigwattPullAction = false;
             applyTdigwattDestinyAdjustment(
                     action, context, actionText);
@@ -4218,9 +4228,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
                     PolicyResult v175KillShot = BattleActionTextPolicy.scoreKillShot(
                         new BattleActionTextFacts.KillShotFacts(
-                            actionId, v175Target, v175TargetType, v175Pow, v175Forf));
+                            actionId, v175Target, v175TargetType, v175Pow, v175Forf,
+                            com.gempukku.swccgo.ai.models.common.phase.BattleHitRemovalGuard
+                                .preservesLastOpponent(v175Gs, v175Pid,
+                                    exactSourceBlueprintId, v175Target)));
                     applyBattleActionTextPolicy(action, v175KillShot);
-                    if (v175TargetType == BattleActionTextFacts.KillShotTarget.OPPONENT) {
+                    if (action.isDeferred()) {
+                        logger.warn("V313 PRESERVE OVERFLOW: declining immediate removal of '{}'", v175Target);
+                    } else if (v175TargetType == BattleActionTextFacts.KillShotTarget.OPPONENT) {
                         float v175Score = v175KillShot.operations().get(0).delta();
                         logger.warn("V175 KILL SHOT: '{}' (pow={} forf={}) -> +{}",
                             v175Target, (int) v175Pow, (int) v175Forf, (int) v175Score);

@@ -23,6 +23,7 @@ import com.gempukku.swccgo.ai.models.common.phase.DeploySitingPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployUndercoverModePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ReserveWeaponDeploymentGuard;
 import com.gempukku.swccgo.ai.models.common.phase.HuntDownCastleMoveContinuation;
 import com.gempukku.swccgo.ai.models.common.phase.KyloBattleKitFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.DeployObjectiveSitingPolicy;
@@ -3773,6 +3774,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                 }
                             }
 
+                            // V313: built-in weapons consume the character's weapon slot too.
+                            if (!alreadyHasWeapon
+                                    && ReserveWeaponDeploymentGuard.isArmedCharacter(game, targetCharacter)) {
+                                alreadyHasWeapon = true;
+                                existingWeaponName = "permanent weapon";
+                            }
                             applyDeployWeaponPolicy(action,
                                 DeployWeaponPolicy.evaluateDestinationSlot(
                                     new DeployWeaponPolicy.DestinationSlotFacts(

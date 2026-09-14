@@ -33,6 +33,7 @@ import com.gempukku.swccgo.ai.models.common.phase.SpaceDeploymentAllocationFacts
 import com.gempukku.swccgo.ai.models.common.phase.DeployTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployPilotShipPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.DeployWeaponPolicy;
+import com.gempukku.swccgo.ai.models.common.phase.ReserveWeaponDeploymentGuard;
 import com.gempukku.swccgo.ai.models.common.phase.KyloBattleKitFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.NoMoneyNoPartsObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.RalltiirOperationsObjectivePolicy;
@@ -3994,7 +3995,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                         || tc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
                                 com.gempukku.swccgo.common.Zone z = tc.getZone();
                                 if (z == null || !z.isInPlay()) continue;
-                                boolean armed = false;
+                                boolean armed = ReserveWeaponDeploymentGuard.isArmedCharacter(game, tc);
                                 java.util.List<PhysicalCard> atts = gameState.getAttachedCards(tc);
                                 if (atts != null) {
                                     for (PhysicalCard a : atts) {

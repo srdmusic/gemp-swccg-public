@@ -7,6 +7,7 @@ import com.gempukku.swccgo.ai.models.common.phase.CaptureObjectivePolicy;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.PullDeployCandidateFacts;
+import com.gempukku.swccgo.ai.models.common.phase.ReserveWeaponDeploymentGuard;
 import com.gempukku.swccgo.ai.models.common.phase.PullOracleView;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFacts;
 import com.gempukku.swccgo.ai.models.common.phase.PullTakeCandidateFactsReader;
@@ -102,7 +103,15 @@ final class PullPolicyAdapter {
                 CardSelectionEvaluator.v70CheckWeaponDeviceBlock(
                         context.getGame(), context.getPlayerId(),
                         category, blueprint);
+        // V313: the live route's legal targets outrank a broad printed-text guess.
+        var exactWeaponBlock = ReserveWeaponDeploymentGuard.candidateBlockReason(
+                context.getGame(), context.getPlayerId(),
+                CardSelectionEvaluator.findPullCandidate(context, candidateCardId, blueprintId));
+        if (exactWeaponBlock.isPresent()) {
+            weaponDeviceBlock = exactWeaponBlock.get().isEmpty() ? null : exactWeaponBlock.get();
+        }
         if (weaponDeviceBlock != null
+                && exactWeaponBlock.isEmpty()
                 && isReadyRequiredObjectiveCandidate(
                     context, candidateCardId,
                     blueprintId)) {

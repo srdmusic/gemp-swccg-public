@@ -1,3 +1,35 @@
+  ==== V313 RESERVE WEAPON PRECHECK AND SOLO HIT OVERFLOW (2026-09-13, both bots) ====
+Game 72362 proved that Mara's abbreviated saber download bypassed the parent
+weapon checks. The -9999 second-weapon score appeared only after the bot had
+committed to a mandatory choice. The new shared AI precheck reads concrete
+Reserve Deck deployment effects and their actual candidate and target filters.
+It rejects a weapon-only route when all legal character hosts are armed, before
+starting it, while preserving an unarmed legal host or a useful non-weapon route.
+Permanent weapons count as armed. Later candidate and target choices share the
+same protection. Unmaterialized custom effects stay unknown; no live effect is
+executed to predict its result, and mandatory choices still receive legal answers.
+
+Game 72363 proved that Sniper & Dark Strike removed the only enemy battle body,
+Kanan, after Dooku's Lightsaber hit him and set forfeit to zero. The existing
+kill-shot owner now categorically defers the source-verified hit-removal modes
+on both sides when they would remove the last hit enemy character before damage.
+Real battle participants determine this, not all cards at the site. Other
+participating characters, vehicles and starships preserve ordinary kill-shot
+scoring. Control-phase weapon firing and the +3 destiny mode are unchanged.
+
+The early-deployment replay audit found an unaffordable Temple target on turn 1
+and a planner/solo-safety mismatch on turn 2, despite 10 Force and affordable
+Hoth pairs. V312 only partially addresses that separate issue. V313 does not
+change deployment aggression or V308's successful four-character battle stack.
+
+AI-only, mirrored/shared source changes. The final offline native server-reactor
+compile and 13 focused suites passed 95 tests with zero failures, errors or skips.
+No package or restart occurred; the installed jar remains V311. Test facts include
+mocked engine legality, so this is SOURCE_TESTED, not gameplay proof. Concrete
+single-effect parents are covered; custom deferred/sequential, react and special
+target-system contracts retain unknown status. Details are in AI_CHANGELOG.md.
+Revert the V313 commit as one unit. No push.
+
   ==== V312 LEGAL DEPLOY PACKETS AND LATE HAND CHARACTERS (2026-09-11, both bots) ====
 Steve authorized fixes after game 72361. Rando held Chewie, Light Side Lando, and Jyn
 through turns 5 and 6 with 10 and 17 Force. Its planned Chewie-first destination at

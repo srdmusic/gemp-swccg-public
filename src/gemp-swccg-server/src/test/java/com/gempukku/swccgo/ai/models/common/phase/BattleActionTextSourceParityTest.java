@@ -134,7 +134,7 @@ public class BattleActionTextSourceParityTest {
                 "DecisionOrigin", "DecisionActionSemantic", "DecisionWire",
                 "PullDeployRef", "PullPhysicalCardRef", "DeployDestinationRef",
                 "DeployPhysicalCardRef", "DeployActionMetadata",
-                "hardVeto(", "defer("}) {
+                "hardVeto(", "action.defer("}) {
             assertFalse(forbidden, sources.contains(forbidden));
         }
     }

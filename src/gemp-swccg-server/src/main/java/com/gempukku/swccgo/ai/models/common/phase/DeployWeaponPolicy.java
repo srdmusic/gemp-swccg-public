@@ -26,6 +26,15 @@ public final class DeployWeaponPolicy {
         return isAttachableWeaponHost(category);
     }
 
+    public static PolicyResult evaluateReserveEligibility(String actionId) {
+        List<PolicyOperation> operations = new ArrayList<>(1);
+        operations.add(PolicyOperation.defer(actionId,
+                TraceRuleId.of("V313-reserve-weapon-parent"), TraceDomainId.PULL_SEARCH,
+                TraceOutputKind.VETO, -9999.0f,
+                "V313 RESERVE WEAPON BLOCK: every legal weapon target already armed; do not start pull"));
+        return new PolicyResult("DEPLOY_RESERVE_WEAPON_ELIGIBILITY_POLICY", operations);
+    }
+
     public static PolicyResult evaluateDirectEligibility(DirectEligibilityFacts facts) {
         Objects.requireNonNull(facts, "facts");
         List<PolicyOperation> operations = new ArrayList<>(1);

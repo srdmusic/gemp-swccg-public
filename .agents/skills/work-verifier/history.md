@@ -792,3 +792,42 @@ the shared ForceLossPolicy and DeployObjectiveSitingPolicy.
   speculative deployment sequencing, package, restart, or replay firing was
   performed. Docker was already stopped and was not started. The installed V311
   jar remains SHA-256 `4c8d526f5f3c9c0054c8c45d70236384f92f452d6235d9893a75e793a9b57253`.
+
+## 2026-09-13: V313 evaluator edits, PASS at SOURCE_TESTED
+
+Independent bounded review against `c52a2d53a` in the maintained
+`gemp-v304-map-buddy-drain-2026-09-06` worktree covered the reserve-weapon
+precheck, permanent-weapon host protection, and solo hit-removal deferral.
+
+- Compile and focused tests: PASS. Root's final offline native Maven reactor
+  test command exited zero. The verifier independently parsed all 13 fresh
+  Surefire reports: 95 tests, zero failures, errors, or skips. No concurrent
+  Maven execution was started by the verifier.
+- Compiled output: PASS. All 15 changed production classes, including the
+  nested KillShotFacts record, contain the expected V313 strings or callable
+  hooks. All inspected outputs have Java 21 class major version 65.
+- Mirrors: PASS. Changed lines match exactly across all five bot pairs:
+  owners, ActionTextEvaluator, CardSelectionEvaluator, DeployEvaluator, and
+  PullPolicyAdapter. Both adapters publish the reserve-parent deferral before
+  ordinary text bonuses. The focused tests prove that an added one-million
+  score cannot revive a deferred reserve parent when Pass is legal.
+- Boundaries: actual action-ID reflection, unarmed legal targets, unrelated
+  unarmed characters, mixed hallway/weapon routes, attached and permanent
+  weapons, and non-mutating effect inspection are covered. Review identified
+  and resolved a direct-hand permanent-weapon counting gap. Multi-result,
+  named-system, alternate-target, react, and unsupported exact-card/free
+  previews remain unknown instead of vetoing on speculative future state.
+- Sniper source checks: PASS. All four removal modes match real card Java.
+  The shared guard uses hit state, actual battle participants, exact target
+  full name, and pre-damage timing. Additional participating characters,
+  starships, or vehicles preserve existing kill-shot scoring. Both bot chains
+  select Pass for the last hit enemy character.
+- Hygiene and documentation: PASS. No new forbidden type-by-title tests;
+  `git diff --check` is clean. Both V313 changelog descriptions match the
+  bounded source implementation. Earlier unrelated deployment-planner
+  behavior is explicitly not claimed fixed by V313.
+
+Verdict: PASS for SOURCE_TESTED only. Engine deployment legality is mocked in
+the focused reserve-route tests; this is not replay-fired proof or a guarantee
+for unmaterialized custom card effects. No package, deployment, restart, live
+game mutation, database change, or push was performed by this verification.

@@ -401,6 +401,13 @@ public final class BattleActionTextPolicy {
 
     public static PolicyResult scoreKillShot(BattleActionTextFacts.KillShotFacts facts) {
         Objects.requireNonNull(facts, "facts");
+        if (facts.preserveLastHitOpponent()) {
+            return weaponsResult(List.of(PolicyOperation.defer(
+                    facts.actionId(), TraceRuleId.of("V313-preserve-solo-hit-overflow"),
+                    TraceDomainId.BATTLE_WEAPONS, TraceOutputKind.VETO, 0.0f,
+                    "V313 PRESERVE OVERFLOW: leave the last hit opponent in battle; "
+                            + "do not spend an interrupt to end the battle before damage")));
+        }
         if (facts.target() == BattleActionTextFacts.KillShotTarget.UNRESOLVED) {
             return oneWeapons(facts.actionId(), "V175-kill-shot-unresolved",
                     TraceOutputKind.BANDED, 0.0f,

@@ -305,6 +305,19 @@ public class BattleActionTextPolicyTest {
     }
 
     @Test
+    public void lastHitOpponentDefersInsteadOfReceivingTheKillShotBonus() {
+        PolicyResult result = BattleActionTextPolicy.scoreKillShot(
+                new BattleActionTextFacts.KillShotFacts("kill", "Yoda",
+                        BattleActionTextFacts.KillShotTarget.OPPONENT, 20, 20, true));
+        assertEquals(1, result.operations().size());
+        PolicyOperation operation = result.operations().get(0);
+        assertEquals(PolicyOperationKind.DEFER, operation.kind());
+        assertEquals("V313-preserve-solo-hit-overflow", operation.ruleArmId().id());
+        assertRawFloat(0f, operation.delta());
+        assertEquals(TraceDomainId.BATTLE_WEAPONS, operation.domainId());
+    }
+
+    @Test
     public void v175RetainsCapDeltaReadFailureAndNoOps() {
         PolicyOperation capped = onlyWeapons(BattleActionTextPolicy.scoreKillShot(
                 new BattleActionTextFacts.KillShotFacts("kill", "Yoda",

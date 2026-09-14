@@ -144,7 +144,13 @@ public final class BattleActionTextFacts {
                                 String targetTitle,
                                 KillShotTarget target,
                                 float power,
-                                float forfeit) {
+                                float forfeit,
+                                boolean preserveLastHitOpponent) {
+        public KillShotFacts(String actionId, String targetTitle,
+                             KillShotTarget target, float power, float forfeit) {
+            this(actionId, targetTitle, target, power, forfeit, false);
+        }
+
         public KillShotFacts {
             Objects.requireNonNull(actionId, "actionId");
             Objects.requireNonNull(targetTitle, "targetTitle");
