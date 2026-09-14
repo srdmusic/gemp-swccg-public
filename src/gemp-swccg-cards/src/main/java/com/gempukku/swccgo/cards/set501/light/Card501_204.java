@@ -19,15 +19,12 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.IconModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
@@ -35,7 +32,6 @@ import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.RaceDestinyStackedResult;
 
@@ -54,7 +50,7 @@ public class Card501_204 extends AbstractJediMaster {
         super(Side.LIGHT, 1, 6, 6, 7, 9, Title.QuiGon_Jinn, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Accepted Obi-Wan Kenobi as his Padawan learner. Was given orders to protect Queen Amidala at all costs.");
-        setGameText("When deployed, may [upload] [Tatooine] Anakin. [Tatooine] Anakin deploys -2 (and may not be targeted by weapons) here while Qui-Gon present. While at a site with [Tatooine] Anakin, adds one [Dark Side] icon and one [Light Side] icon here. Once per game, may stack top card of Lost Pile face up on your podracer as a race destiny. Immune to Dark Strike, Maul Strikes, and attrition.");
+        setGameText("Where present, [Tatooine] Anakin deploys -2 and, while with Qui-Gon, may not be targeted by weapons and adds one [Dark Side] icon and one [Light Side] icon here. Once per game, may stack top card of Lost Pile on your Podracer. Immune to Dark Strike, Maul Strikes, and attrition.");
         addPersona(Persona.QUIGON);
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_27);
         setTestingText("Qui-Gon Jinn (V)");
@@ -64,36 +60,17 @@ public class Card501_204 extends AbstractJediMaster {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Filter tatooineAnakin = Filters.and(Icon.TATOOINE, Filters.Anakin);
         Condition quiGonPresent = new PresentCondition(self);
-        Condition atSiteWithAnakin = new AndCondition(new AtCondition(self, Filters.site), new WithCondition(self, tatooineAnakin));
+        Condition presentAtSiteWithAnakin = new AndCondition(quiGonPresent, new AtCondition(self, Filters.site), new WithCondition(self, tatooineAnakin));
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new DeployCostToLocationModifier(self, tatooineAnakin, quiGonPresent, -2, Filters.here(self)));
         modifiers.add(new MayNotBeTargetedByWeaponsModifier(self, Filters.and(tatooineAnakin, Filters.here(self)), quiGonPresent));
-        modifiers.add(new IconModifier(self, Filters.here(self), atSiteWithAnakin, Icon.DARK_FORCE, 1));
-        modifiers.add(new IconModifier(self, Filters.here(self), atSiteWithAnakin, Icon.LIGHT_FORCE, 1));
+        modifiers.add(new IconModifier(self, Filters.and(Filters.location, Filters.here(self)), presentAtSiteWithAnakin, Icon.DARK_FORCE, 1));
+        modifiers.add(new IconModifier(self, Filters.and(Filters.location, Filters.here(self)), presentAtSiteWithAnakin, Icon.LIGHT_FORCE, 1));
         modifiers.add(new ImmuneToTitleModifier(self, Title.Dark_Strike));
         modifiers.add(new ImmuneToTitleModifier(self, Title.Maul_Strikes));
         modifiers.add(new ImmuneToAttritionModifier(self));
         return modifiers;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.QUI_GON_JINN_V__UPLOAD_TATOOINE_ANAKIN;
-
-        // Check condition(s)
-        if (TriggerConditions.justDeployed(game, effectResult, self)
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take [Tatooine] Anakin into hand from Reserve Deck");
-            action.setActionMsg("Take [Tatooine] Anakin into hand from Reserve Deck");
-            // Perform result(s)
-            action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.and(Icon.TATOOINE, Filters.Anakin), true));
-            return Collections.singletonList(action);
-        }
-        return null;
     }
 
     @Override
