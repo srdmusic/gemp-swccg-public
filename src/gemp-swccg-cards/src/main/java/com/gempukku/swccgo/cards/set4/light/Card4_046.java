@@ -77,7 +77,7 @@ public class Card4_046 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         final Filter vineSnakeOrMynock = Filters.or(Filters.title("Vine Snake"), Filters.title("Mynock"));
-        Filter filter = Filters.and(Filters.or(Filters.creature, Filters.starfighter), Filters.hasAttached(vineSnakeOrMynock));
+        Filter filter = Filters.and(Filters.or(Filters.character, Filters.starfighter), Filters.hasAttached(vineSnakeOrMynock));
 
         // Check condition(s)
         if (GameConditions.canTarget(game, self, filter)

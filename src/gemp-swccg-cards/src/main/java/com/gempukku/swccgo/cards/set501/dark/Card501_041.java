@@ -40,6 +40,7 @@ public class Card501_041 extends AbstractNormalEffect {
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("I'm Sending My Apprentice");
+        hideFromDeckBuilder();
     }
 
     @Override

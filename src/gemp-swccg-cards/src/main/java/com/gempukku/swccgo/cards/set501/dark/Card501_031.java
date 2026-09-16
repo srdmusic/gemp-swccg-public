@@ -37,6 +37,7 @@ public class Card501_031 extends AbstractNormalEffect {
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Battle Droid Reinforcements");
+        hideFromDeckBuilder();
     }
 
     @Override

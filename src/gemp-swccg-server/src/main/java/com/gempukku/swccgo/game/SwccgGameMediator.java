@@ -64,6 +64,9 @@ public class SwccgGameMediator {
     }
 
     private int aiChainCounter = 0;
+    // Any single decision that holds the game's write lock longer than this is logged with
+    // enough context (game, player, decision, answer, phase) to find it in the replay.
+    private static final long SLOW_ACTION_THRESHOLD_MS = 1000;
 
     private Map<String, GameCommunicationChannel> _communicationChannels = Collections.synchronizedMap(new HashMap<String, GameCommunicationChannel>());
     private DefaultUserFeedback _userFeedback;
@@ -319,6 +322,12 @@ public class SwccgGameMediator {
             }
             Zone cardZone = card.getZone();
             if (cardZone == null) {
+                return sb.toString();
+            }
+
+            boolean visible = cardZone.isPublic()
+                    || (player.getName().equals(card.getOwner()) && cardZone.isVisibleByOwner());
+            if (!visible) {
                 return sb.toString();
             }
 
@@ -1030,7 +1039,11 @@ public class SwccgGameMediator {
     }
 
     public void cleanup() {
-        _writeLock.lock();
+        // The cleaner runs every second. If this game is in the middle of processing a player
+        // action (which holds the write lock for the whole action), skip this pass instead of
+        // waiting for it; the next pass will pick it up.
+        if (!_writeLock.tryLock())
+            return;
         try {
             long currentTime = System.currentTimeMillis();
             Map<String, GameCommunicationChannel> channelsCopy = new HashMap<String, GameCommunicationChannel>(_communicationChannels);
@@ -1163,6 +1176,8 @@ public class SwccgGameMediator {
                     AwaitingDecision awaitingDecision = _userFeedback.getAwaitingDecision(playerName);
                     if (awaitingDecision != null) {
                         if (awaitingDecision.getAwaitingDecisionId() == decisionId && !_swccgoGame.isFinished()) {
+                            long startedAt = System.currentTimeMillis();
+                            String decisionText = awaitingDecision.getText();
                             try {
                                 _userFeedback.participantDecided(playerName);
                                 awaitingDecision.decisionMade(answer);
@@ -1180,6 +1195,8 @@ public class SwccgGameMediator {
                             } catch (RuntimeException runtimeException) {
                                 LOG.error("Error processing game decision", runtimeException);
                                 _swccgoGame.abortGame();
+                            } finally {
+                                logIfSlow("player", playerName, decisionId, decisionText, answer, startedAt);
                             }
                         }
                     }
@@ -1192,6 +1209,33 @@ public class SwccgGameMediator {
         } finally {
             _writeLock.unlock();
         }
+    }
+
+    /**
+     * Logs one line when a decision took longer than SLOW_ACTION_THRESHOLD_MS to process. The
+     * time covers everything that ran under the game's write lock as a result of the answer:
+     * the action itself, every triggered response, and for a human answer also any AI decisions
+     * that followed before the next human decision was needed (those are logged separately as
+     * kind "ai" so they can be told apart).
+     */
+    private void logIfSlow(String kind, String playerName, int decisionId, String decisionText, String answer, long startedAt) {
+        long elapsedMs = System.currentTimeMillis() - startedAt;
+        if (elapsedMs < SLOW_ACTION_THRESHOLD_MS)
+            return;
+        String phase = null;
+        String currentPlayer = null;
+        try {
+            if (_swccgoGame.getGameState() != null) {
+                phase = String.valueOf(_swccgoGame.getGameState().getCurrentPhase());
+                currentPlayer = _swccgoGame.getGameState().getCurrentPlayerId();
+            }
+        } catch (RuntimeException ignored) {
+            // Diagnostics only; never let logging break the game.
+        }
+        LOG.warn("Slow action: took=" + elapsedMs + "ms kind=" + kind + " game=" + _gameId
+                + " player=" + playerName + " decisionId=" + decisionId
+                + " decision=\"" + decisionText + "\" answer=\"" + answer + "\""
+                + " phase=" + phase + " turnOf=" + currentPlayer);
     }
 
     public GameCommunicationChannel getCommunicationChannel(Player player, int channelNumber) throws PrivateInformationException, SubscriptionConflictException, SubscriptionExpiredException {
@@ -1430,10 +1474,12 @@ public class SwccgGameMediator {
             return;
         }
 
+        long startedAt = System.currentTimeMillis();
+        String answer = null;
         try {
             // Provide the full game reference for advanced AI features (e.g., deploy planning)
             ai.setGame(_swccgoGame);
-            String answer = ai.decide(playerId, decision, _swccgoGame.getGameState());
+            answer = ai.decide(playerId, decision, _swccgoGame.getGameState());
 
             _userFeedback.participantDecided(playerId);
             decision.decisionMade(answer);
@@ -1460,6 +1506,8 @@ public class SwccgGameMediator {
 
         } catch (DecisionResultInvalidException e) {
             _userFeedback.sendAwaitingDecision(playerId, decision);
+        } finally {
+            logIfSlow("ai", playerId, decision.getAwaitingDecisionId(), decision.getText(), answer, startedAt);
         }
     }
 

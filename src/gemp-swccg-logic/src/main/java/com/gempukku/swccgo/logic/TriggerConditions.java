@@ -404,7 +404,8 @@ public class TriggerConditions {
                 || effectResult.getType() == EffectResult.Type.PARASITE_DETACHED
                 || effectResult.getType() == EffectResult.Type.RETARGETED_EFFECT
                 || effectResult.getType() == EffectResult.Type.DARK_HOURS_EFFECT
-                || effectResult.getType() == EffectResult.Type.CHARACTER_ENSLAVED);
+                || effectResult.getType() == EffectResult.Type.CHARACTER_ENSLAVED
+                || effectResult.getType() == EffectResult.Type.CARDS_SHIELDED);
 
         // TODO: Just checking EffectResult.getType() would be faster???
 
@@ -686,6 +687,24 @@ public class TriggerConditions {
             return stackedOn != null
                     && Filters.and(cardToStackFilter).accepts(game, lostForceResult.getCardLost())
                     && Filters.and(stackedOnFilter).accepts(game, stackedOn);
+        }
+        return false;
+    }
+
+
+    /**
+     * Determine if a card accepted by the card to stack filter was just stacked as a race destiny on a card accepted by the stacked on filter.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param cardToStackFilter the card to stack filter
+     * @param stackedOnFilter the stacked on filter
+     * @return true or false
+     */
+    public static boolean justStackedRaceDestinyOn(SwccgGame game, EffectResult effectResult, Filterable cardToStackFilter, Filterable stackedOnFilter) {
+        if (effectResult.getType() == EffectResult.Type.RACE_DESTINY_STACKED) {
+            RaceDestinyStackedResult raceDestinyStackedResult = (RaceDestinyStackedResult) effectResult;
+            return Filters.and(cardToStackFilter).accepts(game, raceDestinyStackedResult.getCard())
+                    && Filters.and(stackedOnFilter).accepts(game, raceDestinyStackedResult.getStackedOn());
         }
         return false;
     }
@@ -2341,29 +2360,6 @@ public class TriggerConditions {
     }
 
     /**
-     * Determines if a card accepted by the filter was just lost (and still in Lost Pile).
-     * @param game the game
-     * @param effectResult the effect result
-     * @param playerId the player
-     * @param filter the filter
-     * @return true or false
-     */
-    public static boolean justLost(SwccgGame game, EffectResult effectResult, String playerId, Filterable filter) {
-        if (effectResult.getType() == EffectResult.Type.LOST_FROM_TABLE
-                || effectResult.getType() == EffectResult.Type.CANCELED_ON_TABLE
-                || effectResult.getType() == EffectResult.Type.FORFEITED_TO_LOST_PILE_FROM_TABLE) {
-            PhysicalCard cardLost = ((LostFromTableResult) effectResult).getCard();
-            if (playerId.equals(effectResult.getPerformingPlayerId())
-                || (effectResult.getPerformingPlayerId() == null && playerId.equals(cardLost.getOwner()))) {
-                return GameUtils.getZoneFromZoneTop(cardLost.getZone()) == Zone.LOST_PILE
-                        && (cardLost.getPreviousCardState() == CardState.ACTIVE || cardLost.getPreviousCardState() == CardState.INACTIVE)
-                        && Filters.and(filter).accepts(game.getGameState(), game.getModifiersQuerying(), cardLost);
-            }
-        }
-        return false;
-    }
-
-    /**
      * Determines if a card accepted by the card filter was just lost (and still in Lost Pile) and was present with a card
      * accepted by the present with filter when it was lost.
      * @param game the game
@@ -3863,6 +3859,21 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if drawing weapon destiny is about to complete. This is when the weapon destiny total
+     * can be modified.
+     * @param game the game
+     * @param effectResult the effect result
+     * @return true or false
+     */
+    public static boolean isAboutToCompleteWeaponDestinyDraw(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.DRAWING_DESTINY_COMPLETE) {
+            AboutToCompleteDrawingDestinyResult result = (AboutToCompleteDrawingDestinyResult) effectResult;
+            return result.getDestinyType() == DestinyType.WEAPON_DESTINY;
+        }
+        return false;
+    }
+
+    /**
      * Determines if a duel destiny was just drawn (and was not canceled).
      * @param game the game
      * @param effectResult the effect result
@@ -4302,6 +4313,25 @@ public class TriggerConditions {
             ParasiteAttachedResult parasiteAttachedResult = (ParasiteAttachedResult) effectResult;
             PhysicalCard parasite = parasiteAttachedResult.getParasite();
             PhysicalCard host = parasiteAttachedResult.getHost();
+            return (parasite != null && Filters.and(parasiteFilter).accepts(game, parasite)
+                    && host != null && Filters.and(hostFilter).accepts(game, host));
+        }
+        return false;
+    }
+
+    /**
+     * Determines if a parasite creature accepted by the parasite filter just detached from a host accepted by the host filter.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param parasiteFilter the parasite filter
+     * @param hostFilter the host filter
+     * @return true or false
+     */
+    public static boolean justDetachedParasiteFromHost(SwccgGame game, EffectResult effectResult, Filterable parasiteFilter, Filterable hostFilter) {
+        if (effectResult.getType() == EffectResult.Type.PARASITE_DETACHED) {
+            ParasiteDetachedResult parasiteDetachedResult = (ParasiteDetachedResult) effectResult;
+            PhysicalCard parasite = parasiteDetachedResult.getParasite();
+            PhysicalCard host = parasiteDetachedResult.getHost();
             return (parasite != null && Filters.and(parasiteFilter).accepts(game, parasite)
                     && host != null && Filters.and(hostFilter).accepts(game, host));
         }

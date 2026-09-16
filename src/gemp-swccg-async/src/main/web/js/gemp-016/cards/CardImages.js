@@ -3830,15 +3830,13 @@ const fixedImages = {
 "501_34":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/monnok.gif",
 "501_35":"https://res.starwarsccg.org/cards/Virtual11-Dark/large/invisiblehandobservatoryentrance.gif",
 "501_36":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/halt.gif",
+"501_37":"https://res.starwarsccg.org/cards/Virtual26-Dark/hires/thisdealisgettingworseallthetime.png",
+"501_37_BACK":"https://res.starwarsccg.org/cards/Virtual26-Dark/hires/prayidontalteritanyfurther.png",
 "501_41": "https://res.starwarsccg.org/cards/Tatooine-Dark/large/iwillfindthemquicklymaster.gif",
 "501_48":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/theretheyare.gif",
+
 "501_52":"https://res.starwarsccg.org/cards/Tatooine-Light/large/ajedispatience.gif",
 "501_59":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
-
-"501_60":"https://res.starwarsccg.org/cards/Virtual25-Dark/hires/thefirstorderreigns.png",
-"501_60_BACK":"https://res.starwarsccg.org/cards/Virtual25-Dark/hires/theresistanceisdoomed.png",
-"501_61":"https://res.starwarsccg.org/cards/Virtual25-Dark/hires/trackedfleet.png",
-
 "501_90":"https://res.starwarsccg.org/cards/Premiere-Light/large/deathstarplans.gif",
 "501_91":"https://res.starwarsccg.org/cards/ThirdAnthology-Light/large/massassibaseoperations.gif",
 "501_91_BACK":"https://res.starwarsccg.org/cards/ThirdAnthology-Light/large/oneinamillion.gif",
@@ -3868,7 +3866,6 @@ const fixedImages = {
 "501_207":"https://res.starwarsccg.org/cards/ReflectionsII-Light/large/doordonot&wiseadvice.gif",
 "501_208":"https://res.starwarsccg.org/cards/ANewHope-Light/large/grimtaash.gif",
 "501_209":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/honorofthejedi.gif",
-"501_209_BACK":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/honorofthejedi.gif",
 "501_210":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/imperialatrocity.gif",
 "501_211":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/anakinskywalker.gif",
 "501_212":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/ifeeltheconflict.gif",
@@ -3876,6 +3873,8 @@ const fixedImages = {
 "501_214":"https://res.starwarsccg.org/cards/EnhancedJabbasPalace-Light/large/seethreepio.gif",
 "501_215":"https://res.starwarsccg.org/cards/Endor-Light/large/orrimaarko.gif",
 "501_216":"https://res.starwarsccg.org/cards/Endor-Light/large/yt1300transport.gif",
+"501_217":"https://res.starwarsccg.org/cards/Endor-Light/large/chewbaccaofkashyyyk.gif",
+
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",

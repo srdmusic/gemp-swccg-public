@@ -5633,7 +5633,8 @@ public class GameConditions {
     public static boolean canPerformSpecialPlaytestingUpload(String playerId, SwccgGame game, PhysicalCard self) {
         return self.getZone() == Zone.TOP_OF_RESERVE_DECK && self.getZoneOwner().equals(playerId)
                 && hasReserveDeck(game, playerId)
-                && game.getFormat().isPlaytesting();
+                && game.getFormat().isPlaytesting()
+                && !playerId.startsWith("~"); // Only bots can start with ~ and they shouldn't use this action.
     }
 
     /**
@@ -5741,6 +5742,10 @@ public class GameConditions {
 
     public static boolean isSenateInSession(SwccgGame game) {
         return game.getModifiersQuerying().isSenateInSession();
+    }
+
+    public static boolean isShootUsedByTuskenRaiderThisTurn(SwccgGame game) {
+        return game.getModifiersQuerying().isShootUsedByTuskenRaiderThisTurn();
     }
 
     public static int countSpeciesOnTable(SwccgGame game, String playerId) {

@@ -46,6 +46,7 @@ public class Card501_028 extends AbstractRepublic {
         setSpecies(Species.KERKOIDEN);
         addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.PILOT, Icon.SEPARATIST, Icon.VIRTUAL_SET_25);
         setTestingText("General Whorm Loathsom");
+        hideFromDeckBuilder();
     }
 
     @Override

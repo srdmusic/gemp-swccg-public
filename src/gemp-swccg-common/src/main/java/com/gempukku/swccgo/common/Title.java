@@ -932,6 +932,7 @@ public interface Title {
     String QuiGon_Jinn = "Qui-Gon Jinn";
     String Quite_A_Mercenary = "Quite A Mercenary";
     String Quiggold = "Quiggold";
+    String R_kik_D_nec = "R'kik D'nec, Hero Of The Dune Sea";
     String Radar_Scanner = "Radar Scanner";
     String Raithal = "Raithal";
     String Ralltiir = "Ralltiir";
@@ -975,6 +976,7 @@ public interface Title {
     String Restricted_Deployment = "Restricted Deployment";
     String Retract_The_Bridge = "Retract The Bridge";
     String Return_Of_A_Jedi = "Return Of A Jedi";
+    String Return_Of_The_Jedi = "Return Of The Jedi";
     String Revealed = "Revealed";
     String Revenge_Of_The_Sith = "Revenge Of The Sith";
     String Revolution = "Revolution";
@@ -1045,6 +1047,7 @@ public interface Title {
     String Senate_Hovercam = "Senate Hovercam";
     String Send_A_Detachment_Down = "Send A Detachment Down";
     String Sense = "Sense";
+    String Separatist_Command_Center = "Separatist Command Center";
     String Set_For_Stun = "Set For Stun";
     String Set_Your_Course_For_Alderaan = "Set Your Course For Alderaan";
     String Starship_Levitation = "Starship Levitation";

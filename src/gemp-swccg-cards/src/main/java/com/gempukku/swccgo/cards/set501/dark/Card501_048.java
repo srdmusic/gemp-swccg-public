@@ -42,6 +42,7 @@ public class Card501_048 extends AbstractUsedOrLostInterrupt {
                 "LOST: Break cover of and capture opponent's Undercover spy at same site as your battle droid. [Immune to Sense]");
         addIcons(Icon.THEED_PALACE, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         setTestingText("There They Are! (V)");
+        hideFromDeckBuilder();
     }
 
     @Override
