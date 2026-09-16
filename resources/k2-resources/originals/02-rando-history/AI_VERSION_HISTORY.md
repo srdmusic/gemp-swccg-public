@@ -1,3 +1,15 @@
+  ==== UPSTREAM SYNC MERGE (2026-09-15, no AI logic change, not deployed) ====
+PlayersCommittee private master 0c9f515aa merged into the V313 lineage on branch
+k2/upstream-sync-2026-09-15 (merge e7ab89a90, interceptor cherry-pick 7b04fcbb5).
+AI directory byte-identical to V313 apart from two trailing newlines. Four
+conflicts resolved toward upstream (Alter whitespace; three gutted set501 stubs).
+Compile clean; jar edcdf2a0e374 carries every live AI class plus V312/V313.
+Full reactor 3795/20/14/35: 9 red pre-existed on V313, 25 red are fixture or
+test-framework only (deleted playtest 501_60/61, TDIGWATT errata, set501 refresh,
+new Reserve Deck >= cheat assertion). Engine facts Rando reads changed upstream:
+lowest-cap stat limits, crashed-vehicle presence/destiny fixes, TIE landing.
+Pre-merge tag pre-upstream-sync-2026-09-15; live jar eb028d48fde6 archived.
+
   ==== V313 RESERVE WEAPON PRECHECK AND SOLO HIT OVERFLOW (2026-09-13, both bots) ====
 Game 72362 proved that Mara's abbreviated saber download bypassed the parent
 weapon checks. The -9999 second-weapon score appeared only after the bot had
