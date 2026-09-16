@@ -1,4 +1,4 @@
-  ==== UPSTREAM SYNC MERGE (2026-09-15, no AI logic change, not deployed) ====
+  ==== UPSTREAM SYNC MERGE (2026-09-15, no AI logic change, DEPLOYED 21:24 PDT) ====
 PlayersCommittee private master 0c9f515aa merged into the V313 lineage on branch
 k2/upstream-sync-2026-09-15 (merge e7ab89a90, interceptor cherry-pick 7b04fcbb5).
 AI directory byte-identical to V313 apart from two trailing newlines. Four
