@@ -52,7 +52,9 @@ restart count, and OOM state. Sealed, host, and container jar hashes match.
 Startup completed, Set 227 loaded, Card227_014 is present, three HTTP probes
 returned 200, all five settings and operational mode were restored, both bot
 marker checks passed, and the material-error scan was clean. Final Hall remained
-0/0/0. Proof is RUNTIME_LOADED, not replay-fired. No database mutation, game
+0/0/0. An independent read-only post-deployment verifier repeated the container,
+database, hash, Hall, marker, card, startup, HTTP, and log gates and returned
+PASS. Proof is RUNTIME_LOADED, not replay-fired. No database mutation, game
 mutation, or GitHub push occurred. Rollback jar:
 /Users/steve/gemp-deploy-backups/rando-objective-progress-v314-2026-10-14/predeploy-f8529d9da-26cb5c03/web.jar
 (SHA-256 26cb5c032ae26ca1dff8fa22516d545e9a9f4741dfc53ee030b229818f2f0d5b).
