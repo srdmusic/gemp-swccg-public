@@ -831,3 +831,69 @@ Verdict: PASS for SOURCE_TESTED only. Engine deployment legality is mocked in
 the focused reserve-route tests; this is not replay-fired proof or a guarantee
 for unmaterialized custom card effects. No package, deployment, restart, live
 game mutation, database change, or push was performed by this verification.
+
+## 2026-10-14: V314 exact objective progress and Shield route, PASS at SOURCE_TESTED
+
+Independent verification reviewed the complete V314 diff from
+`14bbf321cd77c6afa227dca1cc87b18802d5e5f8` through documentation HEAD
+`3a070243950750b57c479cf518e8513d7d6a28ed` on branch
+`codex/walker-objective-progress-2026-10-14`. Production commits are
+`a92047204` and boundary correction `e9fd061f6`. The worktree was clean before
+this required history append, ancestry is exact, and `git diff --check` passes.
+The bounded diff contains 19 production files, 13 tests, and three histories or
+mailbox documents.
+
+- Review correction: the first source pass found that the original exact deploy
+  predicate also admitted Old Allies' planned Falcon pilot, an ordinary route
+  enabler. A failure-first regression reproduced the leak. The correction adds
+  a shared exact-location predicate that admits missing counted locations and
+  the selected Shield-generator package, while excluding the Falcon pilot and
+  First Order's ordinary actor route. Fresh Old Allies coverage proves the
+  Falcon pilot is not exact and a missing counted Jakku ground body is exact on
+  both bots. The four-suite correction boundary passed `105/0/0/0`.
+- Compile and focused tests: PASS. A clean offline server-reactor compile exited
+  zero. The exact 14-suite focused selector produced `238/0/0/0`. Coverage
+  includes deploy choice and plan ranking, objective strength and merge order,
+  policy transport, the Shield twin and Massassi engine contracts, the Hoth
+  replay boundary, move destination and drain routing, source parity, and the
+  one changed deploy-planner parity method.
+- Impacted tests: BASELINE-ONLY RED. The documented selector
+  `*Objective*Test,*CombinedEvaluatorDecisionTest,*SourceParityTest,*AdapterParityTest`
+  produced `1324/14/14/0`. All 28 red results exactly match the September 15
+  baseline classification: six pre-existing deploy-planner fixture results and
+  22 upstream-sync fixture results. There is no new V314 red class or method.
+- Score semantics: PASS. Ordinary objective relevance remains exactly `+300`.
+  Exact progress is exactly `+1000`. The strongest positive tier wins, so
+  ordinary plus exact remains `+1000` in either order and across merges.
+  Repeated exact signals do not stack. Negative influence is accumulated on its
+  independent channel and bounded at `-300`. Hard veto and deferred status
+  remain categorical.
+- Route boundaries: PASS. Only the source-proven Shield main-generator parent
+  and destination receive the narrow V41 and V67g exemptions. Positive drain
+  scoring still precedes the zero-drain exemption. FormationSafety, legality,
+  package identity, piloting, cannon retention, terminal defense, and
+  backward-route holds remain dominant or categorical. No non-Shield objective
+  movement receives exact strength.
+- Mirrors and compiled output: PASS. Fully normalized Rando and Chosen One
+  versions of `BattleEvaluator`, `CardSelectionEvaluator`, `EvaluatedAction`,
+  `MoveEvaluator`, and `PolicyOperationAdapter` have zero body or import
+  differences. All changed common and mirrored production classes compile to
+  Java 21 class major version 65. Compiled classes contain the new exact tier,
+  exact-location method, and both-bot V41/V67g route markers.
+- Static safety: PASS. The new exact-location method and score transport have
+  live production and test callers. No stale score-field ownership remains.
+  Scans found zero new title-substring type checks, debug printing, TODO/FIXME
+  markers, constant-false branches, or dead exact-progress hooks.
+- Card and documentation truth: PASS. Actual `Card222_013` source proves Ice
+  Plains deployment, controlled-vehicle marker following, marker-3-or-lower
+  firing, and the greater-than-eight generator result. Actual `Card222_014`
+  and `Card222_030` source proves the objective twins flip when Main Power
+  Generators are blown away. Both required histories and the mailbox describe
+  the corrected source, exact magnitudes, baseline-only impacted reds, and the
+  absence of packaging or runtime claims.
+
+Verdict: PASS at `SOURCE_TESTED`. This proves source behavior, compilation,
+focused and impacted regression boundaries, both-bot parity, and card-source
+alignment. It does not prove packaged bytes, runtime loading, or replay firing.
+No package, deployment, restart, database mutation, game mutation, or push was
+performed by this verification.
