@@ -65,6 +65,8 @@ public class HuntDownObjectiveAdapterSourceParityTest {
         assertTrue("Runtime actor progress must not double-stack the generic score",
                 child.contains("boolean countedProgress =\n"
                         + "                                    !actorLocationProgress"));
+        assertTrue("Only counted locations and the Shield package receive exact strength",
+                child.contains(".advancesExactPreFlipLocationRequirementAt("));
     }
 
     @Test

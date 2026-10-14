@@ -444,7 +444,21 @@ public class OldAlliesObjectiveEngineContractTest {
                                 scn.GetLSCard("falcon")),
                 rando.isOldAlliesFalconPilotDeployCandidate(
                     scn.game(), VirtualTableScenario.LS, pilot));
+        assertFalse("A planned Falcon pilot is an ordinary route enabler, not a counted location",
+                rando.advancesExactPreFlipLocationRequirementAt(
+                    scn.game(), VirtualTableScenario.LS,
+                    pilot, scn.GetLSCard("falcon")));
+        assertFalse(chosen.advancesExactPreFlipLocationRequirementAt(
+                scn.game(), VirtualTableScenario.LS,
+                pilot, scn.GetLSCard("falcon")));
         assertTrue(rando.advancesPreFlipRequirementAt(
+                scn.game(), VirtualTableScenario.LS,
+                bodyOne, scn.GetLSCard("shipyard")));
+        assertTrue("A missing Jakku battleground body advances a counted location",
+                rando.advancesExactPreFlipLocationRequirementAt(
+                    scn.game(), VirtualTableScenario.LS,
+                    bodyOne, scn.GetLSCard("shipyard")));
+        assertTrue(chosen.advancesExactPreFlipLocationRequirementAt(
                 scn.game(), VirtualTableScenario.LS,
                 bodyOne, scn.GetLSCard("shipyard")));
         assertTrue(rando.advancesPreFlipRequirementAt(

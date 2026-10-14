@@ -3668,8 +3668,8 @@ public class ObjectiveAnalyzer {
     }
 
     /**
-     * True when this typed candidate deployed to this exact location would add
-     * one qualifying location to an unmet counted pre-flip alternative.
+     * True when this typed candidate deployed to this exact location advances
+     * a pre-flip requirement, including an ordinary route enabler.
      */
     public boolean advancesPreFlipRequirementAt(
             SwccgGame game, String playerId, PhysicalCard candidate,
@@ -3681,10 +3681,6 @@ public class ObjectiveAnalyzer {
                 || game.getModifiersQuerying() == null) {
             return false;
         }
-        if (advancesShieldRoutePackageAt(
-                game, playerId, candidate, location)) {
-            return true;
-        }
         if (advancesFirstOrderReignsChaseShipRouteAt(
                 game, playerId, candidate, location)) {
             return true;
@@ -3694,6 +3690,29 @@ public class ObjectiveAnalyzer {
             return true;
         }
         if (advancesOldAlliesGroundRouteAt(
+                game, playerId, candidate, location)) {
+            return true;
+        }
+        return advancesExactPreFlipLocationRequirementAt(
+                game, playerId, candidate, location);
+    }
+
+    /**
+     * True only when this exact deployment advances a missing counted location
+     * or the source-proven Shield generator package. Route enablers such as a
+     * planned Falcon pilot remain ordinary objective relevance.
+     */
+    public boolean advancesExactPreFlipLocationRequirementAt(
+            SwccgGame game, String playerId, PhysicalCard candidate,
+            PhysicalCard location) {
+        if (!analyzed || isFlipped || game == null || playerId == null
+                || candidate == null || location == null
+                || activeFlipLocationRules == null
+                || game.getGameState() == null
+                || game.getModifiersQuerying() == null) {
+            return false;
+        }
+        if (advancesShieldRoutePackageAt(
                 game, playerId, candidate, location)) {
             return true;
         }

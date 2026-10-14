@@ -2774,7 +2774,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     !actorLocationProgress
                                     &&
                                     objectiveProgressAnalyzer
-                                            .advancesPreFlipRequirementAt(
+                                            .advancesExactPreFlipLocationRequirementAt(
                                                 game, playerId,
                                                 objectiveProgressDeployingCard,
                                                 location);
