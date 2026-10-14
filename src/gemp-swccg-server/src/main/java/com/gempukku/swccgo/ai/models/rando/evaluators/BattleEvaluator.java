@@ -42,7 +42,8 @@ public class BattleEvaluator extends ActionEvaluator {
                         action.addReasoning(contribution.reason(), contribution.delta());
                     } else {
                         action.addReasoning(contribution.reason(), contribution.delta(),
-                            contribution.ruleArmId(), contribution.domainId(), contribution.outputKind());
+                            contribution.ruleArmId(), contribution.domainId(), contribution.outputKind(),
+                            contribution.objectiveStrength());
                     }
                 }
             }

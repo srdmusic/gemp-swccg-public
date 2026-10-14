@@ -1129,7 +1129,7 @@ public class MassassiObjectiveEngineContractTest {
                     advancesFinalSite).operations().getFirst();
         assertEquals(TraceDomainId.OBJECTIVE_INTENT,
                 deployPreference.domainId());
-        assertEquals(300.0f, deployPreference.delta(), 0.0f);
+        assertEquals(1000.0f, deployPreference.delta(), 0.0f);
         scn.LSChooseCard(finalSite);
         scn.PassAllResponses();
 

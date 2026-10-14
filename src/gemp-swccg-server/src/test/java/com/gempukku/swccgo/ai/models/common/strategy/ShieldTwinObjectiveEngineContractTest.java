@@ -767,13 +767,13 @@ public class ShieldTwinObjectiveEngineContractTest {
                                 destinations, northRidge);
                 assertTrue(iceDeploy.reasoning(),
                         iceDeploy.reasoning().contains(
-                                "advance a missing counted-objective location (+300.0)"));
+                                "advance a missing counted-objective location (+1000.0)"));
                 assertFalse(ridgeDeploy.reasoning(),
                         ridgeDeploy.reasoning().contains(
                                 "advance a missing counted-objective location"));
-                assertTrue("Ordinary tactical siting may override the bounded objective preference: "
+                assertTrue("Exact missing Shield-route progress must beat ordinary tactical siting: "
                                 + destinations,
-                        ridgeDeploy.score() > iceDeploy.score());
+                        iceDeploy.score() > ridgeDeploy.score());
 
                 assertEquals(hostCost + cannonCost,
                         analyzer
@@ -1634,6 +1634,9 @@ public class ShieldTwinObjectiveEngineContractTest {
                 assertTrue(reunion.reasoning(),
                         reunion.reasoning().contains(
                             "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"));
+                assertTrue(reunion.reasoning(),
+                        reunion.reasoning().contains(
+                            "advances toward the flip gate via Hoth: Defensive Perimeter (3rd Marker) (+1000.0)"));
                 assertFalse(reverse.reasoning(),
                         reverse.hardVeto());
                 assertTrue(reverse.reasoning(),
@@ -1813,6 +1816,8 @@ public class ShieldTwinObjectiveEngineContractTest {
                         "decoy");
                 assertTrue(routeStart.reasoning().contains(
                         "MOVE.OBJECTIVE.ACTOR_ROUTE_START"));
+                assertTrue(routeStart.reasoning().contains(
+                        "has a safe move toward the flip gate (+1000.0)"));
                 assertFalse(decoyStart.reasoning().contains(
                         "MOVE.OBJECTIVE.ACTOR_ROUTE_START"));
 

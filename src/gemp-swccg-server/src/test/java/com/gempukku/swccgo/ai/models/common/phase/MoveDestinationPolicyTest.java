@@ -697,21 +697,30 @@ public class MoveDestinationPolicyTest {
     }
 
     @Test
-    public void onlyTerminalObjectiveEscapeBypassesWrongDirection() {
-        MoveDestinationPolicy.WrongDirectionEvaluation ordinaryObjectiveRoute =
+    public void onlyExactObjectiveRouteBypassesWrongDirection() {
+        MoveDestinationPolicy.WrongDirectionEvaluation ordinaryObjectiveInterest =
                 MoveDestinationPolicy.wrongDirection(
                         true, "Hallway", "Swamp",
-                        false, false, false);
+                        false, false, false, false, false);
+        MoveDestinationPolicy.WrongDirectionEvaluation exactObjectiveRoute =
+                MoveDestinationPolicy.wrongDirection(
+                        true, "Ice Plains", "Swamp",
+                        false, false, false, true, false);
         MoveDestinationPolicy.WrongDirectionEvaluation terminalEscape =
                 MoveDestinationPolicy.wrongDirection(
                         true, "Salt Plateau", "Swamp",
-                        false, false, true);
+                        false, false, true, false, false);
 
         assertEquals(
                 MoveDestinationPolicy.WrongDirectionDisposition.VETO,
-                ordinaryObjectiveRoute.disposition());
+                ordinaryObjectiveInterest.disposition());
         assertFloat(-9999.0f,
-                ordinaryObjectiveRoute.contribution().delta());
+                ordinaryObjectiveInterest.contribution().delta());
+        assertEquals(
+                MoveDestinationPolicy.WrongDirectionDisposition
+                        .OBJECTIVE_ROUTE_EXEMPT,
+                exactObjectiveRoute.disposition());
+        assertFalse(exactObjectiveRoute.contribution().applies());
         assertEquals(
                 MoveDestinationPolicy.WrongDirectionDisposition
                         .TERMINAL_ESCAPE_EXEMPT,

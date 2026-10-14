@@ -97,8 +97,11 @@ public final class DeployObjectiveSitingPolicy {
                     "DEPLOY_COUNTED_OBJECTIVE_PROGRESS_POLICY", List.of());
         }
         return single("DEPLOY_COUNTED_OBJECTIVE_PROGRESS_POLICY",
-                add(actionId, "DEPLOY.OBJECTIVE.COUNTED_REQUIRED_LOCATION",
-                        TraceOutputKind.BANDED, 300.0f,
+                PolicyOperation.exactObjectiveProgress(
+                        actionId,
+                        TraceRuleId.of(
+                                "DEPLOY.OBJECTIVE.COUNTED_REQUIRED_LOCATION"),
+                        TraceOutputKind.BANDED,
                         "Deploy here to advance a missing counted-objective location"));
     }
 

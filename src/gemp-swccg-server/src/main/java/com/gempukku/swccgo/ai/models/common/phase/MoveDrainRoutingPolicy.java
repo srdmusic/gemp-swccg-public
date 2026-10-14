@@ -43,6 +43,7 @@ public final class MoveDrainRoutingPolicy {
     public enum DestinationDrainBranch {
         DRAIN_POTENTIAL,
         TRANSIT_STAGING,
+        OBJECTIVE_ROUTE_EXEMPT,
         ZERO_DRAIN
     }
 
@@ -103,6 +104,16 @@ public final class MoveDrainRoutingPolicy {
             String destinationTitle,
             float expectedDrain,
             boolean transitStagingSite) {
+        return destinationDrain(
+                destinationTitle, expectedDrain,
+                transitStagingSite, false);
+    }
+
+    public static DestinationDrain destinationDrain(
+            String destinationTitle,
+            float expectedDrain,
+            boolean transitStagingSite,
+            boolean objectiveRouteExempt) {
         if (expectedDrain > 0.0f) {
             float bonus = expectedDrain * 12.0f;
             return new DestinationDrain(
@@ -115,6 +126,11 @@ public final class MoveDrainRoutingPolicy {
                                     destinationTitle,
                                     bonus),
                             bonus));
+        }
+        if (objectiveRouteExempt) {
+            return new DestinationDrain(
+                    DestinationDrainBranch.OBJECTIVE_ROUTE_EXEMPT,
+                    Contribution.none());
         }
         if (transitStagingSite) {
             return new DestinationDrain(
@@ -142,7 +158,21 @@ public final class MoveDrainRoutingPolicy {
             int sourceOpponentIcons,
             String destinationTitle,
             int destinationOpponentIcons) {
-        if (!moveDecision || transitStagingSite
+        return moveFromDrain(
+                moveDecision, transitStagingSite, false,
+                sourceTitle, sourceOpponentIcons,
+                destinationTitle, destinationOpponentIcons);
+    }
+
+    public static Contribution moveFromDrain(
+            boolean moveDecision,
+            boolean transitStagingSite,
+            boolean objectiveRouteExempt,
+            String sourceTitle,
+            int sourceOpponentIcons,
+            String destinationTitle,
+            int destinationOpponentIcons) {
+        if (!moveDecision || transitStagingSite || objectiveRouteExempt
                 || sourceOpponentIcons <= destinationOpponentIcons) {
             return Contribution.none();
         }

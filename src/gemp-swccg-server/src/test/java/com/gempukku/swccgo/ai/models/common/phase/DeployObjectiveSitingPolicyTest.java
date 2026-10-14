@@ -120,8 +120,11 @@ public class DeployObjectiveSitingPolicyTest {
                         "a", false);
 
         assertOperation(progress,
-                "DEPLOY.OBJECTIVE.COUNTED_REQUIRED_LOCATION", 300.0f);
+                "DEPLOY.OBJECTIVE.COUNTED_REQUIRED_LOCATION", 1000.0f);
         assertEquals(TraceDomainId.OBJECTIVE_INTENT, progress.domainId());
+        assertEquals(
+                com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy.Strength.EXACT_PROGRESS,
+                progress.objectiveStrength());
         assertEquals(TraceOutputKind.BANDED, progress.outputKind());
         assertEquals("DEPLOY_COUNTED_OBJECTIVE_PROGRESS_POLICY",
                 neutral.producerId());
@@ -129,7 +132,7 @@ public class DeployObjectiveSitingPolicyTest {
     }
 
     @Test
-    public void objectiveDeployPreferencesShareTheSameCeiling() {
+    public void exactCountedProgressOutranksOrdinaryObjectivePreferences() {
         float progress =
                 DeployObjectiveSitingPolicy.scoreCountedObjectiveProgress(
                         "a", true).operations().get(0).delta();
@@ -144,9 +147,9 @@ public class DeployObjectiveSitingPolicyTest {
                                 "a", "Admiral Piett"))
                         .operations().get(0).delta();
 
-        assertEquals(300.0f, progress, 0.0f);
-        assertEquals(progress, genericObjective, 0.0f);
-        assertEquals(progress, namedKeyCharacter, 0.0f);
+        assertEquals(1000.0f, progress, 0.0f);
+        assertEquals(300.0f, genericObjective, 0.0f);
+        assertEquals(genericObjective, namedKeyCharacter, 0.0f);
     }
 
     @Test
@@ -951,7 +954,10 @@ public class DeployObjectiveSitingPolicyTest {
         assertEquals(TraceDomainId.OBJECTIVE_INTENT,
                 operation.domainId());
         assertTrue(operation.delta() >= -300.0f);
-        assertTrue(operation.delta() <= 300.0f);
+        float positiveCeiling = operation.objectiveStrength()
+                == com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy.Strength.EXACT_PROGRESS
+                ? 1000.0f : 300.0f;
+        assertTrue(operation.delta() <= positiveCeiling);
     }
 
     private static void assertHardVeto(

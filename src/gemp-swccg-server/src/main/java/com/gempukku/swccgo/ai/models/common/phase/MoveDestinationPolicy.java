@@ -63,6 +63,7 @@ public final class MoveDestinationPolicy {
         RETREAT_EXEMPT,
         JOIN_GROUP_EXEMPT,
         TERMINAL_ESCAPE_EXEMPT,
+        OBJECTIVE_ROUTE_EXEMPT,
         FIRST_ORDER_CURRENT_HOST_EXEMPT,
         VETO
     }
@@ -803,6 +804,7 @@ public final class MoveDestinationPolicy {
                 retreatExempt,
                 joinGroupExempt,
                 terminalEscapeExempt,
+                false,
                 false);
     }
 
@@ -813,6 +815,26 @@ public final class MoveDestinationPolicy {
             boolean retreatExempt,
             boolean joinGroupExempt,
             boolean terminalEscapeExempt,
+            boolean firstOrderCurrentHostExempt) {
+        return wrongDirection(
+                opponentsElsewhere,
+                destinationTitle,
+                opponentLocation,
+                retreatExempt,
+                joinGroupExempt,
+                terminalEscapeExempt,
+                false,
+                firstOrderCurrentHostExempt);
+    }
+
+    public static WrongDirectionEvaluation wrongDirection(
+            boolean opponentsElsewhere,
+            String destinationTitle,
+            String opponentLocation,
+            boolean retreatExempt,
+            boolean joinGroupExempt,
+            boolean terminalEscapeExempt,
+            boolean objectiveRouteExempt,
             boolean firstOrderCurrentHostExempt) {
         if (!opponentsElsewhere) {
             return new WrongDirectionEvaluation(
@@ -832,6 +854,11 @@ public final class MoveDestinationPolicy {
         if (terminalEscapeExempt) {
             return new WrongDirectionEvaluation(
                     WrongDirectionDisposition.TERMINAL_ESCAPE_EXEMPT,
+                    Contribution.none());
+        }
+        if (objectiveRouteExempt) {
+            return new WrongDirectionEvaluation(
+                    WrongDirectionDisposition.OBJECTIVE_ROUTE_EXEMPT,
                     Contribution.none());
         }
         if (firstOrderCurrentHostExempt) {

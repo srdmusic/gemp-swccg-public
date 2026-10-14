@@ -21,7 +21,7 @@ public class EvaluatedAction {
     private String actionId;
     private ActionType actionType;
     private float score;
-    private float objectivePreferenceScore;
+    private ObjectivePreferencePolicy.State objectivePreferenceState;
     private List<String> reasoning;
 
     // Optional metadata
@@ -55,9 +55,16 @@ public class EvaluatedAction {
                            String initialReason) {
         this.actionId = actionId;
         this.actionType = actionType;
-        this.score = ObjectivePreferencePolicy.normalize(initialDomainId, score);
-        this.objectivePreferenceScore = ObjectivePreferencePolicy.isObjective(
-                initialDomainId) ? this.score : 0.0f;
+        ObjectivePreferencePolicy.Strength initialStrength =
+                ObjectivePreferencePolicy.defaultStrength(initialDomainId);
+        this.score = ObjectivePreferencePolicy.normalize(
+                initialDomainId, initialStrength, score);
+        this.objectivePreferenceState = ObjectivePreferencePolicy.isObjective(
+                initialDomainId)
+                ? ObjectivePreferencePolicy.apply(
+                        ObjectivePreferencePolicy.State.empty(),
+                        initialStrength, this.score).state()
+                : ObjectivePreferencePolicy.State.empty();
         this.displayText = displayText;
         this.reasoning = new ArrayList<>();
         if (initialReason != null && !initialReason.isBlank()) {
@@ -91,13 +98,24 @@ public class EvaluatedAction {
      */
     public void addReasoning(String reason, float scoreDelta, TraceRuleId ruleId,
                              TraceDomainId domainId, TraceOutputKind outputKind) {
+        addReasoning(reason, scoreDelta, ruleId, domainId, outputKind,
+                ObjectivePreferencePolicy.defaultStrength(domainId));
+    }
+
+    public void addReasoning(String reason, float scoreDelta, TraceRuleId ruleId,
+                             TraceDomainId domainId, TraceOutputKind outputKind,
+                             ObjectivePreferencePolicy.Strength objectiveStrength) {
         float traceBefore = score;
         float appliedDelta = scoreDelta;
         if (ObjectivePreferencePolicy.isObjective(domainId)) {
-            appliedDelta = ObjectivePreferencePolicy.applyWithinCeiling(
-                    objectivePreferenceScore,
-                    ObjectivePreferencePolicy.normalize(domainId, scoreDelta));
-            objectivePreferenceScore += appliedDelta;
+            ObjectivePreferencePolicy.Application application =
+                    ObjectivePreferencePolicy.apply(
+                            objectivePreferenceState, objectiveStrength,
+                            ObjectivePreferencePolicy.normalize(
+                                    domainId, objectiveStrength,
+                                    scoreDelta));
+            objectivePreferenceState = application.state();
+            appliedDelta = application.delta();
         }
         if (appliedDelta != 0) {
             reasoning.add(String.format("%s (%+.1f)", reason, appliedDelta));
@@ -140,15 +158,15 @@ public class EvaluatedAction {
 
         // Objective preference saturates across evaluator objects as well as within one.
         float scoreToMerge = other.score;
-        float requestedObjective = other.objectivePreferenceScore;
-        float acceptedObjective = 0.0f;
-        if (other.objectivePreferenceScore != 0.0f) {
-            acceptedObjective = ObjectivePreferencePolicy.applyWithinCeiling(
-                    this.objectivePreferenceScore,
-                    other.objectivePreferenceScore);
-            scoreToMerge += acceptedObjective - other.objectivePreferenceScore;
-            this.objectivePreferenceScore += acceptedObjective;
-        }
+        float requestedObjective = other.objectivePreferenceState.net();
+        ObjectivePreferencePolicy.State mergedObjective =
+                ObjectivePreferencePolicy.merge(
+                        this.objectivePreferenceState,
+                        other.objectivePreferenceState);
+        float acceptedObjective = mergedObjective.net()
+                - this.objectivePreferenceState.net();
+        scoreToMerge += acceptedObjective - requestedObjective;
+        this.objectivePreferenceState = mergedObjective;
         this.score += scoreToMerge;
 
         // Merge reasoning lists
@@ -263,9 +281,16 @@ public class EvaluatedAction {
     public void setScore(float score, TraceRuleId ruleId, TraceDomainId domainId,
                          TraceOutputKind outputKind) {
         float traceBefore = this.score;
-        this.score = ObjectivePreferencePolicy.normalize(domainId, score);
-        this.objectivePreferenceScore = ObjectivePreferencePolicy.isObjective(
-                domainId) ? this.score : 0.0f;
+        ObjectivePreferencePolicy.Strength strength =
+                ObjectivePreferencePolicy.defaultStrength(domainId);
+        this.score = ObjectivePreferencePolicy.normalize(
+                domainId, strength, score);
+        this.objectivePreferenceState = ObjectivePreferencePolicy.isObjective(
+                domainId)
+                ? ObjectivePreferencePolicy.apply(
+                        ObjectivePreferencePolicy.State.empty(), strength,
+                        this.score).state()
+                : ObjectivePreferencePolicy.State.empty();
         TraceSession.recordSet(this, actionId, traceBefore, this.score,
             ruleId, domainId, outputKind, null);
     }

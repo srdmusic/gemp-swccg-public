@@ -15,21 +15,24 @@ public record PolicyResult(String producerId, List<PolicyOperation> operations) 
         if (producerId.isBlank()) {
             throw new IllegalArgumentException("producerId must be nonblank");
         }
-        Map<String, Float> objectiveByAction = new HashMap<>();
+        Map<String, ObjectivePreferencePolicy.State> objectiveByAction =
+                new HashMap<>();
         List<PolicyOperation> bounded = new ArrayList<>(operations.size());
         for (PolicyOperation operation : operations) {
             if (operation.kind() == PolicyOperationKind.ADD
                     && ObjectivePreferencePolicy.isObjective(
                     operation.domainId())) {
-                float applied = objectiveByAction.getOrDefault(
-                        operation.actionId(), 0.0f);
-                float accepted = ObjectivePreferencePolicy.applyWithinCeiling(
-                        applied, operation.delta());
-                objectiveByAction.put(operation.actionId(), applied + accepted);
-                bounded.add(new PolicyOperation(
-                        operation.actionId(), operation.ruleArmId(),
-                        operation.domainId(), operation.outputKind(),
-                        operation.kind(), accepted, operation.reason()));
+                ObjectivePreferencePolicy.State state =
+                        objectiveByAction.getOrDefault(
+                                operation.actionId(),
+                                ObjectivePreferencePolicy.State.empty());
+                ObjectivePreferencePolicy.Application accepted =
+                        ObjectivePreferencePolicy.apply(
+                                state, operation.objectiveStrength(),
+                                operation.delta());
+                objectiveByAction.put(
+                        operation.actionId(), accepted.state());
+                bounded.add(operation.withAppliedDelta(accepted.delta()));
             } else {
                 bounded.add(operation);
             }

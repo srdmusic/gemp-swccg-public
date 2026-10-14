@@ -14,7 +14,8 @@ public record PolicyOperation(
         TraceOutputKind outputKind,
         PolicyOperationKind kind,
         float delta,
-        String reason) {
+        String reason,
+        ObjectivePreferencePolicy.Strength objectiveStrength) {
 
     public PolicyOperation {
         // The existing CombinedEvaluator represents legal Pass with action id "".
@@ -25,6 +26,7 @@ public record PolicyOperation(
         Objects.requireNonNull(outputKind, "outputKind");
         Objects.requireNonNull(kind, "kind");
         Objects.requireNonNull(reason, "reason");
+        Objects.requireNonNull(objectiveStrength, "objectiveStrength");
         if (reason.isBlank()) {
             throw new IllegalArgumentException("reason must be nonblank");
         }
@@ -47,29 +49,69 @@ public record PolicyOperation(
                 && Float.floatToRawIntBits(delta) != Float.floatToRawIntBits(0.0f)) {
             throw new IllegalArgumentException("HARD_VETO must not carry an additive delta");
         }
-        if (kind == PolicyOperationKind.ADD) {
-            delta = ObjectivePreferencePolicy.normalize(domainId, delta);
+        if (!ObjectivePreferencePolicy.isObjective(domainId)
+                && objectiveStrength
+                != ObjectivePreferencePolicy.Strength.NONE) {
+            throw new IllegalArgumentException(
+                    "non-objective operation cannot carry objective strength");
+        }
+        if (kind == PolicyOperationKind.ADD
+                && ObjectivePreferencePolicy.isObjective(domainId)
+                && objectiveStrength
+                == ObjectivePreferencePolicy.Strength.NONE) {
+            throw new IllegalArgumentException(
+                    "objective addition requires an explicit strength");
+        }
+        if (kind != PolicyOperationKind.ADD
+                && objectiveStrength
+                != ObjectivePreferencePolicy.Strength.NONE) {
+            throw new IllegalArgumentException(
+                    "non-add operation cannot carry objective strength");
         }
     }
 
     public static PolicyOperation add(String actionId, TraceRuleId ruleArmId,
                                       TraceDomainId domainId, TraceOutputKind outputKind,
                                       float delta, String reason) {
+        ObjectivePreferencePolicy.Strength strength =
+                ObjectivePreferencePolicy.defaultStrength(domainId);
         return new PolicyOperation(actionId, ruleArmId, domainId, outputKind,
-                PolicyOperationKind.ADD, delta, reason);
+                PolicyOperationKind.ADD,
+                ObjectivePreferencePolicy.normalize(
+                        domainId, strength, delta),
+                reason, strength);
+    }
+
+    public static PolicyOperation exactObjectiveProgress(
+            String actionId, TraceRuleId ruleArmId,
+            TraceOutputKind outputKind, String reason) {
+        return new PolicyOperation(
+                actionId, ruleArmId, TraceDomainId.OBJECTIVE_INTENT,
+                outputKind, PolicyOperationKind.ADD,
+                ObjectivePreferencePolicy.EXACT_PROGRESS_SCORE,
+                reason,
+                ObjectivePreferencePolicy.Strength.EXACT_PROGRESS);
     }
 
     public static PolicyOperation hardVeto(String actionId, TraceRuleId ruleArmId,
                                            TraceDomainId domainId, TraceOutputKind outputKind,
                                            String reason) {
         return new PolicyOperation(actionId, ruleArmId, domainId, outputKind,
-                PolicyOperationKind.HARD_VETO, 0.0f, reason);
+                PolicyOperationKind.HARD_VETO, 0.0f, reason,
+                ObjectivePreferencePolicy.Strength.NONE);
     }
 
     public static PolicyOperation defer(String actionId, TraceRuleId ruleArmId,
                                         TraceDomainId domainId, TraceOutputKind outputKind,
                                         float mandatoryFallbackDelta, String reason) {
         return new PolicyOperation(actionId, ruleArmId, domainId, outputKind,
-                PolicyOperationKind.DEFER, mandatoryFallbackDelta, reason);
+                PolicyOperationKind.DEFER, mandatoryFallbackDelta, reason,
+                ObjectivePreferencePolicy.Strength.NONE);
+    }
+
+    public PolicyOperation withAppliedDelta(float appliedDelta) {
+        return new PolicyOperation(
+                actionId, ruleArmId, domainId, outputKind,
+                kind, appliedDelta, reason, objectiveStrength);
     }
 }

@@ -27,6 +27,7 @@ import com.gempukku.swccgo.ai.models.common.phase.MoveWeaponHunterPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.MoveWinnabilityPolicy;
 import com.gempukku.swccgo.ai.models.common.phase.ProspectiveBattleSynergy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
+import com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy;
 import com.gempukku.swccgo.ai.models.common.strategy.FormationSafety;
 import com.gempukku.swccgo.ai.models.common.strategy.MovePredicates;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
@@ -674,6 +675,7 @@ public class MoveEvaluator extends ActionEvaluator {
                             .getLocationThatCardIsPresentAt(
                                     gameState, cardToMove);
                     boolean safeAdvancingHop = false;
+                    boolean shieldMainGeneratorRouteHop = false;
                     boolean runtimeLocationHop = false;
                     boolean runtimeBlockerChaseHop = false;
                     boolean requiredCardEnablerHop = false;
@@ -852,6 +854,8 @@ public class MoveEvaluator extends ActionEvaluator {
                                         || mainGeneratorHop
                                         || nabooDuelFrontHop
                                         || payoffHop;
+                                shieldMainGeneratorRouteHop |=
+                                        mainGeneratorHop;
                                 runtimeLocationHop |=
                                         actorLocationHop;
                                 runtimeBlockerChaseHop |=
@@ -946,7 +950,12 @@ public class MoveEvaluator extends ActionEvaluator {
                                             ? "MOVE.OBJECTIVE.BLOCKER_CHASE_START"
                                             : "MOVE.OBJECTIVE.ACTOR_ROUTE_START"),
                                     TraceDomainId.OBJECTIVE_INTENT,
-                                    TraceOutputKind.BANDED);
+                                    TraceOutputKind.BANDED,
+                                    shieldMainGeneratorRouteHop
+                                        ? ObjectivePreferencePolicy.Strength
+                                            .EXACT_PROGRESS
+                                        : ObjectivePreferencePolicy.Strength
+                                            .ORDINARY);
                         }
                         logger.warn(
                                 "OBJECTIVE ACTOR MOVE: {} has a safe objective {} hop",

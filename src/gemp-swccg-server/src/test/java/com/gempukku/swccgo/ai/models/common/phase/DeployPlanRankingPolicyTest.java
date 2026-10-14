@@ -3,8 +3,10 @@ package com.gempukku.swccgo.ai.models.common.phase;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperation;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyOperationKind;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
 import com.gempukku.swccgo.ai.models.common.trace.TraceOutputKind;
+import com.gempukku.swccgo.ai.models.common.trace.TraceRuleId;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -118,6 +120,26 @@ public class DeployPlanRankingPolicyTest {
         assertEquals(0, earlyRescore.operations().size());
         assertBits(431.0f, DeployPlanRankingPolicy.apply(
                 0.0f, objectivePlan, earlyRescore));
+    }
+
+    @Test
+    public void exactProgressPromotesButDoesNotStackWithOrdinaryRanking() {
+        PolicyResult result = new PolicyResult(
+                "DEPLOY_PLAN_RANKING_POLICY", List.of(
+                PolicyOperation.add(
+                        "plan", TraceRuleId.of("objective-ordinary"),
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.BANDED, 300.0f,
+                        "ordinary objective relevance"),
+                PolicyOperation.exactObjectiveProgress(
+                        "plan", TraceRuleId.of("objective-exact"),
+                        TraceOutputKind.BANDED,
+                        "source-proven exact progress")));
+
+        assertEquals(ObjectivePreferencePolicy.Strength.EXACT_PROGRESS,
+                result.operations().get(1).objectiveStrength());
+        assertBits(1000.0f,
+                DeployPlanRankingPolicy.apply(0.0f, result));
     }
 
     @Test

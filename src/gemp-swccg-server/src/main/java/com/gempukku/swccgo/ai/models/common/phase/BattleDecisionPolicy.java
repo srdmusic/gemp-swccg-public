@@ -233,7 +233,14 @@ public final class BattleDecisionPolicy {
 
     public record Contribution(String reason, float delta, boolean hardVeto,
                                TraceRuleId ruleArmId, TraceDomainId domainId,
-                               TraceOutputKind outputKind) {
+                               TraceOutputKind outputKind,
+                               ObjectivePreferencePolicy.Strength objectiveStrength) {
+        public Contribution(String reason, float delta, boolean hardVeto,
+                            TraceRuleId ruleArmId, TraceDomainId domainId,
+                            TraceOutputKind outputKind) {
+            this(reason, delta, hardVeto, ruleArmId, domainId, outputKind,
+                    ObjectivePreferencePolicy.defaultStrength(domainId));
+        }
     }
 
     public record ScoredAction(String actionId, String actionText, float baseScore,
@@ -249,7 +256,8 @@ public final class BattleDecisionPolicy {
         private final float baseScore;
         private final List<Contribution> contributions = new ArrayList<>();
         private float score;
-        private float objectivePreferenceScore;
+        private ObjectivePreferencePolicy.State objectivePreferenceState =
+                ObjectivePreferencePolicy.State.empty();
 
         private ScoreCollector(String actionId, String actionText, float baseScore) {
             this.actionId = actionId;
@@ -285,12 +293,15 @@ public final class BattleDecisionPolicy {
             if (!contribution.applies()) {
                 return 0.0f;
             }
-            float delta = ObjectivePreferencePolicy.applyWithinCeiling(
-                    objectivePreferenceScore,
-                    ObjectivePreferencePolicy.normalize(
-                            TraceDomainId.OBJECTIVE_INTENT,
-                            contribution.delta()));
-            objectivePreferenceScore += delta;
+            ObjectivePreferencePolicy.Application application =
+                    ObjectivePreferencePolicy.apply(
+                            objectivePreferenceState,
+                            ObjectivePreferencePolicy.Strength.ORDINARY,
+                            ObjectivePreferencePolicy.normalize(
+                                    TraceDomainId.OBJECTIVE_INTENT,
+                                    contribution.delta()));
+            objectivePreferenceState = application.state();
+            float delta = application.delta();
             contributions.add(new Contribution(
                     contribution.reason(), delta, false,
                     ruleArmId, TraceDomainId.OBJECTIVE_INTENT,
@@ -306,13 +317,18 @@ public final class BattleDecisionPolicy {
                         float delta = operation.delta();
                         if (ObjectivePreferencePolicy.isObjective(
                                 operation.domainId())) {
-                            delta = ObjectivePreferencePolicy.applyWithinCeiling(
-                                    objectivePreferenceScore, delta);
-                            objectivePreferenceScore += delta;
+                            ObjectivePreferencePolicy.Application application =
+                                    ObjectivePreferencePolicy.apply(
+                                            objectivePreferenceState,
+                                            operation.objectiveStrength(),
+                                            delta);
+                            objectivePreferenceState = application.state();
+                            delta = application.delta();
                         }
                         contributions.add(new Contribution(
                             operation.reason(), delta, false,
-                            operation.ruleArmId(), operation.domainId(), operation.outputKind()));
+                            operation.ruleArmId(), operation.domainId(), operation.outputKind(),
+                            operation.objectiveStrength()));
                         score += delta;
                     }
                     case HARD_VETO -> contributions.add(new Contribution(

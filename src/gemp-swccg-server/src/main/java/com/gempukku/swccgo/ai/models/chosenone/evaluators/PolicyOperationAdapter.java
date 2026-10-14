@@ -24,7 +24,8 @@ public final class PolicyOperationAdapter {
     private static void apply(EvaluatedAction action, PolicyOperation operation) {
         switch (operation.kind()) {
             case ADD -> action.addReasoning(operation.reason(), operation.delta(),
-                    operation.ruleArmId(), operation.domainId(), operation.outputKind());
+                    operation.ruleArmId(), operation.domainId(), operation.outputKind(),
+                    operation.objectiveStrength());
             case HARD_VETO -> action.hardVeto(operation.reason(), operation.ruleArmId(),
                     operation.domainId(), operation.outputKind());
             case DEFER -> action.defer(operation.reason(), operation.delta(),

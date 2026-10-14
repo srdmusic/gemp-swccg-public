@@ -130,11 +130,15 @@ public class HuntDownObjectiveAdapterSourceParityTest {
                 child,
                 "MoveDestinationPolicy.wrongDirection(",
                 "if (v41Direction.disposition()");
-        assertTrue("Only terminal objective loss may bypass wrong-direction tactics",
+        assertTrue("Terminal objective loss may bypass wrong-direction tactics",
                 wrongDirection.contains(
                         "objectiveTerminalEscapeDestination"));
-        assertFalse("Ordinary objective progress must remain overridable",
-                wrongDirection.contains("objectiveActor"));
+        assertTrue("The exact Shield main-generator route may bypass wrong-direction tactics",
+                wrongDirection.contains(
+                        "objectiveShieldMainGeneratorRouteDestination"));
+        assertFalse("Ordinary runtime-location progress must remain overridable",
+                wrongDirection.contains(
+                        "objectiveActorLocationDestination"));
     }
 
     @Test

@@ -82,7 +82,8 @@ public class PolicyContributionLedgerTest {
     public void hardVetoCannotCarryAnAdditiveDelta() {
         try {
             new PolicyOperation("A", RULE, TraceDomainId.DRAW_COUNT, TraceOutputKind.VETO,
-                    PolicyOperationKind.HARD_VETO, -100.0f, "blocked");
+                    PolicyOperationKind.HARD_VETO, -100.0f, "blocked",
+                    ObjectivePreferencePolicy.Strength.NONE);
             fail("expected hard-veto delta rejection");
         } catch (IllegalArgumentException expected) {
             // expected

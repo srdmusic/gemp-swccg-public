@@ -1372,8 +1372,11 @@ public class DeployPlanRankingAdapterParityTest {
                 .scoreCountedObjectiveProgress(
                         "ordinary-complete-site", true);
         assertEquals(1, boundedCompanion.operations().size());
-        assertBits(300.0f,
+        assertBits(1000.0f,
                 boundedCompanion.operations().getFirst().delta());
+        assertEquals(
+                com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy.Strength.EXACT_PROGRESS,
+                boundedCompanion.operations().getFirst().objectiveStrength());
         assertEquals(TraceDomainId.OBJECTIVE_INTENT,
                 boundedCompanion.operations().getFirst().domainId());
     }

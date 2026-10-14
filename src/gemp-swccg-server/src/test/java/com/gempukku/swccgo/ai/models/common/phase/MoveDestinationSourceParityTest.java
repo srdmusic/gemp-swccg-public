@@ -242,7 +242,7 @@ public class MoveDestinationSourceParityTest {
         assertTrue(policy.contains(
                 "public static Contribution objectiveActorLocationDestination("));
         assertTrue(policy.contains("TERMINAL_ESCAPE_EXEMPT"));
-        assertFalse(policy.contains("OBJECTIVE_ROUTE_EXEMPT"));
+        assertTrue(policy.contains("OBJECTIVE_ROUTE_EXEMPT"));
         assertFalse(policy.contains("HIDDEN_PATH_EXEMPT"));
     }
 

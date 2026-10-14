@@ -127,6 +127,36 @@ public class MoveDrainRoutingPolicyTest {
     }
 
     @Test
+    public void exactObjectiveRouteBypassesOnlyZeroDrainPenalty() {
+        MoveDrainRoutingPolicy.DestinationDrain exactRoute =
+                MoveDrainRoutingPolicy.destinationDrain(
+                        "Hoth: Ice Plains (5th Marker)",
+                        0.0f, false, true);
+        MoveDrainRoutingPolicy.DestinationDrain ordinaryMove =
+                MoveDrainRoutingPolicy.destinationDrain(
+                        "Hoth: Ice Plains (5th Marker)",
+                        0.0f, false, false);
+        MoveDrainRoutingPolicy.DestinationDrain drainingRoute =
+                MoveDrainRoutingPolicy.destinationDrain(
+                        "Hoth: Defensive Perimeter (3rd Marker)",
+                        2.0f, false, true);
+
+        assertEquals(
+                MoveDrainRoutingPolicy.DestinationDrainBranch
+                        .OBJECTIVE_ROUTE_EXEMPT,
+                exactRoute.branch());
+        assertFalse(exactRoute.contribution().applies());
+        assertEquals(
+                MoveDrainRoutingPolicy.DestinationDrainBranch.ZERO_DRAIN,
+                ordinaryMove.branch());
+        assertFloat(-200.0f, ordinaryMove.contribution().delta());
+        assertEquals(
+                MoveDrainRoutingPolicy.DestinationDrainBranch.DRAIN_POTENTIAL,
+                drainingRoute.branch());
+        assertFloat(24.0f, drainingRoute.contribution().delta());
+    }
+
+    @Test
     public void moveFromDrainPreservesStrictDropAndExemptions() {
         MoveDrainRoutingPolicy.Contribution drop =
                 MoveDrainRoutingPolicy.moveFromDrain(
@@ -150,6 +180,16 @@ public class MoveDrainRoutingPolicyTest {
                 .applies());
         assertFalse(MoveDrainRoutingPolicy.moveFromDrain(
                 true, false, "Source", 1, "Destination", 2)
+                .applies());
+        assertFalse(MoveDrainRoutingPolicy.moveFromDrain(
+                true, false, true,
+                "Hoth: North Ridge (4th Marker)", 2,
+                "Hoth: Ice Plains (5th Marker)", 0)
+                .applies());
+        assertTrue(MoveDrainRoutingPolicy.moveFromDrain(
+                true, false, false,
+                "Hoth: North Ridge (4th Marker)", 2,
+                "Hoth: Ice Plains (5th Marker)", 0)
                 .applies());
     }
 

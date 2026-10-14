@@ -203,17 +203,22 @@ public final class DeployPlanRankingPolicy {
             ledger.register(result);
         }
         float score = initialScore;
-        float objectivePreference = 0.0f;
+        ObjectivePreferencePolicy.State objectivePreference =
+                ObjectivePreferencePolicy.State.empty();
         for (PolicyOperation operation : ledger.orderedOperations()) {
             if (operation.kind() != PolicyOperationKind.ADD) {
                 throw new IllegalStateException(
                         "deploy plan ranking accepts ADD operations only");
             }
             float delta = operation.delta();
-            if (operation.domainId() == TraceDomainId.OBJECTIVE_INTENT) {
-                delta = ObjectivePreferencePolicy.applyWithinCeiling(
-                        objectivePreference, delta);
-                objectivePreference += delta;
+            if (ObjectivePreferencePolicy.isObjective(
+                    operation.domainId())) {
+                ObjectivePreferencePolicy.Application application =
+                        ObjectivePreferencePolicy.apply(
+                                objectivePreference,
+                                operation.objectiveStrength(), delta);
+                objectivePreference = application.state();
+                delta = application.delta();
             }
             score += delta;
         }

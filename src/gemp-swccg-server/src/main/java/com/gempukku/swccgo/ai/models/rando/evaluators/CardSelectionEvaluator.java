@@ -61,6 +61,7 @@ import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveFactsReader;
 import com.gempukku.swccgo.ai.models.common.phase.TdigwattObjectiveScoringPolicy;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyContributionLedger;
 import com.gempukku.swccgo.ai.models.common.policy.PolicyResult;
+import com.gempukku.swccgo.ai.models.common.policy.ObjectivePreferencePolicy;
 import com.gempukku.swccgo.ai.models.common.strategy.EndorOperationsTacticalPolicy;
 import com.gempukku.swccgo.ai.models.common.strategy.ShieldFacts;
 import com.gempukku.swccgo.ai.models.common.trace.TraceDomainId;
@@ -9552,6 +9553,8 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         }
 
                         boolean objectiveActorRouteDestination = false;
+                        boolean objectiveShieldMainGeneratorRouteDestination =
+                                false;
                         boolean objectiveActorLocationDestination = false;
                         boolean objectiveRequiredCardEnablerDestination =
                                 false;
@@ -9605,6 +9608,13 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         .isFirstOrderReignsCurrentHostRouteDestination(
                                             game, playerId,
                                             fsMover, location);
+                                objectiveShieldMainGeneratorRouteDestination =
+                                    routeAnalyzer != null
+                                    && routeAnalyzer.isAnalyzed()
+                                    && routeAnalyzer
+                                        .advancesShieldMainGeneratorRoute(
+                                            game, playerId,
+                                            fsMover, location);
                                 objectiveActorRouteDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -9612,10 +9622,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         .advancesPreFlipActorRoute(
                                             game, playerId, fsMover,
                                             location)
-                                        || routeAnalyzer
-                                            .advancesShieldMainGeneratorRoute(
-                                                game, playerId,
-                                                fsMover, location));
+                                        || objectiveShieldMainGeneratorRouteDestination);
                                 objectiveActorLocationDestination =
                                     routeAnalyzer != null
                                     && routeAnalyzer.isAnalyzed()
@@ -10001,7 +10008,12 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         TraceRuleId.of(
                                             "MOVE.OBJECTIVE.ACTOR_ROUTE_DESTINATION"),
                                         TraceDomainId.OBJECTIVE_INTENT,
-                                        TraceOutputKind.BANDED);
+                                        TraceOutputKind.BANDED,
+                                        objectiveShieldMainGeneratorRouteDestination
+                                            ? ObjectivePreferencePolicy.Strength
+                                                .EXACT_PROGRESS
+                                            : ObjectivePreferencePolicy.Strength
+                                                .ORDINARY);
                                     logger.warn(
                                         "OBJECTIVE ACTOR ROUTE DEST: {} to {} matched bounded objective preference",
                                         fsMover.getTitle(), title);
@@ -10431,13 +10443,25 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             MoveDrainRoutingPolicy.DestinationDrain v67DestinationDrain =
                                 MoveDrainRoutingPolicy.destinationDrain(
                                     title, v67eExpectedDrain,
-                                    v67kIsTransitStagingSite);
+                                    v67kIsTransitStagingSite,
+                                    objectiveShieldMainGeneratorRouteDestination);
                             if (v67DestinationDrain.branch()
                                     == MoveDrainRoutingPolicy.DestinationDrainBranch.TRANSIT_STAGING) {
                                 addObjectiveContribution(action,
                                         v67DestinationDrain.contribution().reason(),
                                         v67DestinationDrain.contribution().delta(),
                                         "V67n-transit-staging");
+                            } else if (v67DestinationDrain.branch()
+                                    == MoveDrainRoutingPolicy.DestinationDrainBranch.OBJECTIVE_ROUTE_EXEMPT) {
+                                action.addReasoning(
+                                    "MOVE.OBJECTIVE.ACTOR_ROUTE_V67_EXEMPT: exact flip-gate progress outranks generic zero-drain routing",
+                                    0.0f,
+                                    TraceRuleId.of(
+                                        "MOVE.OBJECTIVE.ACTOR_ROUTE_V67_EXEMPT"),
+                                    TraceDomainId.OBJECTIVE_INTENT,
+                                    TraceOutputKind.ORDERING,
+                                    ObjectivePreferencePolicy.Strength
+                                        .EXACT_PROGRESS);
                             } else {
                                 action.addReasoning(
                                     v67DestinationDrain.contribution().reason(),
@@ -10451,6 +10475,9 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     break;
                                 case TRANSIT_STAGING:
                                     logger.info("V67n TRANSIT STAGING DEST: {} -> +300 objective preference", title);
+                                    break;
+                                case OBJECTIVE_ROUTE_EXEMPT:
+                                    logger.info("OBJECTIVE ROUTE: {} advances an exact flip gate; V67g zero-drain penalty skipped", title);
                                     break;
                                 case ZERO_DRAIN:
                                     logger.warn("V67g ZERO DRAIN: {} no drain — strong penalty (-200)", title);
@@ -10487,6 +10514,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                     MoveDrainRoutingPolicy.moveFromDrain(
                                                         isMoveDecision,
                                                         v67kIsTransitStagingSite,
+                                                        objectiveShieldMainGeneratorRouteDestination,
                                                         fromLoc.getTitle(),
                                                         fromTheirIcons, title, theirIcons);
                                                 if (v67gMoveFromDrain.applies()) {
@@ -11024,6 +11052,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                                 MoveDestinationPolicy.retreatExemptsWrongDirection(v169Retreat),
                                                 v156JoinMode && v156DestFriendlyChars > 0,
                                                 objectiveTerminalEscapeDestination,
+                                                objectiveShieldMainGeneratorRouteDestination,
                                                 firstOrderCurrentHostDestination);
                                         if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.RETREAT_EXEMPT) {
@@ -11036,6 +11065,19 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                         } else if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.TERMINAL_ESCAPE_EXEMPT) {
                                             logger.warn("OBJECTIVE TERMINAL ESCAPE: {} avoids source-proven objective loss; V41 wrong-direction skipped",
+                                                title);
+                                        } else if (v41Direction.disposition()
+                                                == MoveDestinationPolicy.WrongDirectionDisposition.OBJECTIVE_ROUTE_EXEMPT) {
+                                            action.addReasoning(
+                                                "MOVE.OBJECTIVE.ACTOR_ROUTE_V41_EXEMPT: exact flip-gate progress outranks an unrelated drain chase",
+                                                0.0f,
+                                                TraceRuleId.of(
+                                                    "MOVE.OBJECTIVE.ACTOR_ROUTE_V41_EXEMPT"),
+                                                TraceDomainId.OBJECTIVE_INTENT,
+                                                TraceOutputKind.ORDERING,
+                                                ObjectivePreferencePolicy.Strength
+                                                    .EXACT_PROGRESS);
+                                            logger.warn("OBJECTIVE ACTOR ROUTE: {} advances a source-proven flip gate; V41 wrong-direction skipped",
                                                 title);
                                         } else if (v41Direction.disposition()
                                                 == MoveDestinationPolicy.WrongDirectionDisposition.FIRST_ORDER_CURRENT_HOST_EXEMPT) {

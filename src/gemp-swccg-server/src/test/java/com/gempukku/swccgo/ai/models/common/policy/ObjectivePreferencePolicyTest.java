@@ -44,6 +44,61 @@ public class ObjectivePreferencePolicyTest {
     }
 
     @Test
+    public void exactProgressPromotesTheSharedObjectiveCeilingWithoutStacking() {
+        PolicyOperation exact = PolicyOperation.exactObjectiveProgress(
+                "A", TraceRuleId.of("objective-exact"), OUTPUT,
+                "source-proven missing requirement");
+        PolicyResult ordinaryThenExact = new PolicyResult(
+                "ordinary-then-exact", List.of(
+                add("A", "objective-ordinary",
+                        TraceDomainId.OBJECTIVE_INTENT, 300.0f),
+                exact,
+                PolicyOperation.exactObjectiveProgress(
+                        "A", TraceRuleId.of("objective-exact-again"),
+                        OUTPUT, "duplicate exact progress")));
+        PolicyResult exactThenOrdinary = new PolicyResult(
+                "exact-then-ordinary", List.of(
+                exact,
+                add("A", "objective-ordinary-later",
+                        TraceDomainId.OBJECTIVE_INTENT, 300.0f)));
+
+        assertEquals(ObjectivePreferencePolicy.Strength.EXACT_PROGRESS,
+                exact.objectiveStrength());
+        assertEquals(1000.0f, exact.delta(), 0.0f);
+        assertEquals(300.0f,
+                ordinaryThenExact.operations().get(0).delta(), 0.0f);
+        assertEquals(700.0f,
+                ordinaryThenExact.operations().get(1).delta(), 0.0f);
+        assertEquals(0.0f,
+                ordinaryThenExact.operations().get(2).delta(), 0.0f);
+        assertEquals(1000.0f,
+                exactThenOrdinary.operations().get(0).delta(), 0.0f);
+        assertEquals(0.0f,
+                exactThenOrdinary.operations().get(1).delta(), 0.0f);
+    }
+
+    @Test
+    public void negativeObjectiveBudgetRemainsIndependentFromExactProgress() {
+        PolicyOperation exact = PolicyOperation.exactObjectiveProgress(
+                "A", TraceRuleId.of("objective-exact"), OUTPUT,
+                "source-proven missing requirement");
+        PolicyOperation negative = add(
+                "A", "objective-negative",
+                TraceDomainId.OBJECTIVE_INTENT, -500.0f);
+        PolicyResult exactThenNegative = new PolicyResult(
+                "exact-then-negative", List.of(exact, negative));
+        PolicyResult negativeThenExact = new PolicyResult(
+                "negative-then-exact", List.of(negative, exact));
+
+        assertEquals(700.0f, exactThenNegative.operations().stream()
+                .map(PolicyOperation::delta)
+                .reduce(0.0f, Float::sum), 0.0f);
+        assertEquals(700.0f, negativeThenExact.operations().stream()
+                .map(PolicyOperation::delta)
+                .reduce(0.0f, Float::sum), 0.0f);
+    }
+
+    @Test
     public void negativeObjectiveIsBoundedButHardVetoRemainsCategorical() {
         PolicyOperation negative = add("A", "objective-negative",
                 TraceDomainId.OBJECTIVE_INTENT, -6000.0f);

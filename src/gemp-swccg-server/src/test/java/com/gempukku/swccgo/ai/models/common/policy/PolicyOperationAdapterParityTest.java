@@ -87,9 +87,11 @@ public class PolicyOperationAdapterParityTest {
 
         PolicyContributionLedger secondLedger = new PolicyContributionLedger("objective-merge");
         secondLedger.register(new PolicyResult(
-                "objective-merge", List.of(PolicyOperation.add(
-                        "A", objectiveTwo, TraceDomainId.OBJECTIVE_INTENT,
-                        TraceOutputKind.BANDED, 1200.0f, "third objective match"))));
+                "objective-merge", List.of(
+                        PolicyOperation.exactObjectiveProgress(
+                                "A", objectiveTwo,
+                                TraceOutputKind.BANDED,
+                                "source-proven exact progress"))));
 
         com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction rando =
                 new com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction(
@@ -115,12 +117,62 @@ public class PolicyOperationAdapterParityTest {
         com.gempukku.swccgo.ai.models.chosenone.evaluators.PolicyOperationAdapter.apply(chosenMerge, secondLedger);
         chosen.mergeFrom(chosenMerge);
 
-        assertEquals(-50.0f, rando.getScore(), 0.0f);
+        assertEquals(650.0f, rando.getScore(), 0.0f);
         assertEquals(rando.getScore(), chosen.getScore(), 0.0f);
         assertEquals(5, rando.getReasoning().size());
         assertEquals(
-                "OBJECTIVE MERGE CAP: requested +300.0, applied +0.0, suppressed +300.0",
+                "OBJECTIVE MERGE CAP: requested +1000.0, applied +700.0, suppressed +300.0",
                 rando.getReasoning().get(3));
+        assertEquals(rando.getReasoning(), chosen.getReasoning());
+    }
+
+    @Test
+    public void exactThenOrdinaryMergeAlsoStopsAtOneThousand() {
+        PolicyContributionLedger exactLedger = new PolicyContributionLedger(
+                "exact-first");
+        exactLedger.register(new PolicyResult("exact-first", List.of(
+                PolicyOperation.exactObjectiveProgress(
+                        "A", TraceRuleId.of("OBJECTIVE.TEST.EXACT"),
+                        TraceOutputKind.BANDED, "exact progress"))));
+        PolicyContributionLedger ordinaryLedger = new PolicyContributionLedger(
+                "ordinary-second");
+        ordinaryLedger.register(new PolicyResult("ordinary-second", List.of(
+                PolicyOperation.add(
+                        "A", TraceRuleId.of("OBJECTIVE.TEST.ORDINARY"),
+                        TraceDomainId.OBJECTIVE_INTENT,
+                        TraceOutputKind.BANDED, 300.0f,
+                        "ordinary objective relevance"))));
+
+        com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction rando =
+                new com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction(
+                        "A", com.gempukku.swccgo.ai.models.rando.evaluators.ActionType.UNKNOWN,
+                        0.0f, "A");
+        com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction randoOrdinary =
+                new com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction(
+                        "A", com.gempukku.swccgo.ai.models.rando.evaluators.ActionType.UNKNOWN,
+                        0.0f, "A");
+        com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction chosen =
+                new com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction(
+                        "A", com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionType.UNKNOWN,
+                        0.0f, "A");
+        com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction chosenOrdinary =
+                new com.gempukku.swccgo.ai.models.chosenone.evaluators.EvaluatedAction(
+                        "A", com.gempukku.swccgo.ai.models.chosenone.evaluators.ActionType.UNKNOWN,
+                        0.0f, "A");
+
+        com.gempukku.swccgo.ai.models.rando.evaluators.PolicyOperationAdapter
+                .apply(rando, exactLedger);
+        com.gempukku.swccgo.ai.models.rando.evaluators.PolicyOperationAdapter
+                .apply(randoOrdinary, ordinaryLedger);
+        rando.mergeFrom(randoOrdinary);
+        com.gempukku.swccgo.ai.models.chosenone.evaluators.PolicyOperationAdapter
+                .apply(chosen, exactLedger);
+        com.gempukku.swccgo.ai.models.chosenone.evaluators.PolicyOperationAdapter
+                .apply(chosenOrdinary, ordinaryLedger);
+        chosen.mergeFrom(chosenOrdinary);
+
+        assertEquals(1000.0f, rando.getScore(), 0.0f);
+        assertEquals(rando.getScore(), chosen.getScore(), 0.0f);
         assertEquals(rando.getReasoning(), chosen.getReasoning());
     }
 }
