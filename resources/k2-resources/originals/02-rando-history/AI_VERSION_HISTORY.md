@@ -1,4 +1,4 @@
-  ==== V314 EXACT OBJECTIVE PROGRESS AND SHIELD GENERATOR ROUTE (2026-10-14, both bots) ====
+  ==== V314 EXACT OBJECTIVE PROGRESS AND SHIELD GENERATOR ROUTE (2026-10-14, both bots, DEPLOYED) ====
 Games 72403 and 72393 selected North Ridge over Ice Plains for the Walker
 package, then declined the legal marker route. Game 72259 proved the intended
 older line: Ice Plains to North Ridge to Defensive Perimeter while Target The
@@ -33,8 +33,29 @@ a92047204 plus boundary correction e9fd061f6 compile clean. The final focused
 ring passed 238/0/0/0. The impacted
 ring ran 1324/14/14/0; every red result is one of the six documented pre-existing
 deploy-planner fixture failures or 22 documented upstream-sync fixture failures.
-Independent verification returned PASS at SOURCE_TESTED with no blocker. No package, deployment, database
-mutation, game mutation, or push has occurred.
+Independent verification returned PASS at SOURCE_TESTED with no blocker.
+
+The clean Java 21 jar 38b2c3b37523f9ec93b6344138d4d5061426ec28e909a8c22c9c393d32b8ad0b
+was rejected before deployment because it omitted 67 October runtime card
+outputs, including Set 227. The safe hybrid starts from prior live jar
+26cb5c032ae26ca1dff8fa22516d545e9a9f4741dfc53ee030b229818f2f0d5b and
+overlays only the 161 outputs owned by the 19 V314 sources. Independent package
+verification found 122 changed, three added, zero removed, all V314 outputs
+equal to the clean candidate, and all 27,050 non-V314 entries byte-preserved.
+Final jar SHA-256 is
+2a33f079885d77464daabaaf73d969c540e7fc53ab1aad572518f6bf8cb9fb47.
+
+Authenticated Hall gates before and after freeze were 0/0/0. Only app container
+dc7c03aa1750 was recreated, with direct Java PID 1, restart count zero, and OOM
+false. Database container 46a8397072d3 retained its exact identity, start time,
+restart count, and OOM state. Sealed, host, and container jar hashes match.
+Startup completed, Set 227 loaded, Card227_014 is present, three HTTP probes
+returned 200, all five settings and operational mode were restored, both bot
+marker checks passed, and the material-error scan was clean. Final Hall remained
+0/0/0. Proof is RUNTIME_LOADED, not replay-fired. No database mutation, game
+mutation, or GitHub push occurred. Rollback jar:
+/Users/steve/gemp-deploy-backups/rando-objective-progress-v314-2026-10-14/predeploy-f8529d9da-26cb5c03/web.jar
+(SHA-256 26cb5c032ae26ca1dff8fa22516d545e9a9f4741dfc53ee030b229818f2f0d5b).
 
 Revert e9fd061f6 and a92047204 as one unit to remove V314.
 

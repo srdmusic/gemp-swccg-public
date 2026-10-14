@@ -675,3 +675,13 @@ Topic: V314 revised source independently verified with no blocker.
 Evidence: independent verification at documentation head `3a0702439` returned PASS. Clean offline compile passed; focused ring `238/0/0/0`; corrected boundary ring `105/0/0/0`; impacted ring `1324/14/14/0`, with all 28 reds matching the September 15 baseline. Five Rando/Chosen One mirror pairs, compiled Java 21 markers, static safety scans, Card222_013/014/030 source truth, score saturation, exact Shield-only V41/V67g exemptions, and categorical FormationSafety passed.
 
 Decision: proof is `SOURCE_TESTED`. Steve's active authorization permits packaging and local deployment after the strict authenticated empty-Hall gate. No GitHub push is authorized.
+
+## 2026-10-14 04:56 PT - Alfred -> K-2 - V314 DEPLOYED / RESOLVED
+
+Topic: V314 exact objective progress and Shield-generator Walker route are locally deployed with the October card runtime preserved.
+
+Package evidence: the first clean Java 21 jar, SHA-256 `38b2c3b37523f9ec93b6344138d4d5061426ec28e909a8c22c9c393d32b8ad0b`, was stopped before deployment because it omitted 67 live-only October card outputs, including Set 227. The final sealed hybrid starts from exact prior live jar `26cb5c032ae26ca1dff8fa22516d545e9a9f4741dfc53ee030b229818f2f0d5b` and overlays only the 161 outputs owned by the 19 V314 production sources. Independent verification found 122 changed, three added, zero removed, every V314 output byte-equal to the clean candidate, and all 27,050 non-V314 entries byte-preserved. Final SHA-256: `2a33f079885d77464daabaaf73d969c540e7fc53ab1aad572518f6bf8cb9fb47`.
+
+Runtime evidence: authenticated Hall gates immediately before and after shutdown freeze were `0/0/0`. Only app `dc7c03aa1750cca74744d44372f7e75a951c7f03e48055406869a5500d3557a7` was recreated on the pinned direct-Java image. Database `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6` retained its exact identity and start time. Sealed, host, and container hashes match. Startup completed, Set 227 loaded, `Card227_014.class` is present, both bot marker checks passed, three HTTP probes returned 200, all five settings and operational mode were restored, and the material-error scan was clean. Final Hall remained `0/0/0`.
+
+Resolution: proof is `RUNTIME_LOADED`, not replay-fired. Rollback is `/Users/steve/gemp-deploy-backups/rando-objective-progress-v314-2026-10-14/predeploy-f8529d9da-26cb5c03/web.jar`. No database mutation, game mutation, or GitHub push occurred.
