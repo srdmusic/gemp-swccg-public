@@ -20,15 +20,23 @@ First Order routing, generic objective interest, and positive drain scoring keep
 their prior behavior. FormationSafety, legality, piloting, physical package
 identity, cannon retention, terminal defense, and reverse-route holds still win.
 
+Independent verification caught the first deploy predicate also admitting Old
+Allies' planned Falcon pilot. Follow-up e9fd061f6 split exact counted-location
+progress from ordinary route enablers. A failure-first engine regression proves
+the Falcon pilot remains ordinary while a missing counted Jakku ground body is
+still exact, with Rando and Chosen One parity. The boundary ring passed
+105/0/0/0.
+
 Actual source was checked in Card222_013, Card222_014, Card222_014_BACK,
 Card222_030, and Card222_030_BACK. No card or engine code changed. Source commit
-a92047204 compiles clean. The final focused ring passed 238/0/0/0. The impacted
+a92047204 plus boundary correction e9fd061f6 compile clean. The final focused
+ring passed 238/0/0/0. The impacted
 ring ran 1324/14/14/0; every red result is one of the six documented pre-existing
 deploy-planner fixture failures or 22 documented upstream-sync fixture failures.
 Independent verification remains pending. No package, deployment, database
 mutation, game mutation, or push has occurred.
 
-Revert a92047204 as one unit to remove V314.
+Revert e9fd061f6 and a92047204 as one unit to remove V314.
 
   ==== UPSTREAM SYNC MERGE (2026-09-15, no AI logic change, DEPLOYED 21:24 PDT) ====
 PlayersCommittee private master 0c9f515aa merged into the V313 lineage on branch

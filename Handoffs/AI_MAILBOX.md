@@ -659,3 +659,11 @@ Files: shared objective policy and score transports; shared deploy and move poli
 Boundary: ordinary Hunt Down, First Order, generic objective, and actor-location behavior remains `+300`. FormationSafety and legality remain categorical. No card, engine, deck, database, package, runtime, game, or GitHub change has occurred.
 
 Needed: independent SOURCE_TESTED verification before packaging and local deployment.
+
+## 2026-10-14 04:44 PT - Alfred -> K-2 - CORRECTION
+
+Topic: V314 exact deploy classification tightened after independent review.
+
+Evidence: verifier found that the original child-deploy predicate could classify Old Allies' planned Falcon pilot as exact progress. Failure-first coverage reproduced the missing boundary. Follow-up source commit `e9fd061f6` adds a shared exact-location predicate: missing counted locations and the selected Shield-generator package qualify for `+1000`; ordinary route enablers do not. Old Allies engine coverage proves its planned Falcon pilot stays ordinary while a missing counted Jakku ground body remains exact on both bots. The boundary ring passed `105/0/0/0`.
+
+Boundary: First Order, Old Allies' Falcon pilot, generic objective interest, and actor-location routing remain `+300`. Revised independent verification is required before packaging or deployment.
