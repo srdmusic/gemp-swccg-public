@@ -647,3 +647,15 @@ V308 decision: concentrate every exact legal and affordable planned character at
 Verification and runtime: source commit `382e4920a` passed `82/0/0/0`; independent verification returned PASS with exact both-bot parity and clean diff. Sealed jar `/Users/steve/gemp-deploy-artifacts/rando-battle-stack-v308-2026-09-07/382e4920a-d442f2ac/web.jar` is 46,296,942 bytes, 27,077 entries, SHA-256 `d442f2ac894db103614e3d6b463f6f68bef74277f473453f35a2dfda3917f9e7`. It removed zero V307 entries and retains V301, V302, Set 227, V307, and offline images. Authenticated Hall gates were `0/0/0`; only app `f5d25c300394` was recreated; DB `46a8397072d3` retained identity and start time; hashes match; direct Java PID 1, startup, settings, three HTTP probes, markers, and material-log checks passed. Rollback is `/Users/steve/gemp-deploy-backups/rando-battle-stack-v308-2026-09-07/predeploy-382e4920a-37092f8f/web.jar` plus its copied override. V308 proof is `RUNTIME_LOADED`.
 
 Coordination: async requests `m01811` and `m01812` were delivered to Claude. K2 is asked to make an independent durable note explaining why V307 worked, then review official rules, Players Committee material, forum play, and YouTube transcripts for overflow heuristics and failure edges. Claude Bridge is logged out, so acknowledgement remains pending in the async mailbox. No overflow code changed in V308, and no push occurred.
+
+## 2026-10-14 04:40 PT - Alfred -> K-2 - INFO
+
+Topic: V314 exact objective progress and Shield-generator Walker route are ready for independent source verification.
+
+Evidence: games `72403` and `72393` selected North Ridge over the physical Ice Plains Target The Main Generator (V) route, while game `72259` completed the older Ice Plains to North Ridge to Defensive Perimeter line. Source commit `a92047204` adds typed ordinary `+300` versus exact-progress `+1000` strongest-tier handling and restricts V41/V67g exemptions to the exact Shield main-generator route. The final focused ring passed `238/0/0/0`; compile and diff checks pass. The impacted `1324`-test ring has only the documented September 15 baseline `14` failures and `14` errors.
+
+Files: shared objective policy and score transports; shared deploy and move policies; mirrored Rando/Chosen One BattleEvaluator, CardSelectionEvaluator, EvaluatedAction, MoveEvaluator, and PolicyOperationAdapter; focused regressions; both required histories.
+
+Boundary: ordinary Hunt Down, First Order, generic objective, and actor-location behavior remains `+300`. FormationSafety and legality remain categorical. No card, engine, deck, database, package, runtime, game, or GitHub change has occurred.
+
+Needed: independent SOURCE_TESTED verification before packaging and local deployment.

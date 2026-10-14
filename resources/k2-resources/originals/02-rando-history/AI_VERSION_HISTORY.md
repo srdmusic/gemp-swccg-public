@@ -1,3 +1,35 @@
+  ==== V314 EXACT OBJECTIVE PROGRESS AND SHIELD GENERATOR ROUTE (2026-10-14, both bots) ====
+Games 72403 and 72393 selected North Ridge over Ice Plains for the Walker
+package, then declined the legal marker route. Game 72259 proved the intended
+older line: Ice Plains to North Ridge to Defensive Perimeter while Target The
+Main Generator (V) followed the AT-AT. The replay boundary was 440 for North
+Ridge against 360 for Ice Plains after the global objective cap in 2d143e169.
+
+V314 keeps ordinary objective relevance at +300 and adds a typed exact-progress
+tier of +1000 for a real candidate that advances a currently missing counted
+requirement. The strongest tier wins instead of stacking: ordinary then exact,
+exact then ordinary, repeated exact signals, PolicyResult streams, evaluator
+merges, battle transport, and deploy-plan ranking all stop at +1000. Negative
+objective influence keeps its independent -300 floor. Hard vetoes and DEFER
+remain categorical.
+
+The selected Walker package now chooses its exact Ice Plains staging site.
+Only the source-proven Shield main-generator move route gets exact parent and
+child strength and narrow V41/V67g exemptions. Ordinary actor routes, Hunt Down,
+First Order routing, generic objective interest, and positive drain scoring keep
+their prior behavior. FormationSafety, legality, piloting, physical package
+identity, cannon retention, terminal defense, and reverse-route holds still win.
+
+Actual source was checked in Card222_013, Card222_014, Card222_014_BACK,
+Card222_030, and Card222_030_BACK. No card or engine code changed. Source commit
+a92047204 compiles clean. The final focused ring passed 238/0/0/0. The impacted
+ring ran 1324/14/14/0; every red result is one of the six documented pre-existing
+deploy-planner fixture failures or 22 documented upstream-sync fixture failures.
+Independent verification remains pending. No package, deployment, database
+mutation, game mutation, or push has occurred.
+
+Revert a92047204 as one unit to remove V314.
+
   ==== UPSTREAM SYNC MERGE (2026-09-15, no AI logic change, DEPLOYED 21:24 PDT) ====
 PlayersCommittee private master 0c9f515aa merged into the V313 lineage on branch
 k2/upstream-sync-2026-09-15 (merge e7ab89a90, interceptor cherry-pick 7b04fcbb5).
