@@ -684,4 +684,6 @@ Package evidence: the first clean Java 21 jar, SHA-256 `38b2c3b37523f9ec93b63441
 
 Runtime evidence: authenticated Hall gates immediately before and after shutdown freeze were `0/0/0`. Only app `dc7c03aa1750cca74744d44372f7e75a951c7f03e48055406869a5500d3557a7` was recreated on the pinned direct-Java image. Database `46a8397072d34ed7927676aa8eaf870e6ead6d3ee9332fa1ca602526de84faa6` retained its exact identity and start time. Sealed, host, and container hashes match. Startup completed, Set 227 loaded, `Card227_014.class` is present, both bot marker checks passed, three HTTP probes returned 200, all five settings and operational mode were restored, and the material-error scan was clean. Final Hall remained `0/0/0`. An independent read-only post-deployment verifier repeated every live gate and returned PASS.
 
-Resolution: proof is `RUNTIME_LOADED`, not replay-fired. Rollback is `/Users/steve/gemp-deploy-backups/rando-objective-progress-v314-2026-10-14/predeploy-f8529d9da-26cb5c03/web.jar`. No database mutation, game mutation, or GitHub push occurred.
+Resolution: proof is `RUNTIME_LOADED`, not replay-fired. Rollback is `/Users/steve/gemp-deploy-backups/rando-objective-progress-v314-2026-10-14/predeploy-f8529d9da-26cb5c03/web.jar`. No database or game mutation occurred.
+
+GitHub: Steve separately authorized the push. `srdmusic/gemp-swccg-public` `main` was advanced through the V314 runtime record by a normal fast-forward from `b9d607b97`; no force push or history replacement was used.

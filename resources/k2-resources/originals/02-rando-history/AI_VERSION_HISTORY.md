@@ -55,7 +55,10 @@ marker checks passed, and the material-error scan was clean. Final Hall remained
 0/0/0. An independent read-only post-deployment verifier repeated the container,
 database, hash, Hall, marker, card, startup, HTTP, and log gates and returned
 PASS. Proof is RUNTIME_LOADED, not replay-fired. No database mutation, game
-mutation, or GitHub push occurred. Rollback jar:
+mutation occurred. Steve separately authorized a GitHub push, and
+srdmusic/gemp-swccg-public main was advanced through the V314 runtime record by
+a normal fast-forward from b9d607b97. No force push or history replacement was
+used. Rollback jar:
 /Users/steve/gemp-deploy-backups/rando-objective-progress-v314-2026-10-14/predeploy-f8529d9da-26cb5c03/web.jar
 (SHA-256 26cb5c032ae26ca1dff8fa22516d545e9a9f4741dfc53ee030b229818f2f0d5b).
 
